@@ -3,7 +3,13 @@ import { describe, expect, test } from "bun:test";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket } from "../fishnet/types.ts";
 import type { CapturedUdpPacket } from "../types.ts";
-import { formatFishNetPacket, formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
+import {
+  formatCombatEvent,
+  formatCombatEventJson,
+  formatFishNetPacket,
+  formatLiteNetLibPacket,
+  formatTransportPacket,
+} from "./format-packet.ts";
 
 function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
   const outbound = direction === "outbound";
@@ -139,5 +145,72 @@ describe("formatLiteNetLibPacket", () => {
     expect(formatLiteNetLibPacket(decoded)).toBe(
       "  LNL path=1.0 kind=channeled seq=4660 channel=7 fragment=258:772/1286 bytes=2 payload=aabb",
     );
+  });
+});
+
+describe("formatCombatEvent", () => {
+  test("makes ambiguous overlapping activations explicit", () => {
+    expect(formatCombatEvent({
+      kind: "damage",
+      rpc: "ApplyDamage_C",
+      tick: 70,
+      payloadBytes: 42,
+      fields: {},
+      actorId: 10,
+      targetId: 20,
+      sourceId: "SyntheticStorm",
+      sourceLabel: "Synthetic Storm",
+      value: 17,
+      hitResult: "critical",
+      wireHits: 1,
+      damageType: 0,
+      team: 0,
+      element: 0,
+      weaponType: 4,
+      range: 2,
+      isClone: false,
+      isSummon: false,
+      position: [1, 2, 3],
+      origin: [4, 5, 6],
+      attribution: "ambiguous",
+      candidateActivationIds: ["activation-1", "activation-2"],
+    })).toBe(
+      "COMBAT tick=70 actor=10 action=damage sourceId=SyntheticStorm source=Synthetic%20Storm target=20 value=17" +
+        " hit=critical attribution=ambiguous candidates=activation-1,activation-2",
+    );
+  });
+
+  test("formats structured combat events as JSON Lines", () => {
+    const line = formatCombatEventJson({
+      kind: "death",
+      rpc: "Death_C",
+      tick: 71,
+      payloadBytes: 25,
+      fields: { "dmg.Value": 125, "dmg.DamageSourceId": "SyntheticStrike" },
+      actorId: 10,
+      targetId: 20,
+      sourceId: "SyntheticStrike",
+      sourceLabel: "Synthetic Strike",
+      value: 125,
+      hitResult: "normal",
+      wireHits: 1,
+      damageType: 0,
+      team: 0,
+      element: 0,
+      weaponType: 4,
+      range: 2,
+      isClone: false,
+      isSummon: false,
+      attribution: "exact",
+      activationId: "activation-1",
+      duplicatesDamageEvent: false,
+    });
+    expect(JSON.parse(line)).toMatchObject({
+      kind: "death",
+      rpc: "Death_C",
+      payloadBytes: 25,
+      fields: { "dmg.Value": 125, "dmg.DamageSourceId": "SyntheticStrike" },
+      duplicatesDamageEvent: false,
+    });
   });
 });

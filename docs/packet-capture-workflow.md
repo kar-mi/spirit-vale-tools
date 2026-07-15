@@ -76,12 +76,19 @@ Enable the FishNet layer with:
 bun run capture:dump -- --protocols udp --decode-fishnet
 ```
 
-Supply a build-matched semantic map to add verified behaviour, RPC, SyncType,
-broadcast, and supported field names:
+The current verified build map is bundled and selected by default. Supply an
+external build-matched map to override it:
 
 ```powershell
 bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
 ```
+
+Use `--fishnet-build <build-fingerprint>` to select another bundled version, or
+`--combat-only` to print only chronological actor-grouped activations and
+per-hit damage/death events. Death records indicate whether they duplicate an
+ordinary damage event, and aggregation is intentionally left to consumers.
+Use `--combat-json` instead to emit the same stream as JSON Lines with every
+decoded RPC field included in each record's `fields` object.
 
 The FishNet layer is session-aware. It parses multiple messages from a single
 transport tick, reassembles reliable split messages, registers length-delimited

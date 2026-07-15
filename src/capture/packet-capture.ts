@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
+import { loadBundledFishNetRpcMap } from "../fishnet/builtin-maps.ts";
 import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoder.ts";
 import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
@@ -92,14 +93,19 @@ export class PacketCapture extends EventEmitter {
       if (processName.length === 0) throw new Error("targetProcessName must not be empty");
       command.push("--process-name", processName);
     }
+    const decodeFishNet = config.decodeFishNet ?? false;
+    const decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || decodeFishNet;
+    const fishNetRpcMap = decodeFishNet
+      ? config.fishNetRpcMap ?? loadBundledFishNetRpcMap(config.fishNetBuildFingerprint)
+      : undefined;
     const spawned = this.spawnProcess(command, path.dirname(helperPath));
 
     this._state = "starting";
     this.process = spawned;
     this.sawStoppedRecord = false;
-    this.decodeFishNet = config.decodeFishNet ?? false;
-    this.decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || this.decodeFishNet;
-    this.fishNetRpcMap = config.fishNetRpcMap;
+    this.decodeFishNet = decodeFishNet;
+    this.decodeLiteNetLib = decodeLiteNetLib;
+    this.fishNetRpcMap = fishNetRpcMap;
     this.fishNetSessionDecoder = this.decodeFishNet ? new FishNetSessionDecoder(this.fishNetRpcMap) : null;
     this.startDeferred = createDeferred();
     const startPromise = this.startDeferred.promise;

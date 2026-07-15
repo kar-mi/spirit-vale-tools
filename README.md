@@ -51,8 +51,17 @@ bun run capture:dump -- --protocols udp --decode-litenetlib
 # Add stateful FishNet bundle, split-packet, and RPC Link decoding
 bun run capture:dump -- --protocols udp --decode-fishnet
 
-# Supply a build-matched semantic map
+# Supply an external build-matched RPC map
 bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
+
+# Print only chronological skill, attack, and per-hit damage events
+bun run capture:dump -- --protocols udp --combat-only
+
+# Emit the same combat stream as one complete JSON object per line
+bun run capture:dump -- --protocols udp --combat-json
+
+# Select a different bundled build map when more versions are registered
+bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-build <build-fingerprint>
 ```
 
 `--decode-fishnet` implies `--decode-litenetlib`. It follows RPC Link
@@ -63,6 +72,11 @@ Schema-v2 decoders may also infer a missing component type when a fixed RPC
 selects exactly one behaviour; ambiguous hashes remain unnamed until stronger
 session evidence appears. Ordered structured parameters are decoded only when
 their generated writer codecs are present in the map.
+
+FishNet decoding uses the current bundled, build-fingerprinted schema by
+default. Explicit map objects and `--fishnet-map` override the bundled map.
+Bundled versions are selected by their full build fingerprint so older maps can
+remain available when a new game build is added.
 
 Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, and the
 FishNet packet identifier table used by the decoder. Native initialization
@@ -87,7 +101,7 @@ action epochs.
 ## Public API
 
 ```ts
-import { FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "spiritvale-pcap";
+import { FishNetCombatTracker, FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "spiritvale-pcap";
 
 const capture = new PacketCapture();
 capture.on("packet", packet => {
@@ -114,15 +128,34 @@ await capture.start({
 declare const payload: Buffer;
 const messages = decodeFishNetBundle(payload, { reliable: true });
 const session = new FishNetSessionDecoder();
+const combat = new FishNetCombatTracker();
 const linked = session.decode(payload, {
   reliable: true,
   connectionId: "connection-1",
   direction: "inbound",
   channel: 0,
 });
+for (const packet of linked) {
+  for (const event of combat.consume(packet)) console.log(event);
+}
 ```
 
 The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. FishNet decoding emits one `fishNetPacket` per safely delimited bundled message, with spawn identity, behaviour type, resolved RPC metadata, SyncType ownership, broadcast identity, and verified common fields when available. Unknown links and ambiguous symbol matches remain numeric. Schema-v2 maps are behaviour-scoped and build-fingerprinted; schema-v1 maps remain supported. Omit `targetProcessName` for an unrestricted diagnostic capture.
+
+`FishNetCombatTracker` converts decoded packets into actor-grouped activation,
+per-hit damage, and death events. A death event carries the server's lethal
+`Damage` record; `duplicatesDamageEvent` identifies when the same hit was also
+emitted as an ordinary damage event at that tick. The tracker does not aggregate
+or summarize damage; consumers combine events using the stable actor and
+`sourceId` fields. Different overlapping
+skills are matched by attacker and damage-source identifiers. Multiple eligible
+activations of the same source are reported as ambiguous with every candidate
+activation ID instead of being force-assigned.
+
+`--combat-json` implies combat-only mode and emits JSON Lines. Every record
+includes its RPC name, tick, payload byte count, normalized combat properties,
+and a `fields` object containing every decoded RPC field by its wire-schema
+name. Consumers can parse each output line independently.
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

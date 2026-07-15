@@ -1,7 +1,18 @@
-import { PacketCapture } from "../index.ts";
+import {
+  BUNDLED_FISHNET_BUILD_FINGERPRINTS,
+  FishNetCombatTracker,
+  PacketCapture,
+  loadBundledFishNetSemanticMap,
+} from "../index.ts";
 import type { CaptureProtocol } from "../types.ts";
 import { loadFishNetRpcMap } from "../fishnet/rpc-map.ts";
-import { formatFishNetPacket, formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
+import {
+  formatCombatEvent,
+  formatCombatEventJson,
+  formatFishNetPacket,
+  formatLiteNetLibPacket,
+  formatTransportPacket,
+} from "./format-packet.ts";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
@@ -19,14 +30,24 @@ if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" &&
   throw new Error("--protocols must be tcp, udp, or tcp,udp");
 }
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
-const decodeFishNet = Bun.argv.includes("--decode-fishnet");
+const combatJson = Bun.argv.includes("--combat-json");
+const combatOnly = Bun.argv.includes("--combat-only") || combatJson;
+const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
 const mapOption = option("--fishnet-map");
 const mapPath = decodeFishNet ? mapOption : undefined;
 const fishNetRpcMap = mapPath ? loadFishNetRpcMap(mapPath) : undefined;
-if (decodeFishNet && !fishNetRpcMap) {
-  console.error("[warning] no FishNet RPC map supplied; numeric packet/RPC identifiers will still be shown");
-}
+const fishNetBuildFingerprint = option("--fishnet-build");
+const combatFingerprint = fishNetRpcMap?.buildFingerprint ?? fishNetBuildFingerprint;
+const semanticMap = combatOnly && combatFingerprint
+  && BUNDLED_FISHNET_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
+  ? loadBundledFishNetSemanticMap(combatFingerprint)
+  : combatOnly && fishNetRpcMap
+    ? { schemaVersion: 1 as const, buildFingerprint: fishNetRpcMap.buildFingerprint, verifiedSkillLabels: [] }
+    : undefined;
+const combatTracker = combatOnly
+  ? new FishNetCombatTracker({ buildFingerprint: fishNetBuildFingerprint, semanticMap })
+  : undefined;
 
 const capture = new PacketCapture();
 capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
@@ -37,10 +58,23 @@ capture.on("targetStatus", (status) => {
   console.error(`target ${status.processName}: ${status.state}${pids}`);
 });
 capture.on("transportPacket", (packet) => {
-  console.log(formatTransportPacket(packet));
+  if (!combatOnly) console.log(formatTransportPacket(packet));
 });
-capture.on("liteNetPacket", (packet) => console.log(formatLiteNetLibPacket(packet)));
-capture.on("fishNetPacket", (packet) => console.log(formatFishNetPacket(packet)));
+capture.on("liteNetPacket", (packet) => {
+  if (!combatOnly) console.log(formatLiteNetLibPacket(packet));
+});
+capture.on("fishNetPacket", (packet) => {
+  if (!combatOnly) {
+    console.log(formatFishNetPacket(packet));
+    return;
+  }
+  for (const event of combatTracker?.consume(packet) ?? []) {
+    console.log(combatJson ? formatCombatEventJson(event) : formatCombatEvent(event));
+  }
+});
+capture.on("stopped", () => {
+  combatTracker?.reset();
+});
 
 let stopping = false;
 async function stop(): Promise<void> {
@@ -59,6 +93,7 @@ await capture.start({
   targetProcessName,
   decodeLiteNetLib,
   decodeFishNet,
+  fishNetBuildFingerprint,
   fishNetRpcMap,
 });
 if (durationSeconds !== undefined) {

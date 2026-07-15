@@ -75,7 +75,8 @@ function decodeField(
     }
     case "stringUtf8Packed": {
       const length = readSignedPackedWhole(buffer, offset);
-      if (length.value < 0) throw new FishNetProtocolError("negative string length");
+      if (length.value === -1) return { value: null, nextOffset: length.nextOffset };
+      if (length.value < -1) throw new FishNetProtocolError("invalid string length");
       const nextOffset = checkedEnd(buffer, length.nextOffset, length.value);
       return { value: buffer.toString("utf8", length.nextOffset, nextOffset), nextOffset };
     }

@@ -139,6 +139,19 @@ describe("PacketCapture lifecycle", () => {
     await capture.stop();
   });
 
+  test("rejects an unsupported bundled FishNet build before spawning the helper", async () => {
+    const helperPath = prepareRuntime();
+    const mock = mockFactory();
+    const capture = new PacketCapture(mock.factory);
+    await expect(capture.start({
+      helperPath,
+      decodeFishNet: true,
+      fishNetBuildFingerprint: "fictional-build",
+    })).rejects.toThrow("unsupported bundled FishNet build fingerprint");
+    expect(mock.commands).toEqual([]);
+    expect(capture.state).toBe("stopped");
+  });
+
   test("derives a protocol filter and supports untargeted capture", async () => {
     const helperPath = prepareRuntime();
     const mock = mockFactory();

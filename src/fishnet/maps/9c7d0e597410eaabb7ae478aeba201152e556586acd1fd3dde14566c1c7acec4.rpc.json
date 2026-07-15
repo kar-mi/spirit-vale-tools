@@ -1,0 +1,3982 @@
+{
+  "schemaVersion": 2,
+  "buildFingerprint": "9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4",
+  "metadataVersion": 31,
+  "behaviours": [
+    {
+      "typeName": "BaseUnitController",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "TraverseShipCaptain",
+          "parameters": [
+            {
+              "name": "npcId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "targetRpc",
+          "methodName": "ClientPrepareTransfer"
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ClientSwitchServer",
+          "parameters": [
+            {
+              "name": "host",
+              "typeName": "System.String"
+            },
+            {
+              "name": "port",
+              "typeName": "System.UInt16"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "observersRpc",
+          "methodName": "TraverseObservers",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "targetRpc",
+          "methodName": "TraverseActive",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "observersRpc",
+          "methodName": "SyncInstanceState",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "instanceId",
+              "typeName": "System.Int32"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "CombatComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "observersRpc",
+          "methodName": "Attack_C",
+          "parameters": [
+            {
+              "name": "position",
+              "typeName": "UnityEngine.Vector3",
+              "codec": "vector3"
+            },
+            {
+              "name": "attackTime",
+              "typeName": "System.Single",
+              "codec": "float32"
+            },
+            {
+              "name": "attackIndex",
+              "typeName": "System.Int32",
+              "codec": "packedInt32"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "FishNet.Component.Animating.NetworkAnimator",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "targetRpc",
+          "methodName": "TargetAnimatorUpdated",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "System.ArraySegment`1[[System.Byte, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "serverRpc",
+          "methodName": "ServerAnimatorUpdated",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "System.ArraySegment`1[[System.Byte, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "FishNet.Component.Ownership.PredictedOwner",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "ServerTakeOwnership",
+          "parameters": [
+            {
+              "name": "includeNested",
+              "typeName": "System.Boolean"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "FishNet.Component.Transforming.NetworkTransform",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "observersRpc",
+          "methodName": "ObserversSetSendToOwner",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "serverRpc",
+          "methodName": "ServerSetInterval",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "System.Byte"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "observersRpc",
+          "methodName": "ObserversSetInterval",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "System.Byte"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "targetRpc",
+          "methodName": "TargetUpdateTransform",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "System.ArraySegment`1[[System.Byte, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "observersRpc",
+          "methodName": "ObserversUpdateClientAuthoritativeTransform",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "System.ArraySegment`1[[System.Byte, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "serverRpc",
+          "methodName": "ServerUpdateTransform",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "System.ArraySegment`1[[System.Byte, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 6,
+          "packetKind": "serverRpc",
+          "methodName": "ServerSetSynchronizedProperties",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "FishNet.Component.Transforming.SynchronizedProperty"
+            }
+          ]
+        },
+        {
+          "wireHash": 7,
+          "packetKind": "observersRpc",
+          "methodName": "ObserversSetSynchronizedProperties",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "FishNet.Component.Transforming.SynchronizedProperty"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "HealthComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "observersRpc",
+          "methodName": "ApplyDamage_C",
+          "parameters": [
+            {
+              "name": "dmg",
+              "typeName": "Damage",
+              "fields": [
+                {
+                  "name": "Team",
+                  "typeName": "CombatTeam",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Value",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Type",
+                  "typeName": "DamageType",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Hit",
+                  "typeName": "HitResult",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Hits",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "DamageSourceId",
+                  "typeName": "System.String",
+                  "codec": "stringUtf8Packed"
+                },
+                {
+                  "name": "AttackerId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "IsClone",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "IsSummon",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "Element",
+                  "typeName": "Element",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "WeaponType",
+                  "typeName": "EquipType",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Range",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                }
+              ]
+            },
+            {
+              "name": "position",
+              "typeName": "UnityEngine.Vector3",
+              "codec": "vector3"
+            },
+            {
+              "name": "origin",
+              "typeName": "UnityEngine.Vector3",
+              "codec": "vector3"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "observersRpc",
+          "methodName": "Recover_C",
+          "parameters": [
+            {
+              "name": "amount",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "settings",
+              "typeName": "FloaterSettings"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "observersRpc",
+          "methodName": "Death_C",
+          "parameters": [
+            {
+              "name": "dmg",
+              "typeName": "Damage",
+              "fields": [
+                {
+                  "name": "Team",
+                  "typeName": "CombatTeam",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Value",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Type",
+                  "typeName": "DamageType",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Hit",
+                  "typeName": "HitResult",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Hits",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "DamageSourceId",
+                  "typeName": "System.String",
+                  "codec": "stringUtf8Packed"
+                },
+                {
+                  "name": "AttackerId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "IsClone",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "IsSummon",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "Element",
+                  "typeName": "Element",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "WeaponType",
+                  "typeName": "EquipType",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Range",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "MonsterController",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "TraverseShipCaptain",
+          "parameters": [
+            {
+              "name": "npcId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "targetRpc",
+          "methodName": "ClientPrepareTransfer"
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ClientSwitchServer",
+          "parameters": [
+            {
+              "name": "host",
+              "typeName": "System.String"
+            },
+            {
+              "name": "port",
+              "typeName": "System.UInt16"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "observersRpc",
+          "methodName": "TraverseObservers",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "targetRpc",
+          "methodName": "TraverseActive",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "observersRpc",
+          "methodName": "SyncInstanceState",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "instanceId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 6,
+          "packetKind": "observersRpc",
+          "methodName": "TrainingDummyBeginHealTimer",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "index",
+              "typeName": "System.Int32"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "MoveComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "targetRpc",
+          "methodName": "ApplyAnimationDelay_T",
+          "parameters": [
+            {
+              "name": "delay",
+              "typeName": "System.Single"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "observersRpc",
+          "methodName": "SetSitting_C",
+          "parameters": [
+            {
+              "name": "isSitting",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "observersRpc",
+          "methodName": "CancelSitInstant_C"
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "observersRpc",
+          "methodName": "ApplyKnockback_C",
+          "parameters": [
+            {
+              "name": "destination",
+              "typeName": "UnityEngine.Vector3"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "observersRpc",
+          "methodName": "Dodge_O"
+        }
+      ]
+    },
+    {
+      "typeName": "PlayerController",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "TraverseShipCaptain",
+          "parameters": [
+            {
+              "name": "npcId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "targetRpc",
+          "methodName": "ClientPrepareTransfer"
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ClientSwitchServer",
+          "parameters": [
+            {
+              "name": "host",
+              "typeName": "System.String"
+            },
+            {
+              "name": "port",
+              "typeName": "System.UInt16"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "observersRpc",
+          "methodName": "TraverseObservers",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "targetRpc",
+          "methodName": "TraverseActive",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "dto",
+              "typeName": "BaseUnitController+TraverseDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "observersRpc",
+          "methodName": "SyncInstanceState",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "instanceId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 6,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Create_S",
+          "parameters": [
+            {
+              "name": "title",
+              "typeName": "System.String"
+            },
+            {
+              "name": "password",
+              "typeName": "System.String"
+            },
+            {
+              "name": "maxMembers",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 7,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Join_S",
+          "parameters": [
+            {
+              "name": "ownerObjectId",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "password",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 8,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Send_S",
+          "parameters": [
+            {
+              "name": "text",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 9,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Leave_S"
+        },
+        {
+          "wireHash": 10,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Kick_S",
+          "parameters": [
+            {
+              "name": "targetId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 11,
+          "packetKind": "serverRpc",
+          "methodName": "ChatRoom_Close_S"
+        },
+        {
+          "wireHash": 12,
+          "packetKind": "targetRpc",
+          "methodName": "ChatRoomJoined_T",
+          "parameters": [
+            {
+              "name": "info",
+              "typeName": "ChatRoomInfo"
+            },
+            {
+              "name": "members",
+              "typeName": "ChatRoomMemberInfo[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 13,
+          "packetKind": "targetRpc",
+          "methodName": "ChatRoomRoster_T",
+          "parameters": [
+            {
+              "name": "members",
+              "typeName": "ChatRoomMemberInfo[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 14,
+          "packetKind": "targetRpc",
+          "methodName": "ChatRoomMessage_T",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "RoomChatMessage"
+            }
+          ]
+        },
+        {
+          "wireHash": 15,
+          "packetKind": "targetRpc",
+          "methodName": "ChatRoomClosed_T",
+          "parameters": [
+            {
+              "name": "reason",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 16,
+          "packetKind": "serverRpc",
+          "methodName": "SendIdle_S",
+          "parameters": [
+            {
+              "name": "idle",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 17,
+          "packetKind": "serverRpc",
+          "methodName": "RequestChannelSwitch",
+          "parameters": [
+            {
+              "name": "channelIndex",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 18,
+          "packetKind": "targetRpc",
+          "methodName": "ChannelSwitchRejected_T",
+          "parameters": [
+            {
+              "name": "reason",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 19,
+          "packetKind": "targetRpc",
+          "methodName": "ReceiveRestartPrompt",
+          "parameters": [
+            {
+              "name": "timeText",
+              "typeName": "System.String"
+            },
+            {
+              "name": "canSwitch",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 20,
+          "packetKind": "serverRpc",
+          "methodName": "RequestAutoChannelSwitch"
+        },
+        {
+          "wireHash": 21,
+          "packetKind": "serverRpc",
+          "methodName": "SendInputsToServer",
+          "parameters": [
+            {
+              "name": "Inputs",
+              "typeName": "PlayerInputDto",
+              "fields": [
+                {
+                  "name": "Move",
+                  "typeName": "UnityEngine.Vector3Int",
+                  "codec": "vector3IntPacked"
+                },
+                {
+                  "name": "ClickPosition",
+                  "typeName": "UnityEngine.Vector3Int",
+                  "codec": "vector3IntPacked"
+                },
+                {
+                  "name": "FastCastPosition",
+                  "typeName": "UnityEngine.Vector3Int",
+                  "codec": "vector3IntPacked"
+                },
+                {
+                  "name": "DodgeStartPosition",
+                  "typeName": "UnityEngine.Vector3Int",
+                  "codec": "vector3IntPacked"
+                },
+                {
+                  "name": "DodgeDirection",
+                  "typeName": "UnityEngine.Vector3Int",
+                  "codec": "vector3IntPacked"
+                },
+                {
+                  "name": "Click",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "AltClick",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "LootId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "ReviveId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "UnitId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "InteractableId",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "InteractableName",
+                  "typeName": "System.String",
+                  "codec": "stringUtf8Packed"
+                },
+                {
+                  "name": "InteractableNetworked",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "FastCast",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "AreaLoot",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "SkillHold",
+                  "typeName": "System.Boolean",
+                  "codec": "boolean"
+                },
+                {
+                  "name": "ClickSkillIndex",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Hotkeys",
+                  "typeName": "System.UInt64",
+                  "codec": "packedUInt64"
+                },
+                {
+                  "name": "HotkeysHeld",
+                  "typeName": "System.UInt64",
+                  "codec": "packedUInt64"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "wireHash": 22,
+          "packetKind": "serverRpc",
+          "methodName": "InspectMonster",
+          "parameters": [
+            {
+              "name": "obj",
+              "typeName": "FishNet.Object.NetworkObject"
+            }
+          ]
+        },
+        {
+          "wireHash": 23,
+          "packetKind": "targetRpc",
+          "methodName": "InspectMonster_T",
+          "parameters": [
+            {
+              "name": "obj",
+              "typeName": "FishNet.Object.NetworkObject"
+            },
+            {
+              "name": "stats",
+              "typeName": "System.Int32[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 24,
+          "packetKind": "serverRpc",
+          "methodName": "Inspect",
+          "parameters": [
+            {
+              "name": "objectId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 25,
+          "packetKind": "targetRpc",
+          "methodName": "Inspect_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CharacterData"
+            }
+          ]
+        },
+        {
+          "wireHash": 26,
+          "packetKind": "targetRpc",
+          "methodName": "DrawMessage",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 27,
+          "packetKind": "serverRpc",
+          "methodName": "ReviveSelf",
+          "parameters": [
+            {
+              "name": "healthAndMana",
+              "typeName": "System.Single"
+            }
+          ]
+        },
+        {
+          "wireHash": 28,
+          "packetKind": "observersRpc",
+          "methodName": "Revive_C"
+        },
+        {
+          "wireHash": 29,
+          "packetKind": "serverRpc",
+          "methodName": "FullHealByHealer"
+        },
+        {
+          "wireHash": 30,
+          "packetKind": "observersRpc",
+          "methodName": "FullHeal_C"
+        },
+        {
+          "wireHash": 31,
+          "packetKind": "targetRpc",
+          "methodName": "ChannelList_T",
+          "parameters": [
+            {
+              "name": "playerCounts",
+              "typeName": "System.Int32[]"
+            },
+            {
+              "name": "currentIndex",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 32,
+          "packetKind": "observersRpc",
+          "methodName": "LevelUp_C"
+        },
+        {
+          "wireHash": 33,
+          "packetKind": "serverRpc",
+          "methodName": "UpdateLootFilter_S",
+          "parameters": [
+            {
+              "name": "dto",
+              "typeName": "PlayerController+LootFilterDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 34,
+          "packetKind": "observersRpc",
+          "methodName": "Pickup_C"
+        },
+        {
+          "wireHash": 35,
+          "packetKind": "observersRpc",
+          "methodName": "TriggerEmote_C",
+          "parameters": [
+            {
+              "name": "emoteId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 36,
+          "packetKind": "observersRpc",
+          "methodName": "StopEmote_C"
+        },
+        {
+          "wireHash": 37,
+          "packetKind": "serverRpc",
+          "methodName": "WarpHome_Rpc"
+        },
+        {
+          "wireHash": 38,
+          "packetKind": "targetRpc",
+          "methodName": "WarpFailed_T",
+          "parameters": [
+            {
+              "name": "message",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 39,
+          "packetKind": "targetRpc",
+          "methodName": "DrawText_T",
+          "parameters": [
+            {
+              "name": "text",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 40,
+          "packetKind": "serverRpc",
+          "methodName": "SendPartyInvite",
+          "parameters": [
+            {
+              "name": "playerId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 41,
+          "packetKind": "serverRpc",
+          "methodName": "RequestJoinParty",
+          "parameters": [
+            {
+              "name": "partyId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 42,
+          "packetKind": "targetRpc",
+          "methodName": "ShowPartyInvite_T",
+          "parameters": [
+            {
+              "name": "inviterName",
+              "typeName": "System.String"
+            },
+            {
+              "name": "inviterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 43,
+          "packetKind": "targetRpc",
+          "methodName": "ShowJoinRequest_T",
+          "parameters": [
+            {
+              "name": "requesterName",
+              "typeName": "System.String"
+            },
+            {
+              "name": "requesterId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "partyId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 44,
+          "packetKind": "serverRpc",
+          "methodName": "AcceptPartyInvite",
+          "parameters": [
+            {
+              "name": "inviterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 45,
+          "packetKind": "serverRpc",
+          "methodName": "AcceptPartyRequestJoin",
+          "parameters": [
+            {
+              "name": "requesterId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "partyId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 46,
+          "packetKind": "serverRpc",
+          "methodName": "DeclinePartyInvite",
+          "parameters": [
+            {
+              "name": "inviterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 47,
+          "packetKind": "serverRpc",
+          "methodName": "DeclinePartyRequestJoin",
+          "parameters": [
+            {
+              "name": "requesterId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "partyId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 48,
+          "packetKind": "serverRpc",
+          "methodName": "CreateParty"
+        },
+        {
+          "wireHash": 49,
+          "packetKind": "serverRpc",
+          "methodName": "LeaveParty_S"
+        },
+        {
+          "wireHash": 50,
+          "packetKind": "targetRpc",
+          "methodName": "UpdateParty_T",
+          "parameters": [
+            {
+              "name": "party",
+              "typeName": "Party"
+            }
+          ]
+        },
+        {
+          "wireHash": 51,
+          "packetKind": "serverRpc",
+          "methodName": "KickFromParty",
+          "parameters": [
+            {
+              "name": "playerId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 52,
+          "packetKind": "serverRpc",
+          "methodName": "PromotePartyLeader",
+          "parameters": [
+            {
+              "name": "playerId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 53,
+          "packetKind": "serverRpc",
+          "methodName": "SetPartyName",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 54,
+          "packetKind": "serverRpc",
+          "methodName": "SetPartyExp",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "PartyShareType"
+            }
+          ]
+        },
+        {
+          "wireHash": 55,
+          "packetKind": "serverRpc",
+          "methodName": "SetPartyDrops",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "PartyShareType"
+            }
+          ]
+        },
+        {
+          "wireHash": 56,
+          "packetKind": "serverRpc",
+          "methodName": "SetPartyLevelRange",
+          "parameters": [
+            {
+              "name": "min",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "max",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 57,
+          "packetKind": "serverRpc",
+          "methodName": "SetPartyPublic",
+          "parameters": [
+            {
+              "name": "value",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 58,
+          "packetKind": "serverRpc",
+          "methodName": "RequestPartyList_S"
+        },
+        {
+          "wireHash": 59,
+          "packetKind": "targetRpc",
+          "methodName": "RequestPartyList_T",
+          "parameters": [
+            {
+              "name": "items",
+              "typeName": "System.Collections.Generic.List`1[[Party, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 60,
+          "packetKind": "serverRpc",
+          "methodName": "SendTradeRequest",
+          "parameters": [
+            {
+              "name": "playerId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 61,
+          "packetKind": "targetRpc",
+          "methodName": "SendTradeRequest_T",
+          "parameters": [
+            {
+              "name": "sender",
+              "typeName": "FishNet.Object.NetworkObject"
+            }
+          ]
+        },
+        {
+          "wireHash": 62,
+          "packetKind": "serverRpc",
+          "methodName": "AcceptTradeRequest",
+          "parameters": [
+            {
+              "name": "sender",
+              "typeName": "FishNet.Object.NetworkObject"
+            }
+          ]
+        },
+        {
+          "wireHash": 63,
+          "packetKind": "serverRpc",
+          "methodName": "CancelTrade_S"
+        },
+        {
+          "wireHash": 64,
+          "packetKind": "targetRpc",
+          "methodName": "CancelTrade_T"
+        },
+        {
+          "wireHash": 65,
+          "packetKind": "targetRpc",
+          "methodName": "BeginTrade_T",
+          "parameters": [
+            {
+              "name": "mine",
+              "typeName": "TradeData"
+            },
+            {
+              "name": "theirs",
+              "typeName": "TradeData"
+            }
+          ]
+        },
+        {
+          "wireHash": 66,
+          "packetKind": "serverRpc",
+          "methodName": "UpdateTrade_S",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "TradeData"
+            },
+            {
+              "name": "isDirty",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 67,
+          "packetKind": "targetRpc",
+          "methodName": "UpdateTrade_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "TradeData"
+            },
+            {
+              "name": "mine",
+              "typeName": "TradeData"
+            }
+          ]
+        },
+        {
+          "wireHash": 68,
+          "packetKind": "targetRpc",
+          "methodName": "CompleteTradeBegin_T"
+        },
+        {
+          "wireHash": 69,
+          "packetKind": "targetRpc",
+          "methodName": "CompleteTrade_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 70,
+          "packetKind": "serverRpc",
+          "methodName": "RequestVendorItemList_S",
+          "parameters": [
+            {
+              "name": "filter",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 71,
+          "packetKind": "targetRpc",
+          "methodName": "RequestVendorItemList_T",
+          "parameters": [
+            {
+              "name": "items",
+              "typeName": "System.Collections.Generic.List`1[[VendingManager+ItemData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 72,
+          "packetKind": "serverRpc",
+          "methodName": "RequestAHAccount_S"
+        },
+        {
+          "wireHash": 73,
+          "packetKind": "targetRpc",
+          "methodName": "RequestAHAccount_T",
+          "parameters": [
+            {
+              "name": "view",
+              "typeName": "VendingAccountView"
+            }
+          ]
+        },
+        {
+          "wireHash": 74,
+          "packetKind": "serverRpc",
+          "methodName": "RequestVendingStallStatus_S"
+        },
+        {
+          "wireHash": 75,
+          "packetKind": "targetRpc",
+          "methodName": "RequestVendingStallStatus_T",
+          "parameters": [
+            {
+              "name": "dto",
+              "typeName": "VendingStallStatusDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 76,
+          "packetKind": "serverRpc",
+          "methodName": "RequestInstanceStatus_S"
+        },
+        {
+          "wireHash": 77,
+          "packetKind": "targetRpc",
+          "methodName": "RequestInstanceStatus_T",
+          "parameters": [
+            {
+              "name": "dto",
+              "typeName": "InstanceStatusDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 78,
+          "packetKind": "serverRpc",
+          "methodName": "RequestVendingStallListings_S",
+          "parameters": [
+            {
+              "name": "accountId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 79,
+          "packetKind": "targetRpc",
+          "methodName": "RequestVendingStallListings_T",
+          "parameters": [
+            {
+              "name": "listings",
+              "typeName": "System.Collections.Generic.List`1[[VendingListing, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 80,
+          "packetKind": "observersRpc",
+          "methodName": "SpawnVendingStall_C",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "VendingDataDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 81,
+          "packetKind": "observersRpc",
+          "methodName": "DespawnVendingStall_C",
+          "parameters": [
+            {
+              "name": "accountId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 82,
+          "packetKind": "targetRpc",
+          "methodName": "LoadVendingStalls_T",
+          "parameters": [
+            {
+              "name": "stalls",
+              "typeName": "System.Collections.Generic.List`1[[VendingDataDto, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 83,
+          "packetKind": "serverRpc",
+          "methodName": "SendEmoji",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "UIGame+EmojiType"
+            }
+          ]
+        },
+        {
+          "wireHash": 84,
+          "packetKind": "observersRpc",
+          "methodName": "SendEmoji_C",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "UIGame+EmojiType"
+            }
+          ]
+        },
+        {
+          "wireHash": 85,
+          "packetKind": "targetRpc",
+          "methodName": "SendLimitReached"
+        },
+        {
+          "wireHash": 86,
+          "packetKind": "serverRpc",
+          "methodName": "SendChat",
+          "parameters": [
+            {
+              "name": "channel",
+              "typeName": "ChatChannel"
+            },
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            },
+            {
+              "name": "receiverId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "items",
+              "typeName": "PickUpList"
+            }
+          ]
+        },
+        {
+          "wireHash": 87,
+          "packetKind": "observersRpc",
+          "methodName": "BroadcastChat",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 88,
+          "packetKind": "targetRpc",
+          "methodName": "ReceiveChat",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "ChatMessage"
+            }
+          ]
+        },
+        {
+          "wireHash": 89,
+          "packetKind": "targetRpc",
+          "methodName": "ReceiveAnnouncement",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 90,
+          "packetKind": "serverRpc",
+          "methodName": "ETEnter"
+        },
+        {
+          "wireHash": 91,
+          "packetKind": "serverRpc",
+          "methodName": "ETLeave"
+        },
+        {
+          "wireHash": 92,
+          "packetKind": "targetRpc",
+          "methodName": "ETUpdateRun",
+          "parameters": [
+            {
+              "name": "match",
+              "typeName": "EternalTowerRun"
+            }
+          ]
+        },
+        {
+          "wireHash": 93,
+          "packetKind": "targetRpc",
+          "methodName": "ETAdvanceFloor",
+          "parameters": [
+            {
+              "name": "floor",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "finished",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 94,
+          "packetKind": "serverRpc",
+          "methodName": "ETAdvanceFloor_S"
+        },
+        {
+          "wireHash": 95,
+          "packetKind": "serverRpc",
+          "methodName": "PvpEnterQueue",
+          "parameters": [
+            {
+              "name": "mode",
+              "typeName": "GameMode"
+            }
+          ]
+        },
+        {
+          "wireHash": 96,
+          "packetKind": "serverRpc",
+          "methodName": "PvpLeaveQueue"
+        },
+        {
+          "wireHash": 97,
+          "packetKind": "serverRpc",
+          "methodName": "PvpForfeit"
+        },
+        {
+          "wireHash": 98,
+          "packetKind": "serverRpc",
+          "methodName": "PvpEnterSkirmish"
+        },
+        {
+          "wireHash": 99,
+          "packetKind": "serverRpc",
+          "methodName": "RequestPvpQueueTransfer"
+        },
+        {
+          "wireHash": 100,
+          "packetKind": "targetRpc",
+          "methodName": "PvpUpdateMatch",
+          "parameters": [
+            {
+              "name": "match",
+              "typeName": "PvpMatch"
+            }
+          ]
+        },
+        {
+          "wireHash": 101,
+          "packetKind": "serverRpc",
+          "methodName": "AcceptSession"
+        },
+        {
+          "wireHash": 102,
+          "packetKind": "serverRpc",
+          "methodName": "DeclineSession"
+        },
+        {
+          "wireHash": 103,
+          "packetKind": "targetRpc",
+          "methodName": "UpdateSession",
+          "parameters": [
+            {
+              "name": "next",
+              "typeName": "GameSession"
+            }
+          ]
+        },
+        {
+          "wireHash": 104,
+          "packetKind": "targetRpc",
+          "methodName": "DrawTitle",
+          "parameters": [
+            {
+              "name": "title",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 105,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Create_S",
+          "parameters": [
+            {
+              "name": "name",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 106,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Rename_S",
+          "parameters": [
+            {
+              "name": "name",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 107,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Disband_S",
+          "parameters": [
+            {
+              "name": "confirmName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 108,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Invite_S",
+          "parameters": [
+            {
+              "name": "characterName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 109,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_InviteById_S",
+          "parameters": [
+            {
+              "name": "accountId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 110,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_AcceptInvite_S",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 111,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_DeclineInvite_S",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 112,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Kick_S",
+          "parameters": [
+            {
+              "name": "characterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 113,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Leave_S"
+        },
+        {
+          "wireHash": 114,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_LeaveAndPass_S",
+          "parameters": [
+            {
+              "name": "newMasterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 115,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Transfer_S",
+          "parameters": [
+            {
+              "name": "newMasterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 116,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetMemberRank_S",
+          "parameters": [
+            {
+              "name": "charId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "rankId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 117,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_EditRank_S",
+          "parameters": [
+            {
+              "name": "rankId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "displayName",
+              "typeName": "System.String"
+            },
+            {
+              "name": "taxPercent",
+              "typeName": "System.Single"
+            },
+            {
+              "name": "permissions",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "storageAccess",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 118,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_AddRank_S"
+        },
+        {
+          "wireHash": 119,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RemoveRank_S",
+          "parameters": [
+            {
+              "name": "rankId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 120,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_MoveRank_S",
+          "parameters": [
+            {
+              "name": "rankId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "direction",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 121,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SpendSkill_S",
+          "parameters": [
+            {
+              "name": "nodeId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 122,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetNotice_S",
+          "parameters": [
+            {
+              "name": "shortMsg",
+              "typeName": "System.String"
+            },
+            {
+              "name": "longMsg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 123,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetDiscord_S",
+          "parameters": [
+            {
+              "name": "url",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 124,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_StorageTransaction_S",
+          "parameters": [
+            {
+              "name": "transaction",
+              "typeName": "Transaction"
+            }
+          ]
+        },
+        {
+          "wireHash": 125,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_OpenStorage_S"
+        },
+        {
+          "wireHash": 126,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_CloseStorage_S"
+        },
+        {
+          "wireHash": 127,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetEmblem_S",
+          "parameters": [
+            {
+              "name": "index",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 128,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetCustomEmblem_S",
+          "parameters": [
+            {
+              "name": "png",
+              "typeName": "System.Byte[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 129,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RequestEmblem_S",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 130,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetNameColor_S",
+          "parameters": [
+            {
+              "name": "hex",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 131,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetMuted_S",
+          "parameters": [
+            {
+              "name": "muted",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 132,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_SetRecruitment_S",
+          "parameters": [
+            {
+              "name": "mode",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "message",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 133,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Apply_S",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "message",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 134,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_CancelApplication_S",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 135,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_AcceptApplication_S",
+          "parameters": [
+            {
+              "name": "applicantCharId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 136,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RejectApplication_S",
+          "parameters": [
+            {
+              "name": "applicantCharId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 137,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_Browse_S",
+          "parameters": [
+            {
+              "name": "query",
+              "typeName": "System.String"
+            },
+            {
+              "name": "page",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 138,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RequestPending_S"
+        },
+        {
+          "wireHash": 139,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RequestAuditLog_S",
+          "parameters": [
+            {
+              "name": "page",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 140,
+          "packetKind": "serverRpc",
+          "methodName": "Guild_RequestPresence_S"
+        },
+        {
+          "wireHash": 141,
+          "packetKind": "targetRpc",
+          "methodName": "GuildStorageLockResult_T",
+          "parameters": [
+            {
+              "name": "acquired",
+              "typeName": "System.Boolean"
+            },
+            {
+              "name": "holderName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 142,
+          "packetKind": "targetRpc",
+          "methodName": "GuildStorageLockExpired_T"
+        },
+        {
+          "wireHash": 143,
+          "packetKind": "targetRpc",
+          "methodName": "GuildStorageTransactionFailed_T",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 144,
+          "packetKind": "targetRpc",
+          "methodName": "UpdateGuild_T",
+          "parameters": [
+            {
+              "name": "guild",
+              "typeName": "GuildData"
+            }
+          ]
+        },
+        {
+          "wireHash": 145,
+          "packetKind": "targetRpc",
+          "methodName": "GuildEmblemResult_T",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "stamp",
+              "typeName": "System.String"
+            },
+            {
+              "name": "png",
+              "typeName": "System.Byte[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 146,
+          "packetKind": "targetRpc",
+          "methodName": "GuildInvite_T",
+          "parameters": [
+            {
+              "name": "guildId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "guildName",
+              "typeName": "System.String"
+            },
+            {
+              "name": "inviterName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 147,
+          "packetKind": "targetRpc",
+          "methodName": "GuildBrowseResults_T",
+          "parameters": [
+            {
+              "name": "entries",
+              "typeName": "GuildBrowseEntry[]"
+            },
+            {
+              "name": "page",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 148,
+          "packetKind": "targetRpc",
+          "methodName": "GuildPendingResults_T",
+          "parameters": [
+            {
+              "name": "entries",
+              "typeName": "GuildBrowseEntry[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 149,
+          "packetKind": "targetRpc",
+          "methodName": "GuildAuditResults_T",
+          "parameters": [
+            {
+              "name": "entries",
+              "typeName": "GuildAuditEntry[]"
+            },
+            {
+              "name": "page",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 150,
+          "packetKind": "targetRpc",
+          "methodName": "GuildPresenceResults_T",
+          "parameters": [
+            {
+              "name": "presence",
+              "typeName": "GuildMemberPresence[]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "PlayerSave",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "Login",
+          "parameters": [
+            {
+              "name": "ticket",
+              "typeName": "System.String"
+            },
+            {
+              "name": "version",
+              "typeName": "System.String"
+            },
+            {
+              "name": "deviceUID",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "targetRpc",
+          "methodName": "SetIsDemo_T",
+          "parameters": [
+            {
+              "name": "isDemo",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ShowPremiumCurrencyChanged_T",
+          "parameters": [
+            {
+              "name": "total",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "targetRpc",
+          "methodName": "SetDisconnectedReason",
+          "parameters": [
+            {
+              "name": "reason",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "serverRpc",
+          "methodName": "LoadCharacter_S",
+          "parameters": [
+            {
+              "name": "characterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "targetRpc",
+          "methodName": "LoadCharacter_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CharacterData"
+            }
+          ]
+        },
+        {
+          "wireHash": 6,
+          "packetKind": "serverRpc",
+          "methodName": "LoadCharacterComplete"
+        },
+        {
+          "wireHash": 7,
+          "packetKind": "serverRpc",
+          "methodName": "QuitCharacter_Rpc"
+        },
+        {
+          "wireHash": 8,
+          "packetKind": "targetRpc",
+          "methodName": "CharacterListCallback_T",
+          "parameters": [
+            {
+              "name": "characters",
+              "typeName": "System.Collections.Generic.List`1[[CharacterData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 9,
+          "packetKind": "serverRpc",
+          "methodName": "WeaponSwap_S"
+        },
+        {
+          "wireHash": 10,
+          "packetKind": "serverRpc",
+          "methodName": "HeavySwap_S"
+        },
+        {
+          "wireHash": 11,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyHeavyEquip_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 12,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveHeavyEquip_S"
+        },
+        {
+          "wireHash": 13,
+          "packetKind": "serverRpc",
+          "methodName": "RenameCharacter_S",
+          "parameters": [
+            {
+              "name": "name",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 14,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyAppearance_S",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CharacterAppearanceDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 15,
+          "packetKind": "serverRpc",
+          "methodName": "CreateCharacter_S",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CharacterAppearanceDto"
+            }
+          ]
+        },
+        {
+          "wireHash": 16,
+          "packetKind": "serverRpc",
+          "methodName": "DeleteCharacter_S",
+          "parameters": [
+            {
+              "name": "characterId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 17,
+          "packetKind": "serverRpc",
+          "methodName": "ResetAttributes_S"
+        },
+        {
+          "wireHash": 18,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyAttributes_S",
+          "parameters": [
+            {
+              "name": "change",
+              "typeName": "System.Int32[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 19,
+          "packetKind": "serverRpc",
+          "methodName": "UseEssence_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "type",
+              "typeName": "EssenceType"
+            },
+            {
+              "name": "substatIndex",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 20,
+          "packetKind": "serverRpc",
+          "methodName": "RefineEquip_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "safe",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 21,
+          "packetKind": "serverRpc",
+          "methodName": "RefineArtifact_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "safe",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 22,
+          "packetKind": "serverRpc",
+          "methodName": "RefineGem_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "safe",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 23,
+          "packetKind": "targetRpc",
+          "methodName": "Refine_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CharacterData"
+            },
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 24,
+          "packetKind": "observersRpc",
+          "methodName": "ShowRefineResult",
+          "parameters": [
+            {
+              "name": "position",
+              "typeName": "UnityEngine.Vector3"
+            },
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            },
+            {
+              "name": "refine",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 25,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyEquip_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 26,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveEquip_S",
+          "parameters": [
+            {
+              "name": "slot",
+              "typeName": "EquipSlot"
+            }
+          ]
+        },
+        {
+          "wireHash": 27,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyCard_S",
+          "parameters": [
+            {
+              "name": "equipUid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "cardId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 28,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveCards_S",
+          "parameters": [
+            {
+              "name": "equipUid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 29,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyGem_S",
+          "parameters": [
+            {
+              "name": "artifactUid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "gemUid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 30,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveGems_S",
+          "parameters": [
+            {
+              "name": "artifactUid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 31,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyGrimoire_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 32,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveGrimoire_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 33,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyArtifact_S",
+          "parameters": [
+            {
+              "name": "artifact",
+              "typeName": "ArtifactData"
+            }
+          ]
+        },
+        {
+          "wireHash": 34,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveArtifact_S",
+          "parameters": [
+            {
+              "name": "slot",
+              "typeName": "ArtifactSlot"
+            }
+          ]
+        },
+        {
+          "wireHash": 35,
+          "packetKind": "serverRpc",
+          "methodName": "UseConsumable_S",
+          "parameters": [
+            {
+              "name": "consumableId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 36,
+          "packetKind": "serverRpc",
+          "methodName": "AdvanceToClass",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "Archetype"
+            }
+          ]
+        },
+        {
+          "wireHash": 37,
+          "packetKind": "serverRpc",
+          "methodName": "ResetSkills_S"
+        },
+        {
+          "wireHash": 38,
+          "packetKind": "serverRpc",
+          "methodName": "ApplySkills_S",
+          "parameters": [
+            {
+              "name": "skills",
+              "typeName": "System.Collections.Generic.List`1[[SkillData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 39,
+          "packetKind": "serverRpc",
+          "methodName": "AssignSkill_S",
+          "parameters": [
+            {
+              "name": "index",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "id",
+              "typeName": "System.String"
+            },
+            {
+              "name": "level",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 40,
+          "packetKind": "targetRpc",
+          "methodName": "CoinsCallback_T",
+          "parameters": [
+            {
+              "name": "coins",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 41,
+          "packetKind": "targetRpc",
+          "methodName": "ExpCoinsChanged_T",
+          "parameters": [
+            {
+              "name": "exp",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "level",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "jobExp",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "jobLevel",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "coins",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 42,
+          "packetKind": "serverRpc",
+          "methodName": "RequestPremiumPurchase",
+          "parameters": [
+            {
+              "name": "tierId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 43,
+          "packetKind": "serverRpc",
+          "methodName": "NotifyPremiumPurchaseAuthorized",
+          "parameters": [
+            {
+              "name": "orderId",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 44,
+          "packetKind": "targetRpc",
+          "methodName": "PremiumChanged_T",
+          "parameters": [
+            {
+              "name": "premiumTotal",
+              "typeName": "System.Int64"
+            },
+            {
+              "name": "premiumSpent",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 45,
+          "packetKind": "serverRpc",
+          "methodName": "ToggleEquipSlotHidden_S",
+          "parameters": [
+            {
+              "name": "slot",
+              "typeName": "EquipSlot"
+            }
+          ]
+        },
+        {
+          "wireHash": 46,
+          "packetKind": "serverRpc",
+          "methodName": "ToggleFavorite_S",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            },
+            {
+              "name": "type",
+              "typeName": "ItemType"
+            }
+          ]
+        },
+        {
+          "wireHash": 47,
+          "packetKind": "serverRpc",
+          "methodName": "Dismantle_S",
+          "parameters": [
+            {
+              "name": "uid",
+              "typeName": "System.String"
+            },
+            {
+              "name": "type",
+              "typeName": "ItemType"
+            }
+          ]
+        },
+        {
+          "wireHash": 48,
+          "packetKind": "serverRpc",
+          "methodName": "MerchantDismantle_S",
+          "parameters": [
+            {
+              "name": "transaction",
+              "typeName": "Transaction"
+            }
+          ]
+        },
+        {
+          "wireHash": 49,
+          "packetKind": "serverRpc",
+          "methodName": "MerchantPurchase_S",
+          "parameters": [
+            {
+              "name": "req",
+              "typeName": "MerchantPurchaseRequest"
+            }
+          ]
+        },
+        {
+          "wireHash": 50,
+          "packetKind": "serverRpc",
+          "methodName": "MerchantSell_S",
+          "parameters": [
+            {
+              "name": "transaction",
+              "typeName": "Transaction"
+            }
+          ]
+        },
+        {
+          "wireHash": 51,
+          "packetKind": "serverRpc",
+          "methodName": "Craft_Rpc",
+          "parameters": [
+            {
+              "name": "npcId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "recipeId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "selectedItems",
+              "typeName": "System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 52,
+          "packetKind": "serverRpc",
+          "methodName": "AttuneWaystone"
+        },
+        {
+          "wireHash": 53,
+          "packetKind": "serverRpc",
+          "methodName": "UnlockWaypoint_S",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 54,
+          "packetKind": "observersRpc",
+          "methodName": "UnlockWaypoint_C",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 55,
+          "packetKind": "serverRpc",
+          "methodName": "WarpWaypoint_S",
+          "parameters": [
+            {
+              "name": "mapId",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 56,
+          "packetKind": "serverRpc",
+          "methodName": "SpeakToNPC_S",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 57,
+          "packetKind": "targetRpc",
+          "methodName": "CharacterCallback_T",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "CharacterUpdateType"
+            },
+            {
+              "name": "sync",
+              "typeName": "CharacterData"
+            }
+          ]
+        },
+        {
+          "wireHash": 58,
+          "packetKind": "targetRpc",
+          "methodName": "CharacterCallback_T"
+        },
+        {
+          "wireHash": 59,
+          "packetKind": "serverRpc",
+          "methodName": "StorageTransaction_S",
+          "parameters": [
+            {
+              "name": "transaction",
+              "typeName": "Transaction"
+            }
+          ]
+        },
+        {
+          "wireHash": 60,
+          "packetKind": "targetRpc",
+          "methodName": "StorageTransactionFailed",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 61,
+          "packetKind": "targetRpc",
+          "methodName": "PlayerCallback",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "PlayerData"
+            }
+          ]
+        },
+        {
+          "wireHash": 62,
+          "packetKind": "targetRpc",
+          "methodName": "PlayerCallback_Storage",
+          "parameters": [
+            {
+              "name": "storage",
+              "typeName": "InventoryData"
+            }
+          ]
+        },
+        {
+          "wireHash": 63,
+          "packetKind": "targetRpc",
+          "methodName": "PlayerCallback_Wardrobe",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "WardrobeData"
+            }
+          ]
+        },
+        {
+          "wireHash": 64,
+          "packetKind": "targetRpc",
+          "methodName": "PlayerCallback_Unlocks",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "PlayerUnlocks"
+            }
+          ]
+        },
+        {
+          "wireHash": 65,
+          "packetKind": "serverRpc",
+          "methodName": "VendingListItems_S",
+          "parameters": [
+            {
+              "name": "listings",
+              "typeName": "System.Collections.Generic.List`1[[VendingListing, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 66,
+          "packetKind": "targetRpc",
+          "methodName": "VendingListResult_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            },
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 67,
+          "packetKind": "serverRpc",
+          "methodName": "VendingCancelListing_S",
+          "parameters": [
+            {
+              "name": "listingId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 68,
+          "packetKind": "targetRpc",
+          "methodName": "VendingCancelResult_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 69,
+          "packetKind": "serverRpc",
+          "methodName": "VendingCollect_S"
+        },
+        {
+          "wireHash": 70,
+          "packetKind": "targetRpc",
+          "methodName": "VendingCollectResult_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 71,
+          "packetKind": "serverRpc",
+          "methodName": "VendingPurchase_S",
+          "parameters": [
+            {
+              "name": "listingId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "count",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 72,
+          "packetKind": "targetRpc",
+          "methodName": "VendingPurchaseResult_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            },
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 73,
+          "packetKind": "serverRpc",
+          "methodName": "HireVendingStall_S",
+          "parameters": [
+            {
+              "name": "shopName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 74,
+          "packetKind": "targetRpc",
+          "methodName": "HireVendingStallResult_T",
+          "parameters": [
+            {
+              "name": "success",
+              "typeName": "System.Boolean"
+            },
+            {
+              "name": "error",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 75,
+          "packetKind": "serverRpc",
+          "methodName": "ReleaseVendingStall_S"
+        },
+        {
+          "wireHash": 76,
+          "packetKind": "targetRpc",
+          "methodName": "ReleaseVendingStallResult_T"
+        },
+        {
+          "wireHash": 77,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_PickupItems",
+          "parameters": [
+            {
+              "name": "pickupList",
+              "typeName": "PickUpList"
+            }
+          ]
+        },
+        {
+          "wireHash": 78,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_MaxLv"
+        },
+        {
+          "wireHash": 79,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_SetClass",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "Archetype"
+            }
+          ]
+        },
+        {
+          "wireHash": 80,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_GrantCoinsAdmin",
+          "parameters": [
+            {
+              "name": "coins",
+              "typeName": "System.Int64"
+            }
+          ]
+        },
+        {
+          "wireHash": 81,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_UnlockAllCosmetics"
+        },
+        {
+          "wireHash": 82,
+          "packetKind": "serverRpc",
+          "methodName": "Debug_UnlockAllWaypoints"
+        },
+        {
+          "wireHash": 83,
+          "packetKind": "targetRpc",
+          "methodName": "PickupItems_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "PickUpList"
+            }
+          ]
+        },
+        {
+          "wireHash": 84,
+          "packetKind": "serverRpc",
+          "methodName": "SendFriendRequest",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 85,
+          "packetKind": "targetRpc",
+          "methodName": "FriendRequest_T",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            },
+            {
+              "name": "displayName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 86,
+          "packetKind": "serverRpc",
+          "methodName": "FriendRequestReject",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 87,
+          "packetKind": "serverRpc",
+          "methodName": "FriendRequestAccept",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            },
+            {
+              "name": "requesterName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 88,
+          "packetKind": "serverRpc",
+          "methodName": "FriendRemove",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 89,
+          "packetKind": "serverRpc",
+          "methodName": "BlockPlayer",
+          "parameters": [
+            {
+              "name": "targetId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 90,
+          "packetKind": "serverRpc",
+          "methodName": "UnblockPlayer",
+          "parameters": [
+            {
+              "name": "targetId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 91,
+          "packetKind": "targetRpc",
+          "methodName": "FriendRequestFailed_T"
+        },
+        {
+          "wireHash": 92,
+          "packetKind": "targetRpc",
+          "methodName": "FriendRequestSent_T"
+        },
+        {
+          "wireHash": 93,
+          "packetKind": "targetRpc",
+          "methodName": "FriendChanged_T",
+          "parameters": [
+            {
+              "name": "friends",
+              "typeName": "FriendSystemData"
+            },
+            {
+              "name": "statuses",
+              "typeName": "System.Collections.Generic.List`1[[PlayerStatus, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            }
+          ]
+        },
+        {
+          "wireHash": 94,
+          "packetKind": "targetRpc",
+          "methodName": "FriendStatusChanged_T",
+          "parameters": [
+            {
+              "name": "status",
+              "typeName": "PlayerStatus"
+            }
+          ]
+        },
+        {
+          "wireHash": 95,
+          "packetKind": "targetRpc",
+          "methodName": "CompleteAccountCallback",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "AccountData"
+            }
+          ]
+        },
+        {
+          "wireHash": 96,
+          "packetKind": "serverRpc",
+          "methodName": "UpdateAccountDisplayName",
+          "parameters": [
+            {
+              "name": "displayName",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 97,
+          "packetKind": "serverRpc",
+          "methodName": "ConvertCosmetic_Rpc",
+          "parameters": [
+            {
+              "name": "equip",
+              "typeName": "EquipData"
+            },
+            {
+              "name": "usePremium",
+              "typeName": "System.Boolean"
+            }
+          ]
+        },
+        {
+          "wireHash": 98,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveCosmetic_S",
+          "parameters": [
+            {
+              "name": "slot",
+              "typeName": "CosmeticSlot"
+            }
+          ]
+        },
+        {
+          "wireHash": 99,
+          "packetKind": "serverRpc",
+          "methodName": "ApplyCosmetic_S",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            },
+            {
+              "name": "targetSlot",
+              "typeName": "CosmeticSlot"
+            }
+          ]
+        },
+        {
+          "wireHash": 100,
+          "packetKind": "serverRpc",
+          "methodName": "PurchaseCosmetics_Rpc",
+          "parameters": [
+            {
+              "name": "ids",
+              "typeName": "System.String[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 101,
+          "packetKind": "serverRpc",
+          "methodName": "AddWardrobe_Rpc",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "CosmeticData"
+            }
+          ]
+        },
+        {
+          "wireHash": 102,
+          "packetKind": "targetRpc",
+          "methodName": "ShowMessage_GotoWardrobe_T",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            },
+            {
+              "name": "list",
+              "typeName": "CosmeticData[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 103,
+          "packetKind": "serverRpc",
+          "methodName": "RemoveWardrobe_Rpc",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 104,
+          "packetKind": "serverRpc",
+          "methodName": "SelectTitle",
+          "parameters": [
+            {
+              "name": "title",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 105,
+          "packetKind": "serverRpc",
+          "methodName": "SelectBadge",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 106,
+          "packetKind": "serverRpc",
+          "methodName": "SelectChatBubble",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 107,
+          "packetKind": "serverRpc",
+          "methodName": "UpgradeStorageSpace_Rpc"
+        },
+        {
+          "wireHash": 108,
+          "packetKind": "serverRpc",
+          "methodName": "ExpandCharacterSlots_Rpc"
+        },
+        {
+          "wireHash": 109,
+          "packetKind": "serverRpc",
+          "methodName": "RequestLeaderboard_Rpc",
+          "parameters": [
+            {
+              "name": "type",
+              "typeName": "LeaderboardType"
+            }
+          ]
+        },
+        {
+          "wireHash": 110,
+          "packetKind": "targetRpc",
+          "methodName": "RequestLeaderboard_T",
+          "parameters": [
+            {
+              "name": "list",
+              "typeName": "System.Collections.Generic.List`1[[LeaderboardEntry, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+            },
+            {
+              "name": "me",
+              "typeName": "LeaderboardEntry"
+            }
+          ]
+        },
+        {
+          "wireHash": 111,
+          "packetKind": "targetRpc",
+          "methodName": "ShowMessage_T",
+          "parameters": [
+            {
+              "name": "msg",
+              "typeName": "System.String"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "SkillsComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "targetRpc",
+          "methodName": "ApplyAnimationDelay_T",
+          "parameters": [
+            {
+              "name": "delay",
+              "typeName": "System.Single"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "observersRpc",
+          "methodName": "Recover_C",
+          "parameters": [
+            {
+              "name": "amount",
+              "typeName": "System.Int32"
+            },
+            {
+              "name": "settings",
+              "typeName": "FloaterSettings"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ReduceCooldown_T",
+          "parameters": [
+            {
+              "name": "skillId",
+              "typeName": "System.String",
+              "codec": "stringUtf8Packed"
+            },
+            {
+              "name": "value",
+              "typeName": "System.Single",
+              "codec": "float32"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "observersRpc",
+          "methodName": "AutoCast_C",
+          "parameters": [
+            {
+              "name": "dto",
+              "typeName": "SkillStateDto",
+              "fields": [
+                {
+                  "name": "Id",
+                  "typeName": "System.String",
+                  "codec": "stringUtf8Packed"
+                },
+                {
+                  "name": "Level",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "CurrentCooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Cooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Duration",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "CooldownRecoveryRate",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "MinCooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Cost",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Charges",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "CastTime",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Delay",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Area",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Range",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "LeapType",
+                  "typeName": "LeapType",
+                  "codec": "packedInt32"
+                }
+              ]
+            },
+            {
+              "name": "obj",
+              "typeName": "FishNet.Object.NetworkObject"
+            },
+            {
+              "name": "position",
+              "typeName": "UnityEngine.Vector3"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "observersRpc",
+          "methodName": "CastInterrupt_C",
+          "parameters": [
+            {
+              "name": "castTime",
+              "typeName": "System.Single"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "observersRpc",
+          "methodName": "CastCancel_C"
+        },
+        {
+          "wireHash": 6,
+          "packetKind": "observersRpc",
+          "methodName": "CastBegin_C",
+          "parameters": [
+            {
+              "name": "dto",
+              "typeName": "SkillStateDto",
+              "fields": [
+                {
+                  "name": "Id",
+                  "typeName": "System.String",
+                  "codec": "stringUtf8Packed"
+                },
+                {
+                  "name": "Level",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "CurrentCooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Cooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Duration",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "CooldownRecoveryRate",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "MinCooldown",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Cost",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "Charges",
+                  "typeName": "System.Int32",
+                  "codec": "packedInt32"
+                },
+                {
+                  "name": "CastTime",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Delay",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Area",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "Range",
+                  "typeName": "System.Single",
+                  "codec": "float32"
+                },
+                {
+                  "name": "LeapType",
+                  "typeName": "LeapType",
+                  "codec": "packedInt32"
+                }
+              ]
+            },
+            {
+              "name": "targetId",
+              "typeName": "System.Int32",
+              "codec": "packedInt32"
+            },
+            {
+              "name": "position",
+              "typeName": "UnityEngine.Vector3",
+              "codec": "vector3"
+            },
+            {
+              "name": "castTime",
+              "typeName": "System.Single",
+              "codec": "float32"
+            },
+            {
+              "name": "animTime",
+              "typeName": "System.Single",
+              "codec": "float32"
+            }
+          ]
+        },
+        {
+          "wireHash": 7,
+          "packetKind": "observersRpc",
+          "methodName": "CastComplete_C"
+        },
+        {
+          "wireHash": 8,
+          "packetKind": "observersRpc",
+          "methodName": "ToggleBegin_C",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "StatusComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "serverRpc",
+          "methodName": "CancelEffect_S",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "observersRpc",
+          "methodName": "ApplySkillDisplay_O",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String",
+              "codec": "stringUtf8Packed"
+            },
+            {
+              "name": "lv",
+              "typeName": "System.Int32",
+              "codec": "packedInt32"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "observersRpc",
+          "methodName": "RemoveSkillDisplay_O",
+          "parameters": [
+            {
+              "name": "id",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "targetRpc",
+          "methodName": "ApplyEffect_T",
+          "parameters": [
+            {
+              "name": "statusId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "level",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "targetRpc",
+          "methodName": "RemoveEffect_T",
+          "parameters": [
+            {
+              "name": "statusId",
+              "typeName": "System.String"
+            },
+            {
+              "name": "level",
+              "typeName": "System.Int32"
+            }
+          ]
+        },
+        {
+          "wireHash": 5,
+          "packetKind": "observersRpc",
+          "methodName": "ApplyEffectDisplays_O",
+          "parameters": [
+            {
+              "name": "applies",
+              "typeName": "StatusComponent+QueuedEffectDisplay[]"
+            },
+            {
+              "name": "removes",
+              "typeName": "System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typeName": "SummoningComponent",
+      "rpcs": [
+        {
+          "wireHash": 0,
+          "packetKind": "targetRpc",
+          "methodName": "CalibrateSummons_T",
+          "parameters": [
+            {
+              "name": "data",
+              "typeName": "SummoningComponent+SummonSkillData[]"
+            }
+          ]
+        },
+        {
+          "wireHash": 1,
+          "packetKind": "serverRpc",
+          "methodName": "UnsummonOne_S",
+          "parameters": [
+            {
+              "name": "skillId",
+              "typeName": "System.String"
+            }
+          ]
+        },
+        {
+          "wireHash": 2,
+          "packetKind": "targetRpc",
+          "methodName": "ApplyRecall_T",
+          "parameters": [
+            {
+              "name": "obj",
+              "typeName": "FishNet.Object.NetworkObject"
+            }
+          ]
+        },
+        {
+          "wireHash": 3,
+          "packetKind": "targetRpc",
+          "methodName": "Swap_T",
+          "parameters": [
+            {
+              "name": "obj",
+              "typeName": "FishNet.Object.NetworkObject"
+            }
+          ]
+        },
+        {
+          "wireHash": 4,
+          "packetKind": "observersRpc",
+          "methodName": "CloneEffect_C"
+        }
+      ]
+    }
+  ],
+  "broadcasts": [
+    {
+      "wireHash": 40743,
+      "typeName": "FishNet.Managing.Scened.ClientScenesLoadedBroadcast"
+    },
+    {
+      "wireHash": 37660,
+      "typeName": "FishNet.Managing.Scened.EmptyStartScenesBroadcast"
+    },
+    {
+      "wireHash": 24702,
+      "typeName": "FishNet.Managing.Scened.LoadScenesBroadcast"
+    },
+    {
+      "wireHash": 22762,
+      "typeName": "FishNet.Managing.Scened.UnloadScenesBroadcast"
+    },
+    {
+      "wireHash": 50655,
+      "typeName": "FishNet.Managing.Server.ClientConnectionChangeBroadcast"
+    },
+    {
+      "wireHash": 50053,
+      "typeName": "FishNet.Managing.Server.ConnectedClientsBroadcast"
+    }
+  ]
+}

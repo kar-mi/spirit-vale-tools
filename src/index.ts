@@ -8,6 +8,26 @@ export {
 } from "./fishnet/decoder.ts";
 export { loadFishNetRpcMap } from "./fishnet/rpc-map.ts";
 export type { FishNetRpcMapLoadOptions } from "./fishnet/rpc-map.ts";
+export {
+  BUNDLED_FISHNET_BUILD_FINGERPRINTS,
+  CURRENT_FISHNET_BUILD_FINGERPRINT,
+  loadBundledFishNetRpcMap,
+} from "./fishnet/builtin-maps.ts";
+export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
+export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
+export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-map.ts";
+export { FishNetCombatTracker } from "./fishnet/combat-tracker.ts";
+export type {
+  FishNetCombatActionKind,
+  FishNetCombatActionPhase,
+  FishNetCombatActivationEvent,
+  FishNetCombatDamageEvent,
+  FishNetCombatDeathEvent,
+  FishNetCombatEvent,
+  FishNetCombatTrackerOptions,
+  FishNetDamageAttribution,
+  FishNetHitResult,
+} from "./fishnet/combat-tracker.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,
