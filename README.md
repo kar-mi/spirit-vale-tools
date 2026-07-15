@@ -44,6 +44,9 @@ bun run capture:dump -- --process OtherGame.exe
 
 # Diagnostic capture without process attribution
 bun run capture:dump -- --all-processes --filter "tcp.DstPort == 443"
+
+# Preserve raw lines and add decoded LiteNetLib 1.x leaf packets
+bun run capture:dump -- --protocols udp --decode-litenetlib
 ```
 
 `--filter` uses [WinDivert filter syntax](https://reqrypt.org/windivert-doc.html#filter_language). Use `--helper <path>` to test a specific helper executable.
@@ -63,13 +66,17 @@ capture.on("udpPacket", packet => {
 capture.on("targetStatus", status => {
   console.log(status.state, status.processIds);
 });
+capture.on("liteNetPacket", decoded => {
+  console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
+});
 await capture.start({
   targetProcessName: "SpiritVale.exe",
   protocols: ["tcp", "udp"],
+  decodeLiteNetLib: true,
 });
 ```
 
-The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. Omit `targetProcessName` for an unrestricted diagnostic capture.
+The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. Omit `targetProcessName` for an unrestricted diagnostic capture.
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

@@ -2,7 +2,9 @@ import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
 import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
+import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type {
   CaptureConfig,
   CaptureTargetStatus,
@@ -39,6 +41,7 @@ export class PacketCapture extends EventEmitter {
   private exitTask: Promise<void> | null = null;
   private startDeferred: Deferred | null = null;
   private sawStoppedRecord = false;
+  private decodeLiteNetLib = false;
   private _state: CaptureState = "stopped";
 
   constructor(private readonly spawnProcess: NativeProcessFactory = defaultSpawnProcess) {
@@ -53,6 +56,7 @@ export class PacketCapture extends EventEmitter {
   override on(event: "packet", listener: (packet: CapturedTcpPacket) => void): this;
   override on(event: "udpPacket", listener: (packet: CapturedUdpPacket) => void): this;
   override on(event: "transportPacket", listener: (packet: CapturedTransportPacket) => void): this;
+  override on(event: "liteNetPacket", listener: (packet: CapturedLiteNetLibPacket) => void): this;
   override on(event: "targetStatus", listener: (status: CaptureTargetStatus) => void): this;
   override on(event: "warning", listener: (message: string) => void): this;
   override on(event: "error", listener: (error: Error) => void): this;
@@ -87,6 +91,7 @@ export class PacketCapture extends EventEmitter {
     this._state = "starting";
     this.process = spawned;
     this.sawStoppedRecord = false;
+    this.decodeLiteNetLib = config.decodeLiteNetLib ?? false;
     this.startDeferred = createDeferred();
     const startPromise = this.startDeferred.promise;
     const stdoutTask = this.consumeStdout(spawned).catch((error: unknown) => this.handleFailure(toError(error)));
@@ -139,6 +144,7 @@ export class PacketCapture extends EventEmitter {
             if (this._state === "running") {
               this.emit("udpPacket", record.packet);
               this.emit("transportPacket", record.packet);
+              if (this.decodeLiteNetLib) this.emitLiteNetLibPackets(record.packet);
             }
             break;
           case NativeRecordType.TargetStatus:
@@ -189,12 +195,28 @@ export class PacketCapture extends EventEmitter {
     else if (this._state !== "starting") console.error("[spiritvale-capture]", error);
   }
 
+  private emitLiteNetLibPackets(packet: CapturedUdpPacket): void {
+    try {
+      for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
+        this.emit("liteNetPacket", { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket);
+      }
+    } catch (error) {
+      const detail = error instanceof LiteNetLibProtocolError ? error.message : toError(error).message;
+      this.emit(
+        "warning",
+        `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ` +
+          `${packet.destinationIP}:${packet.destinationPort}: ${detail}`,
+      );
+    }
+  }
+
   private markStopped(): void {
     const changed = this._state !== "stopped";
     this._state = "stopped";
     this.process = null;
     this.exitTask = null;
     this.startDeferred = null;
+    this.decodeLiteNetLib = false;
     if (changed) this.emit("stopped");
   }
 }

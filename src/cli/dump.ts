@@ -1,6 +1,6 @@
 import { PacketCapture } from "../index.ts";
 import type { CaptureProtocol } from "../types.ts";
-import { formatTransportPacket } from "./format-packet.ts";
+import { formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
@@ -18,6 +18,7 @@ if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" &&
   throw new Error("--protocols must be tcp, udp, or tcp,udp");
 }
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
+const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib");
 
 const capture = new PacketCapture();
 capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
@@ -30,6 +31,7 @@ capture.on("targetStatus", (status) => {
 capture.on("transportPacket", (packet) => {
   console.log(formatTransportPacket(packet));
 });
+capture.on("liteNetPacket", (packet) => console.log(formatLiteNetLibPacket(packet)));
 
 let stopping = false;
 async function stop(): Promise<void> {
@@ -46,6 +48,7 @@ await capture.start({
   helperPath: option("--helper"),
   protocols: protocols as CaptureProtocol[],
   targetProcessName,
+  decodeLiteNetLib,
 });
 if (durationSeconds !== undefined) {
   await Bun.sleep(durationSeconds * 1000);

@@ -62,7 +62,13 @@ The capture remains ready if the application is not running. It automatically fo
 
 Stop capture with Ctrl+C.
 
-In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a remote endpoint on port 7007. This is an observation, not a fixed capture requirement: server addresses and ports may change, so the default process-attributed capture intentionally does not hard-code that endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
+In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a game endpoint on `135.148.52.81:7007`. The user/client endpoint is intentionally omitted, and the default process-attributed capture does not hard-code the game endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
+
+A larger capture identified the UDP transport as the LiteNetLib 1.x wire format. To keep the raw datagram line and append one decoded line per logical packet, including children unpacked from merged envelopes, run:
+
+```powershell
+bun run capture:dump -- --protocols udp --decode-litenetlib
+```
 
 ### Common options
 
@@ -137,9 +143,14 @@ capture.on("transportPacket", packet => {
   }
 });
 
+capture.on("liteNetPacket", decoded => {
+  console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
+});
+
 await capture.start({
   targetProcessName: "SpiritVale.exe",
   protocols: ["tcp", "udp"],
+  decodeLiteNetLib: true,
 });
 ```
 
@@ -154,11 +165,27 @@ Call `await capture.stop()` during application shutdown.
 | `packet` | `CapturedTcpPacket` | Preserved TCP-only packet event. |
 | `udpPacket` | `CapturedUdpPacket` | UDP packet event. |
 | `transportPacket` | `CapturedTransportPacket` | Receives both TCP and UDP packets. |
+| `liteNetPacket` | `CapturedLiteNetLibPacket` | Receives flattened LiteNetLib 1.x leaves when decoding is enabled. |
 | `warning` | `string` | Recoverable native warning. |
 | `error` | `Error` | Capture or protocol failure. |
 | `stopped` | none | Capture has stopped. |
 
 Omit `targetProcessName` to emit packets from every process allowed by the WinDivert filter.
+
+### LiteNetLib decoding
+
+`decodeLiteNetLibDatagram` is also exported as a strict pure function. It returns flattened logical packets with a `mergePath`; malformed input throws `LiteNetLibProtocolError` with the failing byte offset. Live capture handles that error recoverably: the raw UDP event is still emitted, a warning is raised, and only the decoded event is skipped.
+
+The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. Spirit Vale gameplay payloads remain opaque buffers.
+
+## Capture analysis
+
+| Transport | Packets | Payload bytes | Treatment |
+| --- | ---: | ---: | --- |
+| UDP game endpoint `167.114.209.119:7004` | 10,834 | 5,355,984 | LiteNetLib 1.x decoded. |
+| TCP/TLS remote endpoint `91.99.215.190:443` | 151 | 220,866 | Catalogued only; payload remains encrypted. |
+
+All 2,694 merged UDP datagrams validated structurally and contained 5,778 immediate children. Recursive decoding produced 13,918 leaf packets with no errors: 6,870 unreliable, 3,951 channeled, 2,708 acknowledgements, 195 pings, and 194 pongs. User/client endpoint values are intentionally omitted, and game endpoints are not hard-coded.
 
 ## Process attribution
 

@@ -9,6 +9,8 @@ export interface CaptureConfig {
   targetProcessName?: string;
   /** Override the bundled helper path, primarily for development and tests. */
   helperPath?: string;
+  /** Decode captured UDP payloads as LiteNetLib 1.x packets. Defaults to false. */
+  decodeLiteNetLib?: boolean;
 }
 
 export interface CapturedPacketBase {
