@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - name: Configure Rust
+        run: |
+          rustup update stable
+          rustup default stable
+          rustup component add rustfmt clippy
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
+      - name: Fetch verified WinDivert runtime
+        run: bun run fetch:windivert
+      - name: Check native formatting
+        run: bun run format:native
+      - name: Lint native helper
+        run: bun run lint:native
+      - name: Test native helper
+        run: bun run test:native
+      - name: Typecheck Bun package
+        run: bun run typecheck
+      - name: Test Bun package
+        run: bun test
+      - name: Build native release bundle
+        run: bun run build:native
+      - name: Upload Windows native bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiritvale-capture-win-x64
+          path: dist/native/win-x64
+          if-no-files-found: error
