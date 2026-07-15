@@ -48,24 +48,46 @@ bun run capture:dump -- --all-processes --filter "tcp.DstPort == 443"
 # Preserve raw lines and add decoded LiteNetLib 1.x leaf packets
 bun run capture:dump -- --protocols udp --decode-litenetlib
 
-# Add verified FishNet headers and conservative RPC annotations
+# Add stateful FishNet bundle, split-packet, and RPC Link decoding
 bun run capture:dump -- --protocols udp --decode-fishnet
+
+# Supply a build-matched semantic map
+bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
 ```
 
-`--decode-fishnet` implies `--decode-litenetlib`. Method names are emitted only
-for mappings whose compact wire values have been independently verified.
+`--decode-fishnet` implies `--decode-litenetlib`. It follows RPC Link
+registrations from object spawns, reassembles split messages, and emits every
+safely delimited message in a transport bundle. Method names are emitted only
+when the registered RPC kind and compact wire hash select one verified symbol.
+Schema-v2 decoders may also infer a missing component type when a fixed RPC
+selects exactly one behaviour; ambiguous hashes remain unnamed until stronger
+session evidence appears. Ordered structured parameters are decoded only when
+their generated writer codecs are present in the map.
 
 Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, and the
-FishNet packet identifier table used by the decoder. It catalogued 302 generated
-RPC method symbols, including 32 numeric-suffix collisions; those suffixes are
-therefore not treated as wire RPC values.
+FishNet packet identifier table used by the decoder. Native initialization
+sequences verified 304 compact RPC registrations across game and FishNet
+behaviours; generated method-name suffixes are not treated as wire values.
+
+A sanitized replay of the latest capture mapped every observed spawn RPC-link
+registration to a unique behaviour fingerprint. It named 6,721 structurally
+resolved RPC Links and 1,434 fixed ServerRpc calls, associated 6,182 SyncType
+messages with behaviours, named all 84 broadcasts, and completed without
+replay failures.
+
+A controlled zone-bootstrap replay isolated six local-character cast pairs in
+two repeated three-skill sequences. `SkillsComponent.CastBegin_C` field
+`dto.Id` mapped `AxeArc` to Twin Cleave, `AxeVortex` to Vortex Slash, and
+`Whirlwind` to Whirlwind. Both repetitions matched. Repeated Inventory and
+Skills Window openings produced no unique network transaction in their final
+action epochs.
 
 `--filter` uses [WinDivert filter syntax](https://reqrypt.org/windivert-doc.html#filter_language). Use `--helper <path>` to test a specific helper executable.
 
 ## Public API
 
 ```ts
-import { PacketCapture } from "spiritvale-pcap";
+import { FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "spiritvale-pcap";
 
 const capture = new PacketCapture();
 capture.on("packet", packet => {
@@ -88,9 +110,19 @@ await capture.start({
   protocols: ["tcp", "udp"],
   decodeFishNet: true,
 });
+
+declare const payload: Buffer;
+const messages = decodeFishNetBundle(payload, { reliable: true });
+const session = new FishNetSessionDecoder();
+const linked = session.decode(payload, {
+  reliable: true,
+  connectionId: "connection-1",
+  direction: "inbound",
+  channel: 0,
+});
 ```
 
-The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. FishNet decoding emits after its containing LiteNetLib leaf, identifies only verified headers, and preserves ambiguous bytes rather than guessing their meaning. Omit `targetProcessName` for an unrestricted diagnostic capture.
+The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. FishNet decoding emits one `fishNetPacket` per safely delimited bundled message, with spawn identity, behaviour type, resolved RPC metadata, SyncType ownership, broadcast identity, and verified common fields when available. Unknown links and ambiguous symbol matches remain numeric. Schema-v2 maps are behaviour-scoped and build-fingerprinted; schema-v1 maps remain supported. Omit `targetProcessName` for an unrestricted diagnostic capture.
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

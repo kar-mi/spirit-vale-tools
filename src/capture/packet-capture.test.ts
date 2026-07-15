@@ -165,7 +165,7 @@ describe("PacketCapture lifecycle", () => {
 
   test("FishNet decoding implies LiteNetLib and preserves event order", async () => {
     const helperPath = prepareRuntime();
-    const mock = mockFactory({ records: [udpFrame(Buffer.from("002a0000000e00aabb", "hex"))] });
+    const mock = mockFactory({ records: [udpFrame(Buffer.from("002a0000000e0014000000150000", "hex"))] });
     const capture = new PacketCapture(mock.factory);
     const order: string[] = [];
     capture.on("transportPacket", () => order.push("raw"));
@@ -174,7 +174,7 @@ describe("PacketCapture lifecycle", () => {
 
     await capture.start({ helperPath, protocols: ["udp"], decodeFishNet: true });
     await Bun.sleep(0);
-    expect(order).toEqual(["raw", "litenetlib", "pingPong:42"]);
+    expect(order).toEqual(["raw", "litenetlib", "pingPong:42", "version:42"]);
     await capture.stop();
   });
 

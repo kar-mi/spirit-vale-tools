@@ -76,11 +76,43 @@ Enable the FishNet layer with:
 bun run capture:dump -- --protocols udp --decode-fishnet
 ```
 
+Supply a build-matched semantic map to add verified behaviour, RPC, SyncType,
+broadcast, and supported field names:
+
+```powershell
+bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
+```
+
+The FishNet layer is session-aware. It parses multiple messages from a single
+transport tick, reassembles reliable split messages, registers length-delimited
+RPC Links from object spawns, and removes those registrations on despawn or
+connection lifecycle changes. A fixed RPC that selects exactly one mapped
+behaviour may establish a missing component binding for later packets. Object
+respawns replace stale bindings, while ambiguous hashes remain unnamed.
+Unsupported spawn layouts and ambiguous message boundaries remain opaque
+without preventing later transport packets from being decoded.
+
 Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, the
-FishNet packet identifier table, and 302 generated RPC method symbols. There
-were 32 numeric-suffix collisions, so generated method suffixes are not assumed
-to be compact wire RPC hashes. A method name is shown only when its wire mapping
-has been independently verified.
+FishNet packet identifier table, and 304 natively verified compact RPC
+registrations across game and FishNet behaviours. Generated method suffixes are
+not assumed to be wire hashes. A method name is shown only when behaviour,
+registered RPC kind, and compact hash select one verified mapping.
+Optional ordered parameter fields support conservative decoding of generated
+structured writers. Decoding stops at the first missing or invalid codec and
+preserves the remaining payload bytes.
+
+A sanitized replay of the latest capture mapped all observed spawn link
+registrations to unique behaviour fingerprints. It named 6,721 structurally
+resolved RPC Links and 1,434 fixed ServerRpc calls, associated 6,182 SyncType
+messages with behaviours, named all 84 broadcasts, and completed without
+replay failures.
+
+A controlled zone-bootstrap replay separated the final action epoch from scene
+loading and other actors. Six local-character `CastBegin_C`/`CastComplete_C`
+pairs matched two `Twin Cleave -> Vortex Slash -> Whirlwind` sequences. The
+decoded `dto.Id` values were `AxeArc`, `AxeVortex`, and `Whirlwind`
+respectively. Repeated Inventory and Skills Window openings showed no unique
+network transaction in their final action epochs.
 
 ### Common options
 
@@ -181,7 +213,7 @@ Call `await capture.stop()` during application shutdown.
 | `udpPacket` | `CapturedUdpPacket` | UDP packet event. |
 | `transportPacket` | `CapturedTransportPacket` | Receives both TCP and UDP packets. |
 | `liteNetPacket` | `CapturedLiteNetLibPacket` | Receives flattened LiteNetLib 1.x leaves when decoding is enabled. |
-| `fishNetPacket` | `CapturedFishNetPacket` | Receives verified FishNet headers inside LiteNetLib data leaves. |
+| `fishNetPacket` | `CapturedFishNetPacket` | Receives one decoded FishNet message per safe bundle boundary, including registered RPC Link metadata. |
 | `warning` | `string` | Recoverable native warning. |
 | `error` | `Error` | Capture or protocol failure. |
 | `stopped` | none | Capture has stopped. |
@@ -192,7 +224,7 @@ Omit `targetProcessName` to emit packets from every process allowed by the WinDi
 
 `decodeLiteNetLibDatagram` is also exported as a strict pure function. It returns flattened logical packets with a `mergePath`; malformed input throws `LiteNetLibProtocolError` with the failing byte offset. Live capture handles that error recoverably: the raw UDP event is still emitted, a warning is raised, and only the decoded event is skipped.
 
-The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. `decodeFishNet` implies LiteNetLib decoding and adds the verified four-byte tick and two-byte packet identifier. RPC parsing is bounded and preserves ambiguous hash bytes rather than assigning an unverified name.
+The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. `decodeFishNet` implies LiteNetLib decoding and adds stateful bundle, split-message, object-spawn registration, despawn cleanup, and RPC Link parsing. `decodeFishNetBundle` provides pure bundle parsing, while `FishNetSessionDecoder` retains link, component, and split state across payloads. Schema-v2 maps can add spawn identity, `networkBehaviourType`, verified RPC names and fields, SyncType ownership, and broadcast identity. Ambiguous bytes and names remain unresolved rather than guessed; schema-v1 maps remain supported.
 
 ## Capture analysis
 

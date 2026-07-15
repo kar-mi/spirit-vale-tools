@@ -11,15 +11,44 @@ export function formatTransportPacket(packet: CapturedTransportPacket): string {
 }
 
 export function formatFishNetPacket(packet: CapturedFishNetPacket): string {
-  const object = packet.objectId === undefined ? "" : ` object=${packet.objectId}:${packet.networkBehaviourIndex}`;
+  const bundle = packet.bundleIndex === undefined ? "" : ` bundle=${packet.bundleIndex}`;
+  const object = packet.objectId === undefined
+    ? ""
+    : ` object=${packet.objectId}${packet.networkBehaviourIndex === undefined ? "" : `:${packet.networkBehaviourIndex}`}`;
+  const behaviour = packet.networkBehaviourType ? ` behaviour=${packet.networkBehaviourType}` : "";
   const rpc = packet.rpcHash === undefined
     ? ""
     : ` rpc=${packet.rpcHash}${packet.rpcName ? `:${packet.rpcName}` : ""}`;
   const candidate = packet.rpcHash16Candidate === undefined || packet.rpcName
     ? ""
     : ` rpc16?=${packet.rpcHash16Candidate}`;
-  return `    FISHNET tick=${packet.tick} id=${packet.packetId} kind=${packet.packetName}${object}${rpc}${candidate}` +
+  const linked = packet.linkId === undefined
+    ? ""
+    : ` link=${packet.linkId}:${packet.linkResolved ? packet.linkedPacketName ?? "registered" : "unresolved"}`;
+  const spawnIdentity = packet.spawnType === undefined
+    ? ""
+    : ` spawn=${packet.spawnType}:${packet.spawnCollectionId}:${packet.spawnPrefabId ?? packet.spawnSceneId ?? "unknown"}` +
+      ` links=${packet.rpcLinkRegistrations?.length ?? 0}`;
+  const broadcast = packet.broadcastHash === undefined
+    ? ""
+    : ` broadcast=${packet.broadcastHash}${packet.broadcastName ? `:${packet.broadcastName}` : ""}`;
+  const sync = packet.syncIndex === undefined
+    ? ""
+    : ` sync=${packet.syncIndex}${packet.syncName ? `:${packet.syncName}` : ""}`;
+  const resolution = packet.rpcResolution === undefined || packet.rpcResolution === "verified"
+    ? ""
+    : ` resolution=${packet.rpcResolution}`;
+  const fields = packet.decodedFields?.length
+    ? ` fields=${packet.decodedFields.map((field) => `${field.name}:${formatDecodedValue(field.value)}`).join(",")}`
+    : "";
+  return `    FISHNET tick=${packet.tick}${bundle} id=${packet.packetId} kind=${packet.packetName}${linked}${object}` +
+    `${behaviour}${rpc}${candidate}${resolution}${spawnIdentity}${sync}${broadcast}${fields}` +
     ` bytes=${packet.payload.length} payload=${packet.payload.toString("hex")}`;
+}
+
+function formatDecodedValue(value: boolean | number | string | number[]): string {
+  const text = Array.isArray(value) ? `[${value.join(";")}]` : JSON.stringify(value);
+  return encodeURIComponent(text);
 }
 
 export function formatLiteNetLibPacket(decoded: CapturedLiteNetLibPacket): string {

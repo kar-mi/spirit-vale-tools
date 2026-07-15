@@ -70,6 +70,52 @@ describe("formatFishNetPacket", () => {
       "    FISHNET tick=42 id=8 kind=serverRpc object=7:2 rpc=5 rpc16?=261 bytes=2 payload=aabb",
     );
   });
+
+  test("formats resolved RPC Links with their registered kind", () => {
+    const udp = udpPacket("inbound");
+    const liteNetPacket: CapturedLiteNetLibPacket = {
+      udpPacket: udp,
+      mergePath: [],
+      packet: {
+        propertyId: 1,
+        property: "channeled",
+        connectionNumber: 0,
+        fragmented: false,
+        sequence: 1,
+        channel: 0,
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+      },
+    };
+    const packet: CapturedFishNetPacket = {
+      liteNetPacket,
+      tick: 50,
+      bundleIndex: 1,
+      packetId: 900,
+      packetName: "rpcLink",
+      linkId: 900,
+      linkResolved: true,
+      linkedPacketName: "observersRpc",
+      objectId: 12,
+      networkBehaviourIndex: 3,
+      networkBehaviourType: "SyntheticMover",
+      rpcHash: 77,
+      rpcName: "RpcSyntheticNotice",
+      rpcResolution: "verified",
+      decodedFields: [
+        { name: "active", typeName: "System.Boolean", codec: "boolean", value: true },
+        { name: "input.move", typeName: "SyntheticVector3Int", codec: "vector3IntPacked", value: [2, 0, -3] },
+        { name: "input.hotkeys", typeName: "System.UInt64", codec: "packedUInt64", value: "0x800" },
+      ],
+      raw: Buffer.alloc(0),
+      payload: Buffer.from([1]),
+    };
+    expect(formatFishNetPacket(packet)).toBe(
+      "    FISHNET tick=50 bundle=1 id=900 kind=rpcLink link=900:observersRpc object=12:3 behaviour=SyntheticMover" +
+        " rpc=77:RpcSyntheticNotice fields=active:true,input.move:%5B2%3B0%3B-3%5D,input.hotkeys:%220x800%22" +
+        " bytes=1 payload=01",
+    );
+  });
 });
 
 describe("formatLiteNetLibPacket", () => {

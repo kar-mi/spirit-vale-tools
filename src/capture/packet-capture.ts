@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
-import { decodeFishNetPayload, FishNetProtocolError } from "../fishnet/decoder.ts";
+import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoder.ts";
 import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket, FishNetRpcMap } from "../fishnet/types.ts";
@@ -46,6 +46,7 @@ export class PacketCapture extends EventEmitter {
   private decodeLiteNetLib = false;
   private decodeFishNet = false;
   private fishNetRpcMap: FishNetRpcMap | undefined;
+  private fishNetSessionDecoder: FishNetSessionDecoder | null = null;
   private _state: CaptureState = "stopped";
 
   constructor(private readonly spawnProcess: NativeProcessFactory = defaultSpawnProcess) {
@@ -99,6 +100,7 @@ export class PacketCapture extends EventEmitter {
     this.decodeFishNet = config.decodeFishNet ?? false;
     this.decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || this.decodeFishNet;
     this.fishNetRpcMap = config.fishNetRpcMap;
+    this.fishNetSessionDecoder = this.decodeFishNet ? new FishNetSessionDecoder(this.fishNetRpcMap) : null;
     this.startDeferred = createDeferred();
     const startPromise = this.startDeferred.promise;
     const stdoutTask = this.consumeStdout(spawned).catch((error: unknown) => this.handleFailure(toError(error)));
@@ -221,13 +223,29 @@ export class PacketCapture extends EventEmitter {
 
   private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
     const { property, payload } = packet.packet;
+    const udp = packet.udpPacket;
+    const endpoints = [
+      `${udp.sourceIP}:${udp.sourcePort}`,
+      `${udp.destinationIP}:${udp.destinationPort}`,
+    ].sort();
+    const connectionId = `${endpoints[0]}<->${endpoints[1]}#${packet.packet.connectionNumber}`;
+    if (property === "connectRequest" || property === "connectAccept" || property === "disconnect") {
+      this.fishNetSessionDecoder?.reset(connectionId);
+      return;
+    }
     if ((property !== "unreliable" && property !== "channeled") || payload.length < 6) return;
     try {
-      const decoded = decodeFishNetPayload(payload, {
+      const decodedPackets = this.fishNetSessionDecoder?.decode(payload, {
         reliable: property === "channeled",
         rpcMap: this.fishNetRpcMap,
+        connectionId,
+        direction: udp.direction,
+        channel: property === "channeled" ? packet.packet.channel : 1,
+        sequence: property === "channeled" ? packet.packet.sequence : undefined,
       });
-      this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet } satisfies CapturedFishNetPacket);
+      for (const decoded of decodedPackets ?? []) {
+        this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet } satisfies CapturedFishNetPacket);
+      }
     } catch (error) {
       const detail = error instanceof FishNetProtocolError ? error.message : toError(error).message;
       this.emit("warning", `skipped FishNet decode at LiteNetLib path ${packet.mergePath.join(".") || "root"}: ${detail}`);
@@ -243,6 +261,8 @@ export class PacketCapture extends EventEmitter {
     this.decodeLiteNetLib = false;
     this.decodeFishNet = false;
     this.fishNetRpcMap = undefined;
+    this.fishNetSessionDecoder?.reset();
+    this.fishNetSessionDecoder = null;
     if (changed) this.emit("stopped");
   }
 }
