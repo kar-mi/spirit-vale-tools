@@ -129,6 +129,23 @@ describe("bundled FishNet maps", () => {
     ]);
   });
 
+  test("contains the mapped public player identity SyncType prefix", () => {
+    const player = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "PlayerController");
+    expect(player?.syncTypes?.find(({ index }) => index === 5)).toEqual({
+      index: 5,
+      name: "VisualData",
+      typeName: "CharacterVisualDto",
+      fields: [{
+        name: "Appearance",
+        typeName: "CharacterAppearanceDto",
+        fields: [
+          { name: "DisplayName", typeName: "System.String", codec: "stringUtf8Packed" },
+          { name: "Archetype", typeName: "Archetype", codec: "packedInt32" },
+        ],
+      }],
+    });
+  });
+
   test("uses the verified Damage layout for death events", () => {
     const health = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "HealthComponent");
     const applyDamage = health?.rpcs.find(({ methodName }) => methodName === "ApplyDamage_C");

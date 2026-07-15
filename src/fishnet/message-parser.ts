@@ -117,7 +117,13 @@ export function parseMessage(
         if (packet.syncPayload.length > 0) {
           packet.syncIndex = packet.syncPayload.readUInt8(0);
           const sync = findSyncType(options.rpcMap, packet.networkBehaviourType, packet.syncIndex);
-          if (sync) packet.syncName = sync.name;
+          if (sync) {
+            packet.syncName = sync.name;
+            const fields = sync.fields ?? (sync.codec
+              ? [{ name: sync.name, typeName: sync.typeName, codec: sync.codec }]
+              : undefined);
+            applyDecodedFields(packet, fields, 1);
+          }
         }
         return { packet, end, stop: false };
       }

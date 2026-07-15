@@ -81,7 +81,9 @@ function isBehaviour(value: unknown): value is FishNetBehaviourDefinition {
         && Number.isInteger(sync.index)
         && typeof sync.name === "string"
         && (sync.typeName === undefined || typeof sync.typeName === "string")
-        && (sync.codec === undefined || WIRE_CODECS.has(sync.codec));
+        && (sync.codec === undefined || WIRE_CODECS.has(sync.codec))
+        && (sync.fields === undefined || (Array.isArray(sync.fields) && sync.fields.every(isParameter)))
+        && !(sync.codec !== undefined && sync.fields !== undefined);
     })));
 }
 

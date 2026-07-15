@@ -39,6 +39,8 @@ export interface FishNetSyncTypeDefinition {
   name: string;
   typeName?: string;
   codec?: FishNetWireCodec;
+  /** Ordered fields for a structured SyncType value. Leaf fields carry codecs. */
+  fields?: FishNetRpcParameter[];
 }
 
 export interface FishNetBehaviourDefinition {

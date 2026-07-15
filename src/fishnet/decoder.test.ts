@@ -235,6 +235,48 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
+  test("decodes structured SyncType fields after the index and preserves trailing bytes", () => {
+    const map = semanticMap();
+    const behaviour = map.schemaVersion === 2 ? map.behaviours[0] : undefined;
+    if (!behaviour) throw new Error("synthetic behaviour missing");
+    behaviour.syncTypes = [{
+      index: 5,
+      name: "VisualData",
+      typeName: "SyntheticVisualData",
+      fields: [{
+        name: "Appearance",
+        fields: [
+          { name: "DisplayName", codec: "stringUtf8Packed" },
+          { name: "Archetype", codec: "packedInt32" },
+        ],
+      }],
+    }];
+    const name = Buffer.from("Aster Vale", "utf8");
+    const body = Buffer.concat([Buffer.from([5]), packed(name.length), name, packed(3), Buffer.from("aabb", "hex")]);
+    const syncType = message(7, Buffer.concat([
+      packed(7),
+      Buffer.from([1, 2]),
+      u32(body.length),
+      body,
+    ]));
+    const decoder = new FishNetSessionDecoder(map);
+    const results = decoder.decode(tick(21, Buffer.concat([
+      spawnWithLink(7, 2, 900, 0x1234),
+      syncType,
+    ])), { reliable: true, connectionId: "structured-sync" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "syncType",
+      syncIndex: 5,
+      syncName: "VisualData",
+      decodedFields: [
+        { name: "Appearance.DisplayName", value: "Aster Vale" },
+        { name: "Appearance.Archetype", value: 3 },
+      ],
+    });
+    expect(results[1]?.undecodedPayload).toEqual(Buffer.from("aabb", "hex"));
+  });
+
   test("infers a unique behaviour and uses it to resolve later ambiguous hashes", () => {
     const map: FishNetRpcMap = {
       schemaVersion: 2,

@@ -87,8 +87,11 @@ Use `--fishnet-build <build-fingerprint>` to select another bundled version, or
 `--combat-only` to print only chronological actor-grouped activations and
 per-hit damage/death events. Death records indicate whether they duplicate an
 ordinary damage event, and aggregation is intentionally left to consumers.
-Use `--combat-json` instead to emit the same stream as JSON Lines with every
-decoded RPC field included in each record's `fields` object.
+Use `--combat-json` instead to emit JSON Lines with every decoded RPC field in
+each combat record's `fields` object. It also emits public visible-player
+identity lifecycle records automatically. Consumers maintain the actor-ID to
+display-name join from `upsert`, `remove`, and `reset` operations; combat actors
+without an observed identity remain numeric.
 
 The FishNet layer is session-aware. It parses multiple messages from a single
 transport tick, reassembles reliable split messages, registers length-delimited

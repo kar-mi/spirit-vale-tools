@@ -57,7 +57,7 @@ bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json
 # Print only chronological skill, attack, and per-hit damage events
 bun run capture:dump -- --protocols udp --combat-only
 
-# Emit the same combat stream as one complete JSON object per line
+# Emit combat and visible-player identity records as complete JSON objects per line
 bun run capture:dump -- --protocols udp --combat-json
 
 # Select a different bundled build map when more versions are registered
@@ -152,10 +152,18 @@ skills are matched by attacker and damage-source identifiers. Multiple eligible
 activations of the same source are reported as ambiguous with every candidate
 activation ID instead of being force-assigned.
 
-`--combat-json` implies combat-only mode and emits JSON Lines. Every record
-includes its RPC name, tick, payload byte count, normalized combat properties,
-and a `fields` object containing every decoded RPC field by its wire-schema
-name. Consumers can parse each output line independently.
+`FishNetActorDirectory` consumes the same decoded packet stream and maintains
+public player display names by actor ID. Its identity records are lifecycle
+events: `upsert` supplies the display name and archetype, `remove` clears a
+despawned or reused object ID, and `reset` clears the connection. Combat records
+remain numeric and consumers join them using `actorId`, `targetId`, or the
+decoded damage attacker ID.
+
+`--combat-json` implies combat-only mode and emits JSON Lines. Combat records
+include their RPC name, tick, payload byte count, normalized properties, and a
+`fields` object containing every decoded RPC field. Visible-player identity
+records are emitted automatically when available; combat is still emitted when
+an actor has no known display name.
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

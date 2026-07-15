@@ -2,6 +2,7 @@ import type { CapturedTransportPacket } from "../types.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket } from "../fishnet/types.ts";
 import type { FishNetCombatEvent } from "../fishnet/combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../fishnet/actor-directory.ts";
 
 export function formatTransportPacket(packet: CapturedTransportPacket): string {
   const tcp = packet.protocol === "tcp"
@@ -75,6 +76,10 @@ export function formatCombatEvent(event: FishNetCombatEvent): string {
 }
 
 export function formatCombatEventJson(event: FishNetCombatEvent): string {
+  return JSON.stringify(event);
+}
+
+export function formatActorIdentityEventJson(event: FishNetActorIdentityEvent): string {
   return JSON.stringify(event);
 }
 

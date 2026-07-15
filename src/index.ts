@@ -17,6 +17,14 @@ export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
 export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
 export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-map.ts";
 export { FishNetCombatTracker } from "./fishnet/combat-tracker.ts";
+export { FishNetActorDirectory } from "./fishnet/actor-directory.ts";
+export type {
+  FishNetActorIdentity,
+  FishNetActorIdentityEvent,
+  FishNetActorIdentityRemoveEvent,
+  FishNetActorIdentityResetEvent,
+  FishNetActorIdentityUpsertEvent,
+} from "./fishnet/actor-directory.ts";
 export type {
   FishNetCombatActionKind,
   FishNetCombatActionPhase,

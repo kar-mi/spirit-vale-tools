@@ -8,10 +8,14 @@ import type {
   FishNetWireCodec,
 } from "./types.ts";
 
-export function applyDecodedFields(packet: DecodedFishNetPacket, parameters: FishNetRpcParameter[] | undefined): void {
+export function applyDecodedFields(
+  packet: DecodedFishNetPacket,
+  parameters: FishNetRpcParameter[] | undefined,
+  startOffset = 0,
+): void {
   if (!parameters || parameters.length === 0) return;
   const fields: FishNetDecodedField[] = [];
-  const decoded = decodeParameters(packet.payload, 0, parameters, "", fields);
+  const decoded = decodeParameters(packet.payload, startOffset, parameters, "", fields);
   if (fields.length > 0) packet.decodedFields = fields;
   if (decoded.offset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(decoded.offset);
 }

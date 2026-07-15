@@ -1,5 +1,6 @@
 import {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
+  FishNetActorDirectory,
   FishNetCombatTracker,
   PacketCapture,
   loadBundledFishNetSemanticMap,
@@ -7,6 +8,7 @@ import {
 import type { CaptureProtocol } from "../types.ts";
 import { loadFishNetRpcMap } from "../fishnet/rpc-map.ts";
 import {
+  formatActorIdentityEventJson,
   formatCombatEvent,
   formatCombatEventJson,
   formatFishNetPacket,
@@ -48,6 +50,7 @@ const semanticMap = combatOnly && combatFingerprint
 const combatTracker = combatOnly
   ? new FishNetCombatTracker({ buildFingerprint: fishNetBuildFingerprint, semanticMap })
   : undefined;
+const actorDirectory = combatJson ? new FishNetActorDirectory() : undefined;
 
 const capture = new PacketCapture();
 capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
@@ -68,11 +71,15 @@ capture.on("fishNetPacket", (packet) => {
     console.log(formatFishNetPacket(packet));
     return;
   }
+  for (const event of actorDirectory?.consume(packet) ?? []) {
+    console.log(formatActorIdentityEventJson(event));
+  }
   for (const event of combatTracker?.consume(packet) ?? []) {
     console.log(combatJson ? formatCombatEventJson(event) : formatCombatEvent(event));
   }
 });
 capture.on("stopped", () => {
+  actorDirectory?.reset();
   combatTracker?.reset();
 });
 

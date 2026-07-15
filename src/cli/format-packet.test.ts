@@ -6,6 +6,7 @@ import type { CapturedUdpPacket } from "../types.ts";
 import {
   formatCombatEvent,
   formatCombatEventJson,
+  formatActorIdentityEventJson,
   formatFishNetPacket,
   formatLiteNetLibPacket,
   formatTransportPacket,
@@ -211,6 +212,25 @@ describe("formatCombatEvent", () => {
       payloadBytes: 25,
       fields: { "dmg.Value": 125, "dmg.DamageSourceId": "SyntheticStrike" },
       duplicatesDamageEvent: false,
+    });
+  });
+
+  test("formats actor identity lifecycle events as JSON Lines", () => {
+    const line = formatActorIdentityEventJson({
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 72,
+      actorId: 10,
+      displayName: "Aster Vale",
+      archetype: 2,
+    });
+    expect(JSON.parse(line)).toEqual({
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 72,
+      actorId: 10,
+      displayName: "Aster Vale",
+      archetype: 2,
     });
   });
 });
