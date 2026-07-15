@@ -1,0 +1,6 @@
+node_modules/
+dist/
+native/vendor/
+native/capture-helper/target/
+*.log
+*.zip
