@@ -1,3 +1,5 @@
+import type { FishNetRpcMap } from "./fishnet/types.ts";
+
 export type CaptureProtocol = "tcp" | "udp";
 
 export interface CaptureConfig {
@@ -11,6 +13,10 @@ export interface CaptureConfig {
   helperPath?: string;
   /** Decode captured UDP payloads as LiteNetLib 1.x packets. Defaults to false. */
   decodeLiteNetLib?: boolean;
+  /** Decode verified FishNet headers inside LiteNetLib data packets. Implies decodeLiteNetLib. */
+  decodeFishNet?: boolean;
+  /** Optional local symbol map. Only entries with verified wire hashes are used for live names. */
+  fishNetRpcMap?: FishNetRpcMap;
 }
 
 export interface CapturedPacketBase {

@@ -47,7 +47,18 @@ bun run capture:dump -- --all-processes --filter "tcp.DstPort == 443"
 
 # Preserve raw lines and add decoded LiteNetLib 1.x leaf packets
 bun run capture:dump -- --protocols udp --decode-litenetlib
+
+# Add verified FishNet headers and conservative RPC annotations
+bun run capture:dump -- --protocols udp --decode-fishnet
 ```
+
+`--decode-fishnet` implies `--decode-litenetlib`. Method names are emitted only
+for mappings whose compact wire values have been independently verified.
+
+Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, and the
+FishNet packet identifier table used by the decoder. It catalogued 302 generated
+RPC method symbols, including 32 numeric-suffix collisions; those suffixes are
+therefore not treated as wire RPC values.
 
 `--filter` uses [WinDivert filter syntax](https://reqrypt.org/windivert-doc.html#filter_language). Use `--helper <path>` to test a specific helper executable.
 
@@ -69,14 +80,17 @@ capture.on("targetStatus", status => {
 capture.on("liteNetPacket", decoded => {
   console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
 });
+capture.on("fishNetPacket", decoded => {
+  console.log(decoded.tick, decoded.packetName, decoded.rpcHash, decoded.rpcName);
+});
 await capture.start({
   targetProcessName: "SpiritVale.exe",
   protocols: ["tcp", "udp"],
-  decodeLiteNetLib: true,
+  decodeFishNet: true,
 });
 ```
 
-The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. Omit `targetProcessName` for an unrestricted diagnostic capture.
+The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. FishNet decoding emits after its containing LiteNetLib leaf, identifies only verified headers, and preserves ambiguous bytes rather than guessing their meaning. Omit `targetProcessName` for an unrestricted diagnostic capture.
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
+import type { CapturedFishNetPacket } from "../fishnet/types.ts";
 import type { CapturedUdpPacket } from "../types.ts";
-import { formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
+import { formatFishNetPacket, formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
 
 function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
   const outbound = direction === "outbound";
@@ -34,6 +35,39 @@ describe("formatTransportPacket", () => {
   test("renders inbound UDP from its remote source to its local destination", () => {
     expect(formatTransportPacket(udpPacket("inbound"))).toBe(
       "UDP 198.51.100.20:7007 -> 192.0.2.10:50000 payload=042000e68b47f982e2de08",
+    );
+  });
+});
+
+describe("formatFishNetPacket", () => {
+  test("formats verified headers without inventing a name", () => {
+    const udp = udpPacket("outbound");
+    const liteNetPacket: CapturedLiteNetLibPacket = {
+      udpPacket: udp,
+      mergePath: [],
+      packet: {
+        propertyId: 0,
+        property: "unreliable",
+        connectionNumber: 0,
+        fragmented: false,
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+      },
+    };
+    const packet: CapturedFishNetPacket = {
+      liteNetPacket,
+      tick: 42,
+      packetId: 8,
+      packetName: "serverRpc",
+      objectId: 7,
+      networkBehaviourIndex: 2,
+      rpcHash: 5,
+      rpcHash16Candidate: 261,
+      raw: Buffer.alloc(0),
+      payload: Buffer.from("aabb", "hex"),
+    };
+    expect(formatFishNetPacket(packet)).toBe(
+      "    FISHNET tick=42 id=8 kind=serverRpc object=7:2 rpc=5 rpc16?=261 bytes=2 payload=aabb",
     );
   });
 });

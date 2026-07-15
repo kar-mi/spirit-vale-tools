@@ -4,7 +4,8 @@ native/vendor/
 native/capture-helper/target/
 *.log
 *.zip
-out.txt
+*.txt
+.local/
 
 
 scrape/*

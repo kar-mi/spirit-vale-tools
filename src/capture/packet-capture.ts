@@ -3,8 +3,10 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
+import { decodeFishNetPayload, FishNetProtocolError } from "../fishnet/decoder.ts";
 import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
+import type { CapturedFishNetPacket, FishNetRpcMap } from "../fishnet/types.ts";
 import type {
   CaptureConfig,
   CaptureTargetStatus,
@@ -42,6 +44,8 @@ export class PacketCapture extends EventEmitter {
   private startDeferred: Deferred | null = null;
   private sawStoppedRecord = false;
   private decodeLiteNetLib = false;
+  private decodeFishNet = false;
+  private fishNetRpcMap: FishNetRpcMap | undefined;
   private _state: CaptureState = "stopped";
 
   constructor(private readonly spawnProcess: NativeProcessFactory = defaultSpawnProcess) {
@@ -57,6 +61,7 @@ export class PacketCapture extends EventEmitter {
   override on(event: "udpPacket", listener: (packet: CapturedUdpPacket) => void): this;
   override on(event: "transportPacket", listener: (packet: CapturedTransportPacket) => void): this;
   override on(event: "liteNetPacket", listener: (packet: CapturedLiteNetLibPacket) => void): this;
+  override on(event: "fishNetPacket", listener: (packet: CapturedFishNetPacket) => void): this;
   override on(event: "targetStatus", listener: (status: CaptureTargetStatus) => void): this;
   override on(event: "warning", listener: (message: string) => void): this;
   override on(event: "error", listener: (error: Error) => void): this;
@@ -91,7 +96,9 @@ export class PacketCapture extends EventEmitter {
     this._state = "starting";
     this.process = spawned;
     this.sawStoppedRecord = false;
-    this.decodeLiteNetLib = config.decodeLiteNetLib ?? false;
+    this.decodeFishNet = config.decodeFishNet ?? false;
+    this.decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || this.decodeFishNet;
+    this.fishNetRpcMap = config.fishNetRpcMap;
     this.startDeferred = createDeferred();
     const startPromise = this.startDeferred.promise;
     const stdoutTask = this.consumeStdout(spawned).catch((error: unknown) => this.handleFailure(toError(error)));
@@ -198,7 +205,9 @@ export class PacketCapture extends EventEmitter {
   private emitLiteNetLibPackets(packet: CapturedUdpPacket): void {
     try {
       for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
-        this.emit("liteNetPacket", { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket);
+        const captured = { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket;
+        this.emit("liteNetPacket", captured);
+        if (this.decodeFishNet) this.emitFishNetPacket(captured);
       }
     } catch (error) {
       const detail = error instanceof LiteNetLibProtocolError ? error.message : toError(error).message;
@@ -210,6 +219,21 @@ export class PacketCapture extends EventEmitter {
     }
   }
 
+  private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
+    const { property, payload } = packet.packet;
+    if ((property !== "unreliable" && property !== "channeled") || payload.length < 6) return;
+    try {
+      const decoded = decodeFishNetPayload(payload, {
+        reliable: property === "channeled",
+        rpcMap: this.fishNetRpcMap,
+      });
+      this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet } satisfies CapturedFishNetPacket);
+    } catch (error) {
+      const detail = error instanceof FishNetProtocolError ? error.message : toError(error).message;
+      this.emit("warning", `skipped FishNet decode at LiteNetLib path ${packet.mergePath.join(".") || "root"}: ${detail}`);
+    }
+  }
+
   private markStopped(): void {
     const changed = this._state !== "stopped";
     this._state = "stopped";
@@ -217,6 +241,8 @@ export class PacketCapture extends EventEmitter {
     this.exitTask = null;
     this.startDeferred = null;
     this.decodeLiteNetLib = false;
+    this.decodeFishNet = false;
+    this.fishNetRpcMap = undefined;
     if (changed) this.emit("stopped");
   }
 }

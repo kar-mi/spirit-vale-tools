@@ -1,6 +1,7 @@
 import { PacketCapture } from "../index.ts";
 import type { CaptureProtocol } from "../types.ts";
-import { formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
+import { loadFishNetRpcMap } from "../fishnet/rpc-map.ts";
+import { formatFishNetPacket, formatLiteNetLibPacket, formatTransportPacket } from "./format-packet.ts";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
@@ -18,7 +19,14 @@ if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" &&
   throw new Error("--protocols must be tcp, udp, or tcp,udp");
 }
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
-const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib");
+const decodeFishNet = Bun.argv.includes("--decode-fishnet");
+const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
+const mapOption = option("--fishnet-map");
+const mapPath = decodeFishNet ? mapOption : undefined;
+const fishNetRpcMap = mapPath ? loadFishNetRpcMap(mapPath) : undefined;
+if (decodeFishNet && !fishNetRpcMap) {
+  console.error("[warning] no FishNet RPC map supplied; numeric packet/RPC identifiers will still be shown");
+}
 
 const capture = new PacketCapture();
 capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
@@ -32,6 +40,7 @@ capture.on("transportPacket", (packet) => {
   console.log(formatTransportPacket(packet));
 });
 capture.on("liteNetPacket", (packet) => console.log(formatLiteNetLibPacket(packet)));
+capture.on("fishNetPacket", (packet) => console.log(formatFishNetPacket(packet)));
 
 let stopping = false;
 async function stop(): Promise<void> {
@@ -49,6 +58,8 @@ await capture.start({
   protocols: protocols as CaptureProtocol[],
   targetProcessName,
   decodeLiteNetLib,
+  decodeFishNet,
+  fishNetRpcMap,
 });
 if (durationSeconds !== undefined) {
   await Bun.sleep(durationSeconds * 1000);

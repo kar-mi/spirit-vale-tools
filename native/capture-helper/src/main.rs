@@ -13,7 +13,7 @@ mod windows_main {
     use spiritvale_capture::ipc::FrameWriter;
     use spiritvale_capture::packet::parse_transport_packet;
     use spiritvale_capture::target::{
-        AttributionBuffer, TargetSnapshot, windows as target_windows,
+        AttributionBuffer, TargetSnapshot, TargetStatusTracker, windows as target_windows,
     };
     use spiritvale_capture::windivert::{WinDivertCapture, shutdown_handle};
 
@@ -104,6 +104,12 @@ mod windows_main {
         let mut last_generation = target.as_ref().map_or(0, |(_, snapshot, _)| {
             snapshot.read().map_or(0, |value| value.generation)
         });
+        let mut target_status = target.as_ref().map(|(_, snapshot, _)| {
+            TargetStatusTracker::new(snapshot.read().map_or_else(
+                |_| std::collections::BTreeSet::default(),
+                |value| value.process_ids.clone(),
+            ))
+        });
         let mut pending = AttributionBuffer::new();
 
         loop {
@@ -117,12 +123,19 @@ mod windows_main {
                             let now = Instant::now();
                             if snapshot.generation != last_generation {
                                 last_generation = snapshot.generation;
-                                if writer
-                                    .target_status(
-                                        process_name,
-                                        &snapshot.process_ids.iter().copied().collect::<Vec<_>>(),
-                                    )
-                                    .is_err()
+                                if target_status
+                                    .as_mut()
+                                    .is_some_and(|status| status.update(&snapshot.process_ids))
+                                    && writer
+                                        .target_status(
+                                            process_name,
+                                            &snapshot
+                                                .process_ids
+                                                .iter()
+                                                .copied()
+                                                .collect::<Vec<_>>(),
+                                        )
+                                        .is_err()
                                 {
                                     return 1;
                                 }

@@ -20,8 +20,8 @@ function packetBody(payload = Buffer.from([0xaa, 0xbb])): Buffer {
   body.writeUInt8(4, 17);
   body.writeUInt8(0x18, 18);
   body.writeUInt8(3, 19);
-  body.set([10, 0, 0, 1], 32);
-  body.set([10, 0, 0, 2], 48);
+  body.set([192, 0, 2, 1], 32);
+  body.set([198, 51, 100, 2], 48);
   body.writeUInt16LE(1234, 52);
   body.writeUInt16LE(443, 54);
   body.writeUInt32LE(5, 56);
@@ -65,8 +65,8 @@ describe("NativeProtocolDecoder", () => {
     expect(packetRecord?.type).toBe(NativeRecordType.TcpPacket);
     if (packetRecord?.type !== NativeRecordType.TcpPacket) throw new Error("expected packet record");
     expect(packetRecord.packet.protocol).toBe("tcp");
-    expect(packetRecord.packet.sourceIP).toBe("10.0.0.1");
-    expect(packetRecord.packet.destinationIP).toBe("10.0.0.2");
+    expect(packetRecord.packet.sourceIP).toBe("192.0.2.1");
+    expect(packetRecord.packet.destinationIP).toBe("198.51.100.2");
     expect(packetRecord.packet.direction).toBe("outbound");
     expect(packetRecord.packet.loopback).toBe(true);
     expect(packetRecord.packet.truncated).toBe(true);

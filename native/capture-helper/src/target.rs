@@ -61,6 +61,28 @@ pub struct AttributionBuffer {
     pending: VecDeque<(Instant, TransportPacket)>,
 }
 
+/// Tracks the PID set last reported to the parent process. Endpoint-table churn
+/// must not look like additional target processes starting.
+pub struct TargetStatusTracker {
+    process_ids: BTreeSet<u32>,
+}
+
+impl TargetStatusTracker {
+    #[must_use]
+    pub const fn new(process_ids: BTreeSet<u32>) -> Self {
+        Self { process_ids }
+    }
+
+    /// Returns true only when a new status record should be emitted.
+    pub fn update(&mut self, process_ids: &BTreeSet<u32>) -> bool {
+        if self.process_ids == *process_ids {
+            return false;
+        }
+        self.process_ids.clone_from(process_ids);
+        true
+    }
+}
+
 impl AttributionBuffer {
     #[must_use]
     pub const fn new() -> Self {
@@ -432,5 +454,14 @@ mod tests {
         });
         assert_eq!(buffer.drain_matches(&snapshot, now).len(), 1);
         assert!(buffer.drain_matches(&snapshot, now).is_empty());
+    }
+
+    #[test]
+    fn target_status_changes_only_for_process_ids() {
+        let mut tracker = TargetStatusTracker::new(BTreeSet::from([42]));
+        assert!(!tracker.update(&BTreeSet::from([42])));
+        assert!(tracker.update(&BTreeSet::from([42, 84])));
+        assert!(!tracker.update(&BTreeSet::from([42, 84])));
+        assert!(tracker.update(&BTreeSet::new()));
     }
 }

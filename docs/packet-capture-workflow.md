@@ -62,13 +62,25 @@ The capture remains ready if the application is not running. It automatically fo
 
 Stop capture with Ctrl+C.
 
-In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a game endpoint on `135.148.52.81:7007`. The user/client endpoint is intentionally omitted, and the default process-attributed capture does not hard-code the game endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
+In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a game endpoint on `135.148.52.81:7007`. The default process-attributed capture does not hard-code the game endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
 
 A larger capture identified the UDP transport as the LiteNetLib 1.x wire format. To keep the raw datagram line and append one decoded line per logical packet, including children unpacked from merged envelopes, run:
 
 ```powershell
 bun run capture:dump -- --protocols udp --decode-litenetlib
 ```
+
+Enable the FishNet layer with:
+
+```powershell
+bun run capture:dump -- --protocols udp --decode-fishnet
+```
+
+Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, the
+FishNet packet identifier table, and 302 generated RPC method symbols. There
+were 32 numeric-suffix collisions, so generated method suffixes are not assumed
+to be compact wire RPC hashes. A method name is shown only when its wire mapping
+has been independently verified.
 
 ### Common options
 
@@ -146,11 +158,14 @@ capture.on("transportPacket", packet => {
 capture.on("liteNetPacket", decoded => {
   console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
 });
+capture.on("fishNetPacket", decoded => {
+  console.log(decoded.tick, decoded.packetName, decoded.rpcHash, decoded.rpcName);
+});
 
 await capture.start({
   targetProcessName: "SpiritVale.exe",
   protocols: ["tcp", "udp"],
-  decodeLiteNetLib: true,
+  decodeFishNet: true,
 });
 ```
 
@@ -166,6 +181,7 @@ Call `await capture.stop()` during application shutdown.
 | `udpPacket` | `CapturedUdpPacket` | UDP packet event. |
 | `transportPacket` | `CapturedTransportPacket` | Receives both TCP and UDP packets. |
 | `liteNetPacket` | `CapturedLiteNetLibPacket` | Receives flattened LiteNetLib 1.x leaves when decoding is enabled. |
+| `fishNetPacket` | `CapturedFishNetPacket` | Receives verified FishNet headers inside LiteNetLib data leaves. |
 | `warning` | `string` | Recoverable native warning. |
 | `error` | `Error` | Capture or protocol failure. |
 | `stopped` | none | Capture has stopped. |
@@ -176,7 +192,7 @@ Omit `targetProcessName` to emit packets from every process allowed by the WinDi
 
 `decodeLiteNetLibDatagram` is also exported as a strict pure function. It returns flattened logical packets with a `mergePath`; malformed input throws `LiteNetLibProtocolError` with the failing byte offset. Live capture handles that error recoverably: the raw UDP event is still emitted, a warning is raised, and only the decoded event is skipped.
 
-The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. Spirit Vale gameplay payloads remain opaque buffers.
+The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. `decodeFishNet` implies LiteNetLib decoding and adds the verified four-byte tick and two-byte packet identifier. RPC parsing is bounded and preserves ambiguous hash bytes rather than assigning an unverified name.
 
 ## Capture analysis
 
@@ -185,7 +201,7 @@ The decoder targets the observed LiteNetLib 1.x property table. It handles unrel
 | UDP game endpoint `167.114.209.119:7004` | 10,834 | 5,355,984 | LiteNetLib 1.x decoded. |
 | TCP/TLS remote endpoint `91.99.215.190:443` | 151 | 220,866 | Catalogued only; payload remains encrypted. |
 
-All 2,694 merged UDP datagrams validated structurally and contained 5,778 immediate children. Recursive decoding produced 13,918 leaf packets with no errors: 6,870 unreliable, 3,951 channeled, 2,708 acknowledgements, 195 pings, and 194 pongs. User/client endpoint values are intentionally omitted, and game endpoints are not hard-coded.
+All 2,694 merged UDP datagrams validated structurally and contained 5,778 immediate children. Recursive decoding produced 13,918 leaf packets with no errors: 6,870 unreliable, 3,951 channeled, 2,708 acknowledgements, 195 pings, and 194 pongs. Game endpoints are not hard-coded.
 
 ## Process attribution
 
