@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { NativeProtocolDecoder, NativeProtocolError, NativeRecordType } from "./protocol.ts";
 
-function frame(type: number, body: Uint8Array = new Uint8Array(), version = 1): Buffer {
+function frame(type: number, body: Uint8Array = new Uint8Array(), version = 2): Buffer {
   const header = Buffer.alloc(12);
   header.write("SVCP", 0, "ascii");
   header.writeUInt16LE(version, 4);
@@ -31,9 +31,27 @@ function packetBody(payload = Buffer.from([0xaa, 0xbb])): Buffer {
   return body;
 }
 
+function udpBody(payload = Buffer.from([0xcc])): Buffer {
+  const body = packetBody(payload).subarray(0, 60 + payload.length);
+  body.writeUInt32LE(payload.length, 56);
+  body.set(payload, 60);
+  return body;
+}
+
+function targetBody(name: string, pids: number[]): Buffer {
+  const encodedName = Buffer.from(name);
+  const body = Buffer.alloc(5 + encodedName.length + pids.length * 4);
+  body.writeUInt8(pids.length === 0 ? 0 : 1, 0);
+  body.writeUInt16LE(encodedName.length, 1);
+  body.writeUInt16LE(pids.length, 3);
+  body.set(encodedName, 5);
+  pids.forEach((pid, index) => body.writeUInt32LE(pid, 5 + encodedName.length + index * 4));
+  return body;
+}
+
 describe("NativeProtocolDecoder", () => {
   test("reassembles frames split across arbitrary chunks", () => {
-    const bytes = Buffer.concat([frame(NativeRecordType.Ready), frame(NativeRecordType.Packet, packetBody())]);
+    const bytes = Buffer.concat([frame(NativeRecordType.Ready), frame(NativeRecordType.TcpPacket, packetBody())]);
     const decoder = new NativeProtocolDecoder();
     const records = [
       ...decoder.push(bytes.subarray(0, 3)),
@@ -44,8 +62,9 @@ describe("NativeProtocolDecoder", () => {
     expect(records).toHaveLength(2);
     expect(records[0]).toEqual({ type: NativeRecordType.Ready });
     const packetRecord = records[1];
-    expect(packetRecord?.type).toBe(NativeRecordType.Packet);
-    if (packetRecord?.type !== NativeRecordType.Packet) throw new Error("expected packet record");
+    expect(packetRecord?.type).toBe(NativeRecordType.TcpPacket);
+    if (packetRecord?.type !== NativeRecordType.TcpPacket) throw new Error("expected packet record");
+    expect(packetRecord.packet.protocol).toBe("tcp");
     expect(packetRecord.packet.sourceIP).toBe("10.0.0.1");
     expect(packetRecord.packet.destinationIP).toBe("10.0.0.2");
     expect(packetRecord.packet.direction).toBe("outbound");
@@ -57,17 +76,38 @@ describe("NativeProtocolDecoder", () => {
   test("rejects invalid magic and protocol versions", () => {
     const decoder = new NativeProtocolDecoder();
     expect(() => decoder.push(Buffer.alloc(12))).toThrow(NativeProtocolError);
-    expect(() => new NativeProtocolDecoder().push(frame(NativeRecordType.Ready, Buffer.alloc(0), 2))).toThrow(
-      "unsupported capture protocol version 2",
+    expect(() => new NativeProtocolDecoder().push(frame(NativeRecordType.Ready, Buffer.alloc(0), 1))).toThrow(
+      "unsupported capture protocol version 1",
     );
   });
 
   test("rejects mismatched packet payload lengths", () => {
     const body = packetBody();
     body.writeUInt32LE(99, 64);
-    expect(() => new NativeProtocolDecoder().push(frame(NativeRecordType.Packet, body))).toThrow(
+    expect(() => new NativeProtocolDecoder().push(frame(NativeRecordType.TcpPacket, body))).toThrow(
       "packet payload length does not match",
     );
+  });
+
+  test("decodes UDP packets and target status", () => {
+    const records = new NativeProtocolDecoder().push(Buffer.concat([
+      frame(NativeRecordType.UdpPacket, udpBody()),
+      frame(NativeRecordType.TargetStatus, targetBody("SpiritVale.exe", [30616])),
+      frame(NativeRecordType.TargetStatus, targetBody("SpiritVale.exe", [])),
+    ]));
+    const udp = records[0];
+    expect(udp?.type).toBe(NativeRecordType.UdpPacket);
+    if (udp?.type !== NativeRecordType.UdpPacket) throw new Error("expected UDP packet");
+    expect(udp.packet.protocol).toBe("udp");
+    expect(udp.packet.payload).toEqual(Buffer.from([0xcc]));
+    expect(records[1]).toEqual({
+      type: NativeRecordType.TargetStatus,
+      status: { processName: "SpiritVale.exe", state: "active", processIds: [30616] },
+    });
+    expect(records[2]).toEqual({
+      type: NativeRecordType.TargetStatus,
+      status: { processName: "SpiritVale.exe", state: "waiting", processIds: [] },
+    });
   });
 
   test("rejects incomplete terminal frames", () => {

@@ -19,7 +19,7 @@ function prepareRuntime(): string {
 function frame(type: number, body = Buffer.alloc(0)): Buffer {
   const header = Buffer.alloc(12);
   header.write("SVCP", 0, "ascii");
-  header.writeUInt16LE(1, 4);
+  header.writeUInt16LE(2, 4);
   header.writeUInt8(type, 6);
   header.writeUInt32LE(body.length, 8);
   return Buffer.concat([header, body]);
@@ -89,9 +89,15 @@ describe("PacketCapture lifecycle", () => {
     capture.on("started", () => started += 1);
     capture.on("stopped", () => stopped += 1);
 
-    await capture.start({ helperPath, filter: "tcp.DstPort == 443" });
+    await capture.start({ helperPath, filter: "tcp.DstPort == 443", targetProcessName: "SpiritVale.exe" });
     expect(capture.state).toBe("running");
-    expect(mock.commands[0]).toEqual([helperPath, "--filter", "tcp.DstPort == 443"]);
+    expect(mock.commands[0]).toEqual([
+      helperPath,
+      "--filter",
+      "tcp.DstPort == 443",
+      "--process-name",
+      "SpiritVale.exe",
+    ]);
     expect(started).toBe(1);
 
     await capture.stop();
@@ -113,6 +119,15 @@ describe("PacketCapture lifecycle", () => {
     const capture = new PacketCapture(mock.factory);
     await capture.start({ helperPath });
     await expect(capture.start({ helperPath })).rejects.toThrow("cannot start capture while it is running");
+    await capture.stop();
+  });
+
+  test("derives a protocol filter and supports untargeted capture", async () => {
+    const helperPath = prepareRuntime();
+    const mock = mockFactory();
+    const capture = new PacketCapture(mock.factory);
+    await capture.start({ helperPath, protocols: ["udp"] });
+    expect(mock.commands[0]).toEqual([helperPath, "--filter", "udp"]);
     await capture.stop();
   });
 });

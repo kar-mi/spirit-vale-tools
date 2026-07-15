@@ -3,7 +3,14 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
-import type { CaptureConfig, CapturedTcpPacket, CaptureState } from "../types.ts";
+import type {
+  CaptureConfig,
+  CaptureTargetStatus,
+  CapturedTcpPacket,
+  CapturedTransportPacket,
+  CapturedUdpPacket,
+  CaptureState,
+} from "../types.ts";
 
 export interface NativeProcess {
   readonly stdin: {
@@ -44,6 +51,9 @@ export class PacketCapture extends EventEmitter {
 
   override on(event: "started", listener: () => void): this;
   override on(event: "packet", listener: (packet: CapturedTcpPacket) => void): this;
+  override on(event: "udpPacket", listener: (packet: CapturedUdpPacket) => void): this;
+  override on(event: "transportPacket", listener: (packet: CapturedTransportPacket) => void): this;
+  override on(event: "targetStatus", listener: (status: CaptureTargetStatus) => void): this;
   override on(event: "warning", listener: (message: string) => void): this;
   override on(event: "error", listener: (error: Error) => void): this;
   override on(event: "stopped", listener: () => void): this;
@@ -61,7 +71,17 @@ export class PacketCapture extends EventEmitter {
 
     const helperPath = resolveHelperPath(config.helperPath);
     validateRuntimeFiles(helperPath);
-    const command = [helperPath, "--filter", config.filter ?? "tcp"];
+    const protocols = config.protocols ?? ["tcp", "udp"];
+    if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
+      throw new Error("protocols must contain tcp, udp, or both");
+    }
+    const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
+    const command = [helperPath, "--filter", filter];
+    if (config.targetProcessName !== undefined) {
+      const processName = config.targetProcessName.trim();
+      if (processName.length === 0) throw new Error("targetProcessName must not be empty");
+      command.push("--process-name", processName);
+    }
     const spawned = this.spawnProcess(command, path.dirname(helperPath));
 
     this._state = "starting";
@@ -109,8 +129,20 @@ export class PacketCapture extends EventEmitter {
             this.startDeferred = null;
             this.emit("started");
             break;
-          case NativeRecordType.Packet:
-            if (this._state === "running") this.emit("packet", record.packet);
+          case NativeRecordType.TcpPacket:
+            if (this._state === "running") {
+              this.emit("packet", record.packet);
+              this.emit("transportPacket", record.packet);
+            }
+            break;
+          case NativeRecordType.UdpPacket:
+            if (this._state === "running") {
+              this.emit("udpPacket", record.packet);
+              this.emit("transportPacket", record.packet);
+            }
+            break;
+          case NativeRecordType.TargetStatus:
+            if (this._state === "running") this.emit("targetStatus", record.status);
             break;
           case NativeRecordType.Warning:
             this.emit("warning", record.message);

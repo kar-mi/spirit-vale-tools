@@ -1,4 +1,6 @@
 import { PacketCapture } from "../index.ts";
+import type { CaptureProtocol } from "../types.ts";
+import { formatTransportPacket } from "./format-packet.ts";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
@@ -11,18 +13,22 @@ if (durationSeconds !== undefined && (!Number.isFinite(durationSeconds) || durat
   throw new Error("--duration must be a positive number of seconds");
 }
 
+const protocols = (option("--protocols") ?? "tcp,udp").split(",").map((value) => value.trim().toLowerCase());
+if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
+  throw new Error("--protocols must be tcp, udp, or tcp,udp");
+}
+const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
+
 const capture = new PacketCapture();
 capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
 capture.on("warning", (message) => console.error(`[warning] ${message}`));
 capture.on("error", (error) => console.error(`[error] ${error.message}`));
-capture.on("packet", (packet) => {
-  const direction = packet.direction === "outbound" ? "->" : "<-";
-  console.log(
-    `${packet.sourceIP}:${packet.sourcePort} ${direction} ${packet.destinationIP}:${packet.destinationPort}` +
-      ` seq=${packet.sequenceNumber} ack=${packet.acknowledgementNumber}` +
-      ` flags=0x${packet.tcpFlags.toString(16).padStart(2, "0")}` +
-      ` payload=${packet.payload.toString("hex")}`,
-  );
+capture.on("targetStatus", (status) => {
+  const pids = status.processIds.length === 0 ? "" : ` (PID ${status.processIds.join(", ")})`;
+  console.error(`target ${status.processName}: ${status.state}${pids}`);
+});
+capture.on("transportPacket", (packet) => {
+  console.log(formatTransportPacket(packet));
 });
 
 let stopping = false;
@@ -35,7 +41,12 @@ async function stop(): Promise<void> {
 process.on("SIGINT", () => void stop());
 process.on("SIGTERM", () => void stop());
 
-await capture.start({ filter: option("--filter"), helperPath: option("--helper") });
+await capture.start({
+  filter: option("--filter"),
+  helperPath: option("--helper"),
+  protocols: protocols as CaptureProtocol[],
+  targetProcessName,
+});
 if (durationSeconds !== undefined) {
   await Bun.sleep(durationSeconds * 1000);
   await stop();

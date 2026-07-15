@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dir, "..");
@@ -17,9 +17,12 @@ for (const [file] of files) {
   if (!existsSync(file)) throw new Error(`Missing native bundle input: ${file}`);
 }
 
-await rm(destination, { recursive: true, force: true });
 await mkdir(destination, { recursive: true });
-for (const [from, name] of files) await copyFile(from, path.join(destination, name));
+for (const [from, name] of files) {
+  const to = path.join(destination, name);
+  if (existsSync(to) && Buffer.from(await readFile(from)).equals(Buffer.from(await readFile(to)))) continue;
+  await copyFile(from, to);
+}
 await writeFile(
   path.join(destination, "THIRD_PARTY_NOTICES.txt"),
   [
