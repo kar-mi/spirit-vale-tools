@@ -18,6 +18,14 @@ export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
 export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-map.ts";
 export { FishNetCombatTracker } from "./fishnet/combat-tracker.ts";
 export { FishNetActorDirectory } from "./fishnet/actor-directory.ts";
+export { FishNetDpsMeter } from "./fishnet/dps-meter.ts";
+export type {
+  FishNetDpsActorRow,
+  FishNetDpsEncounterSnapshot,
+  FishNetDpsMeterOptions,
+  FishNetDpsSkillRow,
+  FishNetPersonalMatch,
+} from "./fishnet/dps-meter.ts";
 export type {
   FishNetActorIdentity,
   FishNetActorIdentityEvent,

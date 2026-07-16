@@ -2,7 +2,7 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ESNext"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
@@ -11,9 +11,10 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
     "types": ["bun"]
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "electrobun.config.ts"]
 }

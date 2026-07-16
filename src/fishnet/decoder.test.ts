@@ -72,7 +72,14 @@ function fixedServerRpc(objectId: number, componentIndex: number, hash: number, 
   ]));
 }
 
-function spawnWithLink(objectId: number, componentIndex: number, linkId: number, rpcHash: number, kind = 9): Buffer {
+function spawnWithLink(
+  objectId: number,
+  componentIndex: number,
+  linkId: number,
+  rpcHash: number,
+  kind = 9,
+  ownerConnectionId = -1,
+): Buffer {
   const records = Buffer.concat([
     Buffer.from([componentIndex]),
     u16(1),
@@ -85,7 +92,7 @@ function spawnWithLink(objectId: number, componentIndex: number, linkId: number,
     packed(objectId),
     u16(1), // spawnable collection
     packed(0), // initialization order
-    packed(-1), // no owner
+    packed(ownerConnectionId),
     Buffer.from([0]), // no changed transform fields
     packed(3), // prefab id
     u32(0), // payload
@@ -148,12 +155,17 @@ describe("FishNet bundles and sessions", () => {
     };
     const decoder = new FishNetSessionDecoder(map);
     const results = decoder.decode(tick(4, Buffer.concat([
-      spawnWithLink(7, 2, 900, 0x1234),
+      spawnWithLink(7, 2, 900, 0x1234, 9, 12),
       linked(900, Buffer.from("aabb", "hex")),
     ])), { reliable: true, connectionId: "synthetic" });
 
     expect(results).toHaveLength(2);
-    expect(results[0]).toMatchObject({ packetName: "objectSpawn", bundleIndex: 0, objectId: 7 });
+    expect(results[0]).toMatchObject({
+      packetName: "objectSpawn",
+      bundleIndex: 0,
+      objectId: 7,
+      ownerConnectionId: 12,
+    });
     expect(results[1]).toMatchObject({
       packetName: "rpcLink",
       bundleIndex: 1,
@@ -166,6 +178,20 @@ describe("FishNet bundles and sessions", () => {
       rpcName: "RpcSyntheticNotice",
     });
     expect(results[1]?.payload).toEqual(Buffer.from("aabb", "hex"));
+  });
+
+  test("decodes ownership changes using the same session-local owner identifier", () => {
+    const [result] = new FishNetSessionDecoder().decode(tick(5, message(11, Buffer.concat([
+      packed(44),
+      Buffer.from([1]),
+      packed(9),
+    ]))), { reliable: true, connectionId: "ownership" });
+
+    expect(result).toMatchObject({
+      packetName: "ownershipChange",
+      objectId: 44,
+      ownerConnectionId: 9,
+    });
   });
 
   test("binds schema-v2 behaviours and decodes verified common fields", () => {

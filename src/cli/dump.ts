@@ -1,3 +1,7 @@
+import { createWriteStream, mkdirSync } from "node:fs";
+import path from "node:path";
+import { finished } from "node:stream/promises";
+
 import {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
   FishNetActorDirectory,
@@ -7,6 +11,7 @@ import {
 } from "../index.ts";
 import type { CaptureProtocol } from "../types.ts";
 import { loadFishNetRpcMap } from "../fishnet/rpc-map.ts";
+import { defaultCombatLogPath } from "../app/log-path.ts";
 import {
   formatActorIdentityEventJson,
   formatCombatEvent,
@@ -33,6 +38,11 @@ if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" &&
 }
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
 const combatJson = Bun.argv.includes("--combat-json");
+const sharedCombatLog = Bun.argv.includes("--combat-log");
+const outputPath = option("--output") ?? (sharedCombatLog ? defaultCombatLogPath() : undefined);
+if (outputPath && !combatJson) throw new Error("--output requires --combat-json");
+if (outputPath) mkdirSync(path.dirname(outputPath), { recursive: true });
+const combatLog = outputPath ? createWriteStream(outputPath, { flags: "a", encoding: "utf8" }) : undefined;
 const combatOnly = Bun.argv.includes("--combat-only") || combatJson;
 const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
@@ -72,10 +82,12 @@ capture.on("fishNetPacket", (packet) => {
     return;
   }
   for (const event of actorDirectory?.consume(packet) ?? []) {
-    console.log(formatActorIdentityEventJson(event));
+    writeCombatLine(formatActorIdentityEventJson(event));
   }
   for (const event of combatTracker?.consume(packet) ?? []) {
-    console.log(combatJson ? formatCombatEventJson(event) : formatCombatEvent(event));
+    const line = combatJson ? formatCombatEventJson(event) : formatCombatEvent(event);
+    if (combatJson) writeCombatLine(line);
+    else console.log(line);
   }
 });
 capture.on("stopped", () => {
@@ -88,6 +100,15 @@ async function stop(): Promise<void> {
   if (stopping) return;
   stopping = true;
   await capture.stop();
+  if (combatLog) {
+    combatLog.end();
+    await finished(combatLog);
+  }
+}
+
+function writeCombatLine(line: string): void {
+  if (combatLog) combatLog.write(`${line}\n`);
+  else console.log(line);
 }
 
 process.on("SIGINT", () => void stop());

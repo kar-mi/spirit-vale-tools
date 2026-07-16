@@ -15,6 +15,7 @@ export interface SpawnCandidate {
   componentBindings: Array<[string, string]>;
   spawnType: "scene" | "instantiated" | "predicted";
   collectionId: number;
+  ownerConnectionId: number;
   prefabId?: number;
   sceneId?: bigint;
   nested: boolean;
@@ -51,7 +52,8 @@ export function parseObjectSpawn(
     const collectionId = buffer.readUInt16LE(offset);
     offset += 2;
     offset = readSignedPackedWhole(buffer, offset).nextOffset;
-    offset = readSignedPackedWhole(buffer, offset).nextOffset;
+    const owner = readSignedPackedWhole(buffer, offset);
+    offset = owner.nextOffset;
     requireBytes(buffer, offset, 1, "transform flags");
     const transformFlags = buffer[offset] ?? 0;
     if ((transformFlags & ~0x07) !== 0) return undefined;
@@ -101,6 +103,7 @@ export function parseObjectSpawn(
           componentBindings,
           spawnType,
           collectionId,
+          ownerConnectionId: owner.value,
           prefabId,
           sceneId,
           nested,

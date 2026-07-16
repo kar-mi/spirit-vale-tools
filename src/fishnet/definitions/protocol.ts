@@ -58,6 +58,8 @@ export interface DecodedFishNetPacket {
   raw: Buffer;
   payload: Buffer;
   objectId?: number;
+  /** FishNet session-local owner connection ID; -1 denotes no owner. */
+  ownerConnectionId?: number;
   networkBehaviourIndex?: number;
   rpcPayloadLength?: number;
   rpcHash?: number;

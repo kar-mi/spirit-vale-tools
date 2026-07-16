@@ -32,6 +32,30 @@ function visual(displayName: string, archetype = 2): FishNetDecodedField[] {
   ];
 }
 
+function spawn(
+  tick: number,
+  objectId: number,
+  ownerConnectionId: number,
+  networkBehaviourType: string,
+): DecodedFishNetPacket {
+  return {
+    ...packet(tick, "objectSpawn", objectId),
+    ownerConnectionId,
+    rpcLinkRegistrations: [{
+      linkId: 900 + objectId,
+      objectId,
+      componentIndex: 0,
+      rpcHash: 1,
+      packetName: "observersRpc",
+      networkBehaviourType,
+    }],
+  };
+}
+
+function ownership(tick: number, objectId: number, ownerConnectionId: number): DecodedFishNetPacket {
+  return { ...packet(tick, "ownershipChange", objectId), ownerConnectionId };
+}
+
 describe("FishNetActorDirectory", () => {
   test("tracks every visible player and suppresses unchanged updates", () => {
     const directory = new FishNetActorDirectory();
@@ -77,5 +101,68 @@ describe("FishNetActorDirectory", () => {
       { kind: "actorIdentity", operation: "reset", tick: 3 },
     ]);
     expect(directory.get(40)).toBeUndefined();
+  });
+
+  test("propagates a player identity to same-owner combat objects", () => {
+    const directory = new FishNetActorDirectory();
+    expect(directory.consume(spawn(1, 40, 7, "PlayerController"))).toEqual([]);
+    expect(directory.consume(spawn(2, 140, 7, "SkillsComponent"))).toEqual([]);
+    expect(directory.consume(packet(3, "syncType", 40, visual("Aster Vale")))).toEqual([
+      {
+        kind: "actorIdentity",
+        operation: "upsert",
+        tick: 3,
+        actorId: 40,
+        displayName: "Aster Vale",
+        archetype: 2,
+        ownerConnectionId: 7,
+      },
+      {
+        kind: "actorIdentity",
+        operation: "upsert",
+        tick: 3,
+        actorId: 140,
+        displayName: "Aster Vale",
+        archetype: 2,
+        ownerConnectionId: 7,
+      },
+    ]);
+    expect(directory.get(140)).toMatchObject({ displayName: "Aster Vale", ownerConnectionId: 7 });
+
+    expect(directory.consume(spawn(4, 240, 7, "CombatComponent"))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 4,
+      actorId: 240,
+      displayName: "Aster Vale",
+      archetype: 2,
+      ownerConnectionId: 7,
+    }]);
+  });
+
+  test("removes and reapplies aliases across ownership and source lifecycle changes", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    directory.consume(spawn(2, 140, 7, "SkillsComponent"));
+    directory.consume(packet(3, "syncType", 40, visual("Aster Vale")));
+
+    expect(directory.consume(ownership(4, 140, 8))).toEqual([{
+      kind: "actorIdentity",
+      operation: "remove",
+      tick: 4,
+      actorId: 140,
+    }]);
+
+    directory.consume(spawn(5, 50, 8, "PlayerController"));
+    expect(directory.consume(packet(6, "syncType", 50, visual("Briar Stone", 4))))
+      .toMatchObject([
+        { operation: "upsert", actorId: 140, displayName: "Briar Stone", ownerConnectionId: 8 },
+        { operation: "upsert", actorId: 50, displayName: "Briar Stone", ownerConnectionId: 8 },
+      ]);
+
+    expect(directory.consume(packet(7, "objectDespawn", 50))).toEqual([
+      { kind: "actorIdentity", operation: "remove", tick: 7, actorId: 50 },
+      { kind: "actorIdentity", operation: "remove", tick: 7, actorId: 140 },
+    ]);
   });
 });

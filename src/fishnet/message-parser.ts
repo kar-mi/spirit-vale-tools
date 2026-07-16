@@ -67,6 +67,7 @@ export function parseMessage(
       packet.objectId = candidate.objectId;
       packet.spawnType = candidate.spawnType;
       packet.spawnCollectionId = candidate.collectionId;
+      packet.ownerConnectionId = candidate.ownerConnectionId;
       packet.spawnPrefabId = candidate.prefabId;
       packet.spawnSceneId = candidate.sceneId;
       packet.spawnNested = candidate.nested;
@@ -151,9 +152,13 @@ export function parseMessage(
         break;
       case "ownershipChange": {
         const object = readNetworkObjectReference(buffer, dataStart);
-        end = readSignedPackedWhole(buffer, object.nextOffset).nextOffset;
+        const owner = readSignedPackedWhole(buffer, object.nextOffset);
+        end = owner.nextOffset;
         objectId = object.objectId;
-        break;
+        const packet = basePacket(buffer, start, end, tick, bundleIndex, packetId, packetName);
+        packet.objectId = objectId;
+        packet.ownerConnectionId = owner.value;
+        return { packet, end, stop: false };
       }
       case "disconnect":
         end = buffer.length;
