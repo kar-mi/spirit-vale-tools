@@ -63,6 +63,9 @@ bun run capture:dump -- --protocols udp --combat-json
 # Passively decode and search market data from a raw capture log
 bun run market -- --input <capture.log> --query <item-name>
 
+# Require equipment or artifacts with both requested stats and at least +3 Strength
+bun run market -- --input <capture.log> --query <item-name> --stat Str:3 --stat AtkMult
+
 # Watch market responses from the live game connection without sending packets
 bun run market -- --live --query <item-name> --json
 
@@ -182,7 +185,16 @@ whose pending balance decreased.
 
 The `market` command requires either `--input <capture.log>` or `--live`. Local
 queries support `--query`, `--item-type`, `--min-price`, `--max-price`,
-`--sort price-asc|price-desc`, and `--limit`. Add `--json` for machine-readable
+`--sort price-asc|price-desc`, and `--limit`. Repeat `--stat <name>[:minimum]`
+to filter equipment and artifacts by their displayed substat values. The encoded
+roll is converted with the same scaling used by the game. Multiple stat filters require
+all requested stats by default; `--stat-mode any` switches to any-stat matching.
+Stat names are case-insensitive and ignore spaces, hyphens, and underscores.
+Equipment IDs from the supported build use a build-matched substat table, including
+weapons, armor, accessories, eyewear, back equipment, and grimoires. An unknown item ID
+falls back to stat-based inference; if that cannot distinguish two tables with different
+caps, output shows `roll:<value>` and a minimum filter does not match the unresolved value.
+Add `--json` for machine-readable
 output; 64-bit prices, balances, and timestamps are emitted as decimal strings.
 
 ```ts
@@ -196,7 +208,13 @@ capture.on("fishNetPacket", packet => {
 
 await capture.start({ protocols: ["udp"], decodeFishNet: true });
 
-const cheapest = market.query({ text: "example item", sort: "price-asc", limit: 10 });
+const cheapest = market.query({
+  text: "example item",
+  stats: [{ stat: "Str", minValue: 3 }, { stat: "AtkMult" }],
+  statMode: "all",
+  sort: "price-asc",
+  limit: 10,
+});
 ```
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.

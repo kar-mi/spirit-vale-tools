@@ -1,5 +1,8 @@
 import { FishNetProtocolError } from "./protocol.ts";
 import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
+import { fishNetMarketStatName, resolveFishNetMarketStat } from "./market-stats.ts";
+import type { FishNetMarketStatName } from "./market-stats.ts";
+import { calculateFishNetMarketStatValues } from "./market-stat-values.ts";
 import type { DecodedFishNetPacket } from "./types.ts";
 
 export interface FishNetMarketListing {
@@ -76,6 +79,23 @@ export interface FishNetMarketListingView extends FishNetMarketListing {
   searchText: string | null;
   shopName: string | null;
   mapId: string | null;
+  stats?: FishNetMarketStat[];
+}
+
+export interface FishNetMarketStat {
+  type: number;
+  name?: FishNetMarketStatName;
+  /** Converted in-game value. Undefined only when the equipment slot cannot be inferred safely. */
+  value?: number;
+  /** Encoded 0-100 substat roll carried by the market payload. */
+  roll: number;
+  percent: boolean;
+  valueStr: string | null;
+}
+
+export interface FishNetMarketStatFilter {
+  stat: string | number;
+  minValue?: number;
 }
 
 export interface FishNetMarketQuery {
@@ -83,6 +103,8 @@ export interface FishNetMarketQuery {
   itemType?: number;
   minPrice?: bigint;
   maxPrice?: bigint;
+  stats?: readonly FishNetMarketStatFilter[];
+  statMode?: "all" | "any";
   sort?: "price-asc" | "price-desc";
   limit?: number;
 }
@@ -129,7 +151,11 @@ export function decodeFishNetMarketPacket(packet: DecodedFishNetPacket): FishNet
 
 export class FishNetMarketTracker {
   private catalog: FishNetMarketCatalogItem[] = [];
-  private readonly listings = new Map<string, { listing: FishNetMarketListing; searchText: string | null }>();
+  private readonly listings = new Map<string, {
+    listing: FishNetMarketListing;
+    searchText: string | null;
+    stats?: FishNetMarketStat[];
+  }>();
   private readonly stalls = new Map<string, FishNetMarketStall>();
   private account?: FishNetMarketAccount;
   private lastBalanceDelta?: bigint;
@@ -153,11 +179,21 @@ export class FishNetMarketTracker {
 
   query(query: FishNetMarketQuery = {}): FishNetMarketListingView[] {
     const needle = query.text?.trim().toLocaleLowerCase() ?? "";
+    const statFilters = normalizeStatFilters(query.stats ?? []);
+    const statMode = query.statMode ?? "all";
+    if (statMode !== "all" && statMode !== "any") throw new Error(`unknown market stat mode ${JSON.stringify(statMode)}`);
     const result: FishNetMarketListingView[] = [];
-    for (const { listing, searchText } of this.listings.values()) {
+    for (const { listing, searchText, stats } of this.listings.values()) {
       if (query.itemType !== undefined && listing.itemType !== query.itemType) continue;
       if (query.minPrice !== undefined && listing.price < query.minPrice) continue;
       if (query.maxPrice !== undefined && listing.price > query.maxPrice) continue;
+      if (statFilters.length > 0) {
+        const matches = statFilters.map((filter) => stats?.some((stat) => {
+          return stat.type === filter.type && (filter.minValue === undefined
+            || (stat.value !== undefined && stat.value >= filter.minValue));
+        }) ?? false);
+        if (statMode === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) continue;
+      }
       const stall = listing.sellerId === null ? undefined : this.stalls.get(listing.sellerId);
       if (needle && ![
         searchText,
@@ -166,7 +202,7 @@ export class FishNetMarketTracker {
         stall?.shopName,
         stall?.mapId,
       ].some((value) => value?.toLocaleLowerCase().includes(needle))) continue;
-      result.push({ ...listing, searchText, shopName: stall?.shopName ?? null, mapId: stall?.mapId ?? null });
+      result.push({ ...listing, searchText, shopName: stall?.shopName ?? null, mapId: stall?.mapId ?? null, stats });
     }
     const direction = query.sort === "price-desc" ? -1 : 1;
     result.sort((left, right) => {
@@ -233,12 +269,65 @@ export class FishNetMarketTracker {
     if (!listing) return;
     const key = listing.id ?? `${listing.sellerId ?? ""}\u0000${listing.itemId ?? ""}\u0000${listing.price}`;
     const previous = this.listings.get(key);
-    this.listings.set(key, { listing, searchText: searchText ?? previous?.searchText ?? null });
+    this.listings.set(key, {
+      listing,
+      searchText: searchText ?? previous?.searchText ?? null,
+      stats: parseFishNetMarketStats(listing.json, listing.itemType),
+    });
   }
 
   private upsertStall(stall: FishNetMarketStall): void {
     if (stall.accountId !== null) this.stalls.set(stall.accountId, stall);
   }
+}
+
+export function parseFishNetMarketStats(json: string | null, itemType = 2): FishNetMarketStat[] | undefined {
+  if (json === null) return undefined;
+  let value: unknown;
+  try {
+    value = JSON.parse(json);
+  } catch {
+    return undefined;
+  }
+  if (!isRecord(value) || !Array.isArray(value["Substats"])) return undefined;
+  const parsed: Array<Omit<FishNetMarketStat, "value" | "percent">> = [];
+  for (const candidate of value["Substats"]) {
+    if (!isRecord(candidate)
+      || !Number.isSafeInteger(candidate["Type"])
+      || typeof candidate["Value"] !== "number"
+      || !Number.isFinite(candidate["Value"])
+      || (candidate["ValueStr"] !== null && typeof candidate["ValueStr"] !== "string")) return undefined;
+    const type = candidate["Type"] as number;
+    parsed.push({
+      type,
+      name: fishNetMarketStatName(type),
+      roll: candidate["Value"],
+      valueStr: candidate["ValueStr"],
+    });
+  }
+  const baseItemId = typeof value["Id"] === "string" ? value["Id"] : undefined;
+  const values = calculateFishNetMarketStatValues(itemType, parsed, baseItemId);
+  return parsed.map((stat, index) => ({ ...stat, ...values[index]! }));
+}
+
+function normalizeStatFilters(filters: readonly FishNetMarketStatFilter[]): Array<{ type: number; minValue?: number }> {
+  const byType = new Map<number, number | undefined>();
+  for (const filter of filters) {
+    const resolved = resolveFishNetMarketStat(filter.stat);
+    if (!resolved) throw new Error(`unknown market stat ${JSON.stringify(filter.stat)}`);
+    if (filter.minValue !== undefined && !Number.isFinite(filter.minValue)) {
+      throw new Error(`market stat minimum must be finite for ${JSON.stringify(filter.stat)}`);
+    }
+    const previous = byType.get(resolved.type);
+    if (!byType.has(resolved.type) || (filter.minValue !== undefined && (previous === undefined || filter.minValue > previous))) {
+      byType.set(resolved.type, filter.minValue);
+    }
+  }
+  return [...byType].map(([type, minValue]) => ({ type, minValue }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 class MarketReader {

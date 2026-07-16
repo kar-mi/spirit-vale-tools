@@ -45,6 +45,105 @@ describe("FishNet market decoding", () => {
     });
   });
 
+  test("converts encoded rolls and filters equipment and artifacts by displayed values", () => {
+    const tracker = new FishNetMarketTracker();
+    tracker.consume(packet("RequestVendorItemList_T", list([
+      catalogItem("Example Equipment", listing(
+        "listing-equip",
+        "item-equip",
+        2,
+        500n,
+        "Merchant Equip",
+        "seller-equip",
+        gearJson([[0, 50, null], [69, 25, ""], [1, 10, null]]),
+      )),
+      catalogItem("Example Artifact", listing(
+        "listing-artifact",
+        "item-artifact",
+        3,
+        600n,
+        "Merchant Artifact",
+        "seller-artifact",
+        gearJson([[0, 40, null], [71, 80, ""], [4, 20, null]]),
+      )),
+      catalogItem("Malformed Example", listing(
+        "listing-malformed",
+        "item-malformed",
+        2,
+        700n,
+        "Merchant Invalid",
+        "seller-invalid",
+        "{not-json}",
+      )),
+    ])));
+
+    expect(tracker.query({ stats: [{ stat: "str" }] })).toHaveLength(2);
+    expect(tracker.query({ stats: [{ stat: "Str", minValue: 2 }, { stat: "AtkMult" }] }))
+      .toMatchObject([{ id: "listing-equip" }]);
+    expect(tracker.query({
+      stats: [{ stat: "AtkMult", minValue: 2 }, { stat: "HpMult", minValue: 2 }],
+      statMode: "any",
+    })).toMatchObject([{ id: "listing-artifact" }]);
+    expect(tracker.query({ stats: [{ stat: 0 }, { stat: "Str", minValue: 2 }] }))
+      .toMatchObject([{ id: "listing-equip" }, { id: "listing-artifact" }]);
+    expect(tracker.query({ text: "Malformed" })[0]?.stats).toBeUndefined();
+    expect(tracker.query({ stats: [{ stat: "Str" }] })[0]?.stats?.[0]).toEqual({
+      type: 0,
+      name: "Str",
+      value: 3,
+      roll: 50,
+      percent: false,
+      valueStr: null,
+    });
+    expect(() => tracker.query({ stats: [{ stat: "NotAStat" }] })).toThrow("unknown market stat");
+    expect(tracker.query({ text: "Example Equipment" })[0]?.stats?.[1]).toMatchObject({
+      name: "AtkMult",
+      value: undefined,
+      roll: 25,
+      percent: true,
+    });
+  });
+
+  test("converts a melee weapon's stat rolls to tooltip values", () => {
+    const tracker = new FishNetMarketTracker();
+    tracker.consume(packet("RequestVendorItemList_T", list([
+      catalogItem("Example Sword", listing(
+        "listing-sword",
+        "item-sword",
+        2,
+        900n,
+        "Merchant Sword",
+        "seller-sword",
+        gearJson([[0, 73, null], [15, 73, ""], [47, 0, ""]]),
+      )),
+    ])));
+
+    expect(tracker.query()[0]?.stats).toMatchObject([
+      { name: "Str", value: 3, roll: 73, percent: false },
+      { name: "Crit", value: 9, roll: 73, percent: false },
+      { name: "DamageMelee", value: 3, roll: 0, percent: true },
+    ]);
+    expect(tracker.query({ stats: [{ stat: "Crit", minValue: 9 }, { stat: "DamageMelee", minValue: 3 }] }))
+      .toHaveLength(1);
+    expect(tracker.query({ stats: [{ stat: "Crit", minValue: 10 }] })).toHaveLength(0);
+  });
+
+  test("uses a weapon item hint when its stats overlap the accessory pool", () => {
+    expect(parseStats("Training Sword", [[0, 40, null], [70, 30, ""], [63, 96, ""]])).toMatchObject([
+      { name: "Str", value: 2 },
+      { name: "MatkMult", value: 4, percent: true },
+      { name: "AtkSpd", value: 10, percent: true },
+    ]);
+    expect(parseStats("Practice Broad Sword", [[0, 25, null], [70, 71, ""], [13, 93, ""]])).toMatchObject([
+      { name: "Str", value: 2 },
+      { name: "MatkMult", value: 5, percent: true },
+      { name: "Hit", value: 20, percent: false },
+    ]);
+    expect(parseStats("Example Sword", [[80, 100, ""]])).toMatchObject([
+      { name: "DoubleAttack", value: 20, percent: true },
+    ]);
+  });
+
   test("rejects truncated and trailing market payloads", () => {
     const payload = list([catalogItem("Example", listing("listing-d", "item-d", 1, 5n, "Merchant Delta"))]);
     expect(() => decodeFishNetMarketPacket(packet("RequestVendorItemList_T", payload.subarray(0, -1))))
@@ -82,6 +181,7 @@ function listing(
   price: bigint,
   sellerName: string,
   sellerId = "seller-example",
+  json = "{}",
 ): Buffer {
   return reference(Buffer.concat([
     string(id),
@@ -92,9 +192,33 @@ function listing(
     signed(10n),
     signed(2n),
     signed(price),
-    string("{}"),
+    string(json),
     signed(4_102_444_800n),
   ]));
+}
+
+function gearJson(stats: Array<[number, number, string | null]>): string {
+  return JSON.stringify({
+    Id: "item-example",
+    Favorite: false,
+    Substats: stats.map(([Type, Value, ValueStr]) => ({ Type, Value, ValueStr })),
+  });
+}
+
+function parseStats(id: string, stats: Array<[number, number, string | null]>) {
+  const tracker = new FishNetMarketTracker();
+  tracker.consume(packet("RequestVendorItemList_T", list([
+    catalogItem("Synthetic Weapon", listing(
+      "listing-hint",
+      "item-hint",
+      2,
+      1n,
+      "Merchant Hint",
+      "seller-hint",
+      JSON.stringify({ Id: id, Favorite: false, Substats: stats.map(([Type, Value, ValueStr]) => ({ Type, Value, ValueStr })) }),
+    )),
+  ])));
+  return tracker.query()[0]?.stats;
 }
 
 function stall(accountId: string, shopName: string, mapId: string): Buffer {

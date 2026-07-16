@@ -1,6 +1,7 @@
 import {
   FishNetMarketTracker,
   PacketCapture,
+  parseFishNetMarketStatExpression,
 } from "../index.ts";
 import type { FishNetMarketListingView, FishNetMarketQuery } from "../fishnet/market.ts";
 import { replayMarketCapture } from "./market-replay.ts";
@@ -8,6 +9,17 @@ import { replayMarketCapture } from "./market-replay.ts";
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
   return index >= 0 ? Bun.argv[index + 1] : undefined;
+}
+
+function options(name: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < Bun.argv.length; index += 1) {
+    if (Bun.argv[index] !== name) continue;
+    const value = Bun.argv[index + 1];
+    if (value === undefined) throw new Error(`${name} requires a value`);
+    values.push(value);
+  }
+  return values;
 }
 
 function integerOption(name: string): number | undefined {
@@ -33,11 +45,15 @@ const live = Bun.argv.includes("--live");
 if (Boolean(input) === live) throw new Error("choose exactly one market source: --input <capture.log> or --live");
 const sortText = option("--sort") ?? "price-asc";
 if (sortText !== "price-asc" && sortText !== "price-desc") throw new Error("--sort must be price-asc or price-desc");
+const statMode = option("--stat-mode") ?? "all";
+if (statMode !== "all" && statMode !== "any") throw new Error("--stat-mode must be all or any");
 const query: FishNetMarketQuery = {
   text: option("--query"),
   itemType: integerOption("--item-type"),
   minPrice: bigintOption("--min-price"),
   maxPrice: bigintOption("--max-price"),
+  stats: options("--stat").map(parseFishNetMarketStatExpression),
+  statMode,
   sort: sortText,
   limit: integerOption("--limit") ?? 100,
 };
@@ -108,7 +124,7 @@ function emit(
   const collected = snapshot.lastCollectedAmount === undefined ? "" : ` last collected=${snapshot.lastCollectedAmount}`;
   console.log(`market: ${snapshot.catalog.length} catalog entries, ${snapshot.stalls.length} stalls, ${results.length} matches${balance}${delta}${collected}`);
   if (results.length === 0) return;
-  console.log("item\tprice\tremaining\tseller\tshop\tmap");
+  console.log("item\tprice\tremaining\tstats\tseller\tshop\tmap");
   for (const result of results) console.log(formatRow(result));
 }
 
@@ -117,6 +133,10 @@ function formatRow(result: FishNetMarketListingView): string {
     result.itemId ?? "",
     result.price.toString(),
     String(result.count - result.countTraded),
+    result.stats?.map((stat) => {
+      const value = stat.value === undefined ? `roll:${stat.roll}` : `${stat.value}${stat.percent ? "%" : ""}`;
+      return `${stat.name ?? `#${stat.type}`}=${value}`;
+    }).join(",") ?? "",
     result.sellerName ?? "",
     result.shopName ?? "",
     result.mapId ?? "",
