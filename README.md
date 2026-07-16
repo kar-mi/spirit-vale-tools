@@ -60,6 +60,12 @@ bun run capture:dump -- --protocols udp --combat-only
 # Emit combat and visible-player identity records as complete JSON objects per line
 bun run capture:dump -- --protocols udp --combat-json
 
+# Passively decode and search market data from a raw capture log
+bun run market -- --input <capture.log> --query <item-name>
+
+# Watch market responses from the live game connection without sending packets
+bun run market -- --live --query <item-name> --json
+
 # Select a different bundled build map when more versions are registered
 bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-build <build-fingerprint>
 ```
@@ -164,6 +170,34 @@ include their RPC name, tick, payload byte count, normalized properties, and a
 `fields` object containing every decoded RPC field. Visible-player identity
 records are emitted automatically when available; combat is still emitted when
 an actor has no known display name.
+
+## Passive market decoding
+
+Market decoding reads the game's existing FishNet responses; it does not send,
+modify, or inject market requests. The build-matched decoder recognizes the
+searchable vendor catalog, auction-house account snapshots, stall metadata,
+stall-specific listings, and vending collection results. A collection amount is
+reported only when a successful collection is followed by an account snapshot
+whose pending balance decreased.
+
+The `market` command requires either `--input <capture.log>` or `--live`. Local
+queries support `--query`, `--item-type`, `--min-price`, `--max-price`,
+`--sort price-asc|price-desc`, and `--limit`. Add `--json` for machine-readable
+output; 64-bit prices, balances, and timestamps are emitted as decimal strings.
+
+```ts
+import { FishNetMarketTracker, PacketCapture } from "spiritvale-pcap";
+
+const capture = new PacketCapture();
+const market = new FishNetMarketTracker();
+capture.on("fishNetPacket", packet => {
+  for (const event of market.consume(packet)) console.log(event.kind);
+});
+
+await capture.start({ protocols: ["udp"], decodeFishNet: true });
+
+const cheapest = market.query({ text: "example item", sort: "price-asc", limit: 10 });
+```
 
 Live capture requires the Bun parent process to be elevated in this first milestone. A future elevated broker or Windows service can remove that requirement from the parent application.
 

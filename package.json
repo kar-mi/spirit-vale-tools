@@ -11,6 +11,7 @@
     "bundle:native": "bun run scripts/bundle-native.ts",
     "capture:dump": "bun run src/cli/dump.ts",
     "capture:combat": "bun run src/cli/dump.ts --protocols udp --combat-json --combat-log",
+    "market": "bun run src/cli/market.ts",
     "check": "bun run typecheck && bun test && bun run test:native",
     "dev": "electrobun dev --watch",
     "fetch:windivert": "bun run scripts/fetch-windivert.ts",

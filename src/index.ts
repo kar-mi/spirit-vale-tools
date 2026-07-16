@@ -19,6 +19,19 @@ export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-m
 export { FishNetCombatTracker } from "./fishnet/combat-tracker.ts";
 export { FishNetActorDirectory } from "./fishnet/actor-directory.ts";
 export { FishNetDpsMeter } from "./fishnet/dps-meter.ts";
+export { decodeFishNetMarketPacket, FishNetMarketTracker } from "./fishnet/market.ts";
+export type {
+  FishNetMarketAccount,
+  FishNetMarketCatalogItem,
+  FishNetMarketCollectable,
+  FishNetMarketEvent,
+  FishNetMarketListing,
+  FishNetMarketListingView,
+  FishNetMarketQuery,
+  FishNetMarketSale,
+  FishNetMarketSnapshot,
+  FishNetMarketStall,
+} from "./fishnet/market.ts";
 export type {
   FishNetDpsActorRow,
   FishNetDpsEncounterSnapshot,
