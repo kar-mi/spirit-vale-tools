@@ -1,0 +1,15 @@
+{
+  "name": "@spiritvale/ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electrobun dev --watch",
+    "build": "electrobun build"
+  },
+  "dependencies": {
+    "@spiritvale/combat": "workspace:*"
+  },
+  "devDependencies": {
+    "electrobun": "1.18.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@spiritvale/cli",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@spiritvale/combat": "workspace:*",
+    "@spiritvale/core": "workspace:*",
+    "@spiritvale/market": "workspace:*"
+  }
+}

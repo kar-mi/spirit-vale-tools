@@ -173,7 +173,7 @@ The selected helper directory must also contain `WinDivert.dll` and `WinDivert64
 ## Bun API
 
 ```ts
-import { PacketCapture } from "spiritvale-pcap";
+import { PacketCapture } from "@spiritvale/core";
 
 const capture = new PacketCapture();
 

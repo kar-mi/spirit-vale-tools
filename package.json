@@ -1,19 +1,18 @@
 {
-  "name": "spiritvale-pcap",
+  "name": "spiritvale",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "electrobun build",
+    "build": "bun run --filter @spiritvale/ui build",
     "build:native": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
     "bundle:native": "bun run scripts/bundle-native.ts",
-    "capture:dump": "bun run src/cli/dump.ts",
-    "capture:combat": "bun run src/cli/dump.ts --protocols udp --combat-json --combat-log",
-    "market": "bun run src/cli/market.ts",
+    "capture:dump": "bun run packages/cli/src/dump.ts",
+    "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-json --combat-log",
+    "market": "bun run packages/cli/src/market.ts",
     "check": "bun run typecheck && bun test && bun run test:native",
-    "dev": "electrobun dev --watch",
+    "dev": "bun run --filter @spiritvale/ui dev",
     "fetch:windivert": "bun run scripts/fetch-windivert.ts",
     "format:native": "cargo fmt --manifest-path native/capture-helper/Cargo.toml --check",
     "lint:native": "cargo clippy --manifest-path native/capture-helper/Cargo.toml --all-targets -- -D warnings",
@@ -23,7 +22,6 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "electrobun": "1.18.1",
     "typescript": "latest"
   },
   "engines": {

@@ -110,7 +110,8 @@ action epochs.
 ## Public API
 
 ```ts
-import { FishNetCombatTracker, FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "spiritvale-pcap";
+import { FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "@spiritvale/core";
+import { FishNetCombatTracker } from "@spiritvale/combat";
 
 const capture = new PacketCapture();
 capture.on("packet", packet => {
@@ -198,7 +199,8 @@ Add `--json` for machine-readable
 output; 64-bit prices, balances, and timestamps are emitted as decimal strings.
 
 ```ts
-import { FishNetMarketTracker, PacketCapture } from "spiritvale-pcap";
+import { PacketCapture } from "@spiritvale/core";
+import { FishNetMarketTracker } from "@spiritvale/market";
 
 const capture = new PacketCapture();
 const market = new FishNetMarketTracker();
