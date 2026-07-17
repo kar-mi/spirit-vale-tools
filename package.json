@@ -9,7 +9,7 @@
     "build:native": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
     "bundle:native": "bun run scripts/bundle-native.ts",
     "capture:dump": "bun run packages/cli/src/dump.ts",
-    "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-json --combat-log",
+    "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-only",
     "market": "bun run packages/cli/src/market.ts",
     "check": "bun run typecheck && bun test && bun run test:native",
     "dev": "bun run --filter @spiritvale/ui dev",

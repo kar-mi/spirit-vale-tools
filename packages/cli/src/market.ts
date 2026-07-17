@@ -1,6 +1,8 @@
 import { FishNetMarketTracker, parseFishNetMarketStatExpression } from "@spiritvale/market";
 import { PacketCapture } from "@spiritvale/core";
-import type { FishNetMarketListingView, FishNetMarketQuery } from "@spiritvale/market";
+import { createLogSession } from "@spiritvale/logging";
+import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
+import type { FishNetMarketQuery } from "@spiritvale/market";
 import { replayMarketCapture } from "./market-replay.ts";
 
 function option(name: string): string | undefined {
@@ -39,7 +41,8 @@ function bigintOption(name: string): bigint | undefined {
 
 const input = option("--input");
 const live = Bun.argv.includes("--live");
-if (Boolean(input) === live) throw new Error("choose exactly one market source: --input <capture.log> or --live");
+if (Bun.argv.includes("--json")) throw new Error("--json was removed because market logs are always JSON Lines");
+if (Boolean(input) === live) throw new Error("choose exactly one market source: --input <capture.jsonl> or --live");
 const sortText = option("--sort") ?? "price-asc";
 if (sortText !== "price-asc" && sortText !== "price-desc") throw new Error("--sort must be price-asc or price-desc");
 const statMode = option("--stat-mode") ?? "all";
@@ -54,27 +57,46 @@ const query: FishNetMarketQuery = {
   sort: sortText,
   limit: integerOption("--limit") ?? 100,
 };
-const json = Bun.argv.includes("--json");
 const tracker = new FishNetMarketTracker();
+const outputPath = option("--output");
+const session = await createLogSession({
+  producer: "market-cli",
+  streams: ["market"],
+  ...(outputPath ? { outputPaths: { market: outputPath } } : {}),
+});
+const logger = session.logger("market");
+console.error(`logging market session ${session.id}`);
 
 if (input) {
   const replay = await replayMarketCapture(input, tracker);
-  emit(tracker, query, json, { ...replay });
+  emit(tracker, query, logger, { ...replay });
+  await session.close();
 } else {
-  await runLive(tracker, query, json);
+  await runLive(tracker, query, logger);
 }
 
-async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery, asJson: boolean): Promise<void> {
+async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery, output: JsonLinesLogger): Promise<void> {
   const capture = new PacketCapture();
-  capture.on("started", () => console.error("market capture started; open the in-game market or press Ctrl+C to stop"));
-  capture.on("warning", (message) => console.error(`[warning] ${message}`));
-  capture.on("error", (error) => console.error(`[error] ${error.message}`));
+  capture.on("started", () => {
+    output.log("market.lifecycle", { state: "started" });
+    console.error("market capture started; open the in-game market or press Ctrl+C to stop");
+  });
+  capture.on("warning", (message) => {
+    output.log("market.warning", { message });
+    console.error(`[warning] ${message}`);
+  });
+  capture.on("error", (error) => {
+    output.log("market.error", { message: error.message });
+    console.error(`[error] ${error.message}`);
+  });
   capture.on("fishNetPacket", (packet) => {
     try {
       const events = market.consume(packet);
-      if (events.length > 0) emit(market, marketQuery, asJson, { event: events.at(-1)?.kind });
+      if (events.length > 0) emit(market, marketQuery, output, { event: events.at(-1)?.kind });
     } catch (error) {
-      console.error(`[warning] skipped market payload: ${error instanceof Error ? error.message : String(error)}`);
+      const message = `skipped market payload: ${error instanceof Error ? error.message : String(error)}`;
+      output.log("market.warning", { message });
+      console.error(`[warning] ${message}`);
     }
   });
   let stopping = false;
@@ -82,6 +104,8 @@ async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQ
     if (stopping) return;
     stopping = true;
     await capture.stop();
+    output.log("market.lifecycle", { state: "stopped" });
+    await session.close();
   };
   process.on("SIGINT", () => void stop());
   process.on("SIGTERM", () => void stop());
@@ -98,52 +122,24 @@ async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQ
 function emit(
   market: FishNetMarketTracker,
   marketQuery: FishNetMarketQuery,
-  asJson: boolean,
+  output: JsonLinesLogger,
   detail: Record<string, unknown>,
 ): void {
   const snapshot = market.snapshot();
   const results = market.query(marketQuery);
-  if (asJson) {
-    console.log(JSON.stringify({
-      ...detail,
-      account: snapshot.account,
-      lastBalanceDelta: snapshot.lastBalanceDelta,
-      lastCollectedAmount: snapshot.lastCollectedAmount,
-      catalogCount: snapshot.catalog.length,
-      stallCount: snapshot.stalls.length,
-      resultCount: results.length,
-      results,
-    }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
-    return;
-  }
-  const balance = snapshot.account ? ` vending balance=${snapshot.account.balance}` : "";
-  const delta = snapshot.lastBalanceDelta === undefined ? "" : ` last balance change=${signed(snapshot.lastBalanceDelta)}`;
-  const collected = snapshot.lastCollectedAmount === undefined ? "" : ` last collected=${snapshot.lastCollectedAmount}`;
-  console.log(`market: ${snapshot.catalog.length} catalog entries, ${snapshot.stalls.length} stalls, ${results.length} matches${balance}${delta}${collected}`);
-  if (results.length === 0) return;
-  console.log("item\tprice\tremaining\tstats\tseller\tshop\tmap");
-  for (const result of results) console.log(formatRow(result));
+  output.log("market.snapshot", jsonObject({
+    ...detail,
+    account: snapshot.account,
+    lastBalanceDelta: snapshot.lastBalanceDelta,
+    lastCollectedAmount: snapshot.lastCollectedAmount,
+    catalogCount: snapshot.catalog.length,
+    stallCount: snapshot.stalls.length,
+    resultCount: results.length,
+    results,
+  }));
+  console.error(`market: ${snapshot.catalog.length} catalog entries, ${snapshot.stalls.length} stalls, ${results.length} matches`);
 }
 
-function formatRow(result: FishNetMarketListingView): string {
-  return [
-    result.itemId ?? "",
-    result.price.toString(),
-    String(result.count - result.countTraded),
-    result.stats?.map((stat) => {
-      const value = stat.value === undefined ? `roll:${stat.roll}` : `${stat.value}${stat.percent ? "%" : ""}`;
-      return `${stat.name ?? `#${stat.type}`}=${value}`;
-    }).join(",") ?? "",
-    result.sellerName ?? "",
-    result.shopName ?? "",
-    result.mapId ?? "",
-  ].map(clean).join("\t");
-}
-
-function clean(value: string): string {
-  return value.replace(/[\t\r\n]/g, " ");
-}
-
-function signed(value: bigint): string {
-  return value > 0n ? `+${value}` : value.toString();
+function jsonObject(value: unknown): JsonObject {
+  return JSON.parse(JSON.stringify(value, (_key, entry) => typeof entry === "bigint" ? entry.toString() : entry)) as JsonObject;
 }

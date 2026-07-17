@@ -6,6 +6,7 @@ native/capture-helper/target/
 *.zip
 *.txt
 .local/
+logs/
 
 
 scrape/*

@@ -9,7 +9,7 @@ The capture path has four stages:
 1. Bun starts `spiritvale-capture.exe` with a WinDivert filter and optional process name.
 2. The Rust helper captures matching network-layer packets through WinDivert.
 3. The helper correlates packet endpoints with TCP and UDP endpoints owned by the target process.
-4. Normalized binary records are streamed over stdout and decoded into typed Bun events.
+4. Normalized binary records are streamed over the helper's private stdout protocol and decoded into typed Bun events.
 
 The helper opens WinDivert with sniff and receive-only flags. It does not modify, drop, or inject network traffic.
 
@@ -60,11 +60,13 @@ The CLI defaults to:
 
 The capture remains ready if the application is not running. It automatically follows new matching process IDs when Spirit Vale starts or restarts.
 
-Stop capture with Ctrl+C.
+Stop capture with Ctrl+C. The CLI creates a new session in the run-local
+`logs` directory and writes versioned JSON Lines to its stream file;
+stdout redirection is not required.
 
 In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a game endpoint on `135.148.52.81:7007`. The default process-attributed capture does not hard-code the game endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
 
-A larger capture identified the UDP transport as the LiteNetLib 1.x wire format. To keep the raw datagram line and append one decoded line per logical packet, including children unpacked from merged envelopes, run:
+A larger capture identified the UDP transport as the LiteNetLib 1.x wire format. To record transport datagrams and one structured record per logical packet, including children unpacked from merged envelopes, run:
 
 ```powershell
 bun run capture:dump -- --protocols udp --decode-litenetlib
@@ -84,14 +86,21 @@ bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json
 ```
 
 Use `--fishnet-build <build-fingerprint>` to select another bundled version, or
-`--combat-only` to print only chronological actor-grouped activations and
+`--combat-only` to record only chronological actor-grouped activations and
 per-hit damage/death events. Death records indicate whether they duplicate an
 ordinary damage event, and aggregation is intentionally left to consumers.
-Use `--combat-json` instead to emit JSON Lines with every decoded RPC field in
-each combat record's `fields` object. It also emits public visible-player
+Combat sessions include every decoded RPC field in each combat record's
+`fields` object and also include public visible-player
 identity lifecycle records automatically. Consumers maintain the actor-ID to
 display-name join from `upsert`, `remove`, and `reset` operations; combat actors
 without an observed identity remain numeric.
+
+Every record uses the same envelope: schema version, session ID, sequence,
+UTC recording time, source, type, and structured data. Capture, combat, and
+market records are kept in separate JSONL stream files within each session.
+Per-stream current-session metadata lets the DPS display follow newly started
+combat sessions. Human lifecycle messages remain on stderr, and
+`--output <path>` can override a command's stream destination.
 
 The FishNet layer is session-aware. It parses multiple messages from a single
 transport tick, reassembles reliable split messages, registers length-delimited

@@ -5,7 +5,7 @@ import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import {
   FishNetDpsMeter,
   DpsLogFollower,
-  defaultCombatLogPath,
+  DpsSessionLogFollower,
   loadDpsReplay,
 } from "@spiritvale/combat";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
@@ -15,13 +15,13 @@ import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-ty
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
 const LIVE_LOG_POLL_MS = 2_500;
-const liveLogPath = process.env.SPIRIT_VALE_COMBAT_LOG || defaultCombatLogPath(Utils.paths.appData);
+const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
 const settings = await loadDpsAppSettings();
 
 let window: BrowserWindow;
 let mode: DpsAppMode = "live";
 let status: DpsAppStatus = "waiting";
-let statusDetail = `Looking for ${path.basename(liveLogPath)}…`;
+let statusDetail = liveLogOverride ? `Looking for ${path.basename(liveLogOverride)}…` : "Looking for a combat session…";
 let liveStatus: DpsAppStatus = status;
 let liveStatusDetail = statusDetail;
 let replayMeter: FishNetDpsMeter | undefined;
@@ -30,7 +30,7 @@ let replayWarnings = 0;
 let selectedReplayEncounterId: string | undefined;
 let liveMeter = new FishNetDpsMeter({ personalName: settings.personalName });
 let manualPersonalActorId: number | undefined;
-const liveLog = new DpsLogFollower(liveLogPath);
+const liveLog = liveLogOverride ? new DpsLogFollower(liveLogOverride) : new DpsSessionLogFollower();
 let lastLiveObservedAtMs = 0;
 let liveLogPolling = false;
 let publishing = false;
@@ -145,7 +145,7 @@ async function switchMode(nextMode: DpsAppMode): Promise<void> {
 async function chooseReplay(): Promise<void> {
   const [selectedPath] = await Utils.openFileDialog({
     startingFolder: Utils.paths.documents,
-    allowedFileTypes: "log,jsonl,txt",
+    allowedFileTypes: "jsonl",
     canChooseFiles: true,
     canChooseDirectory: false,
     allowsMultipleSelection: false,
@@ -226,13 +226,13 @@ async function pollLiveLog(): Promise<void> {
       if (event.kind === "actorIdentity") liveMeter.consumeIdentity(event, observedAtMs);
       else liveMeter.consumeCombat(event, observedAtMs);
     }
-    const fileName = path.basename(liveLogPath);
+    const fileName = path.basename(batch.path ?? liveLogOverride ?? "combat.jsonl");
     if (batch.missing) updateLiveStatus("waiting", `Waiting for ${fileName}`);
     else if (batch.invalidLines > 0) updateLiveStatus("ready", `Reading ${fileName} with skipped lines`);
     else if (batch.events.length > 0) updateLiveStatus("capturing", `Reading ${fileName}`);
     else updateLiveStatus(liveMeter.getLatestSnapshot() ? "ready" : "waiting", `Watching ${fileName}`);
   } catch {
-    updateLiveStatus("error", `Could not read ${path.basename(liveLogPath)}`);
+    updateLiveStatus("error", `Could not read ${path.basename(liveLogOverride ?? "combat.jsonl")}`);
   } finally {
     liveLogPolling = false;
   }

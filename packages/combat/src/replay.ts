@@ -1,6 +1,7 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { FishNetDpsMeter } from "./dps-meter.ts";
+import { parseLogRecord } from "@spiritvale/logging";
 
 export interface DpsReplayResult {
   meter: FishNetDpsMeter;
@@ -23,7 +24,13 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
       invalidLines += 1;
       continue;
     }
-    const event = parseDpsLogEvent(candidate);
+    const record = parseLogRecord(candidate);
+    if (!record) {
+      invalidLines += 1;
+      continue;
+    }
+    const event = parseDpsLogRecord(record.type, record.data);
+    if (event === null) continue;
     if (!event) {
       invalidLines += 1;
       continue;
@@ -84,6 +91,18 @@ export function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | Fi
     || typeof value["sourceLabel"] !== "string") return undefined;
   if (value["kind"] === "death" && typeof value["duplicatesDamageEvent"] !== "boolean") return undefined;
   return value as unknown as FishNetCombatEvent;
+}
+
+export function parseDpsLogRecord(
+  type: string,
+  data: Record<string, unknown>,
+): FishNetActorIdentityEvent | FishNetCombatEvent | undefined | null {
+  if (type !== "combat.actorIdentity" && type !== "combat.event") return null;
+  const event = parseDpsLogEvent(data);
+  if (!event) return undefined;
+  if (type === "combat.actorIdentity" && event.kind !== "actorIdentity") return undefined;
+  if (type === "combat.event" && event.kind === "actorIdentity") return undefined;
+  return event;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

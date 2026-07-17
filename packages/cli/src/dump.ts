@@ -1,7 +1,3 @@
-import { createWriteStream, mkdirSync } from "node:fs";
-import path from "node:path";
-import { finished } from "node:stream/promises";
-
 import {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
   PacketCapture,
@@ -9,14 +5,13 @@ import {
   loadFishNetRpcMap,
 } from "@spiritvale/core";
 import type { CaptureProtocol } from "@spiritvale/core";
-import { FishNetActorDirectory, FishNetCombatTracker, defaultCombatLogPath } from "@spiritvale/combat";
+import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
+import { createLogSession } from "@spiritvale/logging";
 import {
-  formatActorIdentityEventJson,
-  formatCombatEvent,
-  formatCombatEventJson,
-  formatFishNetPacket,
-  formatLiteNetLibPacket,
-  formatTransportPacket,
+  domainEventData,
+  fishNetPacketData,
+  liteNetLibPacketData,
+  transportPacketData,
 } from "./format-packet.ts";
 
 function option(name: string): string | undefined {
@@ -35,13 +30,11 @@ if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" &&
   throw new Error("--protocols must be tcp, udp, or tcp,udp");
 }
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
-const combatJson = Bun.argv.includes("--combat-json");
-const sharedCombatLog = Bun.argv.includes("--combat-log");
-const outputPath = option("--output") ?? (sharedCombatLog ? defaultCombatLogPath() : undefined);
-if (outputPath && !combatJson) throw new Error("--output requires --combat-json");
-if (outputPath) mkdirSync(path.dirname(outputPath), { recursive: true });
-const combatLog = outputPath ? createWriteStream(outputPath, { flags: "a", encoding: "utf8" }) : undefined;
-const combatOnly = Bun.argv.includes("--combat-only") || combatJson;
+if (Bun.argv.includes("--combat-json") || Bun.argv.includes("--combat-log")) {
+  throw new Error("--combat-json and --combat-log were replaced by automatic JSON sessions; use --combat-only");
+}
+const outputPath = option("--output");
+const combatOnly = Bun.argv.includes("--combat-only");
 const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
 const mapOption = option("--fishnet-map");
@@ -58,37 +51,58 @@ const semanticMap = combatOnly && combatFingerprint
 const combatTracker = combatOnly
   ? new FishNetCombatTracker({ buildFingerprint: fishNetBuildFingerprint, semanticMap })
   : undefined;
-const actorDirectory = combatJson ? new FishNetActorDirectory() : undefined;
+const actorDirectory = combatOnly ? new FishNetActorDirectory() : undefined;
+const stream = combatOnly ? "combat" as const : "capture" as const;
+const session = await createLogSession({
+  producer: "capture-cli",
+  streams: [stream],
+  ...(outputPath ? { outputPaths: { [stream]: outputPath } } : {}),
+});
+const logger = session.logger(stream);
+console.error(`logging ${stream} session ${session.id}`);
 
 const capture = new PacketCapture();
-capture.on("started", () => console.error("capture started; press Ctrl+C to stop"));
-capture.on("warning", (message) => console.error(`[warning] ${message}`));
-capture.on("error", (error) => console.error(`[error] ${error.message}`));
+capture.on("started", () => {
+  logger.log("capture.lifecycle", { state: "started" });
+  console.error("capture started; press Ctrl+C to stop");
+});
+capture.on("warning", (message) => {
+  logger.log("capture.warning", { message });
+  console.error(`[warning] ${message}`);
+});
+capture.on("error", (error) => {
+  logger.log("capture.error", { message: error.message });
+  console.error(`[error] ${error.message}`);
+});
 capture.on("targetStatus", (status) => {
+  logger.log("capture.targetStatus", {
+    processName: status.processName,
+    state: status.state,
+    processIds: status.processIds,
+  });
   const pids = status.processIds.length === 0 ? "" : ` (PID ${status.processIds.join(", ")})`;
   console.error(`target ${status.processName}: ${status.state}${pids}`);
 });
 capture.on("transportPacket", (packet) => {
-  if (!combatOnly) console.log(formatTransportPacket(packet));
+  if (!combatOnly) logger.log("transport.packet", transportPacketData(packet));
 });
 capture.on("liteNetPacket", (packet) => {
-  if (!combatOnly) console.log(formatLiteNetLibPacket(packet));
+  if (!combatOnly) logger.log("litenetlib.packet", liteNetLibPacketData(packet));
 });
 capture.on("fishNetPacket", (packet) => {
   if (!combatOnly) {
-    console.log(formatFishNetPacket(packet));
+    logger.log("fishnet.packet", fishNetPacketData(packet));
     return;
   }
   for (const event of actorDirectory?.consume(packet) ?? []) {
-    writeCombatLine(formatActorIdentityEventJson(event));
+    logger.log("combat.actorIdentity", domainEventData(event));
   }
   for (const event of combatTracker?.consume(packet) ?? []) {
-    const line = combatJson ? formatCombatEventJson(event) : formatCombatEvent(event);
-    if (combatJson) writeCombatLine(line);
-    else console.log(line);
+    logger.log("combat.event", domainEventData(event));
   }
 });
 capture.on("stopped", () => {
+  logger.log("capture.lifecycle", { state: "stopped" });
   actorDirectory?.reset();
   combatTracker?.reset();
 });
@@ -98,15 +112,7 @@ async function stop(): Promise<void> {
   if (stopping) return;
   stopping = true;
   await capture.stop();
-  if (combatLog) {
-    combatLog.end();
-    await finished(combatLog);
-  }
-}
-
-function writeCombatLine(line: string): void {
-  if (combatLog) combatLog.write(`${line}\n`);
-  else console.log(line);
+  await session.close();
 }
 
 process.on("SIGINT", () => void stop());

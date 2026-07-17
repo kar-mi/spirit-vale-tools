@@ -8,11 +8,11 @@ describe("loadDpsReplay", () => {
     const file = Bun.file(`${basePath}.jsonl`);
     const utf16File = Bun.file(`${basePath}-utf16.log`);
     const records = [
-      { kind: "actorIdentity", operation: "upsert", tick: 300, actorId: 101, displayName: "Aster Vale" },
-      combatDamage(300, 101, 120),
+      logRecord(1, "combat.actorIdentity", { kind: "actorIdentity", operation: "upsert", tick: 300, actorId: 101, displayName: "Aster Vale" }),
+      logRecord(2, "combat.event", combatDamage(300, 101, 120)),
       "not-json",
-      { kind: "unknown", tick: 301 },
-      combatDamage(1_200, 101, 30),
+      logRecord(3, "combat.event", { kind: "unknown", tick: 301 }),
+      logRecord(4, "combat.event", combatDamage(1_200, 101, 30)),
     ];
     const text = records.map((record) => typeof record === "string" ? record : JSON.stringify(record)).join("\n");
     await Bun.write(file, text);
@@ -44,5 +44,17 @@ function combatDamage(tick: number, actorId: number, value: number): Record<stri
     value,
     hitResult: "normal",
     team: 0,
+  };
+}
+
+function logRecord(sequence: number, type: string, data: Record<string, unknown>): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    sessionId: "synthetic-session",
+    sequence,
+    recordedAt: `2026-07-16T12:00:0${sequence}.000Z`,
+    source: "synthetic-test",
+    type,
+    data,
   };
 }

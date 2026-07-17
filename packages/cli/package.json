@@ -5,6 +5,7 @@
   "dependencies": {
     "@spiritvale/combat": "workspace:*",
     "@spiritvale/core": "workspace:*",
+    "@spiritvale/logging": "workspace:*",
     "@spiritvale/market": "workspace:*"
   }
 }

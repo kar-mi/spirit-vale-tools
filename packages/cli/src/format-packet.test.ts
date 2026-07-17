@@ -8,6 +8,9 @@ import {
   formatFishNetPacket,
   formatLiteNetLibPacket,
   formatTransportPacket,
+  fishNetPacketData,
+  liteNetLibPacketData,
+  transportPacketData,
 } from "./format-packet.ts";
 
 function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
@@ -31,6 +34,17 @@ function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
 }
 
 describe("formatTransportPacket", () => {
+  test("serializes transport metadata and payloads for JSON logs", () => {
+    expect(transportPacketData(udpPacket("outbound"))).toMatchObject({
+      protocol: "udp",
+      timestampTicks: "0",
+      capturedAt: "1970-01-01T00:00:00.000Z",
+      sourceIP: "192.0.2.10",
+      destinationIP: "198.51.100.20",
+      payloadHex: "032000",
+    });
+  });
+
   test("renders outbound UDP from source to destination", () => {
     expect(formatTransportPacket(udpPacket("outbound"))).toBe(
       "UDP 192.0.2.10:50000 -> 198.51.100.20:7007 payload=032000",
@@ -120,6 +134,9 @@ describe("formatFishNetPacket", () => {
         " rpc=77:RpcSyntheticNotice fields=active:true,input.move:%5B2%3B0%3B-3%5D,input.hotkeys:%220x800%22" +
         " bytes=1 payload=01",
     );
+    const data = fishNetPacketData(packet);
+    expect(data).toMatchObject({ tick: 50, packetName: "rpcLink", payloadHex: "01" });
+    expect(JSON.stringify(data["decodedFields"])).toBe(JSON.stringify(packet.decodedFields));
   });
 });
 
@@ -144,6 +161,12 @@ describe("formatLiteNetLibPacket", () => {
     expect(formatLiteNetLibPacket(decoded)).toBe(
       "  LNL path=1.0 kind=channeled seq=4660 channel=7 fragment=258:772/1286 bytes=2 payload=aabb",
     );
+    expect(liteNetLibPacketData(decoded)).toMatchObject({
+      mergePath: [1, 0],
+      property: "channeled",
+      payloadHex: "aabb",
+      fragment: { id: 258, part: 772, total: 1286 },
+    });
   });
 });
 

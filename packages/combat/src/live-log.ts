@@ -1,8 +1,9 @@
 import { open, stat } from "node:fs/promises";
 
+import { defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "@spiritvale/logging";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
-import { parseDpsLogEvent } from "./replay.ts";
+import { parseDpsLogRecord } from "./replay.ts";
 
 export interface TimedDpsLogEvent {
   event: FishNetActorIdentityEvent | FishNetCombatEvent;
@@ -14,6 +15,8 @@ export interface DpsLogBatch {
   invalidLines: number;
   missing: boolean;
   reset: boolean;
+  path?: string;
+  sessionId?: string;
 }
 
 /** Incrementally reads an actively-written combat JSON Lines file. */
@@ -67,7 +70,13 @@ export class DpsLogFollower {
         invalidLines += 1;
         continue;
       }
-      const event = parseDpsLogEvent(candidate);
+      const record = parseLogRecord(candidate);
+      if (!record) {
+        invalidLines += 1;
+        continue;
+      }
+      const event = parseDpsLogRecord(record.type, record.data);
+      if (event === null) continue;
       if (!event) {
         invalidLines += 1;
         continue;
@@ -91,6 +100,31 @@ export class DpsLogFollower {
     this.decoder = undefined;
     this.originTick = undefined;
     this.lastTick = undefined;
+  }
+}
+
+/** Follows whichever combat session is named by the shared current-stream pointer. */
+export class DpsSessionLogFollower {
+  private sessionId?: string;
+  private follower?: DpsLogFollower;
+
+  constructor(private readonly logDirectory = defaultLogDirectory(), private readonly ticksPerSecond = 30) {}
+
+  async poll(): Promise<DpsLogBatch> {
+    const current = await readCurrentLogStream("combat", this.logDirectory);
+    if (!current) {
+      const reset = this.follower !== undefined;
+      this.follower = undefined;
+      this.sessionId = undefined;
+      return { events: [], invalidLines: 0, missing: true, reset };
+    }
+    const changed = current.sessionId !== this.sessionId;
+    if (changed) {
+      this.sessionId = current.sessionId;
+      this.follower = new DpsLogFollower(current.path, this.ticksPerSecond);
+    }
+    const batch = await this.follower!.poll();
+    return { ...batch, reset: batch.reset || changed, path: current.path, sessionId: current.sessionId };
   }
 }
 

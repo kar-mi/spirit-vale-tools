@@ -31,7 +31,7 @@ Start PowerShell as Administrator, then run:
 bun run capture:dump -- --duration 10
 ```
 
-The dump command follows every `SpiritVale.exe` PID across restarts and emits only that process's TCP and UDP payloads. It refreshes Windows' PID-owned endpoint tables every 100 ms and keeps unmatched packets for at most one second so a newly-created socket can be attributed after it appears in the table.
+The dump command follows every `SpiritVale.exe` PID across restarts and writes only that process's TCP and UDP payloads to a new JSON Lines session. It refreshes Windows' PID-owned endpoint tables every 100 ms and keeps unmatched packets for at most one second so a newly-created socket can be attributed after it appears in the table.
 
 Useful options:
 
@@ -45,7 +45,7 @@ bun run capture:dump -- --process OtherGame.exe
 # Diagnostic capture without process attribution
 bun run capture:dump -- --all-processes --filter "tcp.DstPort == 443"
 
-# Preserve raw lines and add decoded LiteNetLib 1.x leaf packets
+# Record transport packets and decoded LiteNetLib 1.x leaf packets
 bun run capture:dump -- --protocols udp --decode-litenetlib
 
 # Add stateful FishNet bundle, split-packet, and RPC Link decoding
@@ -54,20 +54,17 @@ bun run capture:dump -- --protocols udp --decode-fishnet
 # Supply an external build-matched RPC map
 bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
 
-# Print only chronological skill, attack, and per-hit damage events
+# Record only chronological combat and visible-player identity events
 bun run capture:dump -- --protocols udp --combat-only
 
-# Emit combat and visible-player identity records as complete JSON objects per line
-bun run capture:dump -- --protocols udp --combat-json
-
-# Passively decode and search market data from a raw capture log
-bun run market -- --input <capture.log> --query <item-name>
+# Passively decode and search market data from a capture session
+bun run market -- --input <capture.jsonl> --query <item-name>
 
 # Require equipment or artifacts with both requested stats and at least +3 Strength
-bun run market -- --input <capture.log> --query <item-name> --stat Str:3 --stat AtkMult
+bun run market -- --input <capture.jsonl> --query <item-name> --stat Str:3 --stat AtkMult
 
 # Watch market responses from the live game connection without sending packets
-bun run market -- --live --query <item-name> --json
+bun run market -- --live --query <item-name>
 
 # Select a different bundled build map when more versions are registered
 bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-build <build-fingerprint>
@@ -169,7 +166,13 @@ despawned or reused object ID, and `reset` clears the connection. Combat records
 remain numeric and consumers join them using `actorId`, `targetId`, or the
 decoded damage attacker ID.
 
-`--combat-json` implies combat-only mode and emits JSON Lines. Combat records
+All CLI logs use a versioned JSON Lines envelope containing the session ID,
+sequence, recording time, producer, record type, and structured data. Each
+command creates a session in the run-local `logs` directory and writes
+separate `capture.jsonl`, `combat.jsonl`, or `market.jsonl` streams. Human
+status remains on stderr. `--output <path>` overrides the stream destination.
+
+Combat records
 include their RPC name, tick, payload byte count, normalized properties, and a
 `fields` object containing every decoded RPC field. Visible-player identity
 records are emitted automatically when available; combat is still emitted when
@@ -184,7 +187,8 @@ stall-specific listings, and vending collection results. A collection amount is
 reported only when a successful collection is followed by an account snapshot
 whose pending balance decreased.
 
-The `market` command requires either `--input <capture.log>` or `--live`. Local
+The `market` command requires either `--input <capture.jsonl>` from a capture
+session or `--live`. Local
 queries support `--query`, `--item-type`, `--min-price`, `--max-price`,
 `--sort price-asc|price-desc`, and `--limit`. Repeat `--stat <name>[:minimum]`
 to filter equipment and artifacts by their displayed substat values. The encoded
@@ -195,8 +199,8 @@ Equipment IDs from the supported build use a build-matched substat table, includ
 weapons, armor, accessories, eyewear, back equipment, and grimoires. An unknown item ID
 falls back to stat-based inference; if that cannot distinguish two tables with different
 caps, output shows `roll:<value>` and a minimum filter does not match the unresolved value.
-Add `--json` for machine-readable
-output; 64-bit prices, balances, and timestamps are emitted as decimal strings.
+Market snapshots and query results are always written to `market.jsonl`;
+64-bit prices, balances, and timestamps are represented as decimal strings.
 
 ```ts
 import { PacketCapture } from "@spiritvale/core";
