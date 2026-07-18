@@ -21,11 +21,10 @@ const catalogButton = button("catalog-button");
 const replayButton = button("replay-button");
 const openReplay = button("open-replay");
 const pin = button("pin-button");
-const query = input("catalog-query");
 
 summaryTab.addEventListener("click", () => setView("summary"));
 recentTab.addEventListener("click", () => setView("recent"));
-catalogButton.addEventListener("click", () => openModal("catalog-modal"));
+catalogButton.addEventListener("click", () => void electroview.rpc?.request.openCatalog({}));
 replayButton.addEventListener("click", () => openModal("replay-modal"));
 openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseReplay({}).then((next) => {
   render(next);
@@ -51,7 +50,6 @@ const chrome = initWindowChrome({
   },
 });
 maximizeButton.addEventListener("click", () => void chrome.toggleMaximize());
-query.addEventListener("input", () => void electroview.rpc?.request.setQuery({ query: query.value }));
 for (const close of document.querySelectorAll<HTMLElement>("[data-close-modal]")) {
   close.addEventListener("click", () => closeModal(close.dataset.closeModal ?? ""));
 }
@@ -81,9 +79,6 @@ function render(next: RewardsAppState): void {
   element("replay-detail").textContent = next.replayFileName
     ? `Loaded: ${next.replayFileName}${next.replayWarnings > 0 ? ` · ${next.replayWarnings} malformed records skipped` : ""}`
     : "No replay loaded. Choose a rewards JSON Lines log to inspect it.";
-  if (document.activeElement !== query) query.value = next.query;
-  element("catalog-count").textContent = `${next.catalogCount} mobs`;
-  renderCatalog(next);
   element("total-xp").textContent = format.format(next.totalExperience);
   element("total-job-xp").textContent = format.format(next.totalJobExperience);
   element("total-coins").textContent = formatDecimal(next.totalCoins);
@@ -92,17 +87,6 @@ function render(next: RewardsAppState): void {
   identityWarning.hidden = next.unidentified === 0;
   identityWarning.textContent = next.unidentified === 0 ? "" : `${format.format(next.unidentified)} reward ${next.unidentified === 1 ? "event came" : "events came"} from mobs whose spawn happened before capture. Change maps or wait for those mobs to respawn; newly observed mobs will be categorized.`;
   renderSession(next);
-}
-
-function renderCatalog(next: RewardsAppState): void {
-  const list = element("catalog-list");
-  if (next.catalog.length === 0) { list.replaceChildren(empty(next.catalogCount === 0 ? "No catalog data is bundled for this build yet." : "No mobs match this search.")); return; }
-  list.replaceChildren(...next.catalog.map((mob) => row(
-    mob.displayName,
-    `Level ${mob.level}${mob.boss ? " · Boss" : ""} · ${mob.id}`,
-    [`${format.format(mob.baseExperience)} base XP`, `${format.format(mob.baseCoins)} base coins`],
-    mob.drops,
-  )));
 }
 
 function renderSession(next: RewardsAppState): void {
@@ -144,7 +128,6 @@ function returnToLive(): void {
 function openModal(id: string): void {
   const modal = element(id);
   modal.hidden = false;
-  if (id === "catalog-modal") queueMicrotask(() => query.focus());
 }
 function closeModal(id: string): void {
   if (!id) return;
@@ -158,4 +141,3 @@ function empty(message: string): HTMLElement { return text("div", "empty-state",
 function text<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, value: string): HTMLElementTagNameMap[K] { const node = document.createElement(tag); node.className = className; node.textContent = value; return node; }
 function element(id: string): HTMLElement { const value = document.getElementById(id); if (!value) throw new Error(`Missing #${id}`); return value; }
 function button(id: string): HTMLButtonElement { return element(id) as HTMLButtonElement; }
-function input(id: string): HTMLInputElement { return element(id) as HTMLInputElement; }

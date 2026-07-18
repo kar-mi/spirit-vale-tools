@@ -14,6 +14,7 @@ export default {
       mainview: { entrypoint: "src/mainview/index.ts" },
       marketview: { entrypoint: "../market-ui/src/marketview/index.ts" },
       rewardsview: { entrypoint: "../rewards-ui/src/rewardsview/index.ts" },
+      rewardscatalogview: { entrypoint: "../rewards-ui/src/catalogview/index.ts" },
     },
     copy: {
       "src/launcherview/index.html": "views/launcherview/index.html",
@@ -28,6 +29,9 @@ export default {
       "../rewards-ui/src/rewardsview/index.html": "views/rewardsview/index.html",
       "../rewards-ui/src/rewardsview/index.css": "views/rewardsview/index.css",
       "../ui-theme/../../packages/ui-theme/theme.css": "views/rewardsview/theme.css",
+      "../rewards-ui/src/catalogview/index.html": "views/rewardscatalogview/index.html",
+      "../rewards-ui/src/catalogview/index.css": "views/rewardscatalogview/index.css",
+      "../ui-theme/././theme.css": "views/rewardscatalogview/theme.css",
       "../core/src/fishnet/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.rpc.json":
         "bun/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.rpc.json",
       "../core/src/fishnet/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.semantics.json":

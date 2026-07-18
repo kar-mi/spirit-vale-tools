@@ -1,15 +1,29 @@
 /* Mob Rewards — app layout on top of the shared Material 3 theme (theme.css).
    Tokens only; no raw hex here. */
 
-body { min-width: 620px; }
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  grid-template-rows: 40px minmax(0, 1fr);
+  min-width: 620px;
+}
 
 .titlebar {
-  position: sticky;
-  top: 0;
   z-index: 10;
 }
 
-main { padding: 14px 16px 16px; }
+main {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+}
 
 .toolbar {
   display: flex;

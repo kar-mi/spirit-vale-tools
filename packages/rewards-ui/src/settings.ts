@@ -5,11 +5,17 @@ import type { RewardsAppView } from "./app-types.ts";
 
 export interface RewardsAppSettings {
   frame: { x: number; y: number; width: number; height: number };
+  catalogFrame: { x: number; y: number; width: number; height: number };
   pinned: boolean;
   view: RewardsAppView;
 }
 
-const defaults: RewardsAppSettings = { frame: { x: 120, y: 90, width: 860, height: 720 }, pinned: false, view: "summary" };
+const defaults: RewardsAppSettings = {
+  frame: { x: 120, y: 90, width: 860, height: 720 },
+  catalogFrame: { x: 170, y: 140, width: 760, height: 680 },
+  pinned: false,
+  view: "summary",
+};
 const settingsPath = path.join(Utils.paths.userData, "rewards-settings.json");
 
 export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
@@ -17,10 +23,11 @@ export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
     const value = JSON.parse(await readFile(settingsPath, "utf8")) as Partial<RewardsAppSettings>;
     return {
       frame: validFrame(value.frame) ? value.frame : defaults.frame,
+      catalogFrame: validFrame(value.catalogFrame) ? value.catalogFrame : defaults.catalogFrame,
       pinned: typeof value.pinned === "boolean" ? value.pinned : defaults.pinned,
       view: value.view === "summary" || value.view === "recent" ? value.view : defaults.view,
     };
-  } catch { return { ...defaults, frame: { ...defaults.frame } }; }
+  } catch { return { ...defaults, frame: { ...defaults.frame }, catalogFrame: { ...defaults.catalogFrame } }; }
 }
 
 export async function saveRewardsSettings(settings: RewardsAppSettings): Promise<void> {

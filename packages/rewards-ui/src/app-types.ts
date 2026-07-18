@@ -42,9 +42,6 @@ export interface RewardsAppState {
   status: RewardsAppStatus;
   statusDetail: string;
   pinned: boolean;
-  query: string;
-  catalog: RewardsUiMob[];
-  catalogCount: number;
   replayFileName?: string;
   replayWarnings: number;
   kills: RewardsUiKill[];
@@ -62,7 +59,7 @@ export type RewardsAppRpc = {
       getState: { params: Record<string, never>; response: RewardsAppState };
       setMode: { params: { mode: RewardsAppMode }; response: RewardsAppState };
       setView: { params: { view: RewardsAppView }; response: RewardsAppState };
-      setQuery: { params: { query: string }; response: RewardsAppState };
+      openCatalog: { params: Record<string, never>; response: void };
       chooseReplay: { params: Record<string, never>; response: RewardsAppState };
       setPinned: { params: { pinned: boolean }; response: RewardsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
@@ -72,4 +69,24 @@ export type RewardsAppRpc = {
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: RewardsAppState } }>;
+};
+
+export interface RewardsCatalogState {
+  query: string;
+  catalog: RewardsUiMob[];
+  catalogCount: number;
+}
+
+export type RewardsCatalogRpc = {
+  bun: RPCSchema<{
+    requests: {
+      getState: { params: Record<string, never>; response: RewardsCatalogState };
+      setQuery: { params: { query: string }; response: RewardsCatalogState };
+      windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
+    };
+  }>;
+  webview: RPCSchema<{ messages: { stateChanged: RewardsCatalogState } }>;
 };

@@ -9,7 +9,14 @@ import {
   RewardSessionLogFollower,
 } from "@spiritvale/rewards";
 import type { MobRewardSessionSnapshot, RewardLogStatus } from "@spiritvale/rewards";
-import type { RewardsAppMode, RewardsAppRpc, RewardsAppState, RewardsAppStatus } from "../app-types.ts";
+import type {
+  RewardsAppMode,
+  RewardsAppRpc,
+  RewardsAppState,
+  RewardsAppStatus,
+  RewardsCatalogRpc,
+  RewardsCatalogState,
+} from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
 
 const POLL_MS = 1_000;
@@ -25,10 +32,11 @@ const settings = await loadRewardsSettings();
 const follower = new RewardSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
+let catalogWindow: BrowserWindow | undefined;
 let mode: RewardsAppMode = "live";
 let status: RewardsAppStatus = "waiting";
 let statusDetail = "Start a passive rewards session to observe kills.";
-let query = "";
+let catalogQuery = "";
 let liveSnapshot = emptySnapshot();
 let replaySnapshot = emptySnapshot();
 let replayFileName: string | undefined;
@@ -44,11 +52,12 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
       getState: () => appState(),
       setMode: ({ mode: nextMode }) => { mode = nextMode; publish(); return appState(); },
       setView: ({ view }) => { settings.view = view; scheduleSave(); publish(); return appState(); },
-      setQuery: ({ query: nextQuery }) => { query = nextQuery.trim().slice(0, 200); publish(); return appState(); },
+      openCatalog: () => { openCatalog(); },
       chooseReplay: async () => { await chooseReplay(); return appState(); },
       setPinned: ({ pinned }) => {
         settings.pinned = pinned;
         window.setAlwaysOnTop(pinned);
+        catalogWindow?.setAlwaysOnTop(pinned);
         scheduleSave();
         publish();
         return appState();
@@ -66,6 +75,36 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
         if (window.isMaximized()) window.unmaximize();
         else window.maximize();
         return { maximized: window.isMaximized() };
+      },
+    },
+    messages: {},
+  },
+});
+
+const catalogRpc = BrowserView.defineRPC<RewardsCatalogRpc>({
+  handlers: {
+    requests: {
+      getState: () => catalogState(),
+      setQuery: ({ query }) => {
+        catalogQuery = query.trim().slice(0, 200);
+        publishCatalog();
+        return catalogState();
+      },
+      windowAction: ({ action }) => {
+        if (action === "minimize") catalogWindow?.minimize();
+        else if (catalogWindow) {
+          settings.catalogFrame = clampCatalogFrame(catalogWindow.getFrame());
+          scheduleSave();
+          catalogWindow.close();
+        }
+      },
+      getWindowFrame: () => catalogWindow?.getFrame() ?? settings.catalogFrame,
+      setWindowFrame: ({ x, y, width, height }) => { catalogWindow?.setFrame(x, y, width, height); },
+      toggleMaximize: () => {
+        if (!catalogWindow) return { maximized: false };
+        if (catalogWindow.isMaximized()) catalogWindow.unmaximize();
+        else catalogWindow.maximize();
+        return { maximized: catalogWindow.isMaximized() };
       },
     },
     messages: {},
@@ -105,16 +144,12 @@ return {
 
 function appState(): RewardsAppState {
   const snapshot = mode === "live" ? liveSnapshot : replaySnapshot;
-  const mobs = queryMobRewardCatalog(catalog, { text: query });
   return {
     mode,
     view: settings.view,
     status: mode === "replay" ? (replayFileName ? "ready" : "stopped") : status,
     statusDetail: mode === "replay" ? (replayFileName ? `Replay: ${replayFileName}` : "Choose a rewards log") : statusDetail,
     pinned: settings.pinned,
-    query,
-    catalogCount: catalog.mobs.length,
-    catalog: mobs.map((mob) => ({ ...mob, drops: mob.drops.map((drop) => ({ ...drop })) })),
     ...(replayFileName ? { replayFileName } : {}),
     replayWarnings,
     kills: snapshot.kills.slice(0, 100).map((kill) => ({
@@ -139,6 +174,50 @@ function appState(): RewardsAppState {
     unmatched: snapshot.unmatched,
     unidentified: snapshot.unmatchedByReason.unidentified,
   };
+}
+
+function catalogState(): RewardsCatalogState {
+  const mobs = queryMobRewardCatalog(catalog, { text: catalogQuery });
+  return {
+    query: catalogQuery,
+    catalogCount: catalog.mobs.length,
+    catalog: mobs.map((mob) => ({ ...mob, drops: mob.drops.map((drop) => ({ ...drop })) })),
+  };
+}
+
+function openCatalog(): void {
+  if (catalogWindow) {
+    catalogWindow.show();
+    catalogWindow.activate();
+    return;
+  }
+
+  const nextWindow = new BrowserWindow({
+    title: "Spirit Vale Mob Catalog",
+    url: "views://rewardscatalogview/index.html",
+    frame: settings.catalogFrame,
+    titleBarStyle: "hidden",
+    transparent: false,
+    rpc: catalogRpc,
+  });
+  catalogWindow = nextWindow;
+  nextWindow.setAlwaysOnTop(settings.pinned);
+  applyRoundedCorners(nextWindow.ptr);
+
+  Electrobun.events.on(`move-${nextWindow.id}`, (event: { data: typeof settings.catalogFrame }) => {
+    settings.catalogFrame = clampCatalogFrame(event.data);
+    scheduleSave();
+  });
+  Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: typeof settings.catalogFrame }) => {
+    const frame = clampCatalogFrame(event.data);
+    settings.catalogFrame = frame;
+    if (frame.width !== event.data.width || frame.height !== event.data.height) nextWindow.setSize(frame.width, frame.height);
+    scheduleSave();
+  });
+  nextWindow.on("close", () => {
+    catalogWindow = undefined;
+    scheduleSave();
+  });
 }
 
 async function poll(): Promise<void> {
@@ -206,11 +285,20 @@ function publish(): void {
   try { rpc.send.stateChanged(appState()); } catch { /* webview handshake is not complete yet */ }
 }
 
+function publishCatalog(): void {
+  try { catalogRpc.send.stateChanged(catalogState()); } catch { /* webview handshake is not complete yet */ }
+}
+
 function clampFrame(frame: typeof settings.frame): typeof settings.frame {
   return { x: frame.x, y: frame.y, width: Math.max(620, frame.width), height: Math.max(520, frame.height) };
 }
 
+function clampCatalogFrame(frame: typeof settings.catalogFrame): typeof settings.catalogFrame {
+  return { x: frame.x, y: frame.y, width: Math.max(520, frame.width), height: Math.max(420, frame.height) };
+}
+
 function scheduleSave(): void {
+  if (shuttingDown) return;
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => void saveRewardsSettings(settings), 250);
 }
@@ -220,6 +308,7 @@ async function shutdown(): Promise<void> {
   shuttingDown = true;
   clearInterval(timer);
   if (saveTimer) clearTimeout(saveTimer);
+  catalogWindow?.close();
   settings.frame = clampFrame(window.getFrame());
   await saveRewardsSettings(settings);
 }
