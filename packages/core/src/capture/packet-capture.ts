@@ -250,7 +250,7 @@ export class PacketCapture extends EventEmitter {
         sequence: property === "channeled" ? packet.packet.sequence : undefined,
       });
       for (const decoded of decodedPackets ?? []) {
-        this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet } satisfies CapturedFishNetPacket);
+        this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet, connectionId } satisfies CapturedFishNetPacket);
       }
     } catch (error) {
       const detail = error instanceof FishNetProtocolError ? error.message : toError(error).message;

@@ -19,6 +19,8 @@ export interface SpawnCandidate {
   prefabId?: number;
   sceneId?: bigint;
   nested: boolean;
+  /** Game-defined WritePayload bytes preceding the RPC link and SyncType sections. */
+  customPayload: Buffer;
   syncPayload: Buffer;
 }
 
@@ -82,7 +84,9 @@ export function parseObjectSpawn(
 
         requireBytes(buffer, candidateOffset, 4, "spawn payload length");
         const payloadLength = buffer.readUInt32LE(candidateOffset);
-        candidateOffset = checkedEnd(buffer, candidateOffset + 4, payloadLength);
+        const customPayloadStart = candidateOffset + 4;
+        candidateOffset = checkedEnd(buffer, customPayloadStart, payloadLength);
+        const customPayload = buffer.subarray(customPayloadStart, candidateOffset);
 
         requireBytes(buffer, candidateOffset, 2, "RPC Link segment length");
         const linksLength = buffer.readUInt16LE(candidateOffset);
@@ -110,6 +114,7 @@ export function parseObjectSpawn(
           prefabId,
           sceneId,
           nested,
+          customPayload,
           syncPayload,
         });
       } catch {

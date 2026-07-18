@@ -59,6 +59,57 @@ describe("central capture coordinator", () => {
     }
   });
 
+  test("keeps new-connection actor identities when a stale connection trails a map change", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reconnect-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1_000, "conn-a"));
+      capture.packet(identityPacket(1_010, 10, "Alpha", "conn-a"));
+      capture.packet(authenticatedPacket(50, "conn-b"));
+      capture.packet(identityPacket(60, 20, "Bravo", "conn-b"));
+      capture.packet({ tick: 1_200, packetId: 3, packetName: "disconnect", raw: Buffer.alloc(0), payload: Buffer.alloc(0), connectionId: "conn-a" });
+      capture.packet(identityPacket(1_210, 30, "Ghost", "conn-a"));
+      capture.packet(authenticatedPacket(50, "conn-b"));
+      capture.packet({
+        tick: 70,
+        packetId: 5,
+        packetName: "objectSpawn",
+        objectId: 40,
+        ownerConnectionId: 9,
+        spawnSyncPayload: Buffer.from([1, 2, 3, 4]),
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+        connectionId: "conn-b",
+      });
+      await coordinator.stop();
+
+      const combatPointer = await readCurrentLogStream("combat", directory);
+      const combat = records(await readFile(combatPointer!.path, "utf8"))
+        .filter((record) => record.type === "combat.actorIdentity") as Array<{ type: string; data: { operation: string; displayName?: string } }>;
+      expect(combat.map((record) => [record.data.operation, record.data.displayName])).toEqual([
+        ["reset", undefined],
+        ["upsert", "Alpha"],
+        ["reset", undefined],
+        ["upsert", "Bravo"],
+      ]);
+
+      const otherPointer = await readCurrentLogStream("other", directory);
+      const misses = records(await readFile(otherPointer!.path, "utf8"))
+        .filter((record) => record.type === "combat.spawnIdentityMiss") as unknown as Array<{ data: { objectId: number; spawnSyncPayload: string } }>;
+      expect(misses).toHaveLength(1);
+      expect(misses[0]!.data.objectId).toBe(40);
+      expect(misses[0]!.data.spawnSyncPayload).toBe("01020304");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("reports capture startup failure without throwing or closing the session", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-failure-"));
     const capture = new FakeCapture(new Error("synthetic capture unavailable"));
@@ -93,18 +144,39 @@ class FakeCapture extends EventEmitter {
     this.emit("stopped");
   }
 
-  packet(packet: Omit<CapturedFishNetPacket, "liteNetPacket">): void {
-    this.emit("fishNetPacket", packet as CapturedFishNetPacket);
+  packet(packet: TestPacket): void {
+    this.emit("fishNetPacket", { connectionId: "test-connection", ...packet } as CapturedFishNetPacket);
   }
 }
+
+type TestPacket = Omit<CapturedFishNetPacket, "liteNetPacket" | "connectionId"> & { connectionId?: string };
 
 function records(content: string): Array<{ type: string }> {
   return content.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line) as { type: string });
 }
 
-function experiencePacket(tick: number, experience: number, coins: bigint): Omit<CapturedFishNetPacket, "liteNetPacket"> {
+function experiencePacket(tick: number, experience: number, coins: bigint): TestPacket {
   const payload = Buffer.concat([packed(experience), packed(1), packed(0), packed(1), packed(coins)]);
   return { tick, packetId: 4, packetName: "targetRpc", rpcName: "ExpCoinsChanged_T", raw: payload, payload };
+}
+
+function authenticatedPacket(tick: number, connectionId: string): TestPacket {
+  return { tick, packetId: 0, packetName: "authenticated", raw: Buffer.alloc(0), payload: Buffer.alloc(0), connectionId };
+}
+
+function identityPacket(tick: number, objectId: number, displayName: string, connectionId: string): TestPacket {
+  return {
+    tick,
+    packetId: 7,
+    packetName: "syncType",
+    objectId,
+    networkBehaviourType: "PlayerController",
+    syncName: "VisualData",
+    decodedFields: [{ name: "Appearance.DisplayName", typeName: "System.String", codec: "stringUtf8Packed", value: displayName }],
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    connectionId,
+  };
 }
 
 function packed(value: number | bigint): Buffer {

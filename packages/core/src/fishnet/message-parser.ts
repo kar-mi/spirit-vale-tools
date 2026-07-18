@@ -71,6 +71,7 @@ export function parseMessage(
       packet.spawnPrefabId = candidate.prefabId;
       packet.spawnSceneId = candidate.sceneId;
       packet.spawnNested = candidate.nested;
+      packet.spawnCustomPayload = candidate.customPayload;
       packet.spawnSyncPayload = candidate.syncPayload;
       packet.rpcLinkRegistrations = candidate.registrations.map(([linkId, registration]) => ({ linkId, ...registration }));
       return {

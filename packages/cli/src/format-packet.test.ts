@@ -60,6 +60,7 @@ describe("fishNetPacketData", () => {
     };
     const packet: CapturedFishNetPacket = {
       liteNetPacket,
+      connectionId: "10.0.0.1:7770<->10.0.0.2:5000#0",
       tick: 50,
       bundleIndex: 1,
       packetId: 900,

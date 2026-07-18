@@ -1,4 +1,5 @@
 import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
+import type { FishNetActorIdentityEvent } from "@spiritvale/combat";
 import { PacketCapture } from "@spiritvale/core";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
@@ -7,6 +8,8 @@ import { FishNetMarketTracker } from "@spiritvale/market";
 import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 
 import type { CaptureStatus, LauncherState } from "../launcher-types.ts";
+
+const SPAWN_PAYLOAD_LOG_LIMIT = 2_048;
 
 export interface CaptureCoordinatorOptions {
   logDirectory: string;
@@ -30,6 +33,8 @@ export class CaptureCoordinator {
   private statusDetail = "Capture stopped";
   private stopping = false;
   private lifecycleStopped = false;
+  private activeConnectionId?: string;
+  private lastAuthenticated?: { connectionId: string; tick: number };
 
   constructor(private readonly options: CaptureCoordinatorOptions) {
     this.capture = options.captureFactory?.() ?? new PacketCapture();
@@ -87,6 +92,8 @@ export class CaptureCoordinator {
     this.combat.reset();
     this.rewards.reset();
     this.market.reset();
+    this.activeConnectionId = undefined;
+    this.lastAuthenticated = undefined;
     await this.session?.close();
     this.setStatus("stopped", "Capture stopped");
   }
@@ -127,6 +134,7 @@ export class CaptureCoordinator {
   }
 
   private routePacket(packet: CapturedFishNetPacket): void {
+    if (!this.admitPacket(packet)) return;
     let handled = false;
     try {
       const identities = this.actors.consume(packet);
@@ -134,6 +142,7 @@ export class CaptureCoordinator {
       handled ||= identities.length > 0 || events.length > 0;
       for (const event of identities) this.combatLog?.log("combat.actorIdentity", jsonObject(event));
       for (const event of events) this.combatLog?.log("combat.event", jsonObject(event));
+      this.logSpawnIdentityMiss(packet, identities);
     } catch (error) {
       handled = true;
       this.logDomainWarning("combat", error);
@@ -171,6 +180,54 @@ export class CaptureCoordinator {
     }
 
     if (!handled) this.otherLog?.log("fishnet.packet", unclassifiedPacket(packet));
+  }
+
+  /**
+   * Routes only the active game-server connection. Map changes open a new connection whose
+   * trailing authenticated/disconnect packets from the old one must not wipe fresh actor state.
+   */
+  private admitPacket(packet: CapturedFishNetPacket): boolean {
+    const connectionId = packet.connectionId;
+    this.activeConnectionId ??= connectionId;
+    if (connectionId !== this.activeConnectionId) {
+      if (packet.packetName !== "authenticated") return false;
+      this.activeConnectionId = connectionId;
+    }
+    if (packet.packetName === "authenticated") {
+      if (this.lastAuthenticated?.connectionId === connectionId && this.lastAuthenticated.tick === packet.tick) {
+        return false;
+      }
+      this.lastAuthenticated = { connectionId, tick: packet.tick };
+    }
+    if (packet.packetName === "disconnect") this.activeConnectionId = undefined;
+    return true;
+  }
+
+  private logSpawnIdentityMiss(packet: CapturedFishNetPacket, identities: FishNetActorIdentityEvent[]): void {
+    if (packet.packetName !== "objectSpawn" || packet.objectId === undefined) return;
+    const ownerConnectionId = packet.ownerConnectionId;
+    if (ownerConnectionId === undefined || !Number.isInteger(ownerConnectionId) || ownerConnectionId < 0) return;
+    const named = identities.some((event) => event.operation === "upsert" && event.actorId === packet.objectId);
+    if (named) return;
+    this.otherLog?.log("combat.spawnIdentityMiss", jsonObject({
+      tick: packet.tick,
+      objectId: packet.objectId,
+      ownerConnectionId,
+      spawnType: packet.spawnType,
+      spawnPrefabId: packet.spawnPrefabId,
+      registrations: packet.rpcLinkRegistrations?.map(({ componentIndex, rpcHash, packetName, networkBehaviourType }) => ({
+        componentIndex,
+        rpcHash,
+        packetName,
+        networkBehaviourType,
+      })),
+      spawnSyncPayload: packet.spawnSyncPayload?.subarray(0, SPAWN_PAYLOAD_LOG_LIMIT).toString("hex"),
+      spawnSyncPayloadBytes: packet.spawnSyncPayload?.length,
+      spawnCustomPayload: packet.spawnCustomPayload?.subarray(0, SPAWN_PAYLOAD_LOG_LIMIT).toString("hex"),
+      spawnCustomPayloadBytes: packet.spawnCustomPayload?.length,
+      raw: packet.raw.subarray(0, SPAWN_PAYLOAD_LOG_LIMIT).toString("hex"),
+      rawBytes: packet.raw.length,
+    }));
   }
 
   private logDomainWarning(domain: "combat" | "rewards" | "market", error: unknown): void {

@@ -81,6 +81,8 @@ export interface DecodedFishNetPacket {
   spawnPrefabId?: number;
   spawnSceneId?: bigint;
   spawnNested?: boolean;
+  /** Game-defined WritePayload bytes embedded in an ObjectSpawn packet. */
+  spawnCustomPayload?: Buffer;
   /** Initial per-behaviour SyncType bytes embedded in an ObjectSpawn packet. */
   spawnSyncPayload?: Buffer;
   rpcLinkRegistrations?: FishNetRpcLinkRegistration[];
@@ -94,4 +96,6 @@ export interface DecodedFishNetPacket {
 
 export interface CapturedFishNetPacket extends DecodedFishNetPacket {
   liteNetPacket: CapturedLiteNetLibPacket;
+  /** Transport connection this packet was decoded from (endpoints + LiteNetLib connection number). */
+  connectionId: string;
 }
