@@ -5,7 +5,6 @@ import type { MobRewardCatalog } from "./catalog.ts";
 import { FishNetMobRewardTracker } from "./reward-tracker.ts";
 
 const catalog: MobRewardCatalog = {
-  schemaVersion: 1,
   buildFingerprint: CURRENT_FISHNET_BUILD_FINGERPRINT,
   experienceRequirements: [100, 200, 300],
   mobs: [{ id: "training-mob", displayName: "Training Mob", level: 2, boss: false, baseExperience: 20, baseCoins: 6, drops: [] }],

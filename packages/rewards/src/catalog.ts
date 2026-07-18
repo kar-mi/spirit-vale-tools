@@ -1,31 +1,30 @@
 import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "@spiritvale/core";
-import bundledData from "./maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.rewards.json" with { type: "json" };
+import { MobRewardCatalogDefinitions } from "./definitions/index.ts";
 
 export type MobDropCategory = "equipment" | "artifact" | "card" | "gem" | "material" | "consumable" | "cosmetic";
 
 export interface MobDropDefinition {
-  category: MobDropCategory;
-  itemId: string;
-  itemName: string;
-  count: number;
-  chance: number;
+  readonly category: MobDropCategory;
+  readonly itemId: string;
+  readonly itemName: string;
+  readonly count: number;
+  readonly chance: number;
 }
 
 export interface MobRewardDefinition {
-  id: string;
-  displayName: string;
-  level: number;
-  boss: boolean;
-  baseExperience: number;
-  baseCoins: number;
-  drops: MobDropDefinition[];
+  readonly id: string;
+  readonly displayName: string;
+  readonly level: number;
+  readonly boss: boolean;
+  readonly baseExperience: number;
+  readonly baseCoins: number;
+  readonly drops: readonly MobDropDefinition[];
 }
 
 export interface MobRewardCatalog {
-  schemaVersion: 1;
-  buildFingerprint: string;
-  experienceRequirements: number[];
-  mobs: MobRewardDefinition[];
+  readonly buildFingerprint: string;
+  readonly experienceRequirements: readonly number[];
+  readonly mobs: readonly MobRewardDefinition[];
 }
 
 export interface MobRewardCatalogQuery {
@@ -35,16 +34,7 @@ export interface MobRewardCatalogQuery {
   boss?: boolean;
 }
 
-const BUNDLED_CATALOG: MobRewardCatalog = {
-  schemaVersion: 1,
-  buildFingerprint: CURRENT_FISHNET_BUILD_FINGERPRINT,
-  // The serialized table is fixed-width and its unused tail contains signed
-  // overflow sentinels. Keep only real positive level requirements.
-  experienceRequirements: bundledData.experienceRequirements.filter((requirement) => requirement > 0),
-  // Some game configurations are templates or other non-combat records with
-  // no usable level. They cannot produce meaningful XP/coin estimates.
-  mobs: (bundledData.mobs as MobRewardDefinition[]).filter((mob) => Number.isInteger(mob.level) && mob.level > 0),
-};
+const BUNDLED_CATALOG = MobRewardCatalogDefinitions.catalog;
 
 export function loadBundledMobRewardCatalog(buildFingerprint = CURRENT_FISHNET_BUILD_FINGERPRINT): MobRewardCatalog {
   if (buildFingerprint !== BUNDLED_CATALOG.buildFingerprint) {

@@ -36,8 +36,6 @@ export default {
       "src/sessionpickerview/index.html": "views/sessionpickerview/index.html",
       "src/sessionpickerview/index.css": "views/sessionpickerview/index.css",
       "../ui-theme/./../ui-theme/theme.css": "views/sessionpickerview/theme.css",
-      "../core/src/fishnet/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.semantics.json":
-        "bun/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.semantics.json",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
