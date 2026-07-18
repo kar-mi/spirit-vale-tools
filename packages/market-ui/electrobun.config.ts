@@ -15,11 +15,12 @@ export default {
     copy: {
       "src/marketview/index.html": "views/marketview/index.html",
       "src/marketview/index.css": "views/marketview/index.css",
+      "../ui-theme/theme.css": "views/marketview/theme.css",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src"],
+    watch: ["src", "../ui-theme"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

@@ -13,11 +13,12 @@ export default {
     copy: {
       "src/rewardsview/index.html": "views/rewardsview/index.html",
       "src/rewardsview/index.css": "views/rewardsview/index.css",
+      "../ui-theme/theme.css": "views/rewardsview/theme.css",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src"],
+    watch: ["src", "../ui-theme"],
     win: { bundleCEF: false, defaultRenderer: "native" },
   },
   runtime: { exitOnLastWindowClosed: true },

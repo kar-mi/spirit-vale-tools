@@ -68,7 +68,7 @@ window = new BrowserWindow({
   title: "Spirit Vale Market",
   url: "views://marketview/index.html",
   frame: { x: 100, y: 80, width: 760, height: 720 },
-  titleBarStyle: "hidden",
+  titleBarStyle: "default",
   transparent: false,
   rpc,
 });

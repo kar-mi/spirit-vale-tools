@@ -15,11 +15,12 @@ export default {
     copy: {
       "src/mainview/index.html": "views/mainview/index.html",
       "src/mainview/index.css": "views/mainview/index.css",
+      "../ui-theme/theme.css": "views/mainview/theme.css",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src"],
+    watch: ["src", "../ui-theme"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

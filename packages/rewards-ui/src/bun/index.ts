@@ -59,7 +59,7 @@ window = new BrowserWindow({
   title: "Spirit Vale Mob Rewards",
   url: "views://rewardsview/index.html",
   frame: settings.frame,
-  titleBarStyle: "hidden",
+  titleBarStyle: "default",
   transparent: false,
   rpc,
 });

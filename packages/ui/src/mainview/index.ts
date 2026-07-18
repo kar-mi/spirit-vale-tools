@@ -3,6 +3,15 @@ import { Electroview } from "electrobun/view";
 import type { DpsAppRpc, DpsAppState, DpsAppTab } from "../app-types.ts";
 import type { FishNetDpsActorRow, FishNetDpsSkillRow } from "@spiritvale/combat";
 
+const STATUS_TONE: Record<DpsAppState["status"], string> = {
+  waiting: "is-warn",
+  capturing: "is-ok",
+  loading: "is-warn",
+  ready: "is-ok",
+  stopped: "is-warn",
+  error: "is-err",
+};
+
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 let state: DpsAppState | undefined;
@@ -66,9 +75,9 @@ function render(next: DpsAppState): void {
   resetButton.disabled = next.mode !== "live" || !next.snapshot;
   pinButton.classList.toggle("active", next.pinned);
   pinButton.textContent = next.pinned ? "◆" : "◇";
-  statusDot.className = `status-dot ${next.status}`;
+  statusDot.className = `status-dot ${STATUS_TONE[next.status]}`;
   statusText.textContent = next.statusDetail;
-  partyDps.textContent = `${formatDps(next.snapshot?.partyDps ?? 0)} DPS`;
+  partyDps.textContent = formatDps(next.snapshot?.partyDps ?? 0);
   encounterDuration.textContent = next.snapshot
     ? `${formatDuration(next.snapshot.durationMs)} · ${compactFormat.format(next.snapshot.totalDamage)} total`
     : next.replayFileName ?? "No encounter";

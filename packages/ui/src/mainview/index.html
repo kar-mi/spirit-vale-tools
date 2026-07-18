@@ -5,16 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
     <title>Spirit Vale DPS</title>
+    <link rel="stylesheet" href="views://mainview/theme.css" />
     <link rel="stylesheet" href="views://mainview/index.css" />
     <script type="module" src="views://mainview/index.js"></script>
   </head>
   <body>
     <main class="app-shell">
       <header class="titlebar electrobun-webkit-app-region-drag">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span>Spirit Vale DPS</span>
-        </div>
+        <div class="brand"><span>Spirit Vale</span><span class="brand-tag">DPS</span></div>
         <div class="window-controls electrobun-webkit-app-region-no-drag">
           <button id="pin-button" class="icon-button" type="button" aria-label="Toggle always on top" title="Always on top">◇</button>
           <button id="minimize-button" class="icon-button" type="button" aria-label="Minimize" title="Minimize">−</button>
@@ -23,29 +21,29 @@
       </header>
 
       <section class="command-bar">
-        <div class="mode-switch" aria-label="Data source">
-          <button id="live-mode-button" class="mode-button" type="button">Live</button>
-          <button id="replay-mode-button" class="mode-button" type="button">Replay</button>
+        <div class="seg" aria-label="Data source">
+          <button id="live-mode-button" type="button">Live</button>
+          <button id="replay-mode-button" type="button">Replay</button>
         </div>
-        <button id="open-replay-button" class="secondary-button" type="button">Open log</button>
-        <button id="reset-button" class="secondary-button" type="button">Reset</button>
+        <button id="open-replay-button" class="btn" type="button">Open log</button>
+        <button id="reset-button" class="btn" type="button">Reset</button>
       </section>
 
-      <section class="status-card" aria-live="polite">
-        <div class="status-line">
-          <span id="status-dot" class="status-dot"></span>
-          <span id="status-text">Starting capture…</span>
-          <strong id="party-dps" class="party-dps">0 DPS</strong>
-        </div>
-        <div class="encounter-line">
-          <span id="encounter-duration">No encounter</span>
-          <select id="encounter-select" aria-label="Encounter"></select>
+      <section class="status-strip" aria-live="polite">
+        <div class="status-readout"><span id="status-dot" class="status-dot is-idle"></span><span id="status-text">Starting capture…</span></div>
+        <div class="stat-tiles dps-tiles">
+          <article class="stat-tile"><span class="t-label">Party DPS</span><strong id="party-dps" class="t-data">0</strong></article>
+          <article class="stat-tile">
+            <span class="t-label">Encounter</span>
+            <span id="encounter-duration" class="t-data">—</span>
+            <select id="encounter-select" class="input" aria-label="Encounter" hidden></select>
+          </article>
         </div>
       </section>
 
-      <nav class="tabs" aria-label="Damage views">
-        <button id="all-tab" class="tab-button" type="button" role="tab" aria-controls="all-panel">All DPS</button>
-        <button id="personal-tab" class="tab-button" type="button" role="tab" aria-controls="personal-panel">Personal</button>
+      <nav class="seg tabs" role="tablist" aria-label="Damage views">
+        <button id="all-tab" type="button" role="tab" aria-controls="all-panel">All DPS</button>
+        <button id="personal-tab" type="button" role="tab" aria-controls="personal-panel">Personal</button>
       </nav>
 
       <section id="all-panel" class="panel" role="tabpanel">
@@ -54,13 +52,13 @@
 
       <section id="personal-panel" class="panel" role="tabpanel" hidden>
         <form id="personal-form" class="personal-form">
-          <label for="personal-name">Character</label>
+          <label class="t-label" for="personal-name">Character</label>
           <div class="input-row">
-            <input id="personal-name" type="text" maxlength="64" autocomplete="off" placeholder="Enter display name" />
-            <button class="secondary-button" type="submit">Save</button>
+            <input id="personal-name" class="input" type="text" maxlength="64" autocomplete="off" placeholder="Enter display name" />
+            <button class="btn" type="submit">Save</button>
           </div>
-          <label class="actor-label" for="personal-actor">Damage actor</label>
-          <select id="personal-actor" aria-label="Personal damage actor"></select>
+          <label class="t-label actor-label" for="personal-actor">Damage actor</label>
+          <select id="personal-actor" class="input" aria-label="Personal damage actor"></select>
         </form>
         <p id="personal-hint" class="personal-hint"></p>
         <div id="personal-list" class="meter-list"></div>

@@ -14,6 +14,14 @@ interface DraftFilter {
   max: string;
 }
 
+const STATUS_TONE: Record<MarketUiState["status"], string> = {
+  waiting: "is-warn",
+  watching: "is-ok",
+  ready: "is-ok",
+  stopped: "is-warn",
+  error: "is-err",
+};
+
 const numberFormat = new Intl.NumberFormat();
 let state: MarketUiState | undefined;
 let queryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -41,8 +49,6 @@ const statQuery = input("stat-query");
 const statList = element("stat-list");
 const filterError = element("filter-error");
 
-button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
-button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
 filterButton.addEventListener("click", openFilters);
 button("filter-close-button").addEventListener("click", closeFilters);
 button("cancel-filters-button").addEventListener("click", closeFilters);
@@ -81,7 +87,7 @@ void electroview.rpc?.request.getState({}).then(render);
 function render(next: MarketUiState): void {
   state = next;
   if (document.activeElement !== marketQuery) marketQuery.value = next.query;
-  statusDot.className = `status-dot ${next.status}`;
+  statusDot.className = `status-dot ${STATUS_TONE[next.status]}`;
   statusText.textContent = next.statusDetail;
   resultCount.textContent = `${numberFormat.format(next.matchCount)} ${next.matchCount === 1 ? "result" : "results"}`;
   filterCount.textContent = String(next.filters.length);
@@ -106,18 +112,18 @@ function renderListings(next: MarketUiState): void {
 
 function listingCard(listing: MarketUiListing): HTMLElement {
   const card = document.createElement("article");
-  card.className = "listing-card";
+  card.className = "list-row listing";
   const metadata = [listing.seller, listing.shopName, listing.mapId].filter(Boolean).join(" · ");
   card.append(
-    text("strong", "listing-title", listing.name),
+    text("strong", "row-title", listing.name),
     text("strong", "listing-price", formatPrice(listing.price)),
-    text("span", "listing-meta", metadata || listing.itemId || "Market listing"),
-    text("span", "listing-meta listing-quantity", `${numberFormat.format(listing.available)} available`),
+    text("span", "row-meta", metadata || listing.itemId || "Market listing"),
+    text("span", "row-meta listing-quantity", `${numberFormat.format(listing.available)} available`),
   );
   if (listing.stats.length > 0) {
     const chips = document.createElement("div");
-    chips.className = "stat-chips";
-    chips.replaceChildren(...listing.stats.map((stat) => text("span", "stat-chip", formatStat(stat))));
+    chips.className = "chips";
+    chips.replaceChildren(...listing.stats.map((stat) => text("span", "chip", formatStat(stat))));
     card.append(chips);
   }
   return card;
@@ -205,7 +211,7 @@ function statName(type: number): string {
 
 function rangeInput(label: string, value: string, disabled: boolean): HTMLInputElement {
   const control = document.createElement("input");
-  control.className = "range-input";
+  control.className = "input range-input";
   control.type = "number";
   control.step = "any";
   control.placeholder = label;

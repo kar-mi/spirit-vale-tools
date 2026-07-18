@@ -1,6 +1,14 @@
 import { Electroview } from "electrobun/view";
 import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
 
+const STATUS_TONE: Record<RewardsAppState["status"], string> = {
+  waiting: "is-warn",
+  watching: "is-ok",
+  ready: "is-ok",
+  stopped: "is-warn",
+  error: "is-err",
+};
+
 const format = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 let state: RewardsAppState | undefined;
 const rpc = Electroview.defineRPC<RewardsAppRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });
@@ -25,8 +33,6 @@ openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseR
 button("replay-live").addEventListener("click", returnToLive);
 button("return-live").addEventListener("click", returnToLive);
 pin.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
-button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
-button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
 query.addEventListener("input", () => void electroview.rpc?.request.setQuery({ query: query.value }));
 for (const close of document.querySelectorAll<HTMLElement>("[data-close-modal]")) {
   close.addEventListener("click", () => closeModal(close.dataset.closeModal ?? ""));
@@ -46,8 +52,9 @@ function render(next: RewardsAppState): void {
   recentTab.classList.toggle("active", next.view === "recent");
   replayButton.classList.toggle("active", next.mode === "replay");
   pin.textContent = next.pinned ? "◆" : "◇";
+  pin.classList.toggle("active", next.pinned);
   element("status-text").textContent = next.statusDetail;
-  element("status-dot").className = `status-dot ${next.status}`;
+  element("status-dot").className = `status-dot ${STATUS_TONE[next.status]}`;
   element("summary-panel").hidden = next.view !== "summary";
   element("recent-panel").hidden = next.view !== "recent";
   const replayBanner = element("replay-banner");
@@ -98,14 +105,14 @@ function renderSession(next: RewardsAppState): void {
 }
 
 function row(title: string, meta: string, rewards: string[], drops: RewardsUiDrop[]): HTMLElement {
-  const article = document.createElement("article"); article.className = "row";
+  const article = document.createElement("article"); article.className = "list-row";
   const head = document.createElement("div"); head.className = "row-head";
-  const identity = document.createElement("div"); identity.append(text("h3", "", title), text("div", "meta", meta));
-  const values = document.createElement("div"); values.className = "rewards"; values.append(...rewards.map((value) => text("span", "", value)));
+  const identity = document.createElement("div"); identity.append(text("h3", "row-title", title), text("div", "row-meta", meta));
+  const values = document.createElement("div"); values.className = "row-values"; values.append(...rewards.map((value) => text("span", "", value)));
   head.append(identity, values); article.append(head);
   if (drops.length) {
-    const dropList = document.createElement("div"); dropList.className = "drops";
-    dropList.append(...drops.map((drop) => text("span", "drop", `${drop.itemName} ×${drop.count}${drop.chance === undefined ? "" : ` · ${formatChance(drop.chance)}`}`)));
+    const dropList = document.createElement("div"); dropList.className = "chips";
+    dropList.append(...drops.map((drop) => text("span", "chip", `${drop.itemName} ×${drop.count}${drop.chance === undefined ? "" : ` · ${formatChance(drop.chance)}`}`)));
     article.append(dropList);
   }
   return article;
@@ -129,7 +136,7 @@ function formatDecimal(value: string): string { try { return format.format(BigIn
 function formatChance(value: number): string {
   return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(value)}%`;
 }
-function empty(message: string): HTMLElement { return text("div", "empty", message); }
+function empty(message: string): HTMLElement { return text("div", "empty-state", message); }
 function text<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, value: string): HTMLElementTagNameMap[K] { const node = document.createElement(tag); node.className = className; node.textContent = value; return node; }
 function element(id: string): HTMLElement { const value = document.getElementById(id); if (!value) throw new Error(`Missing #${id}`); return value; }
 function button(id: string): HTMLButtonElement { return element(id) as HTMLButtonElement; }
