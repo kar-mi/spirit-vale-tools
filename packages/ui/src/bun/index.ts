@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 
 import {
@@ -12,6 +12,8 @@ import {
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
+import { formatCombatReplaySummary } from "./replay-summaries.ts";
+import { createSessionPicker } from "./session-picker.ts";
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
@@ -44,6 +46,14 @@ let publishing = false;
 let settingsSaveTimer: ReturnType<typeof setTimeout> | undefined;
 let shuttingDown = false;
 
+const replayPicker = createSessionPicker({
+  logDirectory: options.logDirectory,
+  stream: "combat",
+  title: "Combat replays",
+  summarize: formatCombatReplaySummary,
+  loadReplay: loadReplayPath,
+});
+
 const rpc = BrowserView.defineRPC<DpsAppRpc>({
   maxRequestTime: 30_000,
   handlers: {
@@ -53,10 +63,7 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
         await switchMode(nextMode);
         return appState();
       },
-      chooseReplay: async () => {
-        await chooseReplay();
-        return appState();
-      },
+      openReplayPicker: () => { replayPicker.open(); },
       selectEncounter: ({ id }) => {
         if (replayMeter?.getSnapshots().some((encounter) => encounter.id === id)) selectedReplayEncounterId = id;
         publish();
@@ -159,15 +166,7 @@ async function switchMode(nextMode: DpsAppMode): Promise<void> {
   }
 }
 
-async function chooseReplay(): Promise<void> {
-  const [selectedPath] = await Utils.openFileDialog({
-    startingFolder: Utils.paths.documents,
-    allowedFileTypes: "jsonl",
-    canChooseFiles: true,
-    canChooseDirectory: false,
-    allowsMultipleSelection: false,
-  });
-  if (!selectedPath) return;
+async function loadReplayPath(selectedPath: string): Promise<void> {
   mode = "replay";
   status = "loading";
   statusDetail = "Loading replay…";
@@ -187,6 +186,8 @@ async function chooseReplay(): Promise<void> {
     selectedReplayEncounterId = undefined;
     status = "error";
     statusDetail = "The selected combat log could not be read";
+    publish();
+    throw new Error("combat replay could not be loaded");
   }
   publish();
 }
@@ -296,6 +297,7 @@ function scheduleSettingsSave(): void {
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
+  replayPicker.close();
   settings.frame = clampFrame(window.getFrame());
   clearInterval(liveLogTimer);
   if (settingsSaveTimer) clearTimeout(settingsSaveTimer);

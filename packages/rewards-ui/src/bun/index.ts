@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 import {
   loadBundledMobRewardCatalog,
@@ -18,6 +18,8 @@ import type {
   RewardsCatalogState,
 } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
+import { formatRewardsReplaySummary } from "../../../ui/src/bun/replay-summaries.ts";
+import { createSessionPicker } from "../../../ui/src/bun/session-picker.ts";
 
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();
@@ -45,6 +47,14 @@ let polling = false;
 let shuttingDown = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
+const replayPicker = createSessionPicker({
+  logDirectory: options.logDirectory,
+  stream: "rewards",
+  title: "Rewards replays",
+  summarize: formatRewardsReplaySummary,
+  loadReplay: loadReplayPath,
+});
+
 const rpc = BrowserView.defineRPC<RewardsAppRpc>({
   maxRequestTime: 30_000,
   handlers: {
@@ -53,7 +63,7 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
       setMode: ({ mode: nextMode }) => { mode = nextMode; publish(); return appState(); },
       setView: ({ view }) => { settings.view = view; scheduleSave(); publish(); return appState(); },
       openCatalog: () => { openCatalog(); },
-      chooseReplay: async () => { await chooseReplay(); return appState(); },
+      openReplayPicker: () => { replayPicker.open(); },
       setPinned: ({ pinned }) => {
         settings.pinned = pinned;
         window.setAlwaysOnTop(pinned);
@@ -244,15 +254,7 @@ async function poll(): Promise<void> {
   } finally { polling = false; }
 }
 
-async function chooseReplay(): Promise<void> {
-  const [selectedPath] = await Utils.openFileDialog({
-    startingFolder: Utils.paths.documents,
-    allowedFileTypes: "jsonl",
-    canChooseFiles: true,
-    canChooseDirectory: false,
-    allowsMultipleSelection: false,
-  });
-  if (!selectedPath) return;
+async function loadReplayPath(selectedPath: string): Promise<void> {
   try {
     const replay = await loadRewardReplay(selectedPath);
     replaySnapshot = replay.snapshot;
@@ -263,6 +265,8 @@ async function chooseReplay(): Promise<void> {
     replaySnapshot = emptySnapshot();
     replayWarnings = 0;
     replayFileName = undefined;
+    publish();
+    throw new Error("rewards replay could not be loaded");
   }
   publish();
 }
@@ -312,6 +316,7 @@ function scheduleSave(): void {
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
+  replayPicker.close();
   clearInterval(timer);
   if (saveTimer) clearTimeout(saveTimer);
   catalogWindow?.close();

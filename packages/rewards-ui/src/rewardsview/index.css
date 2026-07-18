@@ -137,18 +137,8 @@ main {
   border: 0;
 }
 
-.replay-detail {
-  padding: 14px;
-  border-radius: var(--shape-sm);
-  background: var(--surface-container);
-  color: var(--on-surface-variant);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 @media (max-width: 740px) {
   .totals { grid-template-columns: 1fr 1fr; }
   .toolbar { flex-wrap: wrap; }
   .trend-chart { height: 360px; }
-  .modal-layer { padding: 12px; }
 }

@@ -1,0 +1,152 @@
+import path from "node:path";
+
+import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import { listLogSessions } from "@spiritvale/logging";
+import type { LogStream } from "@spiritvale/logging";
+import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+
+import type { SessionPickerRpc, SessionPickerState } from "../session-picker-types.ts";
+
+export interface SessionPickerOptions {
+  logDirectory: string;
+  stream: Extract<LogStream, "combat" | "rewards">;
+  title: string;
+  summarize: (path: string) => Promise<string>;
+  loadReplay: (path: string) => Promise<void>;
+}
+
+export interface SessionPicker {
+  open(): void;
+  close(): void;
+}
+
+export function createSessionPicker(options: SessionPickerOptions): SessionPicker {
+  let window: BrowserWindow | undefined;
+  let state: SessionPickerState = loadingState(options.title);
+  let paths = new Map<string, string>();
+  let refreshSequence = 0;
+
+  const rpc = BrowserView.defineRPC<SessionPickerRpc>({
+    handlers: {
+      requests: {
+        getState: () => state,
+        getWindowFrame: () => window?.getFrame() ?? { x: 120, y: 120, width: 640, height: 560 },
+        setWindowFrame: ({ x, y, width, height }) => { window?.setFrame(x, y, Math.max(480, width), Math.max(400, height)); },
+      },
+      messages: {
+        refresh: () => { void refresh(); },
+        openSession: ({ id }) => { void selectManaged(id); },
+        chooseFile: () => { void chooseFile(); },
+        windowAction: ({ action }) => {
+          if (action === "minimize") window?.minimize();
+          else window?.close();
+        },
+      },
+    },
+  });
+
+  return {
+    open() {
+      if (window) {
+        window.show();
+        window.activate();
+      } else {
+        const nextWindow = new BrowserWindow({
+          title: options.title,
+          url: "views://sessionpickerview/index.html",
+          frame: { x: 120, y: 120, width: 640, height: 560 },
+          titleBarStyle: "hidden",
+          transparent: false,
+          rpc,
+        });
+        window = nextWindow;
+        applyRoundedCorners(nextWindow.ptr);
+        Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
+          const width = Math.max(480, event.data.width);
+          const height = Math.max(400, event.data.height);
+          if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
+        });
+        nextWindow.on("close", () => {
+          if (window === nextWindow) window = undefined;
+          paths.clear();
+        });
+        nextWindow.on("focus", () => { void refresh(); });
+      }
+      void refresh();
+    },
+    close() { window?.close(); },
+  };
+
+  async function refresh(): Promise<void> {
+    const sequence = ++refreshSequence;
+    state = loadingState(options.title);
+    publish();
+    try {
+      const sessions = await listLogSessions(options.stream, options.logDirectory, 25);
+      const nextPaths = new Map<string, string>();
+      const items = await Promise.all(sessions.map(async (session) => {
+        try {
+          const summary = await options.summarize(session.path);
+          nextPaths.set(session.id, session.path);
+          return { id: session.id, createdAt: session.createdAt, summary, active: session.active, disabled: false };
+        } catch {
+          return {
+            id: session.id,
+            createdAt: session.createdAt,
+            summary: "Summary unavailable",
+            active: session.active,
+            disabled: true,
+          };
+        }
+      }));
+      if (sequence !== refreshSequence) return;
+      paths = nextPaths;
+      state = {
+        title: options.title,
+        status: "ready",
+        statusDetail: items.length === 0 ? "No managed sessions found." : `${items.length} recent session${items.length === 1 ? "" : "s"}`,
+        sessions: items,
+      };
+    } catch {
+      if (sequence !== refreshSequence) return;
+      paths.clear();
+      state = { title: options.title, status: "error", statusDetail: "Recent sessions could not be scanned.", sessions: [] };
+    }
+    publish();
+  }
+
+  async function selectManaged(id: string): Promise<void> {
+    const selectedPath = paths.get(id);
+    if (!selectedPath) return;
+    await accept(selectedPath);
+  }
+
+  async function chooseFile(): Promise<void> {
+    const [selectedPath] = await Utils.openFileDialog({
+      startingFolder: Utils.paths.documents,
+      allowedFileTypes: "jsonl,json",
+      canChooseFiles: true,
+      canChooseDirectory: false,
+      allowsMultipleSelection: false,
+    });
+    if (!selectedPath) return;
+    await accept(path.resolve(selectedPath));
+  }
+
+  async function accept(selectedPath: string): Promise<void> {
+    try {
+      await options.loadReplay(selectedPath);
+      window?.close();
+    } catch {
+      // The parent owns replay error state. Keep the picker open for another choice.
+    }
+  }
+
+  function publish(): void {
+    try { rpc.send.stateChanged(state); } catch { /* The view may still be connecting. */ }
+  }
+}
+
+function loadingState(title: string): SessionPickerState {
+  return { title, status: "loading", statusDetail: "Scanning recent sessions…", sessions: [] };
+}

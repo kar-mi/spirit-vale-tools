@@ -20,6 +20,13 @@ export interface LogSessionMetadata {
   streams: LogStream[];
 }
 
+export interface ListedLogSession {
+  id: string;
+  createdAt: string;
+  path: string;
+  active: boolean;
+}
+
 export interface CurrentLogStream {
   schemaVersion: 1;
   stream: LogStream;

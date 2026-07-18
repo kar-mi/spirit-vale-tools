@@ -34,19 +34,13 @@ const recentTab = button("recent-tab");
 const trendsTab = button("trends-tab");
 const catalogButton = button("catalog-button");
 const replayButton = button("replay-button");
-const openReplay = button("open-replay");
 const pin = button("pin-button");
 
 summaryTab.addEventListener("click", () => setView("summary"));
 recentTab.addEventListener("click", () => setView("recent"));
 trendsTab.addEventListener("click", () => setView("trends"));
 catalogButton.addEventListener("click", () => void electroview.rpc?.request.openCatalog({}));
-replayButton.addEventListener("click", () => openModal("replay-modal"));
-openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseReplay({}).then((next) => {
-  render(next);
-  if (next.mode === "replay" && next.replayFileName) closeModal("replay-modal");
-}));
-button("replay-live").addEventListener("click", returnToLive);
+replayButton.addEventListener("click", () => void electroview.rpc?.request.openReplayPicker({}));
 button("return-live").addEventListener("click", returnToLive);
 pin.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
@@ -81,16 +75,6 @@ const chrome = initWindowChrome({
   },
 });
 maximizeButton.addEventListener("click", () => void chrome.toggleMaximize());
-for (const close of document.querySelectorAll<HTMLElement>("[data-close-modal]")) {
-  close.addEventListener("click", () => closeModal(close.dataset.closeModal ?? ""));
-}
-for (const layer of document.querySelectorAll<HTMLElement>(".modal-layer")) {
-  layer.addEventListener("click", (event) => { if (event.target === layer) closeModal(layer.id); });
-}
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-  for (const layer of document.querySelectorAll<HTMLElement>(".modal-layer:not([hidden])")) closeModal(layer.id);
-});
 void electroview.rpc?.request.getState({}).then(render);
 
 function render(next: RewardsAppState): void {
@@ -113,10 +97,9 @@ function render(next: RewardsAppState): void {
   }
   const replayBanner = element("replay-banner");
   replayBanner.hidden = next.mode !== "replay";
-  element("replay-banner-text").textContent = next.mode === "replay" ? `Viewing replay: ${next.replayFileName ?? "selected log"}` : "";
-  element("replay-detail").textContent = next.replayFileName
-    ? `Loaded: ${next.replayFileName}${next.replayWarnings > 0 ? ` · ${next.replayWarnings} malformed records skipped` : ""}`
-    : "No replay loaded. Choose a rewards JSON Lines log to inspect it.";
+  element("replay-banner-text").textContent = next.mode === "replay"
+    ? `Viewing replay: ${next.replayFileName ?? "selected log"}${next.replayWarnings > 0 ? ` · ${next.replayWarnings} malformed records skipped` : ""}`
+    : "";
   element("total-xp").textContent = format.format(next.totalExperience);
   element("total-job-xp").textContent = format.format(next.totalJobExperience);
   element("total-coins").textContent = formatDecimal(next.totalCoins);
@@ -448,16 +431,7 @@ function svgElement<K extends keyof SVGElementTagNameMap>(
 
 function setView(view: RewardsAppView): void { void electroview.rpc?.request.setView({ view }); }
 function returnToLive(): void {
-  closeModal("replay-modal");
   void electroview.rpc?.request.setMode({ mode: "live" });
-}
-function openModal(id: string): void {
-  const modal = element(id);
-  modal.hidden = false;
-}
-function closeModal(id: string): void {
-  if (!id) return;
-  element(id).hidden = true;
 }
 function formatDecimal(value: string): string { try { return format.format(BigInt(value)); } catch { return value; } }
 function formatChance(value: number): string {

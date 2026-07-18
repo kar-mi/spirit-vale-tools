@@ -31,7 +31,7 @@ export type DpsAppRpc = {
     requests: {
       getState: { params: Record<string, never>; response: DpsAppState };
       setMode: { params: { mode: DpsAppMode }; response: DpsAppState };
-      chooseReplay: { params: Record<string, never>; response: DpsAppState };
+      openReplayPicker: { params: Record<string, never>; response: void };
       selectEncounter: { params: { id: string }; response: DpsAppState };
       resetEncounter: { params: Record<string, never>; response: DpsAppState };
       setPersonalName: { params: { name: string }; response: DpsAppState };

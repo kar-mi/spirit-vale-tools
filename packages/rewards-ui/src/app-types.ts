@@ -68,7 +68,7 @@ export type RewardsAppRpc = {
       setMode: { params: { mode: RewardsAppMode }; response: RewardsAppState };
       setView: { params: { view: RewardsAppView }; response: RewardsAppState };
       openCatalog: { params: Record<string, never>; response: void };
-      chooseReplay: { params: Record<string, never>; response: RewardsAppState };
+      openReplayPicker: { params: Record<string, never>; response: void };
       setPinned: { params: { pinned: boolean }; response: RewardsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
       getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
