@@ -1,4 +1,5 @@
 import type { DecodedFishNetPacket, FishNetDecodedValue } from "@spiritvale/core";
+import { checkedEnd, readSignedPackedWhole } from "@spiritvale/core/wire-reader";
 
 export interface FishNetActorIdentity {
   readonly actorId: number;
@@ -58,6 +59,19 @@ export class FishNetActorDirectory {
         identityEligible,
       });
       if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, packet.objectId);
+      const embeddedIdentity = decodeSpawnIdentity(packet);
+      if (embeddedIdentity) {
+        const next: FishNetActorIdentity = {
+          actorId: packet.objectId,
+          displayName: embeddedIdentity.displayName,
+          archetype: embeddedIdentity.archetype,
+        };
+        this.identitySources.set(packet.objectId, next);
+        this.sourceRevisions.set(packet.objectId, this.nextSourceRevision++);
+        const object = this.objects.get(packet.objectId);
+        if (object) object.identityEligible = true;
+        if (ownerConnectionId === undefined) events.push(...this.reconcile(packet.objectId, next, packet.tick));
+      }
       events.push(...this.refreshOwner(ownerConnectionId, packet.tick));
       return events;
     }
@@ -212,4 +226,35 @@ function validOwner(ownerConnectionId: number | undefined): number | undefined {
 
 function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {
   return packet.decodedFields?.find((field) => field.name === name)?.value;
+}
+
+function decodeSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype: number } | undefined {
+  const payload = packet.spawnSyncPayload;
+  if (!payload || payload.length < 4) return undefined;
+  const playerComponents = new Set(packet.rpcLinkRegistrations
+    ?.filter(({ networkBehaviourType }) => networkBehaviourType === "PlayerController")
+    .map(({ componentIndex }) => componentIndex) ?? []);
+  if (playerComponents.size === 0) return undefined;
+
+  const identities = new Map<string, { displayName: string; archetype: number }>();
+  for (let offset = 0; offset <= payload.length - 4; offset += 1) {
+    const componentIndex = payload[offset];
+    const writtenCount = payload[offset + 1];
+    const syncIndex = payload[offset + 2];
+    if (componentIndex === undefined || !playerComponents.has(componentIndex)
+      || writtenCount === undefined || writtenCount < 1 || writtenCount > 64 || syncIndex !== 5) continue;
+    try {
+      const length = readSignedPackedWhole(payload, offset + 3);
+      if (length.value < 1 || length.value > 128) continue;
+      const nameEnd = checkedEnd(payload, length.nextOffset, length.value);
+      const displayName = new TextDecoder("utf-8", { fatal: true }).decode(payload.subarray(length.nextOffset, nameEnd));
+      if (!displayName.trim() || /[\u0000-\u001f\u007f]/.test(displayName)) continue;
+      const archetype = readSignedPackedWhole(payload, nameEnd);
+      if (archetype.value < 0 || archetype.value > 1_000) continue;
+      identities.set(`${displayName}\u0000${archetype.value}`, { displayName, archetype: archetype.value });
+    } catch {
+      // Other spawn state may contain the same byte values without being VisualData.
+    }
+  }
+  return identities.size === 1 ? identities.values().next().value : undefined;
 }

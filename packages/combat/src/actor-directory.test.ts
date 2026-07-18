@@ -37,6 +37,7 @@ function spawn(
   objectId: number,
   ownerConnectionId: number,
   networkBehaviourType: string,
+  spawnSyncPayload?: Buffer,
 ): DecodedFishNetPacket {
   return {
     ...packet(tick, "objectSpawn", objectId),
@@ -49,6 +50,7 @@ function spawn(
       packetName: "observersRpc",
       networkBehaviourType,
     }],
+    ...(spawnSyncPayload === undefined ? {} : { spawnSyncPayload }),
   };
 }
 
@@ -140,6 +142,34 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
+  test("reads a player identity from map-load SyncTypes embedded in the spawn", () => {
+    const directory = new FishNetActorDirectory();
+    const embeddedVisual = Buffer.concat([
+      Buffer.from([0, 1, 5]), // component index, written SyncType count, VisualData index
+      packedString("Mapload Ranger"),
+      packed(6),
+    ]);
+
+    expect(directory.consume(spawn(1, 60, 12, "PlayerController", embeddedVisual))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 1,
+      actorId: 60,
+      displayName: "Mapload Ranger",
+      archetype: 6,
+      ownerConnectionId: 12,
+    }]);
+    expect(directory.consume(spawn(2, 160, 12, "CombatComponent"))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 2,
+      actorId: 160,
+      displayName: "Mapload Ranger",
+      archetype: 6,
+      ownerConnectionId: 12,
+    }]);
+  });
+
   test("removes and reapplies aliases across ownership and source lifecycle changes", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 40, 7, "PlayerController"));
@@ -166,3 +196,15 @@ describe("FishNetActorDirectory", () => {
     ]);
   });
 });
+
+function packedString(value: string): Buffer {
+  return Buffer.concat([packed(Buffer.byteLength(value)), Buffer.from(value)]);
+}
+
+function packed(value: number): Buffer {
+  let encoded = (BigInt(value) << 1n) ^ (BigInt(value) >> 63n);
+  const bytes: number[] = [];
+  while (encoded >= 0x80n) { bytes.push(Number(encoded & 0x7fn) | 0x80); encoded >>= 7n; }
+  bytes.push(Number(encoded));
+  return Buffer.from(bytes);
+}
