@@ -1,5 +1,4 @@
 import type { CapturedTransportPacket, CapturedLiteNetLibPacket, CapturedFishNetPacket } from "@spiritvale/core";
-import type { FishNetCombatEvent, FishNetActorIdentityEvent } from "@spiritvale/combat";
 import type { JsonData, JsonObject } from "@spiritvale/logging";
 
 export function transportPacketData(packet: CapturedTransportPacket): JsonObject {
@@ -67,7 +66,7 @@ export function fishNetPacketData(packet: CapturedFishNetPacket): JsonObject {
   };
 }
 
-export function domainEventData(event: FishNetCombatEvent | FishNetActorIdentityEvent): JsonObject {
+export function domainEventData(event: object): JsonObject {
   return jsonValue(event) as JsonObject;
 }
 

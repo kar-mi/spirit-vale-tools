@@ -1,4 +1,4 @@
-export type LogStream = "capture" | "combat" | "market";
+export type LogStream = "capture" | "combat" | "market" | "rewards";
 export type JsonData = null | boolean | number | string | JsonData[] | JsonObject;
 export interface JsonObject { [key: string]: JsonData | undefined }
 

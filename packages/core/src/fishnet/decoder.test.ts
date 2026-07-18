@@ -79,6 +79,7 @@ function spawnWithLink(
   rpcHash: number,
   kind = 9,
   ownerConnectionId = -1,
+  syncPayload = Buffer.alloc(0),
 ): Buffer {
   const records = Buffer.concat([
     Buffer.from([componentIndex]),
@@ -98,7 +99,8 @@ function spawnWithLink(
     u32(0), // payload
     u16(records.length),
     records,
-    u32(0), // initial SyncTypes
+    u32(syncPayload.length),
+    syncPayload,
   ]));
 }
 
@@ -259,6 +261,17 @@ describe("FishNet bundles and sessions", () => {
       broadcastName: "SyntheticNotice",
       decodedFields: [{ name: "code", value: 9 }],
     });
+  });
+
+  test("preserves initial SyncType bytes embedded in an object spawn", () => {
+    const initialSyncTypes = Buffer.from("020100036d6f62", "hex");
+    const [spawn] = new FishNetSessionDecoder(semanticMap()).decode(
+      tick(21, spawnWithLink(8, 2, 901, 0x1234, 9, -1, initialSyncTypes)),
+      { reliable: true, connectionId: "spawn-sync" },
+    );
+
+    expect(spawn).toMatchObject({ packetName: "objectSpawn", objectId: 8 });
+    expect(spawn?.spawnSyncPayload).toEqual(initialSyncTypes);
   });
 
   test("decodes structured SyncType fields after the index and preserves trailing bytes", () => {

@@ -6,6 +6,7 @@
     "@spiritvale/combat": "workspace:*",
     "@spiritvale/core": "workspace:*",
     "@spiritvale/logging": "workspace:*",
-    "@spiritvale/market": "workspace:*"
+    "@spiritvale/market": "workspace:*",
+    "@spiritvale/rewards": "workspace:*"
   }
 }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spirit Vale Mob Rewards</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <header class="titlebar electrobun-webkit-app-region-drag">
+    <div class="brand"><span class="sigil">SV</span><div><strong>Mob Rewards</strong><small id="status-text">Connecting…</small></div></div>
+    <div class="window-controls electrobun-webkit-app-region-no-drag">
+      <button id="pin-button" title="Always on top">◇</button><button id="minimize-button" title="Minimize">—</button><button id="close-button" title="Close">×</button>
+    </div>
+  </header>
+  <main>
+    <nav class="toolbar">
+      <div class="segmented"><button id="catalog-tab">Catalog</button><button id="session-tab">Live rewards</button></div>
+      <div class="segmented"><button id="live-mode">Live</button><button id="replay-mode">Replay</button></div>
+      <button id="open-replay" class="secondary">Open log</button>
+      <span id="status-dot" class="status-dot waiting"></span>
+    </nav>
+
+    <section id="catalog-panel">
+      <div class="section-head"><div><h1>Configured mob rewards</h1><p>Build-matched base values before party and status modifiers.</p></div><span id="catalog-count" class="badge">0 mobs</span></div>
+      <input id="catalog-query" type="search" placeholder="Search mob name or ID…" autocomplete="off">
+      <div id="catalog-list" class="list"></div>
+    </section>
+
+    <section id="session-panel" hidden>
+      <div class="totals">
+        <article><small>Character XP</small><strong id="total-xp">0</strong></article>
+        <article><small>Job XP</small><strong id="total-job-xp">0</strong></article>
+        <article><small>Coins</small><strong id="total-coins">0</strong></article>
+        <article><small>Unmatched</small><strong id="unmatched">0</strong></article>
+      </div>
+      <div id="identity-warning" class="notice" hidden></div>
+      <div class="columns">
+        <section><div class="section-head"><div><h2>Mob summary</h2><p>Confirmed rewards in this session.</p></div></div><div id="summary-list" class="list"></div></section>
+        <section><div class="section-head"><div><h2>Recent kills</h2><p>Newest confirmed attribution first.</p></div></div><div id="kill-list" class="list"></div></section>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="index.js"></script>
+</body>
+</html>

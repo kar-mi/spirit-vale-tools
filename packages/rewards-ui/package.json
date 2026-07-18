@@ -1,5 +1,5 @@
 {
-  "name": "@spiritvale/ui",
+  "name": "@spiritvale/rewards-ui",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,7 +7,7 @@
     "build": "electrobun build"
   },
   "dependencies": {
-    "@spiritvale/combat": "workspace:*"
+    "@spiritvale/rewards": "workspace:*"
   },
   "devDependencies": {
     "electrobun": "1.18.1"

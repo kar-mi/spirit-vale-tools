@@ -214,6 +214,24 @@ bun run dev:market
 The browser does not initiate game requests; opening the in-game market supplies
 the responses that populate the local session.
 
+## Mob rewards
+
+The mob rewards package combines a build-matched catalog with passive live
+observations. Catalog values are the configured base XP, coins, and drop chances;
+live records contain the actual character XP, job XP, coins, and collected items
+seen after party and player modifiers. Only a unique mob-death correlation enters
+the per-mob totals. Ambiguous or unrelated reward updates are counted separately.
+
+Start the passive rewards session first, then launch its standalone desktop UI:
+
+```powershell
+bun run rewards
+bun run dev:rewards
+```
+
+The UI provides the configured catalog, a confirmed recent-kill feed, per-mob
+session totals, and JSON Lines replay. It does not send or modify game traffic.
+
 ```ts
 import { PacketCapture } from "@spiritvale/core";
 import { FishNetMarketTracker } from "@spiritvale/market";

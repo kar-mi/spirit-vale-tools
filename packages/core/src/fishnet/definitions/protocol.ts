@@ -81,6 +81,8 @@ export interface DecodedFishNetPacket {
   spawnPrefabId?: number;
   spawnSceneId?: bigint;
   spawnNested?: boolean;
+  /** Initial per-behaviour SyncType bytes embedded in an ObjectSpawn packet. */
+  spawnSyncPayload?: Buffer;
   rpcLinkRegistrations?: FishNetRpcLinkRegistration[];
   syncPayload?: Buffer;
   /** First SyncType index in the length-delimited body. */

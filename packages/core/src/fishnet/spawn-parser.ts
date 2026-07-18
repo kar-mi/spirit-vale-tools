@@ -19,6 +19,7 @@ export interface SpawnCandidate {
   prefabId?: number;
   sceneId?: bigint;
   nested: boolean;
+  syncPayload: Buffer;
 }
 
 export function parseObjectSpawn(
@@ -94,7 +95,9 @@ export function parseObjectSpawn(
 
         requireBytes(buffer, candidateOffset, 4, "spawn SyncType length");
         const syncLength = buffer.readUInt32LE(candidateOffset);
-        candidateOffset = checkedEnd(buffer, candidateOffset + 4, syncLength);
+        const syncStart = candidateOffset + 4;
+        candidateOffset = checkedEnd(buffer, syncStart, syncLength);
+        const syncPayload = buffer.subarray(syncStart, candidateOffset);
         if (!isPlausibleBoundary(buffer, candidateOffset)) continue;
         candidates.push({
           end: candidateOffset,
@@ -107,6 +110,7 @@ export function parseObjectSpawn(
           prefabId,
           sceneId,
           nested,
+          syncPayload,
         });
       } catch {
         // Try the next supported quaternion packing width.

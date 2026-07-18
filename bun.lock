@@ -16,6 +16,7 @@
         "@spiritvale/core": "workspace:*",
         "@spiritvale/logging": "workspace:*",
         "@spiritvale/market": "workspace:*",
+        "@spiritvale/rewards": "workspace:*",
       },
     },
     "packages/combat": {
@@ -47,6 +48,23 @@
         "electrobun": "1.18.1",
       },
     },
+    "packages/rewards": {
+      "name": "@spiritvale/rewards",
+      "dependencies": {
+        "@spiritvale/combat": "workspace:*",
+        "@spiritvale/core": "workspace:*",
+        "@spiritvale/logging": "workspace:*",
+      },
+    },
+    "packages/rewards-ui": {
+      "name": "@spiritvale/rewards-ui",
+      "dependencies": {
+        "@spiritvale/rewards": "workspace:*",
+      },
+      "devDependencies": {
+        "electrobun": "1.18.1",
+      },
+    },
     "packages/ui": {
       "name": "@spiritvale/ui",
       "dependencies": {
@@ -73,6 +91,10 @@
     "@spiritvale/market": ["@spiritvale/market@workspace:packages/market"],
 
     "@spiritvale/market-ui": ["@spiritvale/market-ui@workspace:packages/market-ui"],
+
+    "@spiritvale/rewards": ["@spiritvale/rewards@workspace:packages/rewards"],
+
+    "@spiritvale/rewards-ui": ["@spiritvale/rewards-ui@workspace:packages/rewards-ui"],
 
     "@spiritvale/ui": ["@spiritvale/ui@workspace:packages/ui"],
 
