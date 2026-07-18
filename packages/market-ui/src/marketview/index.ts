@@ -1,4 +1,5 @@
 import { Electroview } from "electrobun/view";
+import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 
 import type {
   MarketUiFilter,
@@ -48,6 +49,24 @@ const filterForm = form("filter-form");
 const statQuery = input("stat-query");
 const statList = element("stat-list");
 const filterError = element("filter-error");
+
+button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
+button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
+
+const maximizeButton = button("maximize-button");
+const chrome = initWindowChrome({
+  titlebar: element("titlebar"),
+  minWidth: 520,
+  minHeight: 480,
+  getFrame: async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: 520, height: 480 },
+  setFrame: (frame) => void electroview.rpc?.request.setWindowFrame(frame),
+  toggleMaximize: async () => (await electroview.rpc?.request.toggleMaximize({}))?.maximized ?? false,
+  onMaximizedChange: (maximized) => {
+    maximizeButton.textContent = maximized ? "❐" : "▢";
+    maximizeButton.title = maximized ? "Restore" : "Maximize";
+  },
+});
+maximizeButton.addEventListener("click", () => void chrome.toggleMaximize());
 
 filterButton.addEventListener("click", openFilters);
 button("filter-close-button").addEventListener("click", closeFilters);

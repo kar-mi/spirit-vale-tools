@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
 import {
   loadBundledMobRewardCatalog,
   loadRewardReplay,
@@ -11,6 +12,8 @@ import {
 import type { MobRewardSessionSnapshot, RewardLogStatus } from "@spiritvale/rewards";
 import type { RewardsAppMode, RewardsAppRpc, RewardsAppState, RewardsAppStatus } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
+
+makeProcessDpiAware();
 
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();
@@ -50,6 +53,13 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
         if (action === "minimize") window.minimize();
         else await shutdown();
       },
+      getWindowFrame: () => window.getFrame(),
+      setWindowFrame: ({ x, y, width, height }) => { window.setFrame(x, y, width, height); },
+      toggleMaximize: () => {
+        if (window.isMaximized()) window.unmaximize();
+        else window.maximize();
+        return { maximized: window.isMaximized() };
+      },
     },
     messages: {},
   },
@@ -59,11 +69,12 @@ window = new BrowserWindow({
   title: "Spirit Vale Mob Rewards",
   url: "views://rewardsview/index.html",
   frame: settings.frame,
-  titleBarStyle: "default",
+  titleBarStyle: "hidden",
   transparent: false,
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
+applyRoundedCorners(window.ptr);
 
 Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => { settings.frame = clampFrame(event.data); scheduleSave(); });
 Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.frame }) => {

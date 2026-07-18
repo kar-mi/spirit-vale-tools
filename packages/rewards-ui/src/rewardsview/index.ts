@@ -1,4 +1,5 @@
 import { Electroview } from "electrobun/view";
+import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
 
 const STATUS_TONE: Record<RewardsAppState["status"], string> = {
@@ -33,6 +34,23 @@ openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseR
 button("replay-live").addEventListener("click", returnToLive);
 button("return-live").addEventListener("click", returnToLive);
 pin.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
+button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
+button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
+
+const maximizeButton = button("maximize-button");
+const chrome = initWindowChrome({
+  titlebar: element("titlebar"),
+  minWidth: 620,
+  minHeight: 520,
+  getFrame: async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: 620, height: 520 },
+  setFrame: (frame) => void electroview.rpc?.request.setWindowFrame(frame),
+  toggleMaximize: async () => (await electroview.rpc?.request.toggleMaximize({}))?.maximized ?? false,
+  onMaximizedChange: (maximized) => {
+    maximizeButton.textContent = maximized ? "❐" : "▢";
+    maximizeButton.title = maximized ? "Restore" : "Maximize";
+  },
+});
+maximizeButton.addEventListener("click", () => void chrome.toggleMaximize());
 query.addEventListener("input", () => void electroview.rpc?.request.setQuery({ query: query.value }));
 for (const close of document.querySelectorAll<HTMLElement>("[data-close-modal]")) {
   close.addEventListener("click", () => closeModal(close.dataset.closeModal ?? ""));

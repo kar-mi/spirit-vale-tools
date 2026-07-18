@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
 
 import {
   FishNetDpsMeter,
@@ -11,6 +12,8 @@ import {
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
+
+makeProcessDpiAware();
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
@@ -95,6 +98,8 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
         window.hide();
         void shutdown();
       },
+      getWindowFrame: () => window.getFrame(),
+      setWindowFrame: ({ x, y, width, height }) => { window.setFrame(x, y, width, height); },
     },
     messages: {},
   },
@@ -109,6 +114,7 @@ window = new BrowserWindow({
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
+applyRoundedCorners(window.ptr);
 
 Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => {
   settings.frame = clampFrame(event.data);

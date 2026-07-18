@@ -7,7 +7,8 @@
     "build": "electrobun build"
   },
   "dependencies": {
-    "@spiritvale/rewards": "workspace:*"
+    "@spiritvale/rewards": "workspace:*",
+    "@spiritvale/ui-theme": "workspace:*"
   },
   "devDependencies": {
     "electrobun": "1.18.1"

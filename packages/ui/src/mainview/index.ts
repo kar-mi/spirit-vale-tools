@@ -1,4 +1,5 @@
 import { Electroview } from "electrobun/view";
+import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 
 import type { DpsAppRpc, DpsAppState, DpsAppTab } from "../app-types.ts";
 import type { FishNetDpsActorRow, FishNetDpsSkillRow } from "@spiritvale/combat";
@@ -63,6 +64,14 @@ personalForm.addEventListener("submit", (event) => {
 personalActor.addEventListener("change", () => {
   const value = personalActor.value;
   void electroview.rpc?.request.setPersonalActor({ actorId: value === "auto" ? null : Number(value) });
+});
+
+initWindowChrome({
+  titlebar: element("titlebar"),
+  minWidth: 320,
+  minHeight: 360,
+  getFrame: async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: 320, height: 360 },
+  setFrame: (frame) => void electroview.rpc?.request.setWindowFrame(frame),
 });
 
 void electroview.rpc?.request.getState({}).then(render);

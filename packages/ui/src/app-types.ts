@@ -39,6 +39,8 @@ export type DpsAppRpc = {
       setPinned: { params: { pinned: boolean }; response: DpsAppState };
       setTab: { params: { tab: DpsAppTab }; response: DpsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
     };
   }>;
   webview: RPCSchema<{

@@ -3,6 +3,12 @@
 
 body { min-width: 620px; }
 
+.titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 main { padding: 14px 16px 16px; }
 
 .toolbar {

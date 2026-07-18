@@ -49,6 +49,9 @@ export type MarketUiRpc = {
       setFilters: { params: { filters: MarketUiFilter[] }; response: MarketUiState };
       loadMore: { params: Record<string, never>; response: MarketUiState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
     };
   }>;
   webview: RPCSchema<{

@@ -43,6 +43,7 @@
       "name": "@spiritvale/market-ui",
       "dependencies": {
         "@spiritvale/market": "workspace:*",
+        "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
         "electrobun": "1.18.1",
@@ -60,6 +61,7 @@
       "name": "@spiritvale/rewards-ui",
       "dependencies": {
         "@spiritvale/rewards": "workspace:*",
+        "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
         "electrobun": "1.18.1",
@@ -69,10 +71,15 @@
       "name": "@spiritvale/ui",
       "dependencies": {
         "@spiritvale/combat": "workspace:*",
+        "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
         "electrobun": "1.18.1",
       },
+    },
+    "packages/ui-theme": {
+      "name": "@spiritvale/ui-theme",
+      "version": "0.1.0",
     },
   },
   "packages": {
@@ -97,6 +104,8 @@
     "@spiritvale/rewards-ui": ["@spiritvale/rewards-ui@workspace:packages/rewards-ui"],
 
     "@spiritvale/ui": ["@spiritvale/ui@workspace:packages/ui"],
+
+    "@spiritvale/ui-theme": ["@spiritvale/ui-theme@workspace:packages/ui-theme"],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 

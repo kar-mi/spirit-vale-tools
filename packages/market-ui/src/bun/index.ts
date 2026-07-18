@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
 
 import {
   FISHNET_MARKET_STAT_NAMES,
@@ -17,6 +18,8 @@ import type {
   MarketUiStatus,
 } from "../app-types.ts";
 import { validateMarketUiFilters } from "../filter-model.ts";
+
+makeProcessDpiAware();
 
 const POLL_MS = 1_000;
 const PAGE_SIZE = 50;
@@ -59,6 +62,13 @@ const rpc = BrowserView.defineRPC<MarketUiRpc>({
         stopPolling();
         window.close();
       },
+      getWindowFrame: () => window.getFrame(),
+      setWindowFrame: ({ x, y, width, height }) => { window.setFrame(x, y, width, height); },
+      toggleMaximize: () => {
+        if (window.isMaximized()) window.unmaximize();
+        else window.maximize();
+        return { maximized: window.isMaximized() };
+      },
     },
     messages: {},
   },
@@ -68,10 +78,11 @@ window = new BrowserWindow({
   title: "Spirit Vale Market",
   url: "views://marketview/index.html",
   frame: { x: 100, y: 80, width: 760, height: 720 },
-  titleBarStyle: "default",
+  titleBarStyle: "hidden",
   transparent: false,
   rpc,
 });
+applyRoundedCorners(window.ptr);
 
 Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; height: number } }) => {
   const width = Math.max(520, event.data.width);

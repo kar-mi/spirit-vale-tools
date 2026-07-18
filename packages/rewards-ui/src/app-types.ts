@@ -66,6 +66,9 @@ export type RewardsAppRpc = {
       chooseReplay: { params: Record<string, never>; response: RewardsAppState };
       setPinned: { params: { pinned: boolean }; response: RewardsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: RewardsAppState } }>;
