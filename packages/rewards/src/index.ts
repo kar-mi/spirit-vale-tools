@@ -17,6 +17,11 @@ export type {
   FishNetUnmatchedRewardEvent,
 } from "./reward-tracker.ts";
 export { MobRewardSession } from "./session.ts";
-export type { MobRewardMobSummary, MobRewardSessionSnapshot } from "./session.ts";
+export type {
+  MobRewardMobSummary,
+  MobRewardSessionConsumeContext,
+  MobRewardSessionSnapshot,
+  RecordedMobRewardKill,
+} from "./session.ts";
 export { loadRewardReplay, RewardLogFollower, RewardSessionLogFollower } from "./live-log.ts";
 export type { RewardLogBatch, RewardLogStatus } from "./live-log.ts";

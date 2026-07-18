@@ -1,7 +1,7 @@
 import type { RPCSchema } from "electrobun";
 
 export type RewardsAppMode = "live" | "replay";
-export type RewardsAppView = "summary" | "recent";
+export type RewardsAppView = "summary" | "recent" | "trends";
 export type RewardsAppStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
 
 export interface RewardsUiDrop { category: string; itemId: string; itemName: string; count: number; chance?: number }
@@ -36,6 +36,13 @@ export interface RewardsUiSummary {
   drops: RewardsUiDrop[];
 }
 
+export interface RewardsUiGraphSample {
+  recordedAt: string;
+  experience: number;
+  jobExperience: number;
+  coins: string;
+}
+
 export interface RewardsAppState {
   mode: RewardsAppMode;
   view: RewardsAppView;
@@ -45,6 +52,7 @@ export interface RewardsAppState {
   replayFileName?: string;
   replayWarnings: number;
   kills: RewardsUiKill[];
+  graphSamples: RewardsUiGraphSample[];
   summaries: RewardsUiSummary[];
   totalExperience: number;
   totalJobExperience: number;

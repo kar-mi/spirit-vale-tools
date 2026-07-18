@@ -163,6 +163,12 @@ function appState(): RewardsAppState {
       coins: kill.coins.toString(),
       drops: kill.drops.map((drop) => ({ ...drop, itemName: itemName(drop.itemId) })),
     })),
+    graphSamples: snapshot.kills.flatMap((kill) => kill.recordedAt === undefined ? [] : [{
+      recordedAt: kill.recordedAt,
+      experience: kill.experience,
+      jobExperience: kill.jobExperience,
+      coins: kill.coins.toString(),
+    }]),
     summaries: snapshot.mobs.map((mob) => ({
       ...mob,
       coins: mob.coins.toString(),

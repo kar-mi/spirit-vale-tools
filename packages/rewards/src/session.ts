@@ -14,7 +14,7 @@ export interface MobRewardMobSummary {
 }
 
 export interface MobRewardSessionSnapshot {
-  kills: FishNetConfirmedMobKill[];
+  kills: RecordedMobRewardKill[];
   mobs: MobRewardMobSummary[];
   totalExperience: number;
   totalJobExperience: number;
@@ -27,17 +27,25 @@ export interface MobRewardSessionSnapshot {
   };
 }
 
+export interface RecordedMobRewardKill extends FishNetConfirmedMobKill {
+  recordedAt?: string;
+}
+
+export interface MobRewardSessionConsumeContext {
+  recordedAt?: string;
+}
+
 export class MobRewardSession {
-  private readonly kills = new Map<string, FishNetConfirmedMobKill>();
+  private readonly kills = new Map<string, RecordedMobRewardKill>();
   private unmatched = 0;
   private readonly unmatchedByReason = { ambiguous: 0, expired: 0, unidentified: 0 };
 
-  consume(event: FishNetMobRewardEvent): void {
+  consume(event: FishNetMobRewardEvent, context: MobRewardSessionConsumeContext = {}): void {
     if (event.kind === "unmatched") {
       this.unmatched += 1;
       this.unmatchedByReason[event.reason] += 1;
     }
-    else this.kills.set(event.id, cloneKill(event));
+    else this.kills.set(event.id, cloneKill({ ...event, ...context }));
   }
 
   snapshot(): MobRewardSessionSnapshot {
@@ -88,7 +96,7 @@ export class MobRewardSession {
   }
 }
 
-function cloneKill(kill: FishNetConfirmedMobKill): FishNetConfirmedMobKill {
+function cloneKill(kill: RecordedMobRewardKill): RecordedMobRewardKill {
   return { ...kill, mob: { ...kill.mob }, drops: kill.drops.map((item) => ({ ...item })) };
 }
 

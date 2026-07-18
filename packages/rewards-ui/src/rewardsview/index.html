@@ -23,6 +23,7 @@
       <div class="seg" aria-label="Session view">
         <button id="summary-tab" type="button">Summary</button>
         <button id="recent-tab" type="button">Recent kills</button>
+        <button id="trends-tab" type="button">Trends</button>
       </div>
       <div class="status-readout"><span id="status-dot" class="status-dot is-idle"></span><span id="status-text">Connecting…</span></div>
       <div class="toolbar-actions">
@@ -52,6 +53,27 @@
     <section id="recent-panel" hidden>
       <div class="section-head"><h1>Recent kills</h1><p>Newest confirmed attribution first.</p></div>
       <div id="kill-list" class="list"></div>
+    </section>
+    <section id="trends-panel" hidden>
+      <div class="section-head"><h1>Reward trends</h1><p>Session gains over wall-clock time.</p></div>
+      <div class="trend-controls">
+        <div class="seg" aria-label="Trend metric">
+          <button id="trend-xp" class="active" type="button">Character XP</button>
+          <button id="trend-job-xp" type="button">Job XP</button>
+          <button id="trend-coins" type="button">Coins</button>
+        </div>
+        <div class="seg" aria-label="Trend calculation">
+          <button id="trend-rate" class="active" type="button">Rate/sec</button>
+          <button id="trend-cumulative" type="button">Cumulative</button>
+        </div>
+        <button id="trend-reset" class="btn" type="button" hidden>Reset zoom</button>
+      </div>
+      <div id="trend-chart" class="trend-chart" tabindex="0" aria-label="Rewards trend graph">
+        <svg id="trend-svg" role="img" aria-labelledby="trend-chart-title"></svg>
+        <span id="trend-chart-title" class="sr-only">Rewards trend graph</span>
+        <div id="trend-empty" class="trend-empty">Confirmed rewards will appear here.</div>
+        <div id="trend-tooltip" class="trend-tooltip" hidden></div>
+      </div>
     </section>
   </main>
 

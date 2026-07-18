@@ -74,7 +74,7 @@ export class RewardLogFollower {
       if (record.type !== "rewards.kill" && record.type !== "rewards.unmatched") continue;
       const event = parseRewardEvent(record.data);
       if (!event) { invalidLines += 1; continue; }
-      this.session.consume(event);
+      this.session.consume(event, { recordedAt: record.recordedAt });
       this.status = "ready";
       changed = true;
     }
@@ -130,7 +130,7 @@ export async function loadRewardReplay(path: string): Promise<{ snapshot: MobRew
     if (!record || (record.type !== "rewards.kill" && record.type !== "rewards.unmatched")) continue;
     const event = parseRewardEvent(record.data);
     if (!event) invalidLines += 1;
-    else session.consume(event);
+    else session.consume(event, { recordedAt: record.recordedAt });
   }
   return { snapshot: session.snapshot(), invalidLines };
 }

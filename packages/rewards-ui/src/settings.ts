@@ -25,7 +25,7 @@ export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
       frame: validFrame(value.frame) ? value.frame : defaults.frame,
       catalogFrame: validFrame(value.catalogFrame) ? value.catalogFrame : defaults.catalogFrame,
       pinned: typeof value.pinned === "boolean" ? value.pinned : defaults.pinned,
-      view: value.view === "summary" || value.view === "recent" ? value.view : defaults.view,
+      view: value.view === "summary" || value.view === "recent" || value.view === "trends" ? value.view : defaults.view,
     };
   } catch { return { ...defaults, frame: { ...defaults.frame }, catalogFrame: { ...defaults.catalogFrame } }; }
 }
