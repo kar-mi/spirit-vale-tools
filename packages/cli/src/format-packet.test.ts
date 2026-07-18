@@ -2,12 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { CapturedLiteNetLibPacket, CapturedFishNetPacket, CapturedUdpPacket } from "@spiritvale/core";
 import {
-  formatCombatEvent,
-  formatCombatEventJson,
-  formatActorIdentityEventJson,
-  formatFishNetPacket,
-  formatLiteNetLibPacket,
-  formatTransportPacket,
+  domainEventData,
   fishNetPacketData,
   liteNetLibPacketData,
   transportPacketData,
@@ -33,7 +28,7 @@ function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
   };
 }
 
-describe("formatTransportPacket", () => {
+describe("transportPacketData", () => {
   test("serializes transport metadata and payloads for JSON logs", () => {
     expect(transportPacketData(udpPacket("outbound"))).toMatchObject({
       protocol: "udp",
@@ -44,53 +39,10 @@ describe("formatTransportPacket", () => {
       payloadHex: "032000",
     });
   });
-
-  test("renders outbound UDP from source to destination", () => {
-    expect(formatTransportPacket(udpPacket("outbound"))).toBe(
-      "UDP 192.0.2.10:50000 -> 198.51.100.20:7007 payload=032000",
-    );
-  });
-
-  test("renders inbound UDP from its remote source to its local destination", () => {
-    expect(formatTransportPacket(udpPacket("inbound"))).toBe(
-      "UDP 198.51.100.20:7007 -> 192.0.2.10:50000 payload=042000e68b47f982e2de08",
-    );
-  });
 });
 
-describe("formatFishNetPacket", () => {
-  test("formats verified headers without inventing a name", () => {
-    const udp = udpPacket("outbound");
-    const liteNetPacket: CapturedLiteNetLibPacket = {
-      udpPacket: udp,
-      mergePath: [],
-      packet: {
-        propertyId: 0,
-        property: "unreliable",
-        connectionNumber: 0,
-        fragmented: false,
-        raw: Buffer.alloc(0),
-        payload: Buffer.alloc(0),
-      },
-    };
-    const packet: CapturedFishNetPacket = {
-      liteNetPacket,
-      tick: 42,
-      packetId: 8,
-      packetName: "serverRpc",
-      objectId: 7,
-      networkBehaviourIndex: 2,
-      rpcHash: 5,
-      rpcHash16Candidate: 261,
-      raw: Buffer.alloc(0),
-      payload: Buffer.from("aabb", "hex"),
-    };
-    expect(formatFishNetPacket(packet)).toBe(
-      "    FISHNET tick=42 id=8 kind=serverRpc object=7:2 rpc=5 rpc16?=261 bytes=2 payload=aabb",
-    );
-  });
-
-  test("formats resolved RPC Links with their registered kind", () => {
+describe("fishNetPacketData", () => {
+  test("serializes resolved RPC Links with their decoded fields", () => {
     const udp = udpPacket("inbound");
     const liteNetPacket: CapturedLiteNetLibPacket = {
       udpPacket: udp,
@@ -129,19 +81,14 @@ describe("formatFishNetPacket", () => {
       raw: Buffer.alloc(0),
       payload: Buffer.from([1]),
     };
-    expect(formatFishNetPacket(packet)).toBe(
-      "    FISHNET tick=50 bundle=1 id=900 kind=rpcLink link=900:observersRpc object=12:3 behaviour=SyntheticMover" +
-        " rpc=77:RpcSyntheticNotice fields=active:true,input.move:%5B2%3B0%3B-3%5D,input.hotkeys:%220x800%22" +
-        " bytes=1 payload=01",
-    );
     const data = fishNetPacketData(packet);
     expect(data).toMatchObject({ tick: 50, packetName: "rpcLink", payloadHex: "01" });
     expect(JSON.stringify(data["decodedFields"])).toBe(JSON.stringify(packet.decodedFields));
   });
 });
 
-describe("formatLiteNetLibPacket", () => {
-  test("formats a merged channeled leaf", () => {
+describe("liteNetLibPacketData", () => {
+  test("serializes a merged channeled leaf", () => {
     const udp = udpPacket("inbound");
     const decoded: CapturedLiteNetLibPacket = {
       udpPacket: udp,
@@ -158,9 +105,6 @@ describe("formatLiteNetLibPacket", () => {
         payload: Buffer.from("aabb", "hex"),
       },
     };
-    expect(formatLiteNetLibPacket(decoded)).toBe(
-      "  LNL path=1.0 kind=channeled seq=4660 channel=7 fragment=258:772/1286 bytes=2 payload=aabb",
-    );
     expect(liteNetLibPacketData(decoded)).toMatchObject({
       mergePath: [1, 0],
       property: "channeled",
@@ -170,40 +114,9 @@ describe("formatLiteNetLibPacket", () => {
   });
 });
 
-describe("formatCombatEvent", () => {
-  test("makes ambiguous overlapping activations explicit", () => {
-    expect(formatCombatEvent({
-      kind: "damage",
-      rpc: "ApplyDamage_C",
-      tick: 70,
-      payloadBytes: 42,
-      fields: {},
-      actorId: 10,
-      targetId: 20,
-      sourceId: "SyntheticStorm",
-      sourceLabel: "Synthetic Storm",
-      value: 17,
-      hitResult: "critical",
-      wireHits: 1,
-      damageType: 0,
-      team: 0,
-      element: 0,
-      weaponType: 4,
-      range: 2,
-      isClone: false,
-      isSummon: false,
-      position: [1, 2, 3],
-      origin: [4, 5, 6],
-      attribution: "ambiguous",
-      candidateActivationIds: ["activation-1", "activation-2"],
-    })).toBe(
-      "COMBAT tick=70 actor=10 action=damage sourceId=SyntheticStorm source=Synthetic%20Storm target=20 value=17" +
-        " hit=critical attribution=ambiguous candidates=activation-1,activation-2",
-    );
-  });
-
-  test("formats structured combat events as JSON Lines", () => {
-    const line = formatCombatEventJson({
+describe("domainEventData", () => {
+  test("serializes structured combat events for JSON logs", () => {
+    const data = domainEventData({
       kind: "death",
       rpc: "Death_C",
       tick: 71,
@@ -227,7 +140,7 @@ describe("formatCombatEvent", () => {
       activationId: "activation-1",
       duplicatesDamageEvent: false,
     });
-    expect(JSON.parse(line)).toMatchObject({
+    expect(data).toMatchObject({
       kind: "death",
       rpc: "Death_C",
       payloadBytes: 25,
@@ -236,16 +149,15 @@ describe("formatCombatEvent", () => {
     });
   });
 
-  test("formats actor identity lifecycle events as JSON Lines", () => {
-    const line = formatActorIdentityEventJson({
+  test("serializes actor identity lifecycle events for JSON logs", () => {
+    expect(domainEventData({
       kind: "actorIdentity",
       operation: "upsert",
       tick: 72,
       actorId: 10,
       displayName: "Aster Vale",
       archetype: 2,
-    });
-    expect(JSON.parse(line)).toEqual({
+    })).toEqual({
       kind: "actorIdentity",
       operation: "upsert",
       tick: 72,

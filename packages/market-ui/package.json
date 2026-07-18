@@ -1,0 +1,15 @@
+{
+  "name": "@spiritvale/market-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electrobun dev",
+    "build": "electrobun build"
+  },
+  "dependencies": {
+    "@spiritvale/market": "workspace:*"
+  },
+  "devDependencies": {
+    "electrobun": "1.18.1"
+  }
+}

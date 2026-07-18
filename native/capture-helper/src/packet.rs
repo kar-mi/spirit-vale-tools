@@ -7,7 +7,7 @@ pub struct CaptureMetadata {
     pub loopback: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TransportProtocol {
     Tcp,
     Udp,

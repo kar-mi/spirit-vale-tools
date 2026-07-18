@@ -202,6 +202,18 @@ caps, output shows `roll:<value>` and a minimum filter does not match the unreso
 Market snapshots and query results are always written to `market.jsonl`;
 64-bit prices, balances, and timestamps are represented as decimal strings.
 
+The standalone market browser follows the current `market --live` session and
+performs text, stat-range, sorting, and pagination queries locally. Start the
+passive market command first, then launch the separate desktop UI:
+
+```powershell
+bun run market -- --live
+bun run dev:market
+```
+
+The browser does not initiate game requests; opening the in-game market supplies
+the responses that populate the local session.
+
 ```ts
 import { PacketCapture } from "@spiritvale/core";
 import { FishNetMarketTracker } from "@spiritvale/market";

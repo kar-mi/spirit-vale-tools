@@ -17,6 +17,7 @@ describe("FishNet market decoding", () => {
     ]);
     expect(tracker.query({ itemType: 4, minPrice: 100n })).toHaveLength(1);
     expect(tracker.query({ sort: "price-desc", limit: 1 })[0]?.id).toBe("listing-b");
+    expect(tracker.query({ offset: 1, limit: 1 })[0]?.id).toBe("listing-b");
   });
 
   test("tracks account balance changes without guessing collection values", () => {
@@ -126,6 +127,11 @@ describe("FishNet market decoding", () => {
     expect(tracker.query({ stats: [{ stat: "Crit", minValue: 9 }, { stat: "DamageMelee", minValue: 3 }] }))
       .toHaveLength(1);
     expect(tracker.query({ stats: [{ stat: "Crit", minValue: 10 }] })).toHaveLength(0);
+    expect(tracker.query({ stats: [{ stat: "Crit", minValue: 9, maxValue: 9 }] })).toHaveLength(1);
+    expect(tracker.query({ stats: [{ stat: "Crit", maxValue: 8 }] })).toHaveLength(0);
+    expect(tracker.query({ stats: [{ stat: "Crit" }] })).toHaveLength(1);
+    expect(() => tracker.query({ stats: [{ stat: "Crit", minValue: 10, maxValue: 9 }] }))
+      .toThrow("minimum exceeds maximum");
   });
 
   test("uses a weapon item hint when its stats overlap the accessory pool", () => {

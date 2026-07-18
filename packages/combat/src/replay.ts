@@ -71,7 +71,7 @@ function decoderFor(firstChunk: Uint8Array): TextDecoder {
   return new TextDecoder("utf-8");
 }
 
-export function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCombatEvent | undefined {
+function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCombatEvent | undefined {
   if (!isRecord(value) || !isFiniteNumber(value["tick"]) || typeof value["kind"] !== "string") return undefined;
   if (value["kind"] === "actorIdentity") {
     if (value["operation"] === "reset") return value as unknown as FishNetActorIdentityEvent;

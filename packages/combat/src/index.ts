@@ -1,7 +1,7 @@
 export { FishNetCombatTracker } from "./combat-tracker.ts";
 export { FishNetActorDirectory } from "./actor-directory.ts";
 export { FishNetDpsMeter } from "./dps-meter.ts";
-export { loadDpsReplay, parseDpsLogEvent, parseDpsLogRecord } from "./replay.ts";
+export { loadDpsReplay, parseDpsLogRecord } from "./replay.ts";
 export type { DpsReplayResult } from "./replay.ts";
 export { DpsLogFollower, DpsSessionLogFollower } from "./live-log.ts";
 export type { DpsLogBatch, TimedDpsLogEvent } from "./live-log.ts";

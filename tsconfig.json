@@ -16,5 +16,5 @@
     "target": "ESNext",
     "types": ["bun"]
   },
-  "include": ["packages/*/src/**/*.ts", "scripts/**/*.ts", "packages/ui/electrobun.config.ts"]
+  "include": ["packages/*/src/**/*.ts", "scripts/**/*.ts", "packages/*/electrobun.config.ts"]
 }

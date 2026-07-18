@@ -1,4 +1,11 @@
-export { decodeFishNetMarketPacket, FishNetMarketTracker, parseFishNetMarketStats } from "./market.ts";
+export {
+  decodeFishNetMarketPacket,
+  FishNetMarketTracker,
+  parseFishNetMarketStats,
+  queryFishNetMarketListings,
+} from "./market.ts";
+export { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
+export type { MarketLogBatch, MarketLogStatus } from "./live-log.ts";
 export {
   FISHNET_MARKET_STAT_NAMES,
   fishNetMarketStatName,

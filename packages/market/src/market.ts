@@ -96,6 +96,7 @@ export interface FishNetMarketStat {
 export interface FishNetMarketStatFilter {
   stat: string | number;
   minValue?: number;
+  maxValue?: number;
 }
 
 export interface FishNetMarketQuery {
@@ -106,6 +107,7 @@ export interface FishNetMarketQuery {
   stats?: readonly FishNetMarketStatFilter[];
   statMode?: "all" | "any";
   sort?: "price-asc" | "price-desc";
+  offset?: number;
   limit?: number;
 }
 
@@ -178,39 +180,12 @@ export class FishNetMarketTracker {
   }
 
   query(query: FishNetMarketQuery = {}): FishNetMarketListingView[] {
-    const needle = query.text?.trim().toLocaleLowerCase() ?? "";
-    const statFilters = normalizeStatFilters(query.stats ?? []);
-    const statMode = query.statMode ?? "all";
-    if (statMode !== "all" && statMode !== "any") throw new Error(`unknown market stat mode ${JSON.stringify(statMode)}`);
-    const result: FishNetMarketListingView[] = [];
+    const listings: FishNetMarketListingView[] = [];
     for (const { listing, searchText, stats } of this.listings.values()) {
-      if (query.itemType !== undefined && listing.itemType !== query.itemType) continue;
-      if (query.minPrice !== undefined && listing.price < query.minPrice) continue;
-      if (query.maxPrice !== undefined && listing.price > query.maxPrice) continue;
-      if (statFilters.length > 0) {
-        const matches = statFilters.map((filter) => stats?.some((stat) => {
-          return stat.type === filter.type && (filter.minValue === undefined
-            || (stat.value !== undefined && stat.value >= filter.minValue));
-        }) ?? false);
-        if (statMode === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) continue;
-      }
       const stall = listing.sellerId === null ? undefined : this.stalls.get(listing.sellerId);
-      if (needle && ![
-        searchText,
-        listing.itemId,
-        listing.sellerName,
-        stall?.shopName,
-        stall?.mapId,
-      ].some((value) => value?.toLocaleLowerCase().includes(needle))) continue;
-      result.push({ ...listing, searchText, shopName: stall?.shopName ?? null, mapId: stall?.mapId ?? null, stats });
+      listings.push({ ...listing, searchText, shopName: stall?.shopName ?? null, mapId: stall?.mapId ?? null, stats });
     }
-    const direction = query.sort === "price-desc" ? -1 : 1;
-    result.sort((left, right) => {
-      if (left.price !== right.price) return left.price < right.price ? -direction : direction;
-      return (left.id ?? "").localeCompare(right.id ?? "");
-    });
-    const limit = query.limit === undefined ? result.length : Math.max(0, Math.trunc(query.limit));
-    return result.slice(0, limit);
+    return queryFishNetMarketListings(listings, query);
   }
 
   reset(): void {
@@ -281,6 +256,49 @@ export class FishNetMarketTracker {
   }
 }
 
+export function queryFishNetMarketListings(
+  listings: readonly FishNetMarketListingView[],
+  query: FishNetMarketQuery = {},
+): FishNetMarketListingView[] {
+  const needle = query.text?.trim().toLocaleLowerCase() ?? "";
+  const statFilters = normalizeStatFilters(query.stats ?? []);
+  const statMode = query.statMode ?? "all";
+  if (statMode !== "all" && statMode !== "any") throw new Error(`unknown market stat mode ${JSON.stringify(statMode)}`);
+  const result: FishNetMarketListingView[] = [];
+  for (const listing of listings) {
+    const { searchText, stats } = listing;
+    if (query.itemType !== undefined && listing.itemType !== query.itemType) continue;
+    if (query.minPrice !== undefined && listing.price < query.minPrice) continue;
+    if (query.maxPrice !== undefined && listing.price > query.maxPrice) continue;
+    if (statFilters.length > 0) {
+      const matches = statFilters.map((filter) => stats?.some((stat) => {
+        if (stat.type !== filter.type) return false;
+        if (filter.minValue === undefined && filter.maxValue === undefined) return true;
+        return stat.value !== undefined
+          && (filter.minValue === undefined || stat.value >= filter.minValue)
+          && (filter.maxValue === undefined || stat.value <= filter.maxValue);
+      }) ?? false);
+      if (statMode === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) continue;
+    }
+    if (needle && ![
+      searchText,
+      listing.itemId,
+      listing.sellerName,
+      listing.shopName,
+      listing.mapId,
+    ].some((value) => value?.toLocaleLowerCase().includes(needle))) continue;
+    result.push(listing);
+  }
+  const direction = query.sort === "price-desc" ? -1 : 1;
+  result.sort((left, right) => {
+    if (left.price !== right.price) return left.price < right.price ? -direction : direction;
+    return (left.id ?? "").localeCompare(right.id ?? "");
+  });
+  const offset = query.offset === undefined ? 0 : Math.max(0, Math.trunc(query.offset));
+  const limit = query.limit === undefined ? result.length : Math.max(0, Math.trunc(query.limit));
+  return result.slice(offset, offset + limit);
+}
+
 export function parseFishNetMarketStats(json: string | null, itemType = 2): FishNetMarketStat[] | undefined {
   if (json === null) return undefined;
   let value: unknown;
@@ -310,20 +328,32 @@ export function parseFishNetMarketStats(json: string | null, itemType = 2): Fish
   return parsed.map((stat, index) => ({ ...stat, ...values[index]! }));
 }
 
-function normalizeStatFilters(filters: readonly FishNetMarketStatFilter[]): Array<{ type: number; minValue?: number }> {
-  const byType = new Map<number, number | undefined>();
+function normalizeStatFilters(
+  filters: readonly FishNetMarketStatFilter[],
+): Array<{ type: number; minValue?: number; maxValue?: number }> {
+  const byType = new Map<number, { minValue?: number; maxValue?: number }>();
   for (const filter of filters) {
     const resolved = resolveFishNetMarketStat(filter.stat);
     if (!resolved) throw new Error(`unknown market stat ${JSON.stringify(filter.stat)}`);
     if (filter.minValue !== undefined && !Number.isFinite(filter.minValue)) {
       throw new Error(`market stat minimum must be finite for ${JSON.stringify(filter.stat)}`);
     }
-    const previous = byType.get(resolved.type);
-    if (!byType.has(resolved.type) || (filter.minValue !== undefined && (previous === undefined || filter.minValue > previous))) {
-      byType.set(resolved.type, filter.minValue);
+    if (filter.maxValue !== undefined && !Number.isFinite(filter.maxValue)) {
+      throw new Error(`market stat maximum must be finite for ${JSON.stringify(filter.stat)}`);
     }
+    const previous = byType.get(resolved.type) ?? {};
+    const minValue = filter.minValue === undefined
+      ? previous.minValue
+      : previous.minValue === undefined ? filter.minValue : Math.max(previous.minValue, filter.minValue);
+    const maxValue = filter.maxValue === undefined
+      ? previous.maxValue
+      : previous.maxValue === undefined ? filter.maxValue : Math.min(previous.maxValue, filter.maxValue);
+    if (minValue !== undefined && maxValue !== undefined && minValue > maxValue) {
+      throw new Error(`market stat minimum exceeds maximum for ${JSON.stringify(filter.stat)}`);
+    }
+    byType.set(resolved.type, { minValue, maxValue });
   }
-  return [...byType].map(([type, minValue]) => ({ type, minValue }));
+  return [...byType].map(([type, bounds]) => ({ type, ...bounds }));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

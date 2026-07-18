@@ -6,6 +6,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "bun run --filter @spiritvale/ui build",
+    "build:market": "bun run --filter @spiritvale/market-ui build",
     "build:native": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
     "bundle:native": "bun run scripts/bundle-native.ts",
     "capture:dump": "bun run packages/cli/src/dump.ts",
@@ -13,6 +14,7 @@
     "market": "bun run packages/cli/src/market.ts",
     "check": "bun run typecheck && bun test && bun run test:native",
     "dev": "bun run --filter @spiritvale/ui dev",
+    "dev:market": "bun run --filter @spiritvale/market-ui dev",
     "fetch:windivert": "bun run scripts/fetch-windivert.ts",
     "format:native": "cargo fmt --manifest-path native/capture-helper/Cargo.toml --check",
     "lint:native": "cargo clippy --manifest-path native/capture-helper/Cargo.toml --all-targets -- -D warnings",

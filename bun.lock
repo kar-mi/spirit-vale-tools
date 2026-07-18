@@ -35,6 +35,16 @@
       "name": "@spiritvale/market",
       "dependencies": {
         "@spiritvale/core": "workspace:*",
+        "@spiritvale/logging": "workspace:*",
+      },
+    },
+    "packages/market-ui": {
+      "name": "@spiritvale/market-ui",
+      "dependencies": {
+        "@spiritvale/market": "workspace:*",
+      },
+      "devDependencies": {
+        "electrobun": "1.18.1",
       },
     },
     "packages/ui": {
@@ -61,6 +71,8 @@
     "@spiritvale/logging": ["@spiritvale/logging@workspace:packages/logging"],
 
     "@spiritvale/market": ["@spiritvale/market@workspace:packages/market"],
+
+    "@spiritvale/market-ui": ["@spiritvale/market-ui@workspace:packages/market-ui"],
 
     "@spiritvale/ui": ["@spiritvale/ui@workspace:packages/ui"],
 

@@ -134,6 +134,7 @@ function emit(
     lastCollectedAmount: snapshot.lastCollectedAmount,
     catalogCount: snapshot.catalog.length,
     stallCount: snapshot.stalls.length,
+    listings: market.query(),
     resultCount: results.length,
     results,
   }));
