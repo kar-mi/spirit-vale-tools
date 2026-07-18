@@ -2,7 +2,6 @@ import {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
   PacketCapture,
   loadBundledFishNetSemanticMap,
-  loadFishNetRpcMap,
 } from "@spiritvale/core";
 import type { CaptureProtocol } from "@spiritvale/core";
 import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
@@ -37,17 +36,12 @@ const outputPath = option("--output");
 const combatOnly = Bun.argv.includes("--combat-only");
 const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
-const mapOption = option("--fishnet-map");
-const mapPath = decodeFishNet ? mapOption : undefined;
-const fishNetRpcMap = mapPath ? loadFishNetRpcMap(mapPath) : undefined;
 const fishNetBuildFingerprint = option("--fishnet-build");
-const combatFingerprint = fishNetRpcMap?.buildFingerprint ?? fishNetBuildFingerprint;
+const combatFingerprint = fishNetBuildFingerprint;
 const semanticMap = combatOnly && combatFingerprint
   && BUNDLED_FISHNET_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
   ? loadBundledFishNetSemanticMap(combatFingerprint)
-  : combatOnly && fishNetRpcMap
-    ? { schemaVersion: 1 as const, buildFingerprint: fishNetRpcMap.buildFingerprint, verifiedSkillLabels: [] }
-    : undefined;
+  : undefined;
 const combatTracker = combatOnly
   ? new FishNetCombatTracker({ buildFingerprint: fishNetBuildFingerprint, semanticMap })
   : undefined;
@@ -126,7 +120,6 @@ await capture.start({
   decodeLiteNetLib,
   decodeFishNet,
   fishNetBuildFingerprint,
-  fishNetRpcMap,
 });
 if (durationSeconds !== undefined) {
   await Bun.sleep(durationSeconds * 1000);

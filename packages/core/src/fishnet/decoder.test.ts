@@ -4,7 +4,7 @@ import {
   decodeFishNetBundle,
   FishNetSessionDecoder,
 } from "./decoder.ts";
-import type { FishNetRpcMap } from "./types.ts";
+import type { FishNetBehaviourDefinition, FishNetRpcMap } from "./types.ts";
 
 function tick(value: number, messages: Uint8Array): Buffer {
   const header = Buffer.alloc(4);
@@ -106,7 +106,6 @@ function spawnWithLink(
 
 function semanticMap(): FishNetRpcMap {
   return {
-    schemaVersion: 2,
     buildFingerprint: "synthetic-build-v2",
     metadataVersion: 31,
     behaviours: [{
@@ -144,15 +143,15 @@ describe("FishNet bundles and sessions", () => {
 
   test("registers spawn links and resolves verified metadata and names", () => {
     const map: FishNetRpcMap = {
-      schemaVersion: 1,
       buildFingerprint: "synthetic-build",
       metadataVersion: 31,
-      symbols: [{
-        methodHash: 1,
-        methodName: "RpcSyntheticNotice",
-        forms: ["reader", "writer"],
-        wireHash: 0x1234,
-        packetKinds: ["observersRpc"],
+      behaviours: [{
+        typeName: "SyntheticBehaviour",
+        rpcs: [{
+          methodName: "RpcSyntheticNotice",
+          wireHash: 0x1234,
+          packetKind: "observersRpc",
+        }],
       }],
     };
     const decoder = new FishNetSessionDecoder(map);
@@ -196,7 +195,7 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
-  test("binds schema-v2 behaviours and decodes verified common fields", () => {
+  test("binds behaviour definitions and decodes verified common fields", () => {
     const decoder = new FishNetSessionDecoder(semanticMap());
     const fixedRpc = message(8, Buffer.concat([
       packed(7),
@@ -275,10 +274,10 @@ describe("FishNet bundles and sessions", () => {
   });
 
   test("decodes structured SyncType fields after the index and preserves trailing bytes", () => {
-    const map = semanticMap();
-    const behaviour = map.schemaVersion === 2 ? map.behaviours[0] : undefined;
-    if (!behaviour) throw new Error("synthetic behaviour missing");
-    behaviour.syncTypes = [{
+    const baseMap = semanticMap();
+    const baseBehaviour = baseMap.behaviours[0];
+    if (!baseBehaviour) throw new Error("synthetic behaviour missing");
+    const behaviour: FishNetBehaviourDefinition = { ...baseBehaviour, syncTypes: [{
       index: 5,
       name: "VisualData",
       typeName: "SyntheticVisualData",
@@ -289,7 +288,8 @@ describe("FishNet bundles and sessions", () => {
           { name: "Archetype", codec: "packedInt32" },
         ],
       }],
-    }];
+    }] };
+    const map: FishNetRpcMap = { ...baseMap, behaviours: [behaviour, ...baseMap.behaviours.slice(1)] };
     const name = Buffer.from("Aster Vale", "utf8");
     const body = Buffer.concat([Buffer.from([5]), packed(name.length), name, packed(3), Buffer.from("aabb", "hex")]);
     const syncType = message(7, Buffer.concat([
@@ -318,7 +318,6 @@ describe("FishNet bundles and sessions", () => {
 
   test("infers a unique behaviour and uses it to resolve later ambiguous hashes", () => {
     const map: FishNetRpcMap = {
-      schemaVersion: 2,
       buildFingerprint: "synthetic-inference",
       metadataVersion: 31,
       behaviours: [{
@@ -382,7 +381,6 @@ describe("FishNet bundles and sessions", () => {
       ],
     }];
     const map: FishNetRpcMap = {
-      schemaVersion: 2,
       buildFingerprint: "synthetic-structured",
       metadataVersion: 31,
       behaviours: [{
@@ -428,7 +426,6 @@ describe("FishNet bundles and sessions", () => {
 
   test("decodes a synthetic structured skill state and its trailing parameters", () => {
     const map: FishNetRpcMap = {
-      schemaVersion: 2,
       buildFingerprint: "synthetic-skill-state",
       metadataVersion: 31,
       behaviours: [{
@@ -551,16 +548,16 @@ describe("FishNet bundles and sessions", () => {
 
   test("keeps malformed and ambiguous traffic recoverable and unnamed", () => {
     const ambiguousMap: FishNetRpcMap = {
-      schemaVersion: 1,
       buildFingerprint: "synthetic-ambiguous",
       metadataVersion: 31,
-      symbols: ["RpcSyntheticOne", "RpcSyntheticTwo"].map((methodName, index) => ({
-        methodHash: index,
-        methodName,
-        forms: ["reader"],
-        wireHash: 77,
-        packetKinds: ["observersRpc"],
-      })),
+      behaviours: [{
+        typeName: "SyntheticBehaviour",
+        rpcs: ["RpcSyntheticOne", "RpcSyntheticTwo"].map((methodName) => ({
+          methodName,
+          wireHash: 77,
+          packetKind: "observersRpc" as const,
+        })),
+      }],
     };
     const decoder = new FishNetSessionDecoder(ambiguousMap);
     const context = { reliable: true, connectionId: "recovery" };

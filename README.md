@@ -51,9 +51,6 @@ bun run capture:dump -- --protocols udp --decode-litenetlib
 # Add stateful FishNet bundle, split-packet, and RPC Link decoding
 bun run capture:dump -- --protocols udp --decode-fishnet
 
-# Supply an external build-matched RPC map
-bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
-
 # Record only chronological combat and visible-player identity events
 bun run capture:dump -- --protocols udp --combat-only
 
@@ -73,14 +70,15 @@ bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-build <build-
 `--decode-fishnet` implies `--decode-litenetlib`. It follows RPC Link
 registrations from object spawns, reassembles split messages, and emits every
 safely delimited message in a transport bundle. Method names are emitted only
-when the registered RPC kind and compact wire hash select one verified symbol.
-Schema-v2 decoders may also infer a missing component type when a fixed RPC
+when the registered RPC kind and compact wire hash select one verified definition.
+The decoder may also infer a missing component type when a fixed RPC
 selects exactly one behaviour; ambiguous hashes remain unnamed until stronger
 session evidence appears. Ordered structured parameters are decoded only when
 their generated writer codecs are present in the map.
 
-FishNet decoding uses the current bundled, build-fingerprinted schema by
-default. Explicit map objects and `--fishnet-map` override the bundled map.
+FishNet decoding uses the current bundled, build-fingerprinted TypeScript
+definitions by default. Typed map objects supplied through the core API override
+the bundled map.
 Bundled versions are selected by their full build fingerprint so older maps can
 remain available when a new game build is added.
 

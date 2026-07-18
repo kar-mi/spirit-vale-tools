@@ -8,21 +8,20 @@ import type {
   FishNetRpcPacketName,
   FishNetRpcParameter,
   FishNetRpcResolution,
-  FishNetRpcSymbol,
 } from "./types.ts";
 
 export interface RpcLookup {
   resolution: FishNetRpcResolution;
   wireHash?: number;
   methodName?: string;
-  parameters?: FishNetRpcParameter[];
+  parameters?: readonly FishNetRpcParameter[];
 }
 
 export function bindBehaviourTypes(
   registrations: Array<[number, RpcLinkRegistrationState]>,
   map: FishNetRpcMap | undefined,
 ): Array<[string, string]> {
-  if (!map || map.schemaVersion !== 2) return [];
+  if (!map) return [];
   const byComponent = new Map<string, RpcLinkRegistrationState[]>();
   for (const [, registration] of registrations) {
     const key = componentKey(registration.objectId, registration.componentIndex);
@@ -52,7 +51,7 @@ export function inferBehaviourType(
   hash8: number,
   hash16: number | undefined,
 ): string | undefined {
-  if (!map || map.schemaVersion !== 2) return undefined;
+  if (!map) return undefined;
   const hashes = new Set([hash8, ...(hash16 === undefined ? [] : [hash16])]);
   const matches = map.behaviours.filter(({ rpcs }) => {
     return rpcs.some((rpc) => rpc.packetKind === packetName && hashes.has(rpc.wireHash));
@@ -69,13 +68,6 @@ export function lookupRpc(
 ): RpcLookup {
   if (!map) return { resolution: "unresolved" };
   const hashes = new Set([hash8, ...(hash16 === undefined ? [] : [hash16])]);
-  if (map.schemaVersion === 1) {
-    const matches = map.symbols.filter((symbol) => symbol.wireHash !== undefined
-      && hashes.has(symbol.wireHash)
-      && (!symbol.packetKinds || symbol.packetKinds.includes(packetName as "serverRpc" | "observersRpc" | "targetRpc")));
-    return legacyLookup(matches);
-  }
-
   const behaviours = networkBehaviourType
     ? map.behaviours.filter(({ typeName }) => typeName === networkBehaviourType)
     : map.behaviours;
@@ -93,13 +85,13 @@ export function applyRpcLookup(packet: DecodedFishNetPacket, lookup: RpcLookup):
 }
 
 export function findBroadcast(map: FishNetRpcMap | undefined, wireHash: number) {
-  if (!map || map.schemaVersion !== 2) return undefined;
+  if (!map) return undefined;
   const matches = (map.broadcasts ?? []).filter((broadcast) => broadcast.wireHash === wireHash);
   return matches.length === 1 ? matches[0] : undefined;
 }
 
 export function findSyncType(map: FishNetRpcMap | undefined, typeName: string | undefined, index: number) {
-  if (!map || map.schemaVersion !== 2 || !typeName) return undefined;
+  if (!map || !typeName) return undefined;
   const matches = map.behaviours
     .filter((behaviour) => behaviour.typeName === typeName)
     .flatMap((behaviour) => behaviour.syncTypes ?? [])
@@ -111,18 +103,7 @@ function rpcFingerprint(values: Array<{ wireHash: number; packetKind: FishNetRpc
   return values.map(({ wireHash, packetKind }) => `${wireHash}:${packetKind}`).sort().join(",");
 }
 
-function legacyLookup(matches: FishNetRpcSymbol[]): RpcLookup {
-  const wireHashes = new Set(matches.flatMap(({ wireHash }) => wireHash === undefined ? [] : [wireHash]));
-  if (matches.length === 1 && matches[0]) {
-    return { resolution: "verified", wireHash: matches[0].wireHash, methodName: matches[0].methodName };
-  }
-  return {
-    resolution: matches.length > 1 ? "ambiguous" : "unresolved",
-    wireHash: wireHashes.size === 1 ? wireHashes.values().next().value : undefined,
-  };
-}
-
-function definitionLookup(matches: FishNetRpcDefinition[]): RpcLookup {
+function definitionLookup(matches: readonly FishNetRpcDefinition[]): RpcLookup {
   const wireHashes = new Set(matches.map(({ wireHash }) => wireHash));
   if (matches.length === 1 && matches[0]) {
     return {

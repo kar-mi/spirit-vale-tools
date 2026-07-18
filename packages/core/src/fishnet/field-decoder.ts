@@ -10,7 +10,7 @@ import type {
 
 export function applyDecodedFields(
   packet: DecodedFishNetPacket,
-  parameters: FishNetRpcParameter[] | undefined,
+  parameters: readonly FishNetRpcParameter[] | undefined,
   startOffset = 0,
 ): void {
   if (!parameters || parameters.length === 0) return;
@@ -23,7 +23,7 @@ export function applyDecodedFields(
 function decodeParameters(
   buffer: Buffer,
   start: number,
-  parameters: FishNetRpcParameter[],
+  parameters: readonly FishNetRpcParameter[],
   prefix: string,
   fields: FishNetDecodedField[],
 ): { offset: number; complete: boolean } {

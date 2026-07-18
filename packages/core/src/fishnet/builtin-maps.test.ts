@@ -57,8 +57,25 @@ describe("bundled FishNet maps", () => {
   test("loads the current immutable map and rejects unsupported fingerprints", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.buildFingerprint).toBe(CURRENT_FISHNET_BUILD_FINGERPRINT);
+    expect(loadBundledFishNetRpcMap()).toBe(map);
     expect(BUNDLED_FISHNET_BUILD_FINGERPRINTS).toEqual([CURRENT_FISHNET_BUILD_FINGERPRINT]);
     expect(() => loadBundledFishNetRpcMap("fictional-build")).toThrow(`supported: ${CURRENT_FISHNET_BUILD_FINGERPRINT}`);
+  });
+
+  test("assembles a complete map with unique behaviour-local identifiers", () => {
+    const map = loadBundledFishNetRpcMap();
+    expect(map.behaviours).toHaveLength(13);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(316);
+    expect(map.broadcasts).toHaveLength(6);
+
+    const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
+    expect(new Set(behaviourNames).size).toBe(behaviourNames.length);
+    for (const behaviour of map.behaviours) {
+      const identifiers = behaviour.rpcs.map(({ packetKind, wireHash }) => `${packetKind}:${wireHash}`);
+      expect(new Set(identifiers).size).toBe(identifiers.length);
+    }
+    const broadcastHashes = map.broadcasts?.map(({ wireHash }) => wireHash) ?? [];
+    expect(new Set(broadcastHashes).size).toBe(broadcastHashes.length);
   });
 
   test("decodes the verified Damage writer layout from the committed map", () => {

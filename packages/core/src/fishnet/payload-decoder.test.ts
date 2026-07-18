@@ -6,15 +6,15 @@ import type { FishNetRpcMap } from "./types.ts";
 describe("decodeFishNetPayload", () => {
   test("decodes a reliable RPC header and a verified wire name", () => {
     const map: FishNetRpcMap = {
-      schemaVersion: 1,
       buildFingerprint: "fixture",
       metadataVersion: 31,
-      symbols: [{
-        methodHash: 123456789,
-        methodName: "RpcSyntheticAction",
-        forms: ["logic", "reader", "writer"],
-        wireHash: 5,
-        packetKinds: ["serverRpc"],
+      behaviours: [{
+        typeName: "SyntheticBehaviour",
+        rpcs: [{
+          methodName: "RpcSyntheticAction",
+          wireHash: 5,
+          packetKind: "serverRpc",
+        }],
       }],
     };
     const result = decodeFishNetPayload(

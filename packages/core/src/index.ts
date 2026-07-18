@@ -6,8 +6,6 @@ export {
   FishNetProtocolError,
   FishNetSessionDecoder,
 } from "./fishnet/decoder.ts";
-export { loadFishNetRpcMap } from "./fishnet/rpc-map.ts";
-export type { FishNetRpcMapLoadOptions } from "./fishnet/rpc-map.ts";
 export {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
   CURRENT_FISHNET_BUILD_FINGERPRINT,
@@ -48,14 +46,11 @@ export type {
   FishNetBroadcastDefinition,
   FishNetPacketName,
   FishNetRpcMap,
-  FishNetRpcMapV1,
-  FishNetRpcMapV2,
   FishNetRpcPacketName,
   FishNetRpcDefinition,
   FishNetRpcLinkRegistration,
   FishNetRpcParameter,
   FishNetRpcResolution,
-  FishNetRpcSymbol,
   FishNetSyncTypeDefinition,
   FishNetWireCodec,
 } from "./fishnet/types.ts";

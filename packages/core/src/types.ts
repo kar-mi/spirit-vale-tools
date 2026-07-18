@@ -17,7 +17,7 @@ export interface CaptureConfig {
   decodeFishNet?: boolean;
   /** Bundled build-specific RPC map to use. Defaults to the current verified build. */
   fishNetBuildFingerprint?: string;
-  /** Optional local symbol map. Only entries with verified wire hashes are used for live names. */
+  /** Optional typed in-memory definition map. Defaults to the selected bundled build map. */
   fishNetRpcMap?: FishNetRpcMap;
 }
 

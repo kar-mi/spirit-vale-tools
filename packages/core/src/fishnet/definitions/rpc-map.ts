@@ -1,66 +1,46 @@
 import type { FishNetWireCodec } from "./codecs.ts";
 import type { FishNetRpcPacketName } from "./protocol.ts";
 
-export interface FishNetRpcSymbol {
-  /** Stable suffix from an IL2CPP-generated RPC method name; not assumed to be the wire hash. */
-  methodHash: number;
-  methodName: string;
-  forms: Array<"writer" | "reader" | "logic">;
-  /** Present only when a wire hash has been verified independently. */
-  wireHash?: number;
-  packetKinds?: Array<"serverRpc" | "observersRpc" | "targetRpc">;
-}
-
-export interface FishNetRpcMapV1 {
-  schemaVersion: 1;
-  buildFingerprint: string;
-  metadataVersion: number;
-  symbols: FishNetRpcSymbol[];
-}
-
 export interface FishNetRpcParameter {
-  name: string;
-  typeName?: string;
+  readonly name: string;
+  readonly typeName?: string;
   /** Present only when the generated writer call established the exact wire codec. */
-  codec?: FishNetWireCodec;
+  readonly codec?: FishNetWireCodec;
   /** Ordered fields for a generated structured writer. Leaf fields carry codecs. */
-  fields?: FishNetRpcParameter[];
+  readonly fields?: readonly FishNetRpcParameter[];
 }
 
 export interface FishNetRpcDefinition {
-  wireHash: number;
-  packetKind: FishNetRpcPacketName;
-  methodName: string;
-  parameters?: FishNetRpcParameter[];
+  readonly wireHash: number;
+  readonly packetKind: FishNetRpcPacketName;
+  readonly methodName: string;
+  readonly parameters?: readonly FishNetRpcParameter[];
 }
 
 export interface FishNetSyncTypeDefinition {
-  index: number;
-  name: string;
-  typeName?: string;
-  codec?: FishNetWireCodec;
+  readonly index: number;
+  readonly name: string;
+  readonly typeName?: string;
+  readonly codec?: FishNetWireCodec;
   /** Ordered fields for a structured SyncType value. Leaf fields carry codecs. */
-  fields?: FishNetRpcParameter[];
+  readonly fields?: readonly FishNetRpcParameter[];
 }
 
 export interface FishNetBehaviourDefinition {
-  typeName: string;
-  rpcs: FishNetRpcDefinition[];
-  syncTypes?: FishNetSyncTypeDefinition[];
+  readonly typeName: string;
+  readonly rpcs: readonly FishNetRpcDefinition[];
+  readonly syncTypes?: readonly FishNetSyncTypeDefinition[];
 }
 
 export interface FishNetBroadcastDefinition {
-  wireHash: number;
-  typeName: string;
-  fields?: FishNetRpcParameter[];
+  readonly wireHash: number;
+  readonly typeName: string;
+  readonly fields?: readonly FishNetRpcParameter[];
 }
 
-export interface FishNetRpcMapV2 {
-  schemaVersion: 2;
-  buildFingerprint: string;
-  metadataVersion: number;
-  behaviours: FishNetBehaviourDefinition[];
-  broadcasts?: FishNetBroadcastDefinition[];
+export interface FishNetRpcMap {
+  readonly buildFingerprint: string;
+  readonly metadataVersion: number;
+  readonly behaviours: readonly FishNetBehaviourDefinition[];
+  readonly broadcasts?: readonly FishNetBroadcastDefinition[];
 }
-
-export type FishNetRpcMap = FishNetRpcMapV1 | FishNetRpcMapV2;

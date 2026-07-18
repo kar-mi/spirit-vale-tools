@@ -8,10 +8,7 @@ export type {
   FishNetBroadcastDefinition,
   FishNetRpcDefinition,
   FishNetRpcMap,
-  FishNetRpcMapV1,
-  FishNetRpcMapV2,
   FishNetRpcParameter,
-  FishNetRpcSymbol,
   FishNetSyncTypeDefinition,
 } from "./definitions/rpc-map.ts";
 export type {
