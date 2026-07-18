@@ -9,7 +9,7 @@ export interface RewardsAppSettings {
   view: RewardsAppView;
 }
 
-const defaults: RewardsAppSettings = { frame: { x: 120, y: 90, width: 860, height: 720 }, pinned: false, view: "catalog" };
+const defaults: RewardsAppSettings = { frame: { x: 120, y: 90, width: 860, height: 720 }, pinned: false, view: "summary" };
 const settingsPath = path.join(Utils.paths.userData, "rewards-settings.json");
 
 export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
@@ -18,7 +18,7 @@ export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
     return {
       frame: validFrame(value.frame) ? value.frame : defaults.frame,
       pinned: typeof value.pinned === "boolean" ? value.pinned : defaults.pinned,
-      view: value.view === "catalog" || value.view === "session" ? value.view : defaults.view,
+      view: value.view === "summary" || value.view === "recent" ? value.view : defaults.view,
     };
   } catch { return { ...defaults, frame: { ...defaults.frame } }; }
 }

@@ -6,37 +6,56 @@ let state: RewardsAppState | undefined;
 const rpc = Electroview.defineRPC<RewardsAppRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });
 const electroview = new Electroview({ rpc });
 
-const catalogTab = button("catalog-tab");
-const sessionTab = button("session-tab");
-const liveMode = button("live-mode");
-const replayMode = button("replay-mode");
+const summaryTab = button("summary-tab");
+const recentTab = button("recent-tab");
+const catalogButton = button("catalog-button");
+const replayButton = button("replay-button");
 const openReplay = button("open-replay");
 const pin = button("pin-button");
 const query = input("catalog-query");
 
-catalogTab.addEventListener("click", () => setView("catalog"));
-sessionTab.addEventListener("click", () => setView("session"));
-liveMode.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "live" }));
-replayMode.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "replay" }));
-openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseReplay({}));
+summaryTab.addEventListener("click", () => setView("summary"));
+recentTab.addEventListener("click", () => setView("recent"));
+catalogButton.addEventListener("click", () => openModal("catalog-modal"));
+replayButton.addEventListener("click", () => openModal("replay-modal"));
+openReplay.addEventListener("click", () => void electroview.rpc?.request.chooseReplay({}).then((next) => {
+  render(next);
+  if (next.mode === "replay" && next.replayFileName) closeModal("replay-modal");
+}));
+button("replay-live").addEventListener("click", returnToLive);
+button("return-live").addEventListener("click", returnToLive);
 pin.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
 query.addEventListener("input", () => void electroview.rpc?.request.setQuery({ query: query.value }));
+for (const close of document.querySelectorAll<HTMLElement>("[data-close-modal]")) {
+  close.addEventListener("click", () => closeModal(close.dataset.closeModal ?? ""));
+}
+for (const layer of document.querySelectorAll<HTMLElement>(".modal-layer")) {
+  layer.addEventListener("click", (event) => { if (event.target === layer) closeModal(layer.id); });
+}
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  for (const layer of document.querySelectorAll<HTMLElement>(".modal-layer:not([hidden])")) closeModal(layer.id);
+});
 void electroview.rpc?.request.getState({}).then(render);
 
 function render(next: RewardsAppState): void {
   state = next;
-  catalogTab.classList.toggle("active", next.view === "catalog");
-  sessionTab.classList.toggle("active", next.view === "session");
-  liveMode.classList.toggle("active", next.mode === "live");
-  replayMode.classList.toggle("active", next.mode === "replay");
-  openReplay.hidden = next.mode !== "replay";
+  summaryTab.classList.toggle("active", next.view === "summary");
+  recentTab.classList.toggle("active", next.view === "recent");
+  replayButton.classList.toggle("active", next.mode === "replay");
   pin.textContent = next.pinned ? "◆" : "◇";
   element("status-text").textContent = next.statusDetail;
   element("status-dot").className = `status-dot ${next.status}`;
-  element("catalog-panel").hidden = next.view !== "catalog";
-  element("session-panel").hidden = next.view !== "session";
+  element("summary-panel").hidden = next.view !== "summary";
+  element("recent-panel").hidden = next.view !== "recent";
+  const replayBanner = element("replay-banner");
+  replayBanner.hidden = next.mode !== "replay";
+  element("replay-banner-text").textContent = next.mode === "replay" ? `Viewing replay: ${next.replayFileName ?? "selected log"}` : "";
+  element("replay-detail").textContent = next.replayFileName
+    ? `Loaded: ${next.replayFileName}${next.replayWarnings > 0 ? ` · ${next.replayWarnings} malformed records skipped` : ""}`
+    : "No replay loaded. Choose a rewards JSON Lines log to inspect it.";
   if (document.activeElement !== query) query.value = next.query;
   element("catalog-count").textContent = `${next.catalogCount} mobs`;
   renderCatalog(next);
@@ -68,14 +87,14 @@ function renderSession(next: RewardsAppState): void {
     `Level ${mob.level} · ${mob.kills} ${mob.kills === 1 ? "kill" : "kills"}`,
     [`${format.format(mob.experience)} XP`, `${format.format(mob.jobExperience)} job XP`, `${formatDecimal(mob.coins)} coins`],
     mob.drops,
-  )) : [empty("Confirmed mob totals will appear here.")]));
+  )) : [empty(next.mode === "replay" ? "No confirmed mob totals in this replay." : "Confirmed mob totals will appear here.")]));
   const kills = element("kill-list");
   kills.replaceChildren(...(next.kills.length ? next.kills.map((kill) => row(
     kill.displayName,
     `Level ${kill.level} · tick ${kill.tick}`,
     [`+${format.format(kill.experience)} XP`, `+${format.format(kill.jobExperience)} job XP`, `+${formatDecimal(kill.coins)} coins`],
     kill.drops,
-  )) : [empty(next.mode === "replay" ? "Open a rewards log to replay it." : "Waiting for a confirmed mob reward.")]));
+  )) : [empty(next.mode === "replay" ? "No confirmed kills in this replay." : "Waiting for a confirmed mob reward.")]));
 }
 
 function row(title: string, meta: string, rewards: string[], drops: RewardsUiDrop[]): HTMLElement {
@@ -93,6 +112,19 @@ function row(title: string, meta: string, rewards: string[], drops: RewardsUiDro
 }
 
 function setView(view: RewardsAppView): void { void electroview.rpc?.request.setView({ view }); }
+function returnToLive(): void {
+  closeModal("replay-modal");
+  void electroview.rpc?.request.setMode({ mode: "live" });
+}
+function openModal(id: string): void {
+  const modal = element(id);
+  modal.hidden = false;
+  if (id === "catalog-modal") queueMicrotask(() => query.focus());
+}
+function closeModal(id: string): void {
+  if (!id) return;
+  element(id).hidden = true;
+}
 function formatDecimal(value: string): string { try { return format.format(BigInt(value)); } catch { return value; } }
 function formatChance(value: number): string {
   return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(value)}%`;

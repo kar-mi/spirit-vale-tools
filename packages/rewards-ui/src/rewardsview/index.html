@@ -15,32 +15,46 @@
   </header>
   <main>
     <nav class="toolbar">
-      <div class="segmented"><button id="catalog-tab">Catalog</button><button id="session-tab">Live rewards</button></div>
-      <div class="segmented"><button id="live-mode">Live</button><button id="replay-mode">Replay</button></div>
-      <button id="open-replay" class="secondary">Open log</button>
+      <div class="segmented"><button id="summary-tab">1. Summary</button><button id="recent-tab">2. Recent kills</button></div>
+      <button id="catalog-button" class="secondary">Catalog</button>
+      <button id="replay-button" class="secondary">Replay</button>
       <span id="status-dot" class="status-dot waiting"></span>
     </nav>
 
-    <section id="catalog-panel">
-      <div class="section-head"><div><h1>Configured mob rewards</h1><p>Build-matched base values before party and status modifiers.</p></div><span id="catalog-count" class="badge">0 mobs</span></div>
-      <input id="catalog-query" type="search" placeholder="Search mob name or ID…" autocomplete="off">
-      <div id="catalog-list" class="list"></div>
-    </section>
+    <div id="replay-banner" class="mode-banner" hidden><span id="replay-banner-text"></span><button id="return-live">Return to live</button></div>
+    <div class="totals">
+      <article><small>Character XP</small><strong id="total-xp">0</strong></article>
+      <article><small>Job XP</small><strong id="total-job-xp">0</strong></article>
+      <article><small>Coins</small><strong id="total-coins">0</strong></article>
+      <article><small>Unmatched</small><strong id="unmatched">0</strong></article>
+    </div>
+    <div id="identity-warning" class="notice" hidden></div>
 
-    <section id="session-panel" hidden>
-      <div class="totals">
-        <article><small>Character XP</small><strong id="total-xp">0</strong></article>
-        <article><small>Job XP</small><strong id="total-job-xp">0</strong></article>
-        <article><small>Coins</small><strong id="total-coins">0</strong></article>
-        <article><small>Unmatched</small><strong id="unmatched">0</strong></article>
-      </div>
-      <div id="identity-warning" class="notice" hidden></div>
-      <div class="columns">
-        <section><div class="section-head"><div><h2>Mob summary</h2><p>Confirmed rewards in this session.</p></div></div><div id="summary-list" class="list"></div></section>
-        <section><div class="section-head"><div><h2>Recent kills</h2><p>Newest confirmed attribution first.</p></div></div><div id="kill-list" class="list"></div></section>
-      </div>
+    <section id="summary-panel">
+      <div class="section-head"><div><h1>Mob summary</h1><p>Confirmed rewards grouped by mob.</p></div></div>
+      <div id="summary-list" class="list"></div>
+    </section>
+    <section id="recent-panel" hidden>
+      <div class="section-head"><div><h1>Recent kills</h1><p>Newest confirmed attribution first.</p></div></div>
+      <div id="kill-list" class="list"></div>
     </section>
   </main>
+
+  <div id="catalog-modal" class="modal-layer" hidden>
+    <section class="modal-card modal-wide" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
+      <div class="modal-head"><div><h2 id="catalog-title">Mob catalog</h2><p>Build-matched base values before party and status modifiers.</p></div><button class="modal-close" data-close-modal="catalog-modal" title="Close">×</button></div>
+      <div class="modal-tools"><input id="catalog-query" type="search" placeholder="Search mob name or ID…" autocomplete="off"><span id="catalog-count" class="badge">0 mobs</span></div>
+      <div id="catalog-list" class="list modal-scroll"></div>
+    </section>
+  </div>
+
+  <div id="replay-modal" class="modal-layer" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="replay-title">
+      <div class="modal-head"><div><h2 id="replay-title">Rewards replay</h2><p>Load a previous rewards JSON Lines session.</p></div><button class="modal-close" data-close-modal="replay-modal" title="Close">×</button></div>
+      <div id="replay-detail" class="replay-detail">No replay loaded.</div>
+      <div class="modal-actions"><button id="open-replay" class="primary">Open replay log</button><button id="replay-live" class="secondary">Return to live</button></div>
+    </section>
+  </div>
   <script type="module" src="index.js"></script>
 </body>
 </html>

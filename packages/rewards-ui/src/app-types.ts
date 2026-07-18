@@ -1,7 +1,7 @@
 import type { RPCSchema } from "electrobun";
 
 export type RewardsAppMode = "live" | "replay";
-export type RewardsAppView = "catalog" | "session";
+export type RewardsAppView = "summary" | "recent";
 export type RewardsAppStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
 
 export interface RewardsUiDrop { category: string; itemId: string; itemName: string; count: number; chance?: number }
