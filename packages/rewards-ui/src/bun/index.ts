@@ -1,8 +1,7 @@
-import { existsSync } from "node:fs";
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
-import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 import {
   loadBundledMobRewardCatalog,
   loadRewardReplay,
@@ -13,12 +12,17 @@ import type { MobRewardSessionSnapshot, RewardLogStatus } from "@spiritvale/rewa
 import type { RewardsAppMode, RewardsAppRpc, RewardsAppState, RewardsAppStatus } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
 
-makeProcessDpiAware();
-
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();
+
+export interface RewardsWindowOptions {
+  logDirectory: string;
+  onClosed?: () => void;
+}
+
+export async function createRewardsWindow(options: RewardsWindowOptions) {
 const settings = await loadRewardsSettings();
-const follower = new RewardSessionLogFollower(resolveLogDirectory());
+const follower = new RewardSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
 let mode: RewardsAppMode = "live";
@@ -51,7 +55,10 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
       },
       windowAction: async ({ action }) => {
         if (action === "minimize") window.minimize();
-        else await shutdown();
+        else {
+          await shutdown();
+          window.close();
+        }
       },
       getWindowFrame: () => window.getFrame(),
       setWindowFrame: ({ x, y, width, height }) => { window.setFrame(x, y, width, height); },
@@ -83,11 +90,18 @@ Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.fram
   if (frame.width !== event.data.width || frame.height !== event.data.height) window.setSize(frame.width, frame.height);
   scheduleSave();
 });
+window.on("close", () => {
+  void shutdown();
+  options.onClosed?.();
+});
 
 const timer = setInterval(() => void poll(), POLL_MS);
 void poll();
-process.on("SIGINT", () => void shutdown());
-process.on("SIGTERM", () => void shutdown());
+return {
+  show: () => window.show(),
+  activate: () => window.activate(),
+  close: async () => { await shutdown(); window.close(); },
+};
 
 function appState(): RewardsAppState {
   const snapshot = mode === "live" ? liveSnapshot : replaySnapshot;
@@ -208,19 +222,6 @@ async function shutdown(): Promise<void> {
   if (saveTimer) clearTimeout(saveTimer);
   settings.frame = clampFrame(window.getFrame());
   await saveRewardsSettings(settings);
-  Utils.quit();
-}
-
-function resolveLogDirectory(): string {
-  const override = process.env.SPIRIT_VALE_LOG_DIRECTORY?.trim();
-  if (override) return path.resolve(override);
-  let current = process.cwd();
-  while (true) {
-    if (existsSync(path.join(current, "bun.lock")) && existsSync(path.join(current, "packages"))) return path.join(current, "logs");
-    const parent = path.dirname(current);
-    if (parent === current) return path.resolve(process.cwd(), "logs");
-    current = parent;
-  }
 }
 
 function emptySnapshot(): MobRewardSessionSnapshot {
@@ -228,4 +229,5 @@ function emptySnapshot(): MobRewardSessionSnapshot {
     kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0,
     unmatchedByReason: { ambiguous: 0, expired: 0, unidentified: 0 },
   };
+}
 }

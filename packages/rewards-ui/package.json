@@ -2,15 +2,9 @@
   "name": "@spiritvale/rewards-ui",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "electrobun dev",
-    "build": "electrobun build"
-  },
   "dependencies": {
     "@spiritvale/rewards": "workspace:*",
-    "@spiritvale/ui-theme": "workspace:*"
-  },
-  "devDependencies": {
+    "@spiritvale/ui-theme": "workspace:*",
     "electrobun": "1.18.1"
   }
 }

@@ -1,8 +1,5 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
-
-import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
-import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
+import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
+import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 
 import {
   FISHNET_MARKET_STAT_NAMES,
@@ -19,11 +16,16 @@ import type {
 } from "../app-types.ts";
 import { validateMarketUiFilters } from "../filter-model.ts";
 
-makeProcessDpiAware();
-
 const POLL_MS = 1_000;
 const PAGE_SIZE = 50;
-const follower = new MarketSessionLogFollower(resolveLogDirectory());
+
+export interface MarketWindowOptions {
+  logDirectory: string;
+  onClosed?: () => void;
+}
+
+export function createMarketWindow(options: MarketWindowOptions) {
+const follower = new MarketSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
 let status: MarketUiStatus = "waiting";
@@ -89,11 +91,18 @@ Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; hei
   const height = Math.max(480, event.data.height);
   if (width !== event.data.width || height !== event.data.height) window.setSize(width, height);
 });
+window.on("close", () => {
+  stopPolling();
+  options.onClosed?.();
+});
 
 const pollTimer = setInterval(() => void pollMarket(), POLL_MS);
 void pollMarket();
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+return {
+  show: () => window.show(),
+  activate: () => window.activate(),
+  close: () => { stopPolling(); window.close(); },
+};
 
 function appState(): MarketUiState {
   const marketFilters: FishNetMarketStatFilter[] = filters.map((filter) => ({ ...filter }));
@@ -177,27 +186,9 @@ function publish(): void {
   }
 }
 
-function shutdown(): void {
-  stopPolling();
-  Utils.quit();
-}
-
 function stopPolling(): void {
   if (shuttingDown) return;
   shuttingDown = true;
   clearInterval(pollTimer);
 }
-
-function resolveLogDirectory(): string {
-  const override = process.env.SPIRIT_VALE_LOG_DIRECTORY?.trim();
-  if (override) return path.resolve(override);
-  let current = process.cwd();
-  while (true) {
-    if (existsSync(path.join(current, "bun.lock")) && existsSync(path.join(current, "packages"))) {
-      return path.join(current, "logs");
-    }
-    const parent = path.dirname(current);
-    if (parent === current) return path.resolve(process.cwd(), "logs");
-    current = parent;
-  }
 }

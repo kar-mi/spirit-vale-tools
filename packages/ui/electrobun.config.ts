@@ -2,25 +2,41 @@ import type { ElectrobunConfig } from "electrobun";
 
 export default {
   app: {
-    name: "Spirit Vale DPS",
-    identifier: "dev.spiritvale.dps",
+    name: "Spirit Vale",
+    identifier: "dev.spiritvale.desktop",
     version: "0.1.0",
-    description: "A compact live and replay damage meter for Spirit Vale.",
+    description: "Centralized capture and desktop tools for Spirit Vale.",
   },
   build: {
-    bun: { entrypoint: "src/bun/index.ts" },
+    bun: { entrypoint: "src/desktop/index.ts" },
     views: {
+      launcherview: { entrypoint: "src/launcherview/index.ts" },
       mainview: { entrypoint: "src/mainview/index.ts" },
+      marketview: { entrypoint: "../market-ui/src/marketview/index.ts" },
+      rewardsview: { entrypoint: "../rewards-ui/src/rewardsview/index.ts" },
     },
     copy: {
+      "src/launcherview/index.html": "views/launcherview/index.html",
+      "src/launcherview/index.css": "views/launcherview/index.css",
+      "../ui-theme/theme.css": "views/launcherview/theme.css",
       "src/mainview/index.html": "views/mainview/index.html",
       "src/mainview/index.css": "views/mainview/index.css",
-      "../ui-theme/theme.css": "views/mainview/theme.css",
+      "../ui-theme/./theme.css": "views/mainview/theme.css",
+      "../market-ui/src/marketview/index.html": "views/marketview/index.html",
+      "../market-ui/src/marketview/index.css": "views/marketview/index.css",
+      "../ui-theme/../ui-theme/theme.css": "views/marketview/theme.css",
+      "../rewards-ui/src/rewardsview/index.html": "views/rewardsview/index.html",
+      "../rewards-ui/src/rewardsview/index.css": "views/rewardsview/index.css",
+      "../ui-theme/../../packages/ui-theme/theme.css": "views/rewardsview/theme.css",
+      "../core/src/fishnet/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.rpc.json":
+        "bun/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.rpc.json",
+      "../core/src/fishnet/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.semantics.json":
+        "bun/maps/9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4.semantics.json",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src", "../ui-theme"],
+    watch: ["src", "../core/src/fishnet/maps", "../market-ui/src", "../rewards-ui/src", "../ui-theme"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
-import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 
 import {
   FishNetDpsMeter,
@@ -13,11 +13,15 @@ import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
 
-makeProcessDpiAware();
-
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
 const LIVE_LOG_POLL_MS = 2_500;
+export interface DpsWindowOptions {
+  logDirectory: string;
+  onClosed?: () => void;
+}
+
+export async function createDpsWindow(options: DpsWindowOptions) {
 const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
 const settings = await loadDpsAppSettings();
 
@@ -33,7 +37,7 @@ let replayWarnings = 0;
 let selectedReplayEncounterId: string | undefined;
 let liveMeter = new FishNetDpsMeter({ personalName: settings.personalName });
 let manualPersonalActorId: number | undefined;
-const liveLog = liveLogOverride ? new DpsLogFollower(liveLogOverride) : new DpsSessionLogFollower();
+const liveLog = liveLogOverride ? new DpsLogFollower(liveLogOverride) : new DpsSessionLogFollower(options.logDirectory);
 let lastLiveObservedAtMs = 0;
 let liveLogPolling = false;
 let publishing = false;
@@ -95,8 +99,8 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
           window.minimize();
           return;
         }
-        window.hide();
-        void shutdown();
+        await shutdown();
+        window.close();
       },
       getWindowFrame: () => window.getFrame(),
       setWindowFrame: ({ x, y, width, height }) => { window.setFrame(x, y, width, height); },
@@ -128,11 +132,18 @@ Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.fram
   }
   scheduleSettingsSave();
 });
+window.on("close", () => {
+  void shutdown();
+  options.onClosed?.();
+});
 
 const liveLogTimer = setInterval(() => void pollLiveLog(), LIVE_LOG_POLL_MS);
 void pollLiveLog();
-process.on("SIGINT", () => void shutdown());
-process.on("SIGTERM", () => void shutdown());
+return {
+  show: () => window.show(),
+  activate: () => window.activate(),
+  close: async () => { await shutdown(); window.close(); },
+};
 
 async function switchMode(nextMode: DpsAppMode): Promise<void> {
   if (nextMode === mode) return;
@@ -285,13 +296,9 @@ function scheduleSettingsSave(): void {
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
-  try {
-    settings.frame = clampFrame(window.getFrame());
-    window.hide();
-    clearInterval(liveLogTimer);
-    if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
-    await saveDpsAppSettings(settings);
-  } finally {
-    Utils.quit();
-  }
+  settings.frame = clampFrame(window.getFrame());
+  clearInterval(liveLogTimer);
+  if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
+  await saveDpsAppSettings(settings);
+}
 }

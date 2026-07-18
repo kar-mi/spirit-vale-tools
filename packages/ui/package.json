@@ -8,6 +8,10 @@
   },
   "dependencies": {
     "@spiritvale/combat": "workspace:*",
+    "@spiritvale/core": "workspace:*",
+    "@spiritvale/logging": "workspace:*",
+    "@spiritvale/market": "workspace:*",
+    "@spiritvale/rewards": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*"
   },
   "devDependencies": {
