@@ -16,10 +16,17 @@ export interface CaptureCoordinatorOptions {
   helperPath?: string;
   captureFactory?: () => PacketCapture;
   onStatus?: (state: LauncherState) => void;
+  /**
+   * Writes unclassified fishnet.packet records to the "other" stream. Defaults to the
+   * SPIRIT_VALE_LOG_PACKETS environment variable; these records are the bulk of other.jsonl
+   * and are only needed when diagnosing protocol coverage.
+   */
+  logUnclassifiedPackets?: boolean;
 }
 
 export class CaptureCoordinator {
   private readonly capture: PacketCapture;
+  private readonly logUnclassifiedPackets: boolean;
   private readonly actors = new FishNetActorDirectory();
   private readonly combat = new FishNetCombatTracker();
   private readonly rewards = new FishNetMobRewardTracker();
@@ -37,6 +44,7 @@ export class CaptureCoordinator {
   private lastAuthenticated?: { connectionId: string; tick: number };
 
   constructor(private readonly options: CaptureCoordinatorOptions) {
+    this.logUnclassifiedPackets = options.logUnclassifiedPackets ?? envFlag(Bun.env["SPIRIT_VALE_LOG_PACKETS"]);
     this.capture = options.captureFactory?.() ?? new PacketCapture();
     this.capture.on("started", () => this.captureStarted());
     this.capture.on("targetStatus", (target) => this.targetStatus(target));
@@ -179,7 +187,7 @@ export class CaptureCoordinator {
       this.logDomainWarning("market", error);
     }
 
-    if (!handled) this.otherLog?.log("fishnet.packet", unclassifiedPacket(packet));
+    if (!handled && this.logUnclassifiedPackets) this.otherLog?.log("fishnet.packet", unclassifiedPacket(packet));
   }
 
   /**
@@ -292,4 +300,8 @@ function jsonValue(value: unknown): JsonData {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function envFlag(value: string | undefined): boolean {
+  return value !== undefined && value !== "" && value !== "0" && value.toLowerCase() !== "false";
 }

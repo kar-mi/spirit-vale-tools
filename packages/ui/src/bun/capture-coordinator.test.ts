@@ -17,6 +17,7 @@ describe("central capture coordinator", () => {
       const coordinator = new CaptureCoordinator({
         logDirectory: directory,
         captureFactory: () => capture as unknown as PacketCapture,
+        logUnclassifiedPackets: true,
       });
       await coordinator.start();
 
@@ -66,6 +67,7 @@ describe("central capture coordinator", () => {
       const coordinator = new CaptureCoordinator({
         logDirectory: directory,
         captureFactory: () => capture as unknown as PacketCapture,
+        logUnclassifiedPackets: false,
       });
       await coordinator.start();
 
@@ -100,11 +102,13 @@ describe("central capture coordinator", () => {
       ]);
 
       const otherPointer = await readCurrentLogStream("other", directory);
-      const misses = records(await readFile(otherPointer!.path, "utf8"))
+      const other = records(await readFile(otherPointer!.path, "utf8"));
+      const misses = other
         .filter((record) => record.type === "combat.spawnIdentityMiss") as unknown as Array<{ data: { objectId: number; spawnSyncPayload: string } }>;
       expect(misses).toHaveLength(1);
       expect(misses[0]!.data.objectId).toBe(40);
       expect(misses[0]!.data.spawnSyncPayload).toBe("01020304");
+      expect(other.some((record) => record.type === "fishnet.packet")).toBe(false);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
