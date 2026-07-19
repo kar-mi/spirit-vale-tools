@@ -1,7 +1,7 @@
 import type { RPCSchema } from "electrobun";
 
 export type CaptureStatus = "starting" | "capturing" | "unavailable" | "stopped";
-export type ToolWindow = "combat" | "rewards" | "market";
+export type ToolWindow = "combat" | "rewards" | "market" | "character";
 export type NpcapAvailability = "checking" | "ready" | "missing" | "admin-only" | "error";
 
 export interface CaptureAdapterOption {

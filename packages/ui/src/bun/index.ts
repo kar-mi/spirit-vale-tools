@@ -20,12 +20,13 @@ const MINIMUM_HEIGHT = 360;
 const LIVE_LOG_POLL_MS = 2_500;
 export interface DpsWindowOptions {
   logDirectory: string;
+  settingsPath?: string;
   onClosed?: () => void;
 }
 
 export async function createDpsWindow(options: DpsWindowOptions) {
 const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
-const settings = await loadDpsAppSettings();
+const settings = await loadDpsAppSettings(options.settingsPath);
 
 let window: BrowserWindow;
 let mode: DpsAppMode = "live";
@@ -288,7 +289,7 @@ type DpsAppSettingsFrame = typeof settings.frame;
 
 function scheduleSettingsSave(): void {
   if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
-  settingsSaveTimer = setTimeout(() => void saveDpsAppSettings(settings), 250);
+  settingsSaveTimer = setTimeout(() => void saveDpsAppSettings(settings, options.settingsPath), 250);
 }
 
 async function shutdown(): Promise<void> {
@@ -298,6 +299,6 @@ async function shutdown(): Promise<void> {
   settings.frame = clampFrame(window.getFrame());
   clearInterval(liveLogTimer);
   if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
-  await saveDpsAppSettings(settings);
+  await saveDpsAppSettings(settings, options.settingsPath);
 }
 }

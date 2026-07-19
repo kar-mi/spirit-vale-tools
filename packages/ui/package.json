@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "electrobun dev",
-    "build": "electrobun build"
+    "build": "electrobun build",
+    "build:stable": "electrobun build --env=stable"
   },
   "dependencies": {
+    "@spiritvale/character": "workspace:*",
     "@spiritvale/combat": "workspace:*",
     "@spiritvale/core": "workspace:*",
     "@spiritvale/logging": "workspace:*",

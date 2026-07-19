@@ -1,10 +1,20 @@
+import { readFileSync } from "node:fs";
 import type { ElectrobunConfig } from "electrobun";
+
+interface PackageJson {
+  version?: string;
+}
+
+const packageJson = JSON.parse(
+  readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+) as PackageJson;
+if (!packageJson.version) throw new Error("package.json must define a version before building Electrobun.");
 
 export default {
   app: {
     name: "Spirit Vale",
     identifier: "dev.spiritvale.desktop",
-    version: "0.1.0",
+    version: packageJson.version,
     description: "Centralized capture and desktop tools for Spirit Vale.",
   },
   build: {
@@ -12,6 +22,7 @@ export default {
     views: {
       launcherview: { entrypoint: "src/launcherview/index.ts" },
       mainview: { entrypoint: "src/mainview/index.ts" },
+      characterview: { entrypoint: "src/characterview/index.ts" },
       marketview: { entrypoint: "../market-ui/src/marketview/index.ts" },
       rewardsview: { entrypoint: "../rewards-ui/src/rewardsview/index.ts" },
       rewardscatalogview: { entrypoint: "../rewards-ui/src/catalogview/index.ts" },
@@ -24,6 +35,9 @@ export default {
       "src/mainview/index.html": "views/mainview/index.html",
       "src/mainview/index.css": "views/mainview/index.css",
       "../ui-theme/./theme.css": "views/mainview/theme.css",
+      "src/characterview/index.html": "views/characterview/index.html",
+      "src/characterview/index.css": "views/characterview/index.css",
+      "../ui-theme/./../ui-theme/./theme.css": "views/characterview/theme.css",
       "../market-ui/src/marketview/index.html": "views/marketview/index.html",
       "../market-ui/src/marketview/index.css": "views/marketview/index.css",
       "../ui-theme/../ui-theme/theme.css": "views/marketview/theme.css",
@@ -40,7 +54,7 @@ export default {
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src", "../core/src/fishnet", "../items/src", "../market-ui/src", "../rewards-ui/src", "../ui-theme"],
+    watch: ["src", "../character/src", "../core/src/fishnet", "../items/src", "../market-ui/src", "../rewards-ui/src", "../ui-theme"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

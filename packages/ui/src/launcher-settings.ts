@@ -9,9 +9,9 @@ export interface LauncherSettings {
 
 const defaults: LauncherSettings = { captureAdapter: "auto" };
 const directory = path.join(Utils.paths.userData, "spirit-vale-tools");
-const file = path.join(directory, "settings.json");
+const defaultFile = path.join(directory, "settings.json");
 
-export async function loadLauncherSettings(): Promise<LauncherSettings> {
+export async function loadLauncherSettings(file = defaultFile): Promise<LauncherSettings> {
   try {
     const candidate = JSON.parse(await readFile(file, "utf8")) as Partial<LauncherSettings>;
     return {
@@ -24,7 +24,7 @@ export async function loadLauncherSettings(): Promise<LauncherSettings> {
   }
 }
 
-export async function saveLauncherSettings(settings: LauncherSettings): Promise<void> {
-  await mkdir(directory, { recursive: true });
+export async function saveLauncherSettings(settings: LauncherSettings, file = defaultFile): Promise<void> {
+  await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }

@@ -20,9 +20,9 @@ const DEFAULT_SETTINGS: DpsAppSettings = {
 };
 
 const settingsDirectory = path.join(Utils.paths.userData, "spirit-vale-dps");
-const settingsPath = path.join(settingsDirectory, "settings.json");
+const defaultSettingsPath = path.join(settingsDirectory, "settings.json");
 
-export async function loadDpsAppSettings(): Promise<DpsAppSettings> {
+export async function loadDpsAppSettings(settingsPath = defaultSettingsPath): Promise<DpsAppSettings> {
   try {
     const candidate = JSON.parse(await readFile(settingsPath, "utf8")) as Partial<DpsAppSettings>;
     return {
@@ -36,8 +36,8 @@ export async function loadDpsAppSettings(): Promise<DpsAppSettings> {
   }
 }
 
-export async function saveDpsAppSettings(settings: DpsAppSettings): Promise<void> {
-  await mkdir(settingsDirectory, { recursive: true });
+export async function saveDpsAppSettings(settings: DpsAppSettings, settingsPath = defaultSettingsPath): Promise<void> {
+  await mkdir(path.dirname(settingsPath), { recursive: true });
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }
 

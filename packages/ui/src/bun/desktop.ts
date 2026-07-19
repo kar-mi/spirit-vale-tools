@@ -6,15 +6,23 @@ import { createMarketWindow } from "../../../market-ui/src/bun/index.ts";
 import { createRewardsWindow } from "../../../rewards-ui/src/bun/index.ts";
 import type { LauncherRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings.ts";
+import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-storage.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
+import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "./index.ts";
 import { resolveLogDirectory } from "./paths.ts";
 import { WindowSlot } from "./window-slot.ts";
+import { resolveDesktopStoragePaths } from "./portable-paths.ts";
 
 makeProcessDpiAware();
 
-const logDirectory = resolveLogDirectory();
-const settings = await loadLauncherSettings();
+const storagePaths = resolveDesktopStoragePaths({
+  portableRoot: process.env.SPIRIT_VALE_PORTABLE_ROOT,
+  fallbackUserData: Utils.paths.userData,
+  fallbackLogDirectory: resolveLogDirectory(),
+});
+const logDirectory = storagePaths.logDirectory;
+const settings = await loadLauncherSettings(storagePaths.launcherSettingsPath);
 let launcherWindow: BrowserWindow;
 let launcherState: LauncherState = {
   captureStatus: "starting",
@@ -27,8 +35,16 @@ let launcherState: LauncherState = {
 };
 let shuttingDown = false;
 
-const combatWindow = new WindowSlot((onClosed) => createDpsWindow({ logDirectory, onClosed }));
-const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({ logDirectory, onClosed }));
+const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
+  logDirectory,
+  settingsPath: storagePaths.dpsSettingsPath,
+  onClosed,
+}));
+const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({
+  logDirectory,
+  settingsPath: storagePaths.rewardsSettingsPath,
+  onClosed,
+}));
 const marketWindow = new WindowSlot((onClosed) => createMarketWindow({ logDirectory, onClosed }));
 
 const capture = new CaptureCoordinator({
@@ -39,6 +55,18 @@ const capture = new CaptureCoordinator({
     publish();
   },
 });
+capture.setCachedCharacter(await loadCharacterSnapshot(storagePaths.characterStatePath));
+let characterSaveTimer: ReturnType<typeof setTimeout> | undefined;
+const unsubscribeCharacterPersistence = capture.subscribeCharacter((state) => {
+  if (!state.snapshot || state.snapshot.source !== "live") return;
+  if (characterSaveTimer) clearTimeout(characterSaveTimer);
+  characterSaveTimer = setTimeout(() => void saveCharacterSnapshot(state.snapshot!, storagePaths.characterStatePath), 250);
+});
+const characterWindow = new WindowSlot((onClosed) => createCharacterWindow({
+  getState: () => capture.characterState(),
+  subscribe: (listener) => capture.subscribeCharacter(listener),
+  onClosed,
+}));
 
 const rpc = BrowserView.defineRPC<LauncherRpc>({
   maxRequestTime: 30_000,
@@ -53,7 +81,7 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
         const nextSelection = deviceName ?? "auto";
         await capture.reconfigure(deviceName ?? undefined);
         settings.captureAdapter = nextSelection;
-        await saveLauncherSettings(settings);
+        await saveLauncherSettings(settings, storagePaths.launcherSettingsPath);
         launcherState = { ...launcherState, selectedAdapter: nextSelection };
         await refreshCaptureDevices();
         return launcherState;
@@ -153,7 +181,8 @@ async function refreshCaptureDevices(): Promise<void> {
 async function openTool(tool: ToolWindow): Promise<void> {
   if (tool === "combat") await combatWindow.open();
   else if (tool === "rewards") await rewardsWindow.open();
-  else await marketWindow.open();
+  else if (tool === "market") await marketWindow.open();
+  else await characterWindow.open();
 }
 
 function publish(): void {
@@ -165,7 +194,11 @@ async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   launcherWindow.hide();
-  await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close()]);
+  await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
+  unsubscribeCharacterPersistence();
+  if (characterSaveTimer) clearTimeout(characterSaveTimer);
+  const character = capture.characterState().snapshot;
+  if (character) await saveCharacterSnapshot(character, storagePaths.characterStatePath);
   await capture.stop();
   Utils.quit();
 }

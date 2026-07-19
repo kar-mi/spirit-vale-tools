@@ -37,6 +37,16 @@ bun test
 bun run build
 ```
 
+## Portable Windows build
+
+Create the self-contained Windows x64 ZIP and its SHA-256 checksum with:
+
+```powershell
+bun run package:portable
+```
+
+The ZIP contains a versioned folder with a top-level `Spirit Vale.exe`. Settings and capture sessions remain beneath that extracted folder's `data` directory. Npcap is still installed separately.
+
 ## Spirit Vale capture
 
 Run:

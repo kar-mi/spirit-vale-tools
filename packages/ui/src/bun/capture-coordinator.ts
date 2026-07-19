@@ -1,5 +1,7 @@
 import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
 import type { FishNetActorIdentityEvent } from "@spiritvale/combat";
+import { FishNetCharacterTracker } from "@spiritvale/character";
+import type { CharacterSnapshot, CharacterViewState } from "@spiritvale/character";
 import { PacketCapture } from "@spiritvale/core";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
@@ -31,6 +33,7 @@ export class CaptureCoordinator {
   private readonly combat = new FishNetCombatTracker();
   private readonly rewards = new FishNetMobRewardTracker();
   private readonly market = new FishNetMarketTracker();
+  private readonly character = new FishNetCharacterTracker();
   private session?: LogSession;
   private combatLog?: JsonLinesLogger;
   private rewardsLog?: JsonLinesLogger;
@@ -57,6 +60,14 @@ export class CaptureCoordinator {
 
   state(): CaptureCoordinatorState {
     return { captureStatus: this.status, statusDetail: this.statusDetail };
+  }
+
+  characterState(): CharacterViewState { return this.character.state(); }
+
+  setCachedCharacter(snapshot: CharacterSnapshot | undefined): void { this.character.setCached(snapshot); }
+
+  subscribeCharacter(listener: (state: CharacterViewState) => void): () => void {
+    return this.character.subscribe(listener);
   }
 
   async start(): Promise<void> {
@@ -215,6 +226,13 @@ export class CaptureCoordinator {
     } catch (error) {
       handled = true;
       this.logDomainWarning("combat", error);
+    }
+
+    try {
+      handled ||= this.character.consume(packet);
+    } catch (error) {
+      handled = true;
+      this.otherLog?.log("capture.warning", { domain: "character", message: `skipped character payload: ${errorMessage(error)}` });
     }
 
     try {
