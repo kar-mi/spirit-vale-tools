@@ -26,6 +26,22 @@ export type LauncherRpc = {
     requests: {
       getState: { params: Record<string, never>; response: LauncherState };
       openTool: { params: { tool: ToolWindow }; response: LauncherState };
+      openSettings: { params: Record<string, never>; response: void };
+      setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
+      refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
+      openNpcapDownload: { params: Record<string, never>; response: void };
+      windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+    };
+  }>;
+  webview: RPCSchema<{ messages: { stateChanged: LauncherState } }>;
+};
+
+export type LauncherSettingsRpc = {
+  bun: RPCSchema<{
+    requests: {
+      getState: { params: Record<string, never>; response: LauncherState };
       setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
       refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
       openNpcapDownload: { params: Record<string, never>; response: void };

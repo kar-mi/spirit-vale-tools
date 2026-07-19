@@ -41,12 +41,18 @@ export interface MarketUiState {
   listings: MarketUiListing[];
 }
 
+export interface MarketFiltersState {
+  filters: MarketUiFilter[];
+  statOptions: Array<{ type: number; name: string }>;
+}
+
 export type MarketUiRpc = {
   bun: RPCSchema<{
     requests: {
       getState: { params: Record<string, never>; response: MarketUiState };
       setQuery: { params: { query: string }; response: MarketUiState };
       setFilters: { params: { filters: MarketUiFilter[] }; response: MarketUiState };
+      openFilters: { params: Record<string, never>; response: void };
       loadMore: { params: Record<string, never>; response: MarketUiState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
       getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
@@ -59,4 +65,17 @@ export type MarketUiRpc = {
       stateChanged: MarketUiState;
     };
   }>;
+};
+
+export type MarketFiltersRpc = {
+  bun: RPCSchema<{
+    requests: {
+      getState: { params: Record<string, never>; response: MarketFiltersState };
+      setFilters: { params: { filters: MarketUiFilter[] }; response: MarketFiltersState };
+      windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+    };
+  }>;
+  webview: RPCSchema<{ messages: Record<string, never> }>;
 };

@@ -2,18 +2,11 @@ import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 
 import type {
-  MarketUiFilter,
   MarketUiListing,
   MarketUiRpc,
   MarketUiState,
   MarketUiStat,
 } from "../app-types.ts";
-
-interface DraftFilter {
-  enabled: boolean;
-  min: string;
-  max: string;
-}
 
 const STATUS_TONE: Record<MarketUiState["status"], string> = {
   waiting: "is-warn",
@@ -24,9 +17,7 @@ const STATUS_TONE: Record<MarketUiState["status"], string> = {
 };
 
 const numberFormat = new Intl.NumberFormat();
-let state: MarketUiState | undefined;
 let queryTimer: ReturnType<typeof setTimeout> | undefined;
-let draftFilters = new Map<number, DraftFilter>();
 
 const rpc = Electroview.defineRPC<MarketUiRpc>({
   handlers: {
@@ -44,11 +35,6 @@ const statusText = element("status-text");
 const resultCount = element("result-count");
 const results = element("results");
 const loadMoreButton = button("load-more-button");
-const filterDialog = element("filter-dialog") as HTMLDialogElement;
-const filterForm = form("filter-form");
-const statQuery = input("stat-query");
-const statList = element("stat-list");
-const filterError = element("filter-error");
 
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
@@ -68,31 +54,7 @@ const chrome = initWindowChrome({
 });
 maximizeButton.addEventListener("click", () => void chrome.toggleMaximize());
 
-filterButton.addEventListener("click", openFilters);
-button("filter-close-button").addEventListener("click", closeFilters);
-button("cancel-filters-button").addEventListener("click", closeFilters);
-button("clear-filters-button").addEventListener("click", () => {
-  draftFilters.clear();
-  filterError.textContent = "";
-  renderStatOptions();
-});
-filterDialog.addEventListener("cancel", (event) => {
-  event.preventDefault();
-  closeFilters();
-});
-filterDialog.addEventListener("click", (event) => {
-  if (event.target === filterDialog) closeFilters();
-});
-filterForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const filters = appliedFilters();
-  if (!filters) return;
-  void electroview.rpc?.request.setFilters({ filters }).then((next) => {
-    render(next);
-    filterDialog.close();
-  });
-});
-statQuery.addEventListener("input", renderStatOptions);
+filterButton.addEventListener("click", () => void electroview.rpc?.request.openFilters({}));
 marketQuery.addEventListener("input", () => {
   if (queryTimer) clearTimeout(queryTimer);
   queryTimer = setTimeout(() => {
@@ -104,7 +66,6 @@ loadMoreButton.addEventListener("click", () => void electroview.rpc?.request.loa
 void electroview.rpc?.request.getState({}).then(render);
 
 function render(next: MarketUiState): void {
-  state = next;
   if (document.activeElement !== marketQuery) marketQuery.value = next.query;
   statusDot.className = `status-dot ${STATUS_TONE[next.status]}`;
   statusText.textContent = next.statusDetail;
@@ -148,103 +109,6 @@ function listingCard(listing: MarketUiListing): HTMLElement {
   return card;
 }
 
-function openFilters(): void {
-  if (!state) return;
-  draftFilters = new Map(state.filters.map((filter) => [filter.stat, {
-    enabled: true,
-    min: filter.minValue === undefined ? "" : String(filter.minValue),
-    max: filter.maxValue === undefined ? "" : String(filter.maxValue),
-  }]));
-  statQuery.value = "";
-  filterError.textContent = "";
-  renderStatOptions();
-  filterDialog.showModal();
-  statQuery.focus();
-}
-
-function closeFilters(): void {
-  filterDialog.close();
-}
-
-function renderStatOptions(): void {
-  if (!state) return;
-  const needle = normalize(statQuery.value);
-  const options = state.statOptions.filter((option) => normalize(option.name).includes(needle));
-  statList.replaceChildren(...options.map((option) => statRow(option.type, option.name)));
-}
-
-function statRow(type: number, name: string): HTMLElement {
-  const draft = draftFilters.get(type) ?? { enabled: false, min: "", max: "" };
-  const row = document.createElement("div");
-  row.className = "stat-row";
-  const label = document.createElement("label");
-  label.className = "stat-toggle";
-  const enabled = document.createElement("input");
-  enabled.type = "checkbox";
-  enabled.checked = draft.enabled;
-  label.append(enabled, text("span", "", humanizeStat(name)));
-  const minimum = rangeInput("Minimum", draft.min, !draft.enabled);
-  const maximum = rangeInput("Maximum", draft.max, !draft.enabled);
-
-  enabled.addEventListener("change", () => {
-    const next = { ...draft, enabled: enabled.checked };
-    draftFilters.set(type, next);
-    minimum.disabled = !next.enabled;
-    maximum.disabled = !next.enabled;
-  });
-  minimum.addEventListener("input", () => {
-    const current = draftFilters.get(type) ?? draft;
-    draftFilters.set(type, { ...current, min: minimum.value });
-  });
-  maximum.addEventListener("input", () => {
-    const current = draftFilters.get(type) ?? draft;
-    draftFilters.set(type, { ...current, max: maximum.value });
-  });
-  row.append(label, minimum, maximum);
-  return row;
-}
-
-function appliedFilters(): MarketUiFilter[] | undefined {
-  const result: MarketUiFilter[] = [];
-  for (const [stat, draft] of draftFilters) {
-    if (!draft.enabled) continue;
-    const minValue = numericBound(draft.min);
-    const maxValue = numericBound(draft.max);
-    if (minValue === null || maxValue === null) {
-      filterError.textContent = "Minimum and maximum values must be finite numbers.";
-      return undefined;
-    }
-    if (minValue !== undefined && maxValue !== undefined && minValue > maxValue) {
-      filterError.textContent = `${statName(stat)} has a minimum greater than its maximum.`;
-      return undefined;
-    }
-    result.push({ stat, ...(minValue === undefined ? {} : { minValue }), ...(maxValue === undefined ? {} : { maxValue }) });
-  }
-  filterError.textContent = "";
-  return result.sort((left, right) => left.stat - right.stat);
-}
-
-function statName(type: number): string {
-  return humanizeStat(state?.statOptions.find((option) => option.type === type)?.name ?? `Stat ${type}`);
-}
-
-function rangeInput(label: string, value: string, disabled: boolean): HTMLInputElement {
-  const control = document.createElement("input");
-  control.className = "input range-input";
-  control.type = "number";
-  control.step = "any";
-  control.placeholder = label;
-  control.setAttribute("aria-label", label);
-  control.value = value;
-  control.disabled = disabled;
-  return control;
-}
-
-function numericBound(value: string): number | undefined | null {
-  if (!value.trim()) return undefined;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
 
 function formatPrice(value: string): string {
   try {
@@ -267,9 +131,6 @@ function humanizeStat(value: string): string {
     .replace(/\bMp\b/g, "MP");
 }
 
-function normalize(value: string): string {
-  return value.trim().toLocaleLowerCase().replace(/[\s_-]+/g, "");
-}
 
 function text<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, value: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -286,4 +147,3 @@ function element(id: string): HTMLElement {
 
 function button(id: string): HTMLButtonElement { return element(id) as HTMLButtonElement; }
 function input(id: string): HTMLInputElement { return element(id) as HTMLInputElement; }
-function form(id: string): HTMLFormElement { return element(id) as HTMLFormElement; }

@@ -38,26 +38,5 @@
       <section id="results" class="results" aria-label="Market listings"></section>
       <div class="load-more-row"><button id="load-more-button" class="btn" type="button" hidden>Load more</button></div>
     </main>
-
-    <dialog id="filter-dialog" aria-labelledby="filter-title">
-      <form id="filter-form" class="filter-modal" method="dialog">
-        <header class="modal-head">
-          <div><h1 id="filter-title">Stat filters</h1><p>Checked stats must all match. Blank ranges require the stat at any value.</p></div>
-          <button id="filter-close-button" class="modal-close" type="button" aria-label="Close filters">×</button>
-        </header>
-        <label class="field stat-search" for="stat-query">
-          <span aria-hidden="true">⌕</span>
-          <input id="stat-query" type="search" autocomplete="off" placeholder="Search stats" />
-        </label>
-        <div class="stat-head t-label" aria-hidden="true"><span>Use / stat</span><span>Minimum</span><span>Maximum</span></div>
-        <div id="stat-list" class="stat-list"></div>
-        <p id="filter-error" class="filter-error" role="alert"></p>
-        <footer class="modal-actions">
-          <button id="clear-filters-button" class="btn btn-ghost" type="button">Clear all</button>
-          <button id="cancel-filters-button" class="btn" type="button">Cancel</button>
-          <button class="btn btn-primary" type="submit">Apply filters</button>
-        </footer>
-      </form>
-    </dialog>
   </body>
 </html>

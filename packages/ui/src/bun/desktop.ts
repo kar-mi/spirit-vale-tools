@@ -4,7 +4,7 @@ import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritv
 
 import { createMarketWindow } from "../../../market-ui/src/bun/index.ts";
 import { createRewardsWindow } from "../../../rewards-ui/src/bun/index.ts";
-import type { LauncherRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
+import type { LauncherRpc, LauncherSettingsRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings.ts";
 import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-storage.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
@@ -24,6 +24,7 @@ const storagePaths = resolveDesktopStoragePaths({
 const logDirectory = storagePaths.logDirectory;
 const settings = await loadLauncherSettings(storagePaths.launcherSettingsPath);
 let launcherWindow: BrowserWindow;
+let settingsWindow: BrowserWindow | undefined;
 let launcherState: LauncherState = {
   captureStatus: "starting",
   statusDetail: "Checking Npcap…",
@@ -77,15 +78,8 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
         await openTool(tool);
         return launcherState;
       },
-      setCaptureAdapter: async ({ deviceName }) => {
-        const nextSelection = deviceName ?? "auto";
-        await capture.reconfigure(deviceName ?? undefined);
-        settings.captureAdapter = nextSelection;
-        await saveLauncherSettings(settings, storagePaths.launcherSettingsPath);
-        launcherState = { ...launcherState, selectedAdapter: nextSelection };
-        await refreshCaptureDevices();
-        return launcherState;
-      },
+      openSettings: () => { openSettings(); },
+      setCaptureAdapter: ({ deviceName }) => setCaptureAdapter(deviceName),
       refreshCaptureDevices: async () => {
         await refreshCaptureDevices();
         if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
@@ -100,6 +94,29 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
       },
       getWindowFrame: () => launcherWindow.getFrame(),
       setWindowFrame: ({ x, y, width, height }) => launcherWindow.setFrame(x, y, width, height),
+    },
+    messages: {},
+  },
+});
+
+const settingsRpc = BrowserView.defineRPC<LauncherSettingsRpc>({
+  maxRequestTime: 30_000,
+  handlers: {
+    requests: {
+      getState: () => launcherState,
+      setCaptureAdapter: ({ deviceName }) => setCaptureAdapter(deviceName),
+      refreshCaptureDevices: async () => {
+        await refreshCaptureDevices();
+        if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") await capture.start();
+        return launcherState;
+      },
+      openNpcapDownload: () => { Utils.openExternal("https://npcap.com/#download"); },
+      windowAction: ({ action }) => {
+        if (action === "minimize") settingsWindow?.minimize();
+        else settingsWindow?.close();
+      },
+      getWindowFrame: () => settingsWindow?.getFrame() ?? { x: 110, y: 110, width: 520, height: 460 },
+      setWindowFrame: ({ x, y, width, height }) => { settingsWindow?.setFrame(x, y, width, height); },
     },
     messages: {},
   },
@@ -185,15 +202,51 @@ async function openTool(tool: ToolWindow): Promise<void> {
   else await characterWindow.open();
 }
 
+function openSettings(): void {
+  if (settingsWindow) {
+    settingsWindow.show();
+    settingsWindow.activate();
+    return;
+  }
+  const nextWindow = new BrowserWindow({
+    title: "Spirit Vale Packet Capture Settings",
+    url: "views://settingsview/index.html",
+    frame: { x: 110, y: 110, width: 520, height: 460 },
+    titleBarStyle: "hidden",
+    transparent: false,
+    rpc: settingsRpc,
+  });
+  settingsWindow = nextWindow;
+  applyRoundedCorners(nextWindow.ptr);
+  Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
+    const width = Math.max(420, event.data.width);
+    const height = Math.max(360, event.data.height);
+    if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
+  });
+  nextWindow.on("close", () => { if (settingsWindow === nextWindow) settingsWindow = undefined; });
+}
+
+async function setCaptureAdapter(deviceName: string | null): Promise<LauncherState> {
+  const nextSelection = deviceName ?? "auto";
+  await capture.reconfigure(deviceName ?? undefined);
+  settings.captureAdapter = nextSelection;
+  await saveLauncherSettings(settings, storagePaths.launcherSettingsPath);
+  launcherState = { ...launcherState, selectedAdapter: nextSelection };
+  await refreshCaptureDevices();
+  return launcherState;
+}
+
 function publish(): void {
   if (!launcherWindow) return;
   try { rpc.send.stateChanged(launcherState); } catch { /* The view may still be connecting. */ }
+  try { settingsRpc.send.stateChanged(launcherState); } catch { /* The view may still be connecting. */ }
 }
 
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   launcherWindow.hide();
+  settingsWindow?.close();
   await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
   unsubscribeCharacterPersistence();
   if (characterSaveTimer) clearTimeout(characterSaveTimer);

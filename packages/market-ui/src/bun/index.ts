@@ -8,6 +8,8 @@ import {
 } from "@spiritvale/market";
 import type { FishNetMarketListingView, FishNetMarketStatFilter } from "@spiritvale/market";
 import type {
+  MarketFiltersRpc,
+  MarketFiltersState,
   MarketUiFilter,
   MarketUiListing,
   MarketUiRpc,
@@ -28,6 +30,7 @@ export function createMarketWindow(options: MarketWindowOptions) {
 const follower = new MarketSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
+let filterWindow: BrowserWindow | undefined;
 let status: MarketUiStatus = "waiting";
 let statusDetail = "Waiting for market data from the central capture.";
 let listings: FishNetMarketListingView[] = [];
@@ -52,6 +55,7 @@ const rpc = BrowserView.defineRPC<MarketUiRpc>({
         visibleLimit = PAGE_SIZE;
         return appState();
       },
+      openFilters: () => { openFilters(); },
       loadMore: () => {
         visibleLimit += PAGE_SIZE;
         return appState();
@@ -76,6 +80,28 @@ const rpc = BrowserView.defineRPC<MarketUiRpc>({
   },
 });
 
+const filterRpc = BrowserView.defineRPC<MarketFiltersRpc>({
+  maxRequestTime: 30_000,
+  handlers: {
+    requests: {
+      getState: () => filtersState(),
+      setFilters: ({ filters: nextFilters }) => {
+        filters = validateMarketUiFilters(nextFilters, FISHNET_MARKET_STAT_NAMES.length);
+        visibleLimit = PAGE_SIZE;
+        publish();
+        return filtersState();
+      },
+      windowAction: ({ action }) => {
+        if (action === "minimize") filterWindow?.minimize();
+        else filterWindow?.close();
+      },
+      getWindowFrame: () => filterWindow?.getFrame() ?? { x: 140, y: 110, width: 640, height: 680 },
+      setWindowFrame: ({ x, y, width, height }) => { filterWindow?.setFrame(x, y, width, height); },
+    },
+    messages: {},
+  },
+});
+
 window = new BrowserWindow({
   title: "Spirit Vale Market",
   url: "views://marketview/index.html",
@@ -93,6 +119,7 @@ Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; hei
 });
 window.on("close", () => {
   stopPolling();
+  filterWindow?.close();
   options.onClosed?.();
 });
 
@@ -101,7 +128,7 @@ void pollMarket();
 return {
   show: () => window.show(),
   activate: () => window.activate(),
-  close: () => { stopPolling(); window.close(); },
+  close: () => { stopPolling(); filterWindow?.close(); window.close(); },
 };
 
 function appState(): MarketUiState {
@@ -124,6 +151,37 @@ function appState(): MarketUiState {
     hasMore: matches.length > visibleLimit,
     listings: matches.slice(0, visibleLimit).map(listingView),
   };
+}
+
+function filtersState(): MarketFiltersState {
+  return {
+    filters: filters.map((filter) => ({ ...filter })),
+    statOptions: FISHNET_MARKET_STAT_NAMES.map((name, type) => ({ type, name })),
+  };
+}
+
+function openFilters(): void {
+  if (filterWindow) {
+    filterWindow.show();
+    filterWindow.activate();
+    return;
+  }
+  const nextWindow = new BrowserWindow({
+    title: "Spirit Vale Market Filters",
+    url: "views://marketfiltersview/index.html",
+    frame: { x: 140, y: 110, width: 640, height: 680 },
+    titleBarStyle: "hidden",
+    transparent: false,
+    rpc: filterRpc,
+  });
+  filterWindow = nextWindow;
+  applyRoundedCorners(nextWindow.ptr);
+  Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
+    const width = Math.max(520, event.data.width);
+    const height = Math.max(480, event.data.height);
+    if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
+  });
+  nextWindow.on("close", () => { if (filterWindow === nextWindow) filterWindow = undefined; });
 }
 
 function listingView(listing: FishNetMarketListingView, index: number): MarketUiListing {
