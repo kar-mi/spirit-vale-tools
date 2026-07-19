@@ -25,7 +25,12 @@ h1 { margin: 0; font-size: 28px; } h2 { margin: 0 0 14px; font-size: 15px; } .mu
 .build-item { padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: var(--shape-sm); background: var(--surface-container); }
 .build-item-head { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
 .build-item-head span { color: var(--on-surface-variant); }
-.build-detail { margin-top: 6px; color: var(--on-surface-variant); font-size: 10px; line-height: 1.5; }
+.build-details { display: grid; gap: 4px; margin-top: 7px; }
+.build-detail { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; color: var(--on-surface-variant); font-size: 10px; line-height: 1.45; }
+.build-detail-label { color: var(--on-surface); font-weight: 700; }
+.build-detail-value { overflow-wrap: anywhere; }
+.build-detail.active .build-detail-value { color: var(--primary); }
+.build-detail.muted { opacity: .62; }
 .build-empty { color: var(--on-surface-variant); font-size: 12px; }
 .stat-group { border: 1px solid var(--outline-variant); border-radius: var(--shape-sm); overflow: hidden; }
 .stat-group h3 { margin: 0; padding: 10px 12px; background: var(--surface-container); font-size: 12px; }

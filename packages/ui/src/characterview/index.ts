@@ -49,13 +49,21 @@ function render(state: CharacterViewState): void {
   element("loadout-label").textContent = `${character.activeLoadout} loadout · rolled substats shown at their in-game scaled values`;
   renderBuild("equipment", character.equipment.map((item) => ({
     slot: item.slot, name: item.itemId, refine: item.refine,
-    details: [itemEffectText(2, item.itemId, item.refine), substatText(item.substats), item.cards.length ? `Cards: ${item.cards.map((card) => `${card}${itemEffectText(4, card, 0, true)}`).join(", ")}` : ""].filter(Boolean).join(" · "),
+    sections: [
+      ...itemEffectSections(2, item.itemId, item.refine),
+      ...(item.substats.length ? [{ label: "Rolled stats", value: substatText(item.substats) }] : []),
+      ...(item.cards.length ? [{ label: "Cards", value: item.cards.map((card) => `${card}${itemEffectSummary(4, card)}`).join(" · ") }] : []),
+    ],
   })));
   const artifactCounts = new Map<string, number>();
   for (const artifact of character.artifacts) artifactCounts.set(artifact.itemId, (artifactCounts.get(artifact.itemId) ?? 0) + 1);
   renderBuild("artifacts", character.artifacts.map((item) => ({
     slot: item.slot, name: item.itemId, refine: item.refine,
-    details: [itemEffectText(3, item.itemId, item.refine, false, artifactCounts.get(item.itemId) ?? 0), substatText(item.substats), item.gems.length ? `Gems: ${item.gems.map((gem) => `${gem}${itemEffectText(5, gem, 0, true)}`).join(", ")}` : ""].filter(Boolean).join(" · "),
+    sections: [
+      ...itemEffectSections(3, item.itemId, item.refine, artifactCounts.get(item.itemId) ?? 0),
+      ...(item.substats.length ? [{ label: "Rolled stats", value: substatText(item.substats) }] : []),
+      ...(item.gems.length ? [{ label: "Gems", value: item.gems.map((gem) => `${gem}${itemEffectSummary(5, gem)}`).join(" · ") }] : []),
+    ],
   })));
   renderStats("basic-stat-groups", state.stats, "basic");
   renderStats("advanced-stat-groups", state.stats, "advanced");
@@ -70,12 +78,14 @@ function renderSkills(skills: Array<{ displayName: string; level: number; effect
   root.replaceChildren(...skills.map((skill) => node("div", "gear-total", [node("span", "", skill.displayName), node("strong", "", `Lv ${format(skill.level)}${skill.effects.length ? ` → ${skill.effects.map((effect) => `${signed(effect.value)}${effect.percent ? "%" : ""} ${effect.label}`).join(", ")}` : ""}`)])));
 }
 
-function renderBuild(id: string, items: Array<{ slot: string; name: string; refine: number; details: string }>): void {
+interface BuildSection { label: string; value: string; tone?: "active" | "muted"; }
+
+function renderBuild(id: string, items: Array<{ slot: string; name: string; refine: number; sections: BuildSection[] }>): void {
   const root = element(id);
   if (!items.length) { root.replaceChildren(node("div", "build-empty", "No items captured in this loadout.")); return; }
   root.replaceChildren(...items.map((item) => node("div", "build-item", [
     node("div", "build-item-head", [node("span", "", item.slot), node("strong", "", `${item.name}${item.refine ? ` +${item.refine}` : ""}`)]),
-    node("div", "build-detail", item.details || "No rolled substats"),
+    node("div", "build-details", item.sections.length ? item.sections.map((section) => node("div", `build-detail${section.tone ? ` ${section.tone}` : ""}`, [node("span", "build-detail-label", section.label), node("span", "build-detail-value", section.value)])) : [node("div", "build-empty", "No stats or effects")]),
   ])));
 }
 
@@ -83,21 +93,24 @@ function substatText(stats: Array<{ name: string; value?: number; roll: number; 
   return stats.map((stat) => stat.value === undefined ? `${stat.name} (roll ${stat.roll})` : `${stat.name} ${stat.value}${stat.percent ? "%" : ""}`).join(" · ");
 }
 
-function itemEffectText(itemType: number, itemId: string, refine: number, compact = false, pieces?: number): string {
+function itemEffectSections(itemType: number, itemId: string, refine: number, pieces?: number): BuildSection[] {
   const definition = resolveFishNetItem(itemType, itemId);
-  if (!definition) return "";
+  if (!definition) return [];
   const show = (effects: readonly { type: number; value: number }[]) => effects.map((effect) => `${statName(effect.type)} ${signed(effect.value, isPercent(effect.type) ? "%" : undefined)}`).join(", ");
-  const parts = [show(definition.effects ?? [])];
-  if (refine && definition.refineEffects?.length) parts.push(`Refine ${show(definition.refineEffects.map((effect) => ({ ...effect, value: effect.value * refine })))}`);
+  const sections: BuildSection[] = [];
+  const base = show(definition.effects ?? []);
+  if (base) sections.push({ label: "Base", value: base });
+  if (refine && definition.refineEffects?.length) sections.push({ label: `Refine +${refine}`, value: show(definition.refineEffects.map((effect) => ({ ...effect, value: effect.value * refine }))), tone: "active" });
   if (definition.artifactSet && pieces !== undefined) {
     const set = definition.artifactSet;
     const perPiece = show(set.perPiece.map((effect) => ({ ...effect, value: effect.value * pieces })));
-    if (perPiece) parts.push(`${pieces}/${set.requiredPieces} set: ${perPiece}`);
-    if (pieces >= set.requiredPieces) { const full = show(set.fullSet); if (full) parts.push(`Full set: ${full}`); }
+    if (perPiece) sections.push({ label: `Set ${pieces}/${set.requiredPieces}`, value: perPiece, tone: "active" });
+    const full = show(set.fullSet);
+    if (full) sections.push({ label: "Full set", value: full, tone: pieces >= set.requiredPieces ? "active" : "muted" });
   }
-  const value = parts.filter(Boolean).join(" · ");
-  return value ? compact ? ` (${value})` : `Base: ${value}` : "";
+  return sections;
 }
+function itemEffectSummary(itemType: number, itemId: string): string { const values = itemEffectSections(itemType, itemId, 0).map((section) => section.value).join(", "); return values ? ` (${values})` : ""; }
 function statName(type: number): string { return STAT_NAMES[type] ?? `Stat ${type}`; }
 function isPercent(type: number): boolean { return PERCENT_STATS.has(type); }
 
