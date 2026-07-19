@@ -108,7 +108,7 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
 launcherWindow = new BrowserWindow({
   title: "Spirit Vale",
   url: "views://launcherview/index.html",
-  frame: { x: 80, y: 80, width: 520, height: 340 },
+  frame: { x: 80, y: 80, width: 960, height: 430 },
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
@@ -116,8 +116,8 @@ launcherWindow = new BrowserWindow({
 applyRoundedCorners(launcherWindow.ptr);
 
 Electrobun.events.on(`resize-${launcherWindow.id}`, (event: { data: { width: number; height: number } }) => {
-  const width = Math.max(420, event.data.width);
-  const height = Math.max(300, event.data.height);
+  const width = Math.max(900, event.data.width);
+  const height = Math.max(430, event.data.height);
   if (width !== event.data.width || height !== event.data.height) launcherWindow.setSize(width, height);
 });
 launcherWindow.on("close", () => void shutdown());

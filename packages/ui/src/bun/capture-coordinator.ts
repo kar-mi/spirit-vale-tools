@@ -209,13 +209,23 @@ export class CaptureCoordinator {
   }
 
   private routePacket(packet: CapturedFishNetPacket): void {
+    let characterHandled = false;
+    try {
+      // PlayerSave callbacks describe the local character and may arrive while game-server
+      // connections overlap during login or a map change. Decode them before selecting the
+      // active combat connection so a valid local snapshot is never discarded as stale.
+      characterHandled = this.character.consume(packet);
+    } catch (error) {
+      characterHandled = true;
+      this.otherLog?.log("capture.warning", { domain: "character", message: `skipped character payload: ${errorMessage(error)}` });
+    }
     if (!this.admitPacket(packet)) return;
     if (packet.splitDropReason !== undefined) {
       this.combatLog?.log("combat.warning", {
         message: `split reassembly dropped (${packet.splitDropReason}) at tick ${packet.tick}`,
       });
     }
-    let handled = false;
+    let handled = characterHandled;
     try {
       const identities = this.actors.consume(packet);
       const events = this.combat.consume(packet);
@@ -226,13 +236,6 @@ export class CaptureCoordinator {
     } catch (error) {
       handled = true;
       this.logDomainWarning("combat", error);
-    }
-
-    try {
-      handled ||= this.character.consume(packet);
-    } catch (error) {
-      handled = true;
-      this.otherLog?.log("capture.warning", { domain: "character", message: `skipped character payload: ${errorMessage(error)}` });
     }
 
     try {

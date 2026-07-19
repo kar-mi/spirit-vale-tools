@@ -3,6 +3,11 @@ import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 
 import type { LauncherRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 
+const DEFAULT_WIDTH = 960;
+const DEFAULT_HEIGHT = 430;
+const MINIMUM_WIDTH = 900;
+const MINIMUM_HEIGHT = 430;
+
 const rpc = Electroview.defineRPC<LauncherRpc>({
   handlers: { requests: {}, messages: { stateChanged: render } },
 });
@@ -42,13 +47,25 @@ adapterSelect.addEventListener("change", () => {
 
 initWindowChrome({
   titlebar: element("titlebar"),
-  minWidth: 420,
-  minHeight: 300,
-  getFrame: async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: 520, height: 340 },
+  minWidth: MINIMUM_WIDTH,
+  minHeight: MINIMUM_HEIGHT,
+  getFrame: async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
   setFrame: (frame) => void electroview.rpc?.request.setWindowFrame(frame),
 });
 
+void ensureInitialWindowSize();
 void electroview.rpc?.request.getState({}).then(render);
+
+async function ensureInitialWindowSize(): Promise<void> {
+  const requests = electroview.rpc?.request;
+  if (!requests) return;
+  const frame = await requests.getWindowFrame({});
+  const scale = window.devicePixelRatio || 1;
+  const width = Math.max(frame.width, Math.ceil(DEFAULT_WIDTH * scale));
+  const height = Math.max(frame.height, Math.ceil(DEFAULT_HEIGHT * scale));
+  if (width === frame.width && height === frame.height) return;
+  await requests.setWindowFrame({ ...frame, width, height });
+}
 
 function render(state: LauncherState): void {
   const unavailable = state.captureStatus === "unavailable";

@@ -172,6 +172,45 @@ describe("central capture coordinator", () => {
     }
   });
 
+  test("routes local character callbacks before filtering overlapping connections", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-character-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      const receivedConnections: string[] = [];
+      const internal = coordinator as unknown as {
+        character: { consume: (packet: CapturedFishNetPacket) => boolean };
+      };
+      internal.character.consume = (packet) => {
+        if (packet.rpcName !== "CharacterCallback_T") return false;
+        receivedConnections.push(packet.connectionId);
+        return true;
+      };
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1, "conn-a"));
+      capture.packet({
+        tick: 2,
+        packetId: 1,
+        packetName: "rpcLink",
+        rpcName: "CharacterCallback_T",
+        rpcResolution: "verified",
+        networkBehaviourType: "PlayerSave",
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+        connectionId: "conn-b",
+      });
+
+      expect(receivedConnections).toEqual(["conn-b"]);
+      await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("reports capture startup failure without throwing or closing the session", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-failure-"));
     const capture = new FakeCapture(new Error("synthetic capture unavailable"));
