@@ -522,6 +522,41 @@ describe("FishNet bundles and sessions", () => {
     expect(incomplete.decode(first, { ...context, sequence: 20 })).toEqual([]);
   });
 
+  test("reassembles concurrent splits interleaved on one channel", () => {
+    const decoder = new FishNetSessionDecoder();
+    const context = { reliable: true, connectionId: "concurrent-splits", direction: "inbound" as const, channel: 2 };
+    const firstPayload = message(14, u32(101));
+    const secondPayload = message(21, Buffer.from([0]));
+    const firstChunks = [firstPayload.subarray(0, 3), firstPayload.subarray(3)];
+    const secondChunks = [secondPayload.subarray(0, 1), secondPayload.subarray(1, 2), secondPayload.subarray(2)];
+    const splitPacket = (atTick: number, count: number, chunk: Buffer) => tick(atTick, message(2, Buffer.concat([packed(count), chunk])));
+
+    expect(decoder.decode(splitPacket(40, 2, firstChunks[0]!), { ...context, sequence: 10 })).toEqual([]);
+    expect(decoder.decode(splitPacket(40, 3, secondChunks[0]!), { ...context, sequence: 11 })).toEqual([]);
+    expect(decoder.decode(splitPacket(40, 2, firstChunks[1]!), { ...context, sequence: 12 })[0])
+      .toMatchObject({ packetName: "pingPong" });
+    expect(decoder.decode(splitPacket(40, 3, secondChunks[1]!), { ...context, sequence: 13 })).toEqual([]);
+    expect(decoder.decode(splitPacket(40, 3, secondChunks[2]!), { ...context, sequence: 14 })[0])
+      .toMatchObject({ packetName: "version" });
+  });
+
+  test("reassembles same-count splits interleaved across ticks", () => {
+    const decoder = new FishNetSessionDecoder();
+    const context = { reliable: true, connectionId: "same-count-splits", direction: "inbound" as const, channel: 2 };
+    const firstPayload = message(14, u32(202));
+    const secondPayload = message(21, Buffer.from([0]));
+    const firstChunks = [firstPayload.subarray(0, 3), firstPayload.subarray(3)];
+    const secondChunks = [secondPayload.subarray(0, 2), secondPayload.subarray(2)];
+    const splitPacket = (atTick: number, chunk: Buffer) => tick(atTick, message(2, Buffer.concat([packed(2), chunk])));
+
+    expect(decoder.decode(splitPacket(50, firstChunks[0]!), { ...context, sequence: 20 })).toEqual([]);
+    expect(decoder.decode(splitPacket(51, secondChunks[0]!), { ...context, sequence: 21 })).toEqual([]);
+    expect(decoder.decode(splitPacket(50, firstChunks[1]!), { ...context, sequence: 22 })[0])
+      .toMatchObject({ packetName: "pingPong" });
+    expect(decoder.decode(splitPacket(51, secondChunks[1]!), { ...context, sequence: 23 })[0])
+      .toMatchObject({ packetName: "version" });
+  });
+
   test("bounds invalid split reassembly and tolerates gapped or reordered sequences", () => {
     const context = { reliable: true, connectionId: "bounded-split", direction: "inbound" as const, channel: 0 };
     const excessiveCount = tick(6, message(2, Buffer.concat([packed(1_025), Buffer.from([1])])));

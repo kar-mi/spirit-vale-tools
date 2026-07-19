@@ -7,6 +7,7 @@ const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 
 export class FishNetCharacterTracker {
   private snapshot?: CharacterSnapshot;
+  private unsupportedDetail?: string;
   private listeners = new Set<(state: CharacterViewState) => void>();
 
   constructor(initial?: CharacterSnapshot) {
@@ -15,29 +16,40 @@ export class FishNetCharacterTracker {
 
   consume(packet: CapturedFishNetPacket): boolean {
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
-    const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
-    this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
+    try {
+      const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
+      this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
+      this.unsupportedDetail = undefined;
+    } catch (error) {
+      this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
+    }
     this.publish();
     return true;
   }
 
   setCached(snapshot: CharacterSnapshot | undefined): void {
     this.snapshot = snapshot ? { ...snapshot, source: "cached" } : undefined;
+    this.unsupportedDetail = undefined;
     this.publish();
   }
 
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
 
   state(): CharacterViewState {
-    if (!this.snapshot) return { status: "waiting", statusDetail: "Waiting for the game to send your character…", stats: [] };
+    if (this.unsupportedDetail) return {
+      ...(this.snapshot ? { snapshot: structuredClone(this.snapshot) } : {}),
+      stats: this.snapshot ? calculateStats(this.snapshot) : [],
+      status: "unsupported",
+      statusDetail: this.unsupportedDetail,
+    };
+    if (!this.snapshot) return {
+      status: "waiting",
+      statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
+      stats: [],
+    };
     return {
       snapshot: structuredClone(this.snapshot),
-      stats: calculateCharacterStats(
-        this.snapshot.level,
-        this.snapshot.attributes,
-        [...this.snapshot.equipment, ...this.snapshot.artifacts].flatMap((item) => item.substats),
-        this.snapshot.archetypes,
-      ),
+      stats: calculateStats(this.snapshot),
       status: this.snapshot.source,
       statusDetail: this.snapshot.source === "live"
         ? "Live character data"
@@ -54,6 +66,19 @@ export class FishNetCharacterTracker {
     const state = this.state();
     for (const listener of this.listeners) listener(state);
   }
+}
+
+function calculateStats(snapshot: CharacterSnapshot): CharacterViewState["stats"] {
+  return calculateCharacterStats(
+    snapshot.level,
+    snapshot.attributes,
+    [...snapshot.equipment, ...snapshot.artifacts].flatMap((item) => item.substats),
+    snapshot.archetypes,
+  );
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function mergeSnapshot(previous: CharacterSnapshot | undefined, next: CharacterSnapshot, updateType: number): CharacterSnapshot {

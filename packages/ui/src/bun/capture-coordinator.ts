@@ -217,7 +217,14 @@ export class CaptureCoordinator {
       characterHandled = this.character.consume(packet);
     } catch (error) {
       characterHandled = true;
-      this.otherLog?.log("capture.warning", { domain: "character", message: `skipped character payload: ${errorMessage(error)}` });
+      this.otherLog?.log("capture.warning", {
+        domain: "character",
+        message: `skipped character payload: ${errorMessage(error)}`,
+        rpcName: packet.rpcName ?? null,
+        objectId: packet.objectId ?? null,
+        payloadHex: packet.payload.subarray(0, SPAWN_PAYLOAD_LOG_LIMIT).toString("hex"),
+        payloadBytes: packet.payload.length,
+      });
     }
     if (!this.admitPacket(packet)) return;
     if (packet.splitDropReason !== undefined) {

@@ -31,4 +31,15 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.consume(characterPacket("UnrelatedRpc"))).toBe(false);
     expect(tracker.state()).toMatchObject({ status: "waiting", stats: [] });
   });
+
+  test("reports unsupported status when a named character payload cannot be decoded", () => {
+    const tracker = new FishNetCharacterTracker();
+    const packet = characterPacket("LoadCharacter_T");
+    packet.payload = Buffer.from([0xff]);
+
+    expect(tracker.consume(packet)).toBe(true);
+    expect(tracker.state()).toMatchObject({ status: "unsupported", stats: [] });
+    expect(tracker.state().statusDetail).toStartWith("Character data isn't recognized:");
+    expect(tracker.state().statusDetail).toContain("Change maps or channels");
+  });
 });

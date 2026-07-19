@@ -9,17 +9,19 @@ interface SplitState {
   expected: number;
   chunks: { sequence?: number; chunk: Buffer }[];
   sequences: Set<number>;
-  tick: number;
   totalBytes: number;
+  lastSeen: number;
 }
 
 const MAX_SPLIT_CHUNKS = 1_024;
 const MAX_SPLIT_BYTES = 1024 * 1024;
+const MAX_CONCURRENT_SPLITS_PER_CONNECTION = 32;
 
 /** Stateful decoder for RPC-link registration, despawn cleanup, and split reassembly. */
 export class FishNetSessionDecoder {
   private readonly connections = new Map<string, ConnectionState>();
   private readonly splits = new Map<string, SplitState>();
+  private splitClock = 0;
 
   constructor(private readonly rpcMap?: FishNetRpcMap) {}
 
@@ -77,8 +79,16 @@ export class FishNetSessionDecoder {
 
   private clearConnectionSplits(key: string): void {
     for (const splitKey of this.splits.keys()) {
-      if (splitKey.startsWith(`${key}\u0000`)) this.splits.delete(splitKey);
+      if (splitKey.startsWith(`${key} `)) this.splits.delete(splitKey);
     }
+  }
+
+  private evictOldestConnectionSplit(connectionKey: string): void {
+    const prefix = `${connectionKey} `;
+    const connectionSplits = [...this.splits.entries()].filter(([key]) => key.startsWith(prefix));
+    if (connectionSplits.length < MAX_CONCURRENT_SPLITS_PER_CONNECTION) return;
+    const [oldestKey] = connectionSplits.reduce((oldest, entry) => entry[1].lastSeen < oldest[1].lastSeen ? entry : oldest);
+    this.splits.delete(oldestKey);
   }
 
   private decodeSplit(
@@ -88,25 +98,29 @@ export class FishNetSessionDecoder {
     connection: ConnectionState,
     options: FishNetDecodeOptions,
   ): DecodedFishNetPacket[] {
-    const splitKey = `${connectionKey}\u0000${options.direction ?? "unknown"}\u0000${options.channel ?? (options.reliable ? 0 : 1)}`;
+    const direction = options.direction ?? "unknown";
+    const channel = options.channel ?? (options.reliable ? 0 : 1);
     let count;
     try {
       count = readSignedPackedWhole(payload, 6);
     } catch {
-      return [this.dropSplit(splitKey, payload, tick, "header")];
+      return [this.dropSplit("", payload, tick, "header")];
     }
+    const splitKey = `${connectionKey} ${direction} ${channel} ${tick} ${count.value}`;
     if (count.value < 1 || count.value > MAX_SPLIT_CHUNKS) {
       return [this.dropSplit(splitKey, payload, tick, "chunk-count")];
     }
 
     let split = this.splits.get(splitKey);
-    if (!split || split.expected !== count.value || (options.sequence === undefined && split.tick !== tick)) {
-      split = { expected: count.value, chunks: [], sequences: new Set(), tick, totalBytes: 0 };
+    if (!split) {
+      this.evictOldestConnectionSplit(connectionKey);
+      split = { expected: count.value, chunks: [], sequences: new Set(), totalBytes: 0, lastSeen: ++this.splitClock };
       this.splits.set(splitKey, split);
     }
 
     if (options.sequence !== undefined && split.sequences.has(options.sequence)) return [];
     if (options.sequence !== undefined) split.sequences.add(options.sequence);
+    split.lastSeen = ++this.splitClock;
     const chunk = payload.subarray(count.nextOffset);
     split.totalBytes += chunk.length;
     if (split.totalBytes > MAX_SPLIT_BYTES) {
