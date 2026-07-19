@@ -24,6 +24,7 @@ export interface CharacterSnapshot {
   activeLoadout: "Normal" | "Secondary" | "Heavy";
   equipment: CharacterEquipment[];
   artifacts: CharacterArtifact[];
+  skills: CharacterSkill[];
   playtimeSeconds?: number;
   monsterKills?: number;
   bossKills?: number;
@@ -54,6 +55,21 @@ export interface CharacterArtifact {
   refine: number;
   gems: string[];
   substats: CharacterSubstat[];
+}
+
+/** A learned skill as sent by the character callback. */
+export interface CharacterSkill {
+  id: string;
+  displayName: string;
+  level: number;
+  effects: CharacterSkillEffect[];
+}
+
+export interface CharacterSkillEffect {
+  type: number;
+  label: string;
+  value: number;
+  percent: boolean;
 }
 
 export interface CharacterStatBreakdown {

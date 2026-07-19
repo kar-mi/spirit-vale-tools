@@ -33,7 +33,11 @@ export function syntheticCharacter(update: boolean): Buffer {
     list(out, [0], () => { bool(out, false); string(out, "example-gem-instance"); packed(out, 1); string(out, "Example Gem"); bool(out, false); });
     string(out, "example-artifact-instance"); packed(out, 3); string(out, "Example Rune"); bool(out, false);
   });
-  bool(out, false); list(out, [], () => undefined); list(out, [], () => undefined); bool(out, true); list(out, [], () => undefined);
+  bool(out, false);
+  list(out, [undefined], () => { bool(out, false); string(out, "Multistrike"); packed(out, 3); });
+  list(out, [], () => undefined);
+  bool(out, true);
+  list(out, [], () => undefined);
   list(out, [], () => undefined);
   bool(out, false);
   for (let index = 0; index < 7; index += 1) list(out, [], () => undefined);

@@ -17,6 +17,10 @@ export async function loadCharacterSnapshot(file = defaultFile): Promise<Charact
       activeLoadout: value.activeLoadout ?? "Normal",
       equipment: Array.isArray(value.equipment) ? value.equipment : [],
       artifacts: Array.isArray(value.artifacts) ? value.artifacts : [],
+      skills: Array.isArray(value.skills) ? value.skills.map((skill) => ({
+        ...(skill as unknown as Record<string, unknown>),
+        effects: Array.isArray((skill as unknown as { effects?: unknown }).effects) ? (skill as unknown as { effects: unknown[] }).effects : [],
+      })) as CharacterSnapshot["skills"] : [],
       source: "cached",
     } as CharacterSnapshot;
   } catch {
@@ -39,6 +43,7 @@ export async function saveCharacterSnapshot(snapshot: CharacterSnapshot, file = 
     activeLoadout: snapshot.activeLoadout,
     equipment: structuredClone(snapshot.equipment),
     artifacts: structuredClone(snapshot.artifacts),
+    skills: structuredClone(snapshot.skills),
     ...(snapshot.playtimeSeconds === undefined ? {} : { playtimeSeconds: snapshot.playtimeSeconds }),
     ...(snapshot.monsterKills === undefined ? {} : { monsterKills: snapshot.monsterKills }),
     ...(snapshot.bossKills === undefined ? {} : { bossKills: snapshot.bossKills }),

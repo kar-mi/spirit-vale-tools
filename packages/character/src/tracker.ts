@@ -1,6 +1,6 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
 import { decodeCharacterRpcPayload } from "./decoder.ts";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import type { CharacterSnapshot, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
@@ -76,7 +76,7 @@ function calculateStats(snapshot: CharacterSnapshot): CharacterViewState["stats"
   return calculateCharacterStats(
     snapshot.level,
     snapshot.attributes,
-    [...snapshot.equipment, ...snapshot.artifacts].flatMap((item) => item.substats),
+    [...materializeGearStats(snapshot.equipment, snapshot.artifacts), ...materializeSkillStats(snapshot.skills)],
     snapshot.archetypes,
   ).concat(calculateAdvancedGearStats(gearTotals));
 }

@@ -10,6 +10,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 198,
+          "value": 20,
+          "label": "SkillDamageLowHp 20"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCast Heal"
+        }
       ]
     },
     {
@@ -18,6 +30,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnAutoAttack  5"
+        },
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnMaxStacks Radiance 10"
+        }
       ]
     },
     {
@@ -26,6 +50,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnCast HolyLight 5"
+        }
       ]
     },
     {
@@ -34,6 +65,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 72,
+          "value": 20,
+          "label": "MpMult"
+        },
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnCast Heal 10"
+        }
       ]
     },
     {
@@ -42,6 +85,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 124,
+          "value": 1,
+          "label": "SkillChains 1"
+        },
+        {
+          "type": 204,
+          "value": -20,
+          "label": "SkillCastTimeMult -20"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "label": "SkillRemoveKnockback 1"
+        }
       ]
     },
     {
@@ -50,6 +110,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnHeal  10"
+        },
+        {
+          "type": 64,
+          "value": 10,
+          "label": "CastSpd"
+        }
       ]
     },
     {
@@ -113,6 +185,14 @@ export class SkillDefinitions {
       "displayName": "Deadly Strikes",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 146,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "AutoattackDamage"
+        }
       ]
     },
     {
@@ -120,6 +200,14 @@ export class SkillDefinitions {
       "displayName": "Auto Strafe",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 40,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "AutocastAttack 5"
+        }
       ]
     },
     {
@@ -134,6 +222,32 @@ export class SkillDefinitions {
       "displayName": "Axe Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 15,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "Crit"
+        }
       ]
     },
     {
@@ -177,6 +291,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast ShoutMight"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast ShoutFury"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast ShoutBlood"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast ShoutStun"
+        }
       ]
     },
     {
@@ -185,6 +321,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCrit "
+        }
       ]
     },
     {
@@ -193,6 +336,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": -1,
+          "label": "OnKill  -1"
+        },
+        {
+          "type": -1,
+          "value": -1,
+          "label": "OnKill  -1"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnKill  5"
+        }
       ]
     },
     {
@@ -201,6 +361,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 198,
+          "value": 25,
+          "label": "SkillDamageLowHp 25"
+        },
+        {
+          "type": -1,
+          "value": -1,
+          "label": "OnKill Execute -1"
+        }
       ]
     },
     {
@@ -215,6 +387,38 @@ export class SkillDefinitions {
       "displayName": "Blade Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 63,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "AtkSpd"
+        }
       ]
     },
     {
@@ -286,6 +490,38 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 200,
+          "value": 5,
+          "label": "SkillInstances 5"
+        },
+        {
+          "type": 200,
+          "value": 5,
+          "label": "SkillInstances 5"
+        },
+        {
+          "type": 200,
+          "value": 2,
+          "label": "SkillInstances 2"
+        },
+        {
+          "type": 199,
+          "value": 10,
+          "label": "SkillRange 10"
+        },
+        {
+          "type": 199,
+          "value": 5,
+          "label": "SkillRange 5"
+        },
+        {
+          "type": 199,
+          "value": 5,
+          "label": "SkillRange 5"
+        }
       ]
     },
     {
@@ -294,6 +530,43 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 65,
+          "value": 200,
+          "label": "MoveSpd"
+        },
+        {
+          "type": 139,
+          "value": 100,
+          "label": "FinalDamageReduction"
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "label": "GrantSkill 1"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 112,
+          "value": 1,
+          "label": "Detector"
+        },
+        {
+          "type": 30,
+          "value": 1,
+          "label": "NoAttack"
+        },
+        {
+          "type": 31,
+          "value": 1,
+          "label": "NoCast"
+        }
       ]
     },
     {
@@ -315,6 +588,32 @@ export class SkillDefinitions {
       "displayName": "Codex Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 67,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "Healing"
+        }
       ]
     },
     {
@@ -406,6 +705,14 @@ export class SkillDefinitions {
       "displayName": "Honed Blade",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 52,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "CritDamage"
+        }
       ]
     },
     {
@@ -567,6 +874,14 @@ export class SkillDefinitions {
       "displayName": "Double Attack",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 80,
+          "value": 0,
+          "valuePerLevel": 10,
+          "label": "DoubleAttack"
+        }
       ]
     },
     {
@@ -574,6 +889,14 @@ export class SkillDefinitions {
       "displayName": "Dual Wield Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 87,
+          "value": 50,
+          "valuePerLevel": 10,
+          "label": "DualWield 50"
+        }
       ]
     },
     {
@@ -728,6 +1051,32 @@ export class SkillDefinitions {
       "displayName": "Faith",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 44,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "DamageToElement 5"
+        },
+        {
+          "type": 44,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "DamageToElement 5"
+        },
+        {
+          "type": 56,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "DamageFromElement 5"
+        },
+        {
+          "type": 56,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "DamageFromElement 5"
+        }
       ]
     },
     {
@@ -882,6 +1231,26 @@ export class SkillDefinitions {
       "displayName": "Fortify",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 71,
+          "value": 0,
+          "valuePerLevel": 4,
+          "label": "HpMult"
+        },
+        {
+          "type": 68,
+          "value": 0,
+          "valuePerLevel": 4,
+          "label": "HealingReceived"
+        },
+        {
+          "type": 1,
+          "value": 0,
+          "valuePerLevel": 2,
+          "label": "Vit"
+        }
       ]
     },
     {
@@ -889,6 +1258,20 @@ export class SkillDefinitions {
       "displayName": "Free Cast",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 82,
+          "value": 15,
+          "valuePerLevel": 10,
+          "label": "FreeCastMove 15"
+        },
+        {
+          "type": 83,
+          "value": 50,
+          "valuePerLevel": 10,
+          "label": "FreeCastAtk 50"
+        }
       ]
     },
     {
@@ -960,6 +1343,38 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 6,
+          "value": 150,
+          "label": "AllStats"
+        },
+        {
+          "type": 65,
+          "value": 400,
+          "label": "MoveSpd"
+        },
+        {
+          "type": 139,
+          "value": 100,
+          "label": "FinalDamageReduction"
+        },
+        {
+          "type": 112,
+          "value": 1,
+          "label": "Detector"
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "label": "GrantSkill 1"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -1023,6 +1438,44 @@ export class SkillDefinitions {
       "displayName": "Gun Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "AtkWeapon 5"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "AtkWeapon 5"
+        },
+        {
+          "type": 63,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "AtkSpd"
+        }
       ]
     },
     {
@@ -1142,6 +1595,14 @@ export class SkillDefinitions {
       "displayName": "Increased Flee",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 14,
+          "value": 0,
+          "valuePerLevel": 8,
+          "label": "Flee"
+        }
       ]
     },
     {
@@ -1149,6 +1610,14 @@ export class SkillDefinitions {
       "displayName": "Increased Health",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 7,
+          "value": 0,
+          "valuePerLevel": 100,
+          "label": "Hp"
+        }
       ]
     },
     {
@@ -1156,6 +1625,20 @@ export class SkillDefinitions {
       "displayName": "Increased Regeneration",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 59,
+          "value": 0,
+          "valuePerLevel": 5,
+          "label": "HpRegen"
+        },
+        {
+          "type": 60,
+          "value": 0,
+          "valuePerLevel": 0.20000000298023224,
+          "label": "HpRegenMax"
+        }
       ]
     },
     {
@@ -1163,6 +1646,14 @@ export class SkillDefinitions {
       "displayName": "Increased Mana",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 8,
+          "value": 0,
+          "valuePerLevel": 40,
+          "label": "Mp"
+        }
       ]
     },
     {
@@ -1170,6 +1661,20 @@ export class SkillDefinitions {
       "displayName": "Increased Recovery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 61,
+          "value": 0,
+          "valuePerLevel": 2,
+          "label": "MpRegen"
+        },
+        {
+          "type": 62,
+          "value": 0,
+          "valuePerLevel": 0.20000000298023224,
+          "label": "MpRegenMax"
+        }
       ]
     },
     {
@@ -1199,6 +1704,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 202,
+          "value": 2,
+          "label": "SkillLeap 2"
+        },
+        {
+          "type": 199,
+          "value": 10,
+          "label": "SkillRange 10"
+        },
+        {
+          "type": 203,
+          "value": 2,
+          "label": "SkillThreat 2"
+        }
       ]
     },
     {
@@ -1207,6 +1729,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 197,
+          "value": 4,
+          "label": "SkillPull 4"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 SpearSlice"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 CounterSlash"
+        }
       ]
     },
     {
@@ -1215,6 +1754,33 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 15,
+          "value": 20,
+          "label": "Crit"
+        },
+        {
+          "type": 14,
+          "value": 30,
+          "label": "Flee"
+        },
+        {
+          "type": 107,
+          "value": 1,
+          "label": "SkillHits 1"
+        },
+        {
+          "type": 107,
+          "value": 1,
+          "label": "SkillHits 1"
+        },
+        {
+          "type": 107,
+          "value": 1,
+          "label": "SkillHits 1"
+        }
       ]
     },
     {
@@ -1223,6 +1789,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 197,
+          "value": 4,
+          "label": "SkillPull 4"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "label": "SkillRemoveKnockback 1"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 WeaponThrow"
+        }
       ]
     },
     {
@@ -1231,6 +1814,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 3,
+          "label": "OnBlock  3"
+        }
       ]
     },
     {
@@ -1239,6 +1829,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 Taunt"
+        }
       ]
     },
     {
@@ -1316,6 +1913,32 @@ export class SkillDefinitions {
       "displayName": "Mace Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 63,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "AtkSpd"
+        }
       ]
     },
     {
@@ -1324,6 +1947,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 210,
+          "value": 0,
+          "label": "StatusReplace FireAttunement"
+        },
+        {
+          "type": 210,
+          "value": 0,
+          "label": "StatusReplace WaterAttunement"
+        },
+        {
+          "type": 210,
+          "value": 0,
+          "label": "StatusReplace WindAttunement"
+        },
+        {
+          "type": 210,
+          "value": 0,
+          "label": "StatusReplace EarthAttunement"
+        }
       ]
     },
     {
@@ -1332,6 +1977,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 186,
+          "value": 100,
+          "label": "AutoattackMatk"
+        },
+        {
+          "type": 96,
+          "value": 10,
+          "label": "RangeWand"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnAutoAttack  5"
+        }
       ]
     },
     {
@@ -1340,6 +2002,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 199,
+          "value": 5,
+          "label": "SkillRange 5"
+        },
+        {
+          "type": -1,
+          "value": 2,
+          "label": "OnCast Blink 2"
+        }
       ]
     },
     {
@@ -1348,6 +2022,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 72,
+          "value": 20,
+          "label": "MpMult"
+        },
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnKill "
+        }
       ]
     },
     {
@@ -1356,6 +2042,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit "
+        }
       ]
     },
     {
@@ -1364,6 +2057,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit "
+        }
       ]
     },
     {
@@ -1413,6 +2113,14 @@ export class SkillDefinitions {
       "displayName": "Multistrike",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 80,
+          "value": 0,
+          "valuePerLevel": 10,
+          "label": "DoubleAttack"
+        }
       ]
     },
     {
@@ -1420,6 +2128,32 @@ export class SkillDefinitions {
       "displayName": "Ninjutsu Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 25,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "Range"
+        },
+        {
+          "type": 70,
+          "value": 0,
+          "valuePerLevel": 2,
+          "label": "MatkMult"
+        },
+        {
+          "type": 76,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MpRegenMult"
+        },
+        {
+          "type": 72,
+          "value": 0,
+          "valuePerLevel": 4,
+          "label": "MpMult"
+        }
       ]
     },
     {
@@ -1617,6 +2351,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": -1,
+          "label": "OnBlock  -1"
+        },
+        {
+          "type": 199,
+          "value": 5,
+          "label": "SkillRange 5"
+        }
       ]
     },
     {
@@ -1625,6 +2371,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCharge "
+        }
       ]
     },
     {
@@ -1633,6 +2386,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 196,
+          "value": 20,
+          "label": "HealingToBarrier"
+        }
       ]
     },
     {
@@ -1641,6 +2401,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnBlock  5"
+        }
       ]
     },
     {
@@ -1683,6 +2450,20 @@ export class SkillDefinitions {
       "displayName": "Precise Aim",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 25,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "Range"
+        },
+        {
+          "type": 13,
+          "value": 0,
+          "valuePerLevel": 2,
+          "label": "Hit"
+        }
       ]
     },
     {
@@ -1691,6 +2472,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnCast HolyWrath 10"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 HolyWrathField"
+        }
       ]
     },
     {
@@ -1699,6 +2492,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnTakePhysicalHit  5"
+        }
       ]
     },
     {
@@ -1707,6 +2507,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 1,
+          "label": "SkillApplyStatus 1 Exorcism"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 Exorcism"
+        }
       ]
     },
     {
@@ -1715,6 +2527,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 209,
+          "value": 0,
+          "label": "SkillReplace Barrier"
+        }
       ]
     },
     {
@@ -1723,6 +2542,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 196,
+          "value": 20,
+          "label": "HealingToBarrier"
+        }
       ]
     },
     {
@@ -1731,6 +2557,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 3,
+          "label": "OnRevive  3"
+        },
+        {
+          "type": 145,
+          "value": -2,
+          "label": "SkillCastTime -2"
+        }
       ]
     },
     {
@@ -1739,6 +2577,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnRemoveStatus  5"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnHeal  5"
+        }
       ]
     },
     {
@@ -1747,6 +2597,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 1,
+          "label": "OnApplyStatus Sanctuary 1"
+        }
       ]
     },
     {
@@ -1754,6 +2611,14 @@ export class SkillDefinitions {
       "displayName": "Brutality",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 183,
+          "value": 0,
+          "valuePerLevel": 25,
+          "label": "StatusMaxStacks 25"
+        }
       ]
     },
     {
@@ -1782,6 +2647,14 @@ export class SkillDefinitions {
       "displayName": "Reflect Shield",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 86,
+          "value": 0,
+          "valuePerLevel": 10,
+          "label": "ReflectDamage"
+        }
       ]
     },
     {
@@ -1789,6 +2662,14 @@ export class SkillDefinitions {
       "displayName": "Natural Resistance",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 141,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AllResist"
+        }
       ]
     },
     {
@@ -1811,6 +2692,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 2,
+          "label": "SkillApplyStatus 2 BladeDance"
+        },
+        {
+          "type": 214,
+          "value": 2,
+          "label": "SkillApplyStatus 2 ShadowStep"
+        }
       ]
     },
     {
@@ -1819,6 +2712,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCast ShadowStep"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCast ShadowStep"
+        }
       ]
     },
     {
@@ -1827,6 +2732,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnCast VenomStrike"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnKill "
+        }
       ]
     },
     {
@@ -1835,6 +2752,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 124,
+          "value": 2,
+          "label": "SkillChains 2"
+        }
       ]
     },
     {
@@ -1843,6 +2767,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnApplyStatus Cloaking 5"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnKill  5"
+        }
       ]
     },
     {
@@ -1893,6 +2829,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnApplyHit  5"
+        }
       ]
     },
     {
@@ -1901,6 +2844,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 197,
+          "value": 1.5,
+          "label": "SkillPull 1.5"
+        }
       ]
     },
     {
@@ -1909,6 +2859,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 190,
+          "value": 25,
+          "label": "DodgeRecovery"
+        },
+        {
+          "type": -1,
+          "value": 2,
+          "label": "OnDodge  2"
+        }
       ]
     },
     {
@@ -1917,6 +2879,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 ForceShot"
+        }
       ]
     },
     {
@@ -1925,6 +2894,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 106,
+          "value": 3,
+          "label": "SkillArea 3"
+        },
+        {
+          "type": 25,
+          "value": 1,
+          "label": "Range"
+        }
       ]
     },
     {
@@ -1932,6 +2913,32 @@ export class SkillDefinitions {
       "displayName": "Scythe Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 176,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "SiphonHp"
+        }
       ]
     },
     {
@@ -1946,6 +2953,26 @@ export class SkillDefinitions {
       "displayName": "Shadow Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 121,
+          "value": 0,
+          "valuePerLevel": 2,
+          "label": "PerfectDodge"
+        },
+        {
+          "type": 65,
+          "value": 0,
+          "valuePerLevel": 4,
+          "label": "MoveSpd"
+        },
+        {
+          "type": 127,
+          "value": 0,
+          "valuePerLevel": 6,
+          "label": "SpellDodge"
+        }
       ]
     },
     {
@@ -1995,6 +3022,26 @@ export class SkillDefinitions {
       "displayName": "Shield Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 95,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "BlockShield"
+        },
+        {
+          "type": 73,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "DefMult"
+        },
+        {
+          "type": 74,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "MdefMult"
+        }
       ]
     },
     {
@@ -2010,6 +3057,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 198,
+          "value": 25,
+          "label": "SkillDamageLowHp"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast ShadowStep"
+        }
       ]
     },
     {
@@ -2018,6 +3077,38 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 0,
+          "label": "SkillApplyStatus FireRelease"
+        },
+        {
+          "type": 214,
+          "value": 0,
+          "label": "SkillApplyStatus IceRelease"
+        },
+        {
+          "type": 214,
+          "value": 0,
+          "label": "SkillApplyStatus LightningRelease"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit FlameOrb"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit FrostBlade"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit LightningStrike"
+        }
       ]
     },
     {
@@ -2026,6 +3117,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 4,
+          "label": "OnTeleport  4"
+        },
+        {
+          "type": -1,
+          "value": 4,
+          "label": "OnApplyStatus Cloaking 4"
+        }
       ]
     },
     {
@@ -2034,6 +3137,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 2,
+          "label": "OnEndStatus Cloaking 2"
+        },
+        {
+          "type": -1,
+          "value": 2,
+          "label": "OnEndStatus Cloaking 2"
+        }
       ]
     },
     {
@@ -2104,6 +3219,26 @@ export class SkillDefinitions {
       "displayName": "Skeleton Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 132,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "SummonAtkMult"
+        },
+        {
+          "type": 133,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "SummonMatkMult"
+        },
+        {
+          "type": 175,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "SummonResist"
+        }
       ]
     },
     {
@@ -2174,6 +3309,32 @@ export class SkillDefinitions {
       "displayName": "Spear Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 7,
+          "value": 0,
+          "valuePerLevel": 35,
+          "label": "Hp"
+        }
       ]
     },
     {
@@ -2223,6 +3384,20 @@ export class SkillDefinitions {
       "displayName": "Steady Hands",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 54,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "AtkWeapon 3"
+        },
+        {
+          "type": 3,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "Dex"
+        }
       ]
     },
     {
@@ -2287,6 +3462,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnAutoAttack  5"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 AxeVortex"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 ShadowRelease"
+        }
       ]
     },
     {
@@ -2295,6 +3487,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 FieldDamage"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 Thunderbolt"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 ThunderStorm"
+        }
       ]
     },
     {
@@ -2303,6 +3512,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 197,
+          "value": 4,
+          "label": "SkillPull 4"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "label": "SkillRemoveKnockback 1"
+        },
+        {
+          "type": 104,
+          "value": 2,
+          "label": "SkillCooldown 2"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast FieldCurse"
+        }
       ]
     },
     {
@@ -2311,6 +3542,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 FieldHealing"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 Smite"
+        }
       ]
     },
     {
@@ -2319,6 +3562,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 FieldHealing"
+        }
       ]
     },
     {
@@ -2327,6 +3577,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 124,
+          "value": 2,
+          "label": "SkillChains 2"
+        },
+        {
+          "type": 145,
+          "value": 2,
+          "label": "SkillCastTime 2"
+        }
       ]
     },
     {
@@ -2334,6 +3596,14 @@ export class SkillDefinitions {
       "displayName": "Summon Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 92,
+          "value": 0,
+          "valuePerLevel": 10,
+          "label": "SummonStatShare"
+        }
       ]
     },
     {
@@ -2502,6 +3772,14 @@ export class SkillDefinitions {
       "displayName": "Twohand Parry",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 85,
+          "value": 0,
+          "valuePerLevel": 6,
+          "label": "Block"
+        }
       ]
     },
     {
@@ -2593,6 +3871,32 @@ export class SkillDefinitions {
       "displayName": "Wand Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 55,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "MatkWeapon 3"
+        },
+        {
+          "type": 64,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "CastSpd"
+        }
       ]
     },
     {
@@ -2601,6 +3905,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 208,
+          "value": 15,
+          "label": "SkillDamageVsStatus 15 AxeArc"
+        },
+        {
+          "type": 208,
+          "value": 15,
+          "label": "SkillDamageVsStatus 15 AxeVortex"
+        },
+        {
+          "type": 218,
+          "value": 15,
+          "label": "DamageVsStatus 15"
+        }
       ]
     },
     {
@@ -2609,6 +3930,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 203,
+          "value": 2,
+          "label": "SkillThreat 2"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnCharge  5"
+        },
+        {
+          "type": 192,
+          "value": 150,
+          "label": "ThreatMult"
+        }
       ]
     },
     {
@@ -2617,6 +3955,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 197,
+          "value": 4,
+          "label": "SkillPull 4"
+        },
+        {
+          "type": -1,
+          "value": 5,
+          "label": "OnCast AxeArc 5"
+        }
       ]
     },
     {
@@ -2625,6 +3975,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnHealthLow  10"
+        }
       ]
     },
     {
@@ -2633,6 +3990,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 1,
+          "label": "SkillApplyStatus 1 Whirlwind"
+        },
+        {
+          "type": -1,
+          "value": 3,
+          "label": "OnApplyStatus Spinning 3"
+        }
       ]
     },
     {
@@ -2662,6 +4031,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 141,
+          "value": 10,
+          "label": "AllResist"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -2670,6 +4056,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 67,
+          "value": 10,
+          "label": "Healing"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -2678,6 +4081,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 48,
+          "value": 10,
+          "label": "DamageMagic"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -2686,6 +4106,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 47,
+          "value": 10,
+          "label": "DamageMelee"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -2694,6 +4131,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 102,
+          "value": 10,
+          "label": "DamageRanged"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        },
+        {
+          "type": 42,
+          "value": 5,
+          "label": "GrantSkill 5"
+        }
       ]
     },
     {
@@ -2701,6 +4155,31 @@ export class SkillDefinitions {
       "displayName": "Weaver Mastery",
       "kinds": [
         "passive"
+      ],
+      "effects": [
+        {
+          "type": 9,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "Atk"
+        },
+        {
+          "type": 10,
+          "value": 0,
+          "valuePerLevel": 3,
+          "label": "Matk"
+        },
+        {
+          "type": 6,
+          "value": 0,
+          "valuePerLevel": 1,
+          "label": "AllStats"
+        },
+        {
+          "type": 148,
+          "value": 3,
+          "label": "SkillSplash"
+        }
       ]
     },
     {
@@ -2730,6 +4209,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 205,
+          "value": 100,
+          "label": "SkillHitsMult 100"
+        },
+        {
+          "type": 204,
+          "value": 20,
+          "label": "SkillCastTimeMult 20"
+        },
+        {
+          "type": 124,
+          "value": -10,
+          "label": "SkillChains -10"
+        }
       ]
     },
     {
@@ -2738,6 +4234,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit ChainLightning"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit Tempest"
+        }
       ]
     },
     {
@@ -2746,6 +4254,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 124,
+          "value": 2,
+          "label": "SkillChains 2"
+        },
+        {
+          "type": 214,
+          "value": 5,
+          "label": "SkillApplyStatus 5 ChainLightning"
+        }
       ]
     },
     {
@@ -2754,6 +4274,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 206,
+          "value": 100,
+          "label": "SkillDurationMult 100"
+        },
+        {
+          "type": 214,
+          "value": 1,
+          "label": "SkillApplyStatus 1 EarthWall"
+        }
       ]
     },
     {
@@ -2762,6 +4294,18 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 138,
+          "value": 20,
+          "label": "FinalDamage"
+        },
+        {
+          "type": 188,
+          "value": -10,
+          "label": "CastTimeReductionLimit"
+        }
       ]
     },
     {
@@ -2770,6 +4314,13 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 10,
+          "label": "OnCast  10"
+        }
       ]
     },
     {
@@ -2778,6 +4329,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 1,
+          "label": "OnApplyStatus FireBarrier 1"
+        },
+        {
+          "type": -1,
+          "value": 1,
+          "label": "OnApplyStatus WaterBarrier 1"
+        },
+        {
+          "type": -1,
+          "value": 1,
+          "label": "OnApplyStatus WindBarrier 1"
+        },
+        {
+          "type": -1,
+          "value": 1,
+          "label": "OnApplyStatus EarthBarrier 1"
+        }
       ]
     },
     {
@@ -2786,6 +4359,23 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 214,
+          "value": 10,
+          "label": "SkillApplyStatus 10 Tempest"
+        },
+        {
+          "type": 214,
+          "value": 10,
+          "label": "SkillApplyStatus 10 ChainLightning"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit ChainLightning"
+        }
       ]
     },
     {
@@ -2794,6 +4384,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": 211,
+          "value": 30,
+          "label": "StatusDuration 30"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "label": "SkillRemoveKnockback 1"
+        },
+        {
+          "type": 213,
+          "value": 0,
+          "label": "SkillAutocast FreezingField"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyHit IceShard"
+        }
       ]
     },
     {
@@ -2802,6 +4414,28 @@ export class SkillDefinitions {
       "kinds": [
         "passive",
         "mastery"
+      ],
+      "effects": [
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyStatus Burning"
+        },
+        {
+          "type": -1,
+          "value": 0,
+          "label": "OnApplyStatus Stun"
+        },
+        {
+          "type": 212,
+          "value": 2,
+          "label": "SkillMaxInstances 2"
+        },
+        {
+          "type": 209,
+          "value": 0,
+          "label": "SkillReplace Meteor"
+        }
       ]
     },
     {

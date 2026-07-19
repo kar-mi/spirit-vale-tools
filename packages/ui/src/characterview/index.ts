@@ -57,7 +57,14 @@ function render(state: CharacterViewState): void {
   renderStats("basic-stat-groups", state.stats, "basic");
   renderStats("advanced-stat-groups", state.stats, "advanced");
   renderGearTotals(state.gearTotals);
+  renderSkills(character.skills);
   setActiveTab(activeTab);
+}
+
+function renderSkills(skills: Array<{ displayName: string; level: number; effects: Array<{ label: string; value: number; percent: boolean }> }>): void {
+  const root = element("skills");
+  if (!skills.length) { root.replaceChildren(node("div", "build-empty", "No learned skills captured.")); return; }
+  root.replaceChildren(...skills.map((skill) => node("div", "gear-total", [node("span", "", skill.displayName), node("strong", "", `Lv ${format(skill.level)}${skill.effects.length ? ` → ${skill.effects.map((effect) => `${signed(effect.value)}${effect.percent ? "%" : ""} ${effect.label}`).join(", ")}` : ""}`)])));
 }
 
 function renderBuild(id: string, items: Array<{ slot: string; name: string; refine: number; details: string }>): void {

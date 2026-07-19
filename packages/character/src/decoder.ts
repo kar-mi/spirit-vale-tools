@@ -1,6 +1,8 @@
 import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { resolveFishNetItem } from "@spiritvale/items";
+import { resolveFishNetSkill } from "@spiritvale/skills";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
-import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSnapshot, CharacterSubstat } from "./types.ts";
+import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterSubstat } from "./types.ts";
 
 const ARCHETYPES: Record<number, string> = {
   [-1]: "Novice", 0: "Warrior", 1: "Mage", 2: "Rogue", 3: "Knight", 4: "Summoner", 5: "Acolyte", 6: "Scout",
@@ -58,7 +60,7 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
   ];
   const artifacts = reader.list(() => readArtifact(reader)).filter((value): value is CharacterArtifact => value !== undefined);
   const equipment = loadouts[activeIndex]?.length ? loadouts[activeIndex]! : equipped;
-  const history = readCharacterHistory(reader);
+  const { skills, ...history } = readCharacterHistory(reader);
   return {
     updateType,
     snapshot: {
@@ -75,6 +77,7 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
       activeLoadout: LOADOUTS[activeIndex] ?? "Normal",
       equipment,
       artifacts,
+      skills,
       ...history,
       updatedAt: now.toISOString(),
       source: "live",
@@ -90,7 +93,7 @@ function readEquipmentSlot(reader: CharacterReader): CharacterEquipment | undefi
 
 function readEquipmentData(reader: CharacterReader, slotIndex: number): CharacterEquipment | undefined {
   if (!reader.object()) return undefined;
-  const substats = reader.list(() => readSubstat(reader, slotIndex, false)).filter((value): value is CharacterSubstat => value !== undefined);
+  const rawStats = reader.list(() => readRawSubstat(reader));
   const cards = reader.list(() => reader.string(256)).filter((value): value is string => Boolean(value));
   reader.packed();
   reader.packed();
@@ -99,6 +102,8 @@ function readEquipmentData(reader: CharacterReader, slotIndex: number): Characte
   const refine = reader.packed();
   const itemId = reader.string(256) ?? "Unknown equipment";
   reader.boolean();
+  const substatGroup = resolveFishNetItem(2, itemId)?.substatGroup;
+  const substats = rawStats.flatMap((stat) => stat ? [convertSubstat(stat.type, stat.roll, slotIndex, false, substatGroup)] : []);
   return { slot: EQUIP_SLOTS[slotIndex] ?? `Slot ${slotIndex}`, itemId, refine, cards, substats };
 }
 
@@ -119,9 +124,9 @@ function readArtifactData(reader: CharacterReader): CharacterArtifact | undefine
   return { slot: ARTIFACT_SLOTS[slotIndex] ?? `Artifact ${slotIndex}`, itemId, refine, gems, substats };
 }
 
-function readCharacterHistory(reader: CharacterReader): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> {
+function readCharacterHistory(reader: CharacterReader): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & { skills: CharacterSkill[] } {
   try {
-    skipSkillSystem(reader);
+    const skills = readSkillSystem(reader);
     reader.list(() => readEquipmentData(reader, -1));
     if (reader.object()) {
       reader.dictionary(() => readEquipmentData(reader, -1));
@@ -137,21 +142,48 @@ function readCharacterHistory(reader: CharacterReader): Partial<Pick<CharacterSn
     const monsterKills = reader.packed();
     const bossKills = reader.packed();
     const deaths = reader.packed();
-    return { playtimeSeconds, monsterKills, bossKills, deaths };
+    return { skills, playtimeSeconds, monsterKills, bossKills, deaths };
   } catch {
     // A partial callback may end after build data. The already-decoded snapshot remains useful.
-    return {};
+    return { skills: [] };
   }
 }
 
-function skipSkillSystem(reader: CharacterReader): void {
-  if (!reader.object()) return;
-  reader.list(() => skipSkill(reader));
-  reader.list(() => skipSkill(reader));
-  skipSkill(reader);
+function readSkillSystem(reader: CharacterReader): CharacterSkill[] {
+  if (!reader.object()) return [];
+  const skills = [
+    ...reader.list(() => readSkill(reader)),
+    ...reader.list(() => readSkill(reader)),
+  ];
+  const selected = readSkill(reader);
+  if (selected) skills.push(selected);
   reader.list(() => reader.string(256));
+  const unique = new Map<string, CharacterSkill>();
+  for (const skill of skills) {
+    if (!skill) continue;
+    const existing = unique.get(skill.id);
+    if (!existing || skill.level > existing.level) unique.set(skill.id, skill);
+  }
+  return [...unique.values()].sort((left, right) => left.displayName.localeCompare(right.displayName));
 }
-function skipSkill(reader: CharacterReader): void { if (reader.object()) { reader.string(256); reader.packed(); } }
+function readSkill(reader: CharacterReader): CharacterSkill | undefined {
+  if (!reader.object()) return undefined;
+  const id = reader.string(256);
+  const level = reader.packed();
+  if (!id || level < 0) return undefined;
+  const definition = resolveFishNetSkill(id);
+  return {
+    id,
+    displayName: definition?.displayName ?? id,
+    level,
+    effects: (definition?.effects ?? []).map((effect) => ({
+      type: effect.type,
+      label: effect.label ?? STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,
+      value: effect.value + (effect.valuePerLevel ?? 0) * level,
+      percent: PERCENT_STATS.has(effect.type),
+    })),
+  };
+}
 function skipStackable(reader: CharacterReader): void {
   if (!reader.object()) return;
   reader.packed(); reader.string(256); reader.boolean();
@@ -170,11 +202,6 @@ function readRefinableItem(reader: CharacterReader): string | undefined {
   return id;
 }
 
-function readSubstat(reader: CharacterReader, slot: number, artifact: boolean): CharacterSubstat | undefined {
-  const stat = readRawSubstat(reader);
-  return stat ? convertSubstat(stat.type, stat.roll, slot, artifact) : undefined;
-}
-
 function readRawSubstat(reader: CharacterReader): { type: number; roll: number } | undefined {
   if (!reader.object()) return undefined;
   const type = reader.packed();
@@ -183,16 +210,23 @@ function readRawSubstat(reader: CharacterReader): { type: number; roll: number }
   return { type, roll };
 }
 
-function convertSubstat(type: number, roll: number, slot: number, artifact: boolean): CharacterSubstat {
+function convertSubstat(type: number, roll: number, slot: number, artifact: boolean, substatGroup?: string): CharacterSubstat {
   const name = STAT_NAMES[type] ?? `Stat ${type}`;
-  const cap = substatCap(type, slot, artifact);
+  const cap = substatCap(type, slot, artifact, substatGroup);
   const value = cap === undefined ? undefined : roundAwayFromZero(cap * (2 / 3 + roll / 300));
   return { type, name, roll, ...(value === undefined ? {} : { value }), percent: PERCENT_STATS.has(type) };
 }
 
-function substatCap(type: number, slot: number, artifact: boolean): number | undefined {
+function substatCap(type: number, slot: number, artifact: boolean, substatGroup?: string): number | undefined {
   if (type >= 0 && type <= 5) return 3;
   if (artifact) return ({ 69: 2, 70: 2, 71: 2, 72: 2 } as Record<number, number>)[type];
+  const weaponCaps: Record<string, Record<number, number>> = {
+    Magic: { 69: 5, 70: 5, 47: 5, 48: 5, 64: 10, 90: -10, 63: 10, 9: 5, 10: 5, 182: 10, 67: 10, 189: 1 },
+    Melee: { 69: 5, 70: 5, 47: 5, 48: 5, 15: 10, 13: 20, 63: 10, 9: 5, 10: 5, 52: 10, 98: 5, 130: 1, 80: 20 },
+    Ranged: { 69: 5, 70: 5, 102: 5, 48: 5, 15: 10, 13: 20, 63: 10, 9: 5, 10: 5, 52: 10, 98: 5, 25: 1, 80: 20 },
+  };
+  const weaponCap = substatGroup ? weaponCaps[substatGroup]?.[type] : undefined;
+  if (weaponCap !== undefined) return weaponCap;
   const caps: Record<number, Record<number, number>> = {
     2: { 69: 2, 70: 2, 71: 2, 72: 2, 9: 3, 10: 3, 11: 5, 12: 5 },
     3: { 75: 25, 76: 25, 98: 5, 64: 10, 14: 15, 121: 5, 90: -10 },

@@ -9,4 +9,5 @@ export type {
   FishNetSkillCatalog,
   FishNetSkillDefinition,
   FishNetSkillKind,
+  FishNetSkillEffect,
 } from "./catalog.ts";

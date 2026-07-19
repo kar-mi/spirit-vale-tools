@@ -1,17 +1,17 @@
 export const STAT_NAMES: Record<number, string> = {
   0: "STR", 1: "VIT", 2: "AGI", 3: "DEX", 4: "INT", 5: "LUK", 6: "All stats", 7: "HP", 8: "MP",
   9: "ATK", 10: "MATK", 11: "DEF", 12: "MDEF", 13: "Hit", 14: "Flee", 15: "Critical chance",
-  16: "Flat DEF", 17: "Flat MDEF", 20: "Health on hit", 21: "Mana on hit", 22: "Kill leech", 23: "Kill MP leech",
+  16: "Flat DEF", 17: "Flat MDEF", 18: "Weapon element", 19: "Armor element", 20: "Health on hit", 21: "Mana on hit", 22: "Kill leech", 23: "Kill MP leech",
   25: "Range", 26: "Status immunity", 39: "Autocast on hit", 40: "Autocast on attack", 41: "Autocast chance",
-  52: "Critical damage", 59: "HP regeneration", 60: "Maximum HP regeneration", 61: "MP regeneration", 62: "Maximum MP regeneration",
+  42: "Granted skill", 43: "Skill level", 44: "Damage to element", 45: "Damage to boss", 46: "Element damage", 47: "Melee damage", 48: "Magic damage", 49: "Skill damage", 50: "Skill cost", 51: "Skill cooldown", 52: "Critical damage", 53: "Element resistance", 54: "Weapon ATK", 55: "Weapon MATK", 56: "Damage from element", 57: "Damage from magic", 58: "Damage from melee", 59: "HP regeneration", 60: "Maximum HP regeneration", 61: "MP regeneration", 62: "Maximum MP regeneration",
   63: "Attack speed", 64: "Cast speed", 65: "Move speed", 66: "After-cast delay", 67: "Healing",
   69: "ATK multiplier", 70: "MATK multiplier", 71: "HP multiplier", 72: "MP multiplier", 73: "DEF multiplier", 74: "MDEF multiplier",
   75: "HP regeneration multiplier", 76: "MP regeneration multiplier", 77: "Flee multiplier", 78: "Hit multiplier", 79: "Critical multiplier",
-  86: "Reflect damage", 97: "Leech chance", 98: "Leech", 99: "MP leech chance", 100: "MP leech",
+  80: "Double attack", 81: "Energy shield", 82: "Cast while moving", 83: "Attack while casting", 84: "Spell echo", 85: "Block", 86: "Reflect damage", 87: "Dual wield", 88: "Experience rate", 89: "Drop rate", 90: "MP cost", 91: "Life bond", 92: "Summon stat share", 93: "Summon damage share", 94: "Spell reflect", 95: "Shield block", 96: "Wand range", 97: "Leech chance", 98: "Leech", 99: "MP leech chance", 100: "MP leech",
   102: "Ranged damage", 104: "Skill cooldown", 113: "HP regeneration rate", 114: "MP regeneration rate",
   120: "Critical defence", 121: "Perfect dodge", 142: "Status damage", 151: "MATK per STR", 152: "ATK per STR",
-  159: "Attack-speed multiplier", 160: "Cast-speed multiplier", 176: "HP siphon", 177: "MP siphon",
-  184: "Two-handed stance bonus", 185: "Attack-speed limit", 187: "Cast-time reduction", 188: "Cast-time reduction limit",
+  159: "Attack-speed multiplier", 160: "Cast-speed multiplier", 161: "Move-speed multiplier", 162: "Skill charges", 163: "Auto fire", 164: "Close-range damage", 165: "Far-range damage", 166: "Damage to summons", 167: "Damage from summons", 168: "Summon spell echo", 169: "Summon damage", 170: "Summon damage reduction", 171: "Summon leech", 172: "Summon cost share", 173: "Summon hit", 174: "Summon autoattack damage", 175: "Summon resistance", 176: "HP siphon", 177: "MP siphon", 178: "Healing share", 179: "Death share", 180: "Autocast on death", 181: "Autocast on kill", 182: "Cooldown recovery", 183: "Status max stacks",
+  184: "Two-handed stance bonus", 185: "Attack-speed limit", 186: "Autoattack MATK", 187: "Cast-time reduction", 188: "Cast-time reduction limit", 189: "Cast range", 190: "Dodge recovery", 191: "Flat attack speed", 192: "Threat multiplier", 193: "DEF pierce", 194: "MDEF pierce", 195: "Perfect hit", 196: "Healing to barrier", 197: "Skill pull", 198: "Skill damage at low HP", 199: "Skill range", 200: "Skill instances", 201: "Skill critical chance", 202: "Skill leap", 203: "Skill threat", 204: "Skill cast-time multiplier", 205: "Skill-hits multiplier", 206: "Skill-duration multiplier", 207: "Skill damage received", 208: "Skill damage vs. status", 209: "Skill replacement", 210: "Status replacement", 211: "Status duration", 212: "Skill max instances", 213: "Skill autocast", 214: "Skill applies status", 215: "Skill consumes status", 216: "Skill health recovery", 217: "Skill mana recovery", 218: "Damage vs. status", 219: "Set attack speed",
 };
 
-export const PERCENT_STATS = new Set([47, 48, 52, 57, 58, 63, 64, 65, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 79, 90, 98, 102, 104, 121, 159, 160, 184, 187]);
+export const PERCENT_STATS = new Set([44, 45, 46, 47, 48, 49, 52, 56, 57, 58, 63, 64, 65, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 86, 88, 89, 90, 97, 98, 99, 100, 102, 103, 104, 113, 114, 119, 121, 138, 139, 140, 142, 159, 160, 161, 164, 165, 166, 167, 169, 170, 171, 175, 182, 184, 187, 192, 201, 204, 205, 206, 207, 208]);

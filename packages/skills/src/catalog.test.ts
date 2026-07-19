@@ -3,6 +3,7 @@ import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import {
   FishNetSkillDirectory,
   loadBundledSkillCatalog,
+  resolveFishNetSkill,
   resolveFishNetSkillDisplayName,
 } from "./catalog.ts";
 import type { FishNetSkillCatalog } from "./catalog.ts";
@@ -36,5 +37,12 @@ describe("FishNetSkillDirectory", () => {
       buildFingerprint: "synthetic-build",
       skills: [SYNTHETIC_CATALOG.skills[0]!, SYNTHETIC_CATALOG.skills[0]!],
     })).toThrow("duplicate skill definition");
+  });
+
+  test("includes extracted per-level passive effects", () => {
+    expect(resolveFishNetSkill("Multistrike")).toMatchObject({
+      displayName: "Multistrike",
+      effects: [{ type: 80, value: 0, valuePerLevel: 10 }],
+    });
   });
 });

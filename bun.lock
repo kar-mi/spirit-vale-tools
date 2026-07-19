@@ -13,6 +13,8 @@
       "name": "@spiritvale/character",
       "dependencies": {
         "@spiritvale/core": "workspace:*",
+        "@spiritvale/items": "workspace:*",
+        "@spiritvale/skills": "workspace:*",
       },
     },
     "packages/cli": {

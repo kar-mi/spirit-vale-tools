@@ -1,5 +1,7 @@
-import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
-import { STAT_NAMES } from "./stat-names.ts";
+import { resolveFishNetItem } from "@spiritvale/items";
+import { resolveFishNetSkill } from "@spiritvale/skills";
+import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
+import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 
 const rounded = Math.round;
 const integer = Math.floor;
@@ -13,13 +15,51 @@ export function calculateCharacterStats(level: number, baseAttributes: Character
 
 export function aggregateGearSubstats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[]): GearStatTotal[] {
   const totals = new Map<number, GearStatTotal>();
-  for (const stat of [...equipment, ...artifacts].flatMap((item) => item.substats)) {
+  for (const stat of materializeGearStats(equipment, artifacts)) {
     const entry = totals.get(stat.type) ?? { type: stat.type, name: STAT_NAMES[stat.type] ?? stat.name, total: 0, percent: stat.percent, unresolvedRolls: 0 };
     if (stat.value === undefined) entry.unresolvedRolls += 1;
     else entry.total += stat.value;
     totals.set(stat.type, entry);
   }
   return [...totals.values()].sort((left, right) => left.name.localeCompare(right.name) || left.type - right.type);
+}
+
+/** Combines rolled stats with the catalogued innate effects of items, cards, artifacts, and gems. */
+export function materializeGearStats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[]): CharacterSubstat[] {
+  const stats = [...equipment, ...artifacts].flatMap((item) => item.substats);
+  for (const item of equipment) {
+    stats.push(...itemEffects(2, item.itemId, item.refine));
+    for (const card of item.cards) stats.push(...itemEffects(4, card, 0));
+  }
+  for (const artifact of artifacts) {
+    stats.push(...itemEffects(3, artifact.itemId, artifact.refine));
+    for (const gem of artifact.gems) stats.push(...itemEffects(5, gem, 0));
+  }
+  return stats;
+}
+
+/** Converts passive-skill effects into stat inputs at their learned level. */
+export function materializeSkillStats(skills: readonly CharacterSkill[]): CharacterSubstat[] {
+  return skills.flatMap((skill) => (resolveFishNetSkill(skill.id)?.effects ?? []).map((effect) => ({
+    type: effect.type,
+    name: effect.label ?? STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,
+    roll: 0,
+    value: effect.value + (effect.valuePerLevel ?? 0) * skill.level,
+    percent: PERCENT_STATS.has(effect.type),
+  })));
+}
+
+function itemEffects(itemType: number, itemId: string, refine: number): CharacterSubstat[] {
+  const definition = resolveFishNetItem(itemType, itemId);
+  return (definition?.effects ?? [])
+    .filter((effect) => effect.skillId === undefined)
+    .map((effect) => ({
+      type: effect.type,
+      name: STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,
+      roll: 0,
+      value: effect.value + (effect.perRefine ?? 0) * refine,
+      percent: PERCENT_STATS.has(effect.type),
+    }));
 }
 
 export function calculateAdvancedGearStats(totals: readonly GearStatTotal[]): CharacterStatBreakdown[] {
