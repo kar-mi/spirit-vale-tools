@@ -10,6 +10,25 @@ See [Packet Capture Workflow](docs/packet-capture-workflow.md) for the complete 
 - Bun 1.3 or newer
 - A current [Npcap](https://npcap.com/#download) installation with its administrator-only restriction unchecked
 
+## Installation
+
+### Prerequisites
+
+Before installing spirit vale tools, you'll need:
+
+1. **Npcap** - Network packet capture library
+    - Download: https://npcap.com/dist/npcap-1.84.exe
+    - **Important**: During installation, select **"Install Npcap in WinPcap API-compatible Mode"**
+    - ![option](docs/npcap_option.png)
+
+### Download & Run
+
+#### Option 1: to update
+
+#### Option 2: Build from Source
+
+See [DEVELOPER.md](DEVELOPER.md) to update
+
 ## Setup
 
 ```powershell
