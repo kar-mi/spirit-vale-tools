@@ -33,6 +33,21 @@ export type FishNetActorIdentityEvent =
   | FishNetActorIdentityRemoveEvent
   | FishNetActorIdentityResetEvent;
 
+export interface FishNetLocalIdentity {
+  displayName: string;
+  accountId: string;
+}
+
+export interface FishNetActorDirectoryOptions {
+  /**
+   * Persisted local-player identity. Only the local player's objects emit serverRpc traffic, so
+   * it names them even when the capture attaches mid-connection and never sees their spawn.
+   */
+  localIdentity?: FishNetLocalIdentity;
+  /** Invoked whenever the local player's identity is decoded from CharacterData RPCs. */
+  onLocalIdentity?: (identity: FishNetLocalIdentity) => void;
+}
+
 /** Tracks public display names by the FishNet object IDs used by combat events. */
 export class FishNetActorDirectory {
   private readonly identities = new Map<number, FishNetActorIdentity>();
@@ -40,7 +55,15 @@ export class FishNetActorDirectory {
   private readonly ownerObjects = new Map<number, Set<number>>();
   private readonly identitySources = new Map<number, FishNetActorIdentity>();
   private readonly sourceRevisions = new Map<number, number>();
+  /** Account-keyed names survive map-change resets: delta respawns omit VisualData but repeat the account id. */
+  private readonly accountIdentities = new Map<string, { displayName: string; archetype?: number }>();
   private nextSourceRevision = 1;
+  private localIdentity?: FishNetLocalIdentity;
+
+  constructor(private readonly options: FishNetActorDirectoryOptions = {}) {
+    this.localIdentity = options.localIdentity;
+    this.seedLocalIdentity();
+  }
 
   consume(packet: DecodedFishNetPacket): FishNetActorIdentityEvent[] {
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
@@ -59,12 +82,12 @@ export class FishNetActorDirectory {
         identityEligible,
       });
       if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, packet.objectId);
-      const embeddedIdentity = decodeSpawnIdentity(packet);
+      const embeddedIdentity = this.resolveSpawnIdentity(packet);
       if (embeddedIdentity) {
         const next: FishNetActorIdentity = {
           actorId: packet.objectId,
           displayName: embeddedIdentity.displayName,
-          archetype: embeddedIdentity.archetype,
+          ...(embeddedIdentity.archetype === undefined ? {} : { archetype: embeddedIdentity.archetype }),
         };
         this.identitySources.set(packet.objectId, next);
         this.sourceRevisions.set(packet.objectId, this.nextSourceRevision++);
@@ -84,10 +107,25 @@ export class FishNetActorDirectory {
       return this.changeOwner(packet.objectId, validOwner(packet.ownerConnectionId), packet.tick);
     }
 
+    if (packet.packetName === "serverRpc" && packet.objectId !== undefined
+      && this.localIdentity !== undefined && !this.identitySources.has(packet.objectId)) {
+      return this.applyIdentitySource(
+        packet.objectId,
+        { actorId: packet.objectId, displayName: this.localIdentity.displayName },
+        packet.tick,
+      );
+    }
+
     if (packet.objectId !== undefined && packet.rpcName !== undefined && CHARACTER_RPC_NAMES.has(packet.rpcName)) {
-      const displayName = decodeCharacterDataName(packet.payload);
-      if (displayName === undefined) return [];
-      return this.applyIdentitySource(packet.objectId, { actorId: packet.objectId, displayName }, packet.tick);
+      const character = decodeCharacterDataName(packet.payload);
+      if (character === undefined) return [];
+      this.learnAccountIdentity(character.accountId, { displayName: character.displayName });
+      this.updateLocalIdentity(character);
+      return this.applyIdentitySource(
+        packet.objectId,
+        { actorId: packet.objectId, displayName: character.displayName },
+        packet.tick,
+      );
     }
 
     if (packet.packetName !== "syncType"
@@ -129,7 +167,44 @@ export class FishNetActorDirectory {
   }
 
   reset(): void {
+    this.accountIdentities.clear();
     this.clear();
+    this.seedLocalIdentity();
+  }
+
+  private seedLocalIdentity(): void {
+    if (!this.localIdentity) return;
+    this.learnAccountIdentity(this.localIdentity.accountId, { displayName: this.localIdentity.displayName });
+  }
+
+  private updateLocalIdentity(identity: FishNetLocalIdentity): void {
+    if (this.localIdentity?.displayName === identity.displayName
+      && this.localIdentity.accountId === identity.accountId) return;
+    this.localIdentity = identity;
+    this.options.onLocalIdentity?.(identity);
+  }
+
+  /** Names a spawn from its embedded VisualData, falling back to the account cache for delta spawns. */
+  private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number } | undefined {
+    const embedded = decodeSpawnIdentity(packet);
+    const accountId = packet.spawnSyncPayload && hasPlayerControllerRegistration(packet)
+      ? scanSpawnAccountId(packet.spawnSyncPayload)
+      : undefined;
+    if (embedded) {
+      if (accountId !== undefined) this.learnAccountIdentity(accountId, embedded);
+      return embedded;
+    }
+    return accountId !== undefined ? this.accountIdentities.get(accountId) : undefined;
+  }
+
+  private learnAccountIdentity(accountId: string, identity: { displayName: string; archetype?: number }): void {
+    const current = this.accountIdentities.get(accountId);
+    const archetype = identity.archetype
+      ?? (current?.displayName === identity.displayName ? current.archetype : undefined);
+    this.accountIdentities.set(accountId, {
+      displayName: identity.displayName,
+      ...(archetype === undefined ? {} : { archetype }),
+    });
   }
 
   private changeOwner(actorId: number, ownerConnectionId: number | undefined, tick: number): FishNetActorIdentityEvent[] {
@@ -246,11 +321,31 @@ const VISUAL_DATA_SYNC_INDEX = 5;
 function decodeSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype: number } | undefined {
   const payload = packet.spawnSyncPayload;
   if (!payload || payload.length < 4) return undefined;
-  const playerComponents = new Set(packet.rpcLinkRegistrations
-    ?.filter(({ networkBehaviourType }) => networkBehaviourType === "PlayerController")
-    .map(({ componentIndex }) => componentIndex) ?? []);
-  if (playerComponents.size === 0) return undefined;
+  if (!hasPlayerControllerRegistration(packet)) return undefined;
   return scanSpawnIdentity(payload);
+}
+
+function hasPlayerControllerRegistration(packet: DecodedFishNetPacket): boolean {
+  return packet.rpcLinkRegistrations
+    ?.some(({ networkBehaviourType }) => networkBehaviourType === "PlayerController") ?? false;
+}
+
+const ACCOUNT_ID_PATTERN = /^7656119\d{10}$/;
+const ACCOUNT_ID_LENGTH = 17;
+
+/**
+ * Player spawn state embeds the owning account's SteamID64 as a packed string (length prefix
+ * 0x22 = 17 << 1) even when the delta payload omits VisualData. The fixed `7656119` prefix makes
+ * the scan unambiguous; multiple disagreeing matches are rejected like the identity scan.
+ */
+function scanSpawnAccountId(payload: Buffer): string | undefined {
+  const matches = new Set<string>();
+  for (let offset = 0; offset + 1 + ACCOUNT_ID_LENGTH <= payload.length; offset += 1) {
+    if (payload[offset] !== ACCOUNT_ID_LENGTH << 1) continue;
+    const candidate = payload.subarray(offset + 1, offset + 1 + ACCOUNT_ID_LENGTH).toString("latin1");
+    if (ACCOUNT_ID_PATTERN.test(candidate)) matches.add(candidate);
+  }
+  return matches.size === 1 ? matches.values().next().value : undefined;
 }
 
 /**
@@ -304,13 +399,13 @@ const CHARACTER_RPC_NAMES = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Extracts the display name from a CharacterData DTO:
+ * Extracts the display name and account id from a CharacterData DTO:
  * [empty string][character GUID][account digits][packed number][guild GUID or empty]
  * [guild role or empty][display name]. CharacterCallback_T prefixes the DTO with a
  * packed update-type enum; LoadCharacter_T carries the DTO directly, so both offsets
  * are attempted and every field is validated before the name is trusted.
  */
-function decodeCharacterDataName(payload: Buffer): string | undefined {
+function decodeCharacterDataName(payload: Buffer): { displayName: string; accountId: string } | undefined {
   for (const skipEnum of [true, false]) {
     try {
       let offset = 0;
@@ -325,7 +420,7 @@ function decodeCharacterDataName(payload: Buffer): string | undefined {
       if (guildId.value.length > 0 && !GUID_PATTERN.test(guildId.value)) continue;
       const role = readCharacterString(payload, guildId.nextOffset, 32);
       const name = readCharacterString(payload, role.nextOffset, 32);
-      if (name.value.trim().length > 0) return name.value;
+      if (name.value.trim().length > 0) return { displayName: name.value, accountId: account.value };
     } catch {
       // Fall through to the next candidate offset.
     }

@@ -522,20 +522,37 @@ describe("FishNet bundles and sessions", () => {
     expect(incomplete.decode(first, { ...context, sequence: 20 })).toEqual([]);
   });
 
-  test("bounds and abandons invalid split reassembly", () => {
+  test("bounds invalid split reassembly and tolerates gapped or reordered sequences", () => {
     const context = { reliable: true, connectionId: "bounded-split", direction: "inbound" as const, channel: 0 };
     const excessiveCount = tick(6, message(2, Buffer.concat([packed(1_025), Buffer.from([1])])));
     expect(new FishNetSessionDecoder().decode(excessiveCount, { ...context, sequence: 1 })[0])
-      .toMatchObject({ packetName: "split" });
+      .toMatchObject({ packetName: "split", splitDropReason: "chunk-count" });
 
     const oversized = tick(6, message(2, Buffer.concat([packed(2), Buffer.alloc(1024 * 1024 + 1)])));
     expect(new FishNetSessionDecoder().decode(oversized, { ...context, sequence: 2 })[0])
-      .toMatchObject({ packetName: "split" });
+      .toMatchObject({ packetName: "split", splitDropReason: "size-cap" });
 
-    const interrupted = new FishNetSessionDecoder();
-    const chunk = tick(6, message(2, Buffer.concat([packed(2), Buffer.from([1])])));
-    expect(interrupted.decode(chunk, { ...context, sequence: 10 })).toEqual([]);
-    expect(interrupted.decode(chunk, { ...context, sequence: 12 })[0]).toMatchObject({ packetName: "split" });
+    const complete = Buffer.concat([spawnWithLink(9, 1, 901, 44), linked(901, Buffer.from([5, 6]))]);
+    const midpoint = Math.floor(complete.length / 2);
+    const first = tick(6, message(2, Buffer.concat([packed(2), complete.subarray(0, midpoint)])));
+    const second = tick(6, message(2, Buffer.concat([packed(2), complete.subarray(midpoint)])));
+
+    // Interleaved reliable traffic leaves gaps between chunk sequences.
+    const gapped = new FishNetSessionDecoder();
+    expect(gapped.decode(first, { ...context, sequence: 10 })).toEqual([]);
+    expect(gapped.decode(second, { ...context, sequence: 13 }).map(({ packetName }) => packetName))
+      .toEqual(["objectSpawn", "rpcLink"]);
+
+    // Wire reordering delivers a later chunk first; reassembly follows sequence order.
+    const reordered = new FishNetSessionDecoder();
+    expect(reordered.decode(second, { ...context, sequence: 21 })).toEqual([]);
+    expect(reordered.decode(first, { ...context, sequence: 20 }).map(({ packetName }) => packetName))
+      .toEqual(["objectSpawn", "rpcLink"]);
+
+    const wrapped = new FishNetSessionDecoder();
+    expect(wrapped.decode(first, { ...context, sequence: 0xffff })).toEqual([]);
+    expect(wrapped.decode(second, { ...context, sequence: 0 }).map(({ packetName }) => packetName))
+      .toEqual(["objectSpawn", "rpcLink"]);
   });
 
   test("despawn and authentication remove stale registrations", () => {

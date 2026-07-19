@@ -92,6 +92,8 @@ export interface DecodedFishNetPacket {
   syncName?: string;
   broadcastHash?: number;
   broadcastName?: string;
+  /** Set when split reassembly was abandoned and the accumulated bundle was dropped. */
+  splitDropReason?: "header" | "chunk-count" | "size-cap";
 }
 
 export interface CapturedFishNetPacket extends DecodedFishNetPacket {

@@ -87,6 +87,16 @@ describe("central capture coordinator", () => {
         raw: Buffer.from([1]),
         payload: Buffer.from([1]),
       });
+      capture.packet({
+        tick: 5,
+        packetId: 5,
+        packetName: "objectSpawn",
+        objectId: 40,
+        ownerConnectionId: 9,
+        spawnSyncPayload: Buffer.from([1, 2, 3, 4]),
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+      });
       await coordinator.stop();
 
       const combat = await new DpsSessionLogFollower(directory).poll();
@@ -97,6 +107,10 @@ describe("central capture coordinator", () => {
       expect(rewards.snapshot.unmatched).toBeGreaterThan(0);
       expect(market).toMatchObject({ missing: false, status: "stopped" });
       expect(await readCurrentLogStream("other", directory)).toBeUndefined();
+
+      const combatPointer = await readCurrentLogStream("combat", directory);
+      const combatRecords = records(await readFile(combatPointer!.path, "utf8"));
+      expect(combatRecords.some((record) => record.type === "combat.spawnIdentityMiss")).toBe(true);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
@@ -134,7 +148,8 @@ describe("central capture coordinator", () => {
       await coordinator.stop();
 
       const combatPointer = await readCurrentLogStream("combat", directory);
-      const combat = records(await readFile(combatPointer!.path, "utf8"))
+      const combatRecords = records(await readFile(combatPointer!.path, "utf8"));
+      const combat = combatRecords
         .filter((record) => record.type === "combat.actorIdentity") as Array<{ type: string; data: { operation: string; displayName?: string } }>;
       expect(combat.map((record) => [record.data.operation, record.data.displayName])).toEqual([
         ["reset", undefined],
@@ -143,13 +158,14 @@ describe("central capture coordinator", () => {
         ["upsert", "Bravo"],
       ]);
 
-      const otherPointer = await readCurrentLogStream("other", directory);
-      const other = records(await readFile(otherPointer!.path, "utf8"));
-      const misses = other
+      const misses = combatRecords
         .filter((record) => record.type === "combat.spawnIdentityMiss") as unknown as Array<{ data: { objectId: number; spawnSyncPayload: string } }>;
       expect(misses).toHaveLength(1);
       expect(misses[0]!.data.objectId).toBe(40);
       expect(misses[0]!.data.spawnSyncPayload).toBe("01020304");
+
+      const otherPointer = await readCurrentLogStream("other", directory);
+      const other = records(await readFile(otherPointer!.path, "utf8"));
       expect(other.some((record) => record.type === "fishnet.packet")).toBe(true);
     } finally {
       await rm(directory, { recursive: true, force: true });

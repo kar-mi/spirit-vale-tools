@@ -222,20 +222,12 @@ describe("FishNetActorDirectory", () => {
   });
 
   test("names the local player from a CharacterCallback_T payload", () => {
-    // Real prefix captured from session 20260718T224705686Z-bf379ac3 (object 62698, name "rak").
-    const characterCallback = Buffer.from(
-      "04004861366331636634652d626334312d343739352d613236642d633065336563333763633433"
-      + "223736353631313938333833383738383435ac534837323931396164382d313634312d343834"
-      + "652d383865642d6461656234656231646563380c6d656d6265720672616b000c262e22240c0a0a00",
-      "hex",
-    );
-
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 62698, 21, "PlayerController"));
     expect(directory.consume({
       ...packet(2, "rpcLink", 62698),
       rpcName: "CharacterCallback_T",
-      payload: characterCallback,
+      payload: characterCallbackPayload,
     })).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
@@ -244,6 +236,78 @@ describe("FishNetActorDirectory", () => {
       displayName: "rak",
       ownerConnectionId: 21,
     }]);
+  });
+
+  test("names a delta spawn from the account cache across a map change", () => {
+    const directory = new FishNetActorDirectory();
+    const fullSpawn = Buffer.concat([
+      Buffer.from([0, 2, 5]), // component index, written SyncType count, VisualData index
+      packedString("Delta Ranger"),
+      packed(6),
+      Buffer.from([7]), // account entry sync index
+      packedString("76561198040785673"),
+    ]);
+    expect(directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn))).toMatchObject([
+      { operation: "upsert", actorId: 60, displayName: "Delta Ranger", archetype: 6 },
+    ]);
+
+    directory.consume(packet(2, "authenticated"));
+
+    // Real delta spawn captured from session 20260718T224705686Z-bf379ac3 (object 4622):
+    // no VisualData, only the owning account id.
+    const deltaSpawn = Buffer.from(
+      "00010ac2e50601010006030101080702010000fa4300223736353631313938303430373835363733",
+      "hex",
+    );
+    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 3,
+      actorId: 70,
+      displayName: "Delta Ranger",
+      archetype: 6,
+      ownerConnectionId: 44,
+    }]);
+  });
+
+  test("names a delta spawn from an account learned via CharacterCallback_T", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 62698, 21, "PlayerController"));
+    directory.consume({
+      ...packet(2, "rpcLink", 62698),
+      rpcName: "CharacterCallback_T",
+      payload: characterCallbackPayload,
+    });
+    directory.consume(packet(3, "authenticated"));
+
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString("76561198383878845")]);
+    expect(directory.consume(spawn(4, 71, 30, "PlayerController", deltaSpawn))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 4,
+      actorId: 71,
+      displayName: "rak",
+      ownerConnectionId: 30,
+    }]);
+  });
+
+  test("leaves empty delta spawns unnamed and wipes the account cache on reset", () => {
+    const directory = new FishNetActorDirectory();
+    const fullSpawn = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Delta Ranger"),
+      packed(6),
+      packedString("76561198040785673"),
+    ]);
+    directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn));
+
+    // Real empty delta spawn (8 bytes) seen for remote players: nothing to name from.
+    expect(directory.consume(spawn(2, 61, 13, "PlayerController", Buffer.from("0101000603010108", "hex"))))
+      .toEqual([]);
+
+    directory.reset();
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString("76561198040785673")]);
+    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([]);
   });
 
   test("removes and reapplies aliases across ownership and source lifecycle changes", () => {
@@ -272,6 +336,15 @@ describe("FishNetActorDirectory", () => {
     ]);
   });
 });
+
+// Real prefix captured from session 20260718T224705686Z-bf379ac3 (object 62698, name "rak",
+// account 76561198383878845).
+const characterCallbackPayload = Buffer.from(
+  "04004861366331636634652d626334312d343739352d613236642d633065336563333763633433"
+  + "223736353631313938333833383738383435ac534837323931396164382d313634312d343834"
+  + "652d383865642d6461656234656231646563380c6d656d6265720672616b000c262e22240c0a0a00",
+  "hex",
+);
 
 function section(componentIndex: number, data: Buffer): Buffer {
   const header = Buffer.alloc(5);

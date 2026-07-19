@@ -7,11 +7,10 @@ import type { DecodedFishNetPacket, FishNetDecodeOptions, FishNetRpcMap } from "
 
 interface SplitState {
   expected: number;
-  chunks: Buffer[];
+  chunks: { sequence?: number; chunk: Buffer }[];
   sequences: Set<number>;
   tick: number;
   totalBytes: number;
-  lastSequence?: number;
 }
 
 const MAX_SPLIT_CHUNKS = 1_024;
@@ -64,6 +63,18 @@ export class FishNetSessionDecoder {
     return state;
   }
 
+  private dropSplit(
+    splitKey: string,
+    payload: Buffer,
+    tick: number,
+    reason: NonNullable<DecodedFishNetPacket["splitDropReason"]>,
+  ): DecodedFishNetPacket {
+    this.splits.delete(splitKey);
+    const packet = opaquePacket(payload, 4, tick, 0, "split");
+    packet.splitDropReason = reason;
+    return packet;
+  }
+
   private clearConnectionSplits(key: string): void {
     for (const splitKey of this.splits.keys()) {
       if (splitKey.startsWith(`${key}\u0000`)) this.splits.delete(splitKey);
@@ -82,42 +93,30 @@ export class FishNetSessionDecoder {
     try {
       count = readSignedPackedWhole(payload, 6);
     } catch {
-      this.splits.delete(splitKey);
-      return [opaquePacket(payload, 4, tick, 0, "split")];
+      return [this.dropSplit(splitKey, payload, tick, "header")];
     }
     if (count.value < 1 || count.value > MAX_SPLIT_CHUNKS) {
-      this.splits.delete(splitKey);
-      return [opaquePacket(payload, 4, tick, 0, "split")];
+      return [this.dropSplit(splitKey, payload, tick, "chunk-count")];
     }
 
     let split = this.splits.get(splitKey);
-    if (split && options.sequence !== undefined && split.lastSequence !== undefined
-      && options.sequence !== ((split.lastSequence + 1) & 0xffff)
-      && !split.sequences.has(options.sequence)) {
-      this.splits.delete(splitKey);
-      return [opaquePacket(payload, 4, tick, 0, "split")];
-    }
     if (!split || split.expected !== count.value || (options.sequence === undefined && split.tick !== tick)) {
       split = { expected: count.value, chunks: [], sequences: new Set(), tick, totalBytes: 0 };
       this.splits.set(splitKey, split);
     }
 
     if (options.sequence !== undefined && split.sequences.has(options.sequence)) return [];
-    if (options.sequence !== undefined) {
-      split.sequences.add(options.sequence);
-      split.lastSequence = options.sequence;
-    }
+    if (options.sequence !== undefined) split.sequences.add(options.sequence);
     const chunk = payload.subarray(count.nextOffset);
     split.totalBytes += chunk.length;
     if (split.totalBytes > MAX_SPLIT_BYTES) {
-      this.splits.delete(splitKey);
-      return [opaquePacket(payload, 4, tick, 0, "split")];
+      return [this.dropSplit(splitKey, payload, tick, "size-cap")];
     }
-    split.chunks.push(chunk);
+    split.chunks.push({ sequence: options.sequence, chunk });
     if (split.chunks.length < split.expected) return [];
 
     this.splits.delete(splitKey);
-    const reassembled = Buffer.concat(split.chunks.slice(0, split.expected), split.totalBytes);
+    const reassembled = Buffer.concat(orderedChunks(split.chunks), split.totalBytes);
     return this.decodeMessages(reassembled, 0, tick, connection, options);
   }
 
@@ -162,6 +161,22 @@ export class FishNetSessionDecoder {
     }
     return packets;
   }
+}
+
+/**
+ * Passive capture observes wire order, not delivery order: retransmits and reordering are normal,
+ * and interleaved reliable traffic means chunk sequences are monotonic but not contiguous. Chunks
+ * are therefore accumulated without gap checks and concatenated in wrap-aware sequence order.
+ */
+function orderedChunks(chunks: { sequence?: number; chunk: Buffer }[]): Buffer[] {
+  if (chunks.some(({ sequence }) => sequence === undefined)) return chunks.map(({ chunk }) => chunk);
+  const sequences = chunks.map(({ sequence }) => sequence!);
+  const wrapped = Math.max(...sequences) - Math.min(...sequences) > 0x8000;
+  const order = (sequence: number): number => (wrapped && sequence < 0x8000 ? sequence + 0x10000 : sequence);
+  return chunks
+    .slice()
+    .sort((a, b) => order(a.sequence!) - order(b.sequence!))
+    .map(({ chunk }) => chunk);
 }
 
 function removeObjectLinks(links: Map<number, RpcLinkRegistrationState>, objectId: number): void {

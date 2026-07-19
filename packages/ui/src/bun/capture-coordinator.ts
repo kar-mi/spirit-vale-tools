@@ -199,6 +199,11 @@ export class CaptureCoordinator {
 
   private routePacket(packet: CapturedFishNetPacket): void {
     if (!this.admitPacket(packet)) return;
+    if (packet.splitDropReason !== undefined) {
+      this.combatLog?.log("combat.warning", {
+        message: `split reassembly dropped (${packet.splitDropReason}) at tick ${packet.tick}`,
+      });
+    }
     let handled = false;
     try {
       const identities = this.actors.consume(packet);
@@ -262,7 +267,7 @@ export class CaptureCoordinator {
     if (ownerConnectionId === undefined || !Number.isInteger(ownerConnectionId) || ownerConnectionId < 0) return;
     const named = identities.some((event) => event.operation === "upsert" && event.actorId === packet.objectId);
     if (named) return;
-    this.otherLog?.log("combat.spawnIdentityMiss", jsonObject({
+    this.combatLog?.log("combat.spawnIdentityMiss", jsonObject({
       tick: packet.tick,
       objectId: packet.objectId,
       ownerConnectionId,

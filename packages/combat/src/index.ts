@@ -13,11 +13,13 @@ export type {
   FishNetPersonalMatch,
 } from "./dps-meter.ts";
 export type {
+  FishNetActorDirectoryOptions,
   FishNetActorIdentity,
   FishNetActorIdentityEvent,
   FishNetActorIdentityRemoveEvent,
   FishNetActorIdentityResetEvent,
   FishNetActorIdentityUpsertEvent,
+  FishNetLocalIdentity,
 } from "./actor-directory.ts";
 export type {
   FishNetCombatActionKind,
