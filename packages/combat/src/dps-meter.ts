@@ -206,6 +206,12 @@ export class FishNetDpsMeter {
     this.finishCurrent(observedAtMs);
   }
 
+  /** Discards all encounter statistics while retaining actor and personal configuration. */
+  clearEncounters(): void {
+    this.finished.length = 0;
+    this.current = undefined;
+  }
+
   setPersonalName(name: string): void {
     this.personalName = name.trim();
   }

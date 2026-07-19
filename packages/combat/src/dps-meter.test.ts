@@ -117,6 +117,29 @@ describe("FishNetDpsMeter", () => {
     expect(meter.replayTimeMs(330, 300)).toBe(1_000);
   });
 
+  test("clears encounter history while retaining identity and personal selection", () => {
+    const meter = new FishNetDpsMeter({ personalName: "Aster Vale", personalActorId: 101 });
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeCombat(damage(101, 100), 0);
+    meter.reset(1_000);
+    meter.consumeCombat(damage(101, 50), 2_000);
+
+    meter.clearEncounters();
+
+    expect(meter.getSnapshots()).toEqual([]);
+    expect(meter.getLatestSnapshot()).toBeUndefined();
+    expect(meter.getPersonalName()).toBe("Aster Vale");
+    expect(meter.getPersonalActorId()).toBe(101);
+
+    meter.consumeCombat(damage(101, 25), 3_000);
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      totalDamage: 25,
+      personalMatch: "matched",
+      actors: [{ displayName: "Aster Vale", damage: 25 }],
+      personal: { displayName: "Aster Vale", damage: 25 },
+    });
+  });
+
   test("uses a 30 second encounter timeout by default", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeCombat(damage(101, 100), 0);

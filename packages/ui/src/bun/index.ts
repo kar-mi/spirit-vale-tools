@@ -40,7 +40,6 @@ let selectedReplayEncounterId: string | undefined;
 let liveMeter = new FishNetDpsMeter({ personalName: settings.personalName });
 let manualPersonalActorId: number | undefined;
 const liveLog = liveLogOverride ? new DpsLogFollower(liveLogOverride) : new DpsSessionLogFollower(options.logDirectory);
-let lastLiveObservedAtMs = 0;
 let liveLogPolling = false;
 let publishing = false;
 let settingsSaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -70,7 +69,7 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
         return appState();
       },
       resetEncounter: () => {
-        if (mode === "live") liveMeter.reset(lastLiveObservedAtMs);
+        if (mode === "live") liveMeter.clearEncounters();
         publish();
         return appState();
       },
@@ -237,10 +236,8 @@ async function pollLiveLog(): Promise<void> {
         personalName: settings.personalName,
         ...(manualPersonalActorId === undefined ? {} : { personalActorId: manualPersonalActorId }),
       });
-      lastLiveObservedAtMs = 0;
     }
     for (const { event, observedAtMs } of batch.events) {
-      lastLiveObservedAtMs = observedAtMs;
       if (event.kind === "actorIdentity") liveMeter.consumeIdentity(event, observedAtMs);
       else liveMeter.consumeCombat(event, observedAtMs);
     }
