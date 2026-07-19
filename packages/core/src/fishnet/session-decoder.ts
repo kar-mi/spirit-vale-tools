@@ -9,7 +9,13 @@ interface SplitState {
   expected: number;
   chunks: Buffer[];
   sequences: Set<number>;
+  tick: number;
+  totalBytes: number;
+  lastSequence?: number;
 }
+
+const MAX_SPLIT_CHUNKS = 1_024;
+const MAX_SPLIT_BYTES = 1024 * 1024;
 
 /** Stateful decoder for RPC-link registration, despawn cleanup, and split reassembly. */
 export class FishNetSessionDecoder {
@@ -71,28 +77,47 @@ export class FishNetSessionDecoder {
     connection: ConnectionState,
     options: FishNetDecodeOptions,
   ): DecodedFishNetPacket[] {
+    const splitKey = `${connectionKey}\u0000${options.direction ?? "unknown"}\u0000${options.channel ?? (options.reliable ? 0 : 1)}`;
     let count;
     try {
       count = readSignedPackedWhole(payload, 6);
     } catch {
+      this.splits.delete(splitKey);
       return [opaquePacket(payload, 4, tick, 0, "split")];
     }
-    if (count.value < 1 || count.value > 65_535) return [opaquePacket(payload, 4, tick, 0, "split")];
+    if (count.value < 1 || count.value > MAX_SPLIT_CHUNKS) {
+      this.splits.delete(splitKey);
+      return [opaquePacket(payload, 4, tick, 0, "split")];
+    }
 
-    const splitKey = `${connectionKey}\u0000${options.direction ?? "unknown"}\u0000${options.channel ?? (options.reliable ? 0 : 1)}`;
     let split = this.splits.get(splitKey);
-    if (!split || split.expected !== count.value) {
-      split = { expected: count.value, chunks: [], sequences: new Set() };
+    if (split && options.sequence !== undefined && split.lastSequence !== undefined
+      && options.sequence !== ((split.lastSequence + 1) & 0xffff)
+      && !split.sequences.has(options.sequence)) {
+      this.splits.delete(splitKey);
+      return [opaquePacket(payload, 4, tick, 0, "split")];
+    }
+    if (!split || split.expected !== count.value || (options.sequence === undefined && split.tick !== tick)) {
+      split = { expected: count.value, chunks: [], sequences: new Set(), tick, totalBytes: 0 };
       this.splits.set(splitKey, split);
     }
 
     if (options.sequence !== undefined && split.sequences.has(options.sequence)) return [];
-    if (options.sequence !== undefined) split.sequences.add(options.sequence);
-    split.chunks.push(payload.subarray(count.nextOffset));
+    if (options.sequence !== undefined) {
+      split.sequences.add(options.sequence);
+      split.lastSequence = options.sequence;
+    }
+    const chunk = payload.subarray(count.nextOffset);
+    split.totalBytes += chunk.length;
+    if (split.totalBytes > MAX_SPLIT_BYTES) {
+      this.splits.delete(splitKey);
+      return [opaquePacket(payload, 4, tick, 0, "split")];
+    }
+    split.chunks.push(chunk);
     if (split.chunks.length < split.expected) return [];
 
     this.splits.delete(splitKey);
-    const reassembled = Buffer.concat(split.chunks.slice(0, split.expected));
+    const reassembled = Buffer.concat(split.chunks.slice(0, split.expected), split.totalBytes);
     return this.decodeMessages(reassembled, 0, tick, connection, options);
   }
 

@@ -16,17 +16,35 @@ export interface CreateLogSessionOptions {
   streams: readonly LogStream[];
   logDirectory?: string;
   outputPaths?: Partial<Record<LogStream, string>>;
+  onWriteError?: (failure: LogWriteFailure) => void;
+}
+
+export interface LogWriteFailure {
+  stream: LogStream;
+  path: string;
+  error: Error;
+}
+
+interface JsonLinesLoggerOptions {
+  stream: LogStream;
+  onWriteError?: (failure: LogWriteFailure) => void;
+  append?: typeof appendFile;
 }
 
 export class JsonLinesLogger {
   private sequence = 0;
   private pending: Promise<void> = Promise.resolve();
+  private firstFailure?: Error;
+  private readonly append: typeof appendFile;
 
   constructor(
     readonly path: string,
     private readonly sessionId: string,
     private readonly source: string,
-  ) {}
+    private readonly options: JsonLinesLoggerOptions = { stream: "other" },
+  ) {
+    this.append = options.append ?? appendFile;
+  }
 
   log(type: string, data: JsonObject): void {
     const record: LogRecord = {
@@ -39,11 +57,22 @@ export class JsonLinesLogger {
       data,
     };
     const line = `${JSON.stringify(record)}\n`;
-    this.pending = this.pending.then(() => appendFile(this.path, line, "utf8"));
+    this.pending = this.pending
+      .then(() => this.append(this.path, line, "utf8"))
+      .catch((error: unknown) => {
+        const failure = toError(error);
+        this.firstFailure ??= failure;
+        try {
+          this.options.onWriteError?.({ stream: this.options.stream, path: this.path, error: failure });
+        } catch {
+          // A reporting callback must not poison the append queue.
+        }
+      });
   }
 
-  close(): Promise<void> {
-    return this.pending;
+  async close(): Promise<void> {
+    await this.pending;
+    if (this.firstFailure) throw this.firstFailure;
   }
 }
 
@@ -64,7 +93,10 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
     const streamPath = override ?? sessionStreamPath(id, stream, logDirectory);
     await mkdir(path.dirname(streamPath), { recursive: true });
     await writeFile(streamPath, "", override ? undefined : { flag: "wx" });
-    loggers.set(stream, new JsonLinesLogger(streamPath, id, options.producer));
+    loggers.set(stream, new JsonLinesLogger(streamPath, id, options.producer, {
+      stream,
+      onWriteError: options.onWriteError,
+    }));
     if (!override) {
       const pointer: CurrentLogStream = {
         schemaVersion: 1,
@@ -145,4 +177,8 @@ function isIsoDate(value: unknown): value is string {
 
 function isMissing(error: unknown): boolean {
   return isObject(error) && error["code"] === "ENOENT";
+}
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
 }

@@ -12,6 +12,8 @@ export type FishNetHitResult = "normal" | "critical" | "miss" | "blocked" | "dod
 export interface FishNetCombatTrackerOptions {
   /** Ticks to retain a completed activation for trailing hits. Defaults to 30. */
   hitGraceTicks?: number;
+  /** Maximum age of an activation that never completes. Defaults to 900 ticks. */
+  activationMaxAgeTicks?: number;
   /** Semantic labels for skill wire identifiers. Defaults to the current bundled build. */
   semanticMap?: FishNetSemanticMap;
   buildFingerprint?: string;
@@ -118,6 +120,7 @@ const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "CastComplete_C", 
 /** Converts decoded FishNet RPCs into actor-grouped combat events and summaries. */
 export class FishNetCombatTracker {
   private readonly hitGraceTicks: number;
+  private readonly activationMaxAgeTicks: number;
   private readonly skillLabels: Map<string, string>;
   private readonly activations = new Map<string, ActivationState>();
   private readonly recentDamageSignatures = new Set<string>();
@@ -128,6 +131,9 @@ export class FishNetCombatTracker {
     const grace = options.hitGraceTicks ?? 30;
     if (!Number.isInteger(grace) || grace < 0) throw new Error("hitGraceTicks must be a non-negative integer");
     this.hitGraceTicks = grace;
+    const maxAge = options.activationMaxAgeTicks ?? 900;
+    if (!Number.isInteger(maxAge) || maxAge < 1) throw new Error("activationMaxAgeTicks must be a positive integer");
+    this.activationMaxAgeTicks = maxAge;
     const semanticMap = options.semanticMap
       ?? loadBundledFishNetSemanticMap(options.buildFingerprint ?? CURRENT_FISHNET_BUILD_FINGERPRINT);
     this.skillLabels = new Map(semanticMap.verifiedSkillLabels.map(({ value, label }) => [value, label]));
@@ -381,7 +387,9 @@ export class FishNetCombatTracker {
 
   private pruneExpired(tick: number): void {
     const expired = [...this.activations.values()]
-      .filter((activation) => activation.deadlineTick !== undefined && activation.deadlineTick < tick)
+      .filter((activation) => activation.deadlineTick !== undefined
+        ? activation.deadlineTick < tick
+        : tick - activation.startTick > this.activationMaxAgeTicks)
       .map(({ id }) => id);
     for (const id of expired) this.activations.delete(id);
   }

@@ -40,7 +40,9 @@ export class LiteNetLibProtocolError extends Error {
 }
 
 export function decodeLiteNetLibDatagram(data: Uint8Array): DecodedLiteNetLibPacket[] {
-  const bytes = Buffer.from(data);
+  const bytes = Buffer.isBuffer(data)
+    ? data
+    : Buffer.from(data.buffer, data.byteOffset, data.byteLength);
   if (bytes.length === 0) throw new LiteNetLibProtocolError("LiteNetLib datagram is empty", 0);
   const packets: DecodedLiteNetLibPacket[] = [];
   decodePacket(bytes, 0, [], 0, packets);

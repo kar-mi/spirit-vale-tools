@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { createLogSession, defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "./index.ts";
+import { JsonLinesLogger, createLogSession, defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "./index.ts";
 
 describe("shared JSON logger", () => {
   test("defaults to a logs folder under the working directory", () => {
@@ -34,5 +34,28 @@ describe("shared JSON logger", () => {
 
   test("rejects records outside the versioned envelope", () => {
     expect(parseLogRecord({ kind: "damage", tick: 1 })).toBeUndefined();
+  });
+
+  test("continues queued writes after reporting an append failure", async () => {
+    const appended: string[] = [];
+    const failures: string[] = [];
+    let attempts = 0;
+    const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
+      stream: "combat",
+      append: async (_path, data) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("synthetic write failure");
+        appended.push(String(data));
+      },
+      onWriteError: ({ stream, error }) => failures.push(`${stream}:${error.message}`),
+    });
+
+    logger.log("combat.event", { value: 1 });
+    logger.log("combat.event", { value: 2 });
+    await expect(logger.close()).rejects.toThrow("synthetic write failure");
+
+    expect(failures).toEqual(["combat:synthetic write failure"]);
+    expect(appended).toHaveLength(1);
+    expect(JSON.parse(appended[0]!)).toMatchObject({ sequence: 2, data: { value: 2 } });
   });
 });

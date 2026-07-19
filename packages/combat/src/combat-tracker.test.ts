@@ -158,6 +158,16 @@ describe("FishNetCombatTracker", () => {
     expect(actorTen[0]).toMatchObject({ kind: "damage", actorId: 10, value: 7 });
   });
 
+  test("expires a skill activation when its lifecycle completion is lost", () => {
+    const tracker = new FishNetCombatTracker({ activationMaxAgeTicks: 5 });
+    tracker.consume(cast(1, 10, "AxeArc"));
+
+    const events = tracker.consume(damage(7, 20, 10, "AxeArc", 12));
+
+    expect(events[0]).toMatchObject({ kind: "activation", phase: "inferred" });
+    expect(events[1]).toMatchObject({ kind: "damage", attribution: "inferred" });
+  });
+
   test("emits lethal damage as a death event and identifies a paired damage event", () => {
     const tracker = new FishNetCombatTracker();
     tracker.consume(cast(1, 10, "AxeArc"));

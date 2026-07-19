@@ -122,6 +122,25 @@ describe("PacketCapture Npcap lifecycle", () => {
     expect(warnings[0]).toContain("192.0.2.10:50000 -> 198.51.100.20:7004");
     await capture.stop();
   });
+
+  test("isolates a throwing packet listener and keeps capture running", async () => {
+    const runtime = new FakeRuntime();
+    runtime.packets.push(packet(udpDatagram(Buffer.from([1, 2, 3]))));
+    const capture = new PacketCapture({ runtime, platform: "win32" });
+    const warnings: string[] = [];
+    let observed = 0;
+    capture.on("udpPacket", () => { throw new Error("synthetic listener failure"); });
+    capture.on("udpPacket", () => observed += 1);
+    capture.on("warning", (message) => warnings.push(message));
+
+    await capture.start({ protocols: ["udp"] });
+    await Bun.sleep(10);
+
+    expect(observed).toBe(1);
+    expect(warnings).toEqual(["udpPacket listener failed: synthetic listener failure"]);
+    expect(capture.state).toBe("running");
+    await capture.stop();
+  });
 });
 
 function packet(data: Buffer): NpcapPacket {

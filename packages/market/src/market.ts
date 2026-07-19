@@ -218,7 +218,8 @@ export class FishNetMarketTracker {
     this.awaitingCollectAccount = false;
   }
 
-  private apply(event: FishNetMarketEvent): FishNetMarketEvent {
+  /** Applies an event restored from an event-sourced market log. */
+  apply(event: FishNetMarketEvent): FishNetMarketEvent {
     switch (event.kind) {
       case "catalog":
         this.catalog = event.items?.slice() ?? [];

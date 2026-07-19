@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { createLogSession } from "@spiritvale/logging";
 import type { JsonObject } from "@spiritvale/logging";
 import { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
+import { marketEventLogData } from "./event-log.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -49,6 +50,39 @@ describe("market log follower", () => {
     expect(await follower.poll()).toMatchObject({ invalidLines: 1, listings: [] });
     await writeFile(logPath, `${record(1, "market.lifecycle", { state: "started" })}\n`);
     expect(await follower.poll()).toMatchObject({ reset: true, status: "watching", listings: [] });
+  });
+
+  test("reconstructs listings from validated market events", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-market-test-"));
+    temporaryDirectories.push(directory);
+    const logPath = path.join(directory, "market.jsonl");
+    const data = marketEventLogData({
+      kind: "catalog",
+      tick: 10,
+      items: [{
+        sellerId: "seller-example",
+        searchText: "Example Sword",
+        sellerName: "Merchant Example",
+        listing: {
+          id: "listing-event",
+          sellerId: "seller-example",
+          sellerName: "Merchant Example",
+          itemId: "item-example",
+          itemType: 2,
+          count: 2,
+          countTraded: 0,
+          price: 1250n,
+          json: null,
+          expiresAt: 4102444800n,
+        },
+      }],
+    });
+    await writeFile(logPath, `${record(1, "market.event", data)}\n`);
+
+    const batch = await new MarketLogFollower(logPath).poll();
+
+    expect(batch).toMatchObject({ status: "ready", invalidLines: 0 });
+    expect(batch.listings[0]).toMatchObject({ id: "listing-event", displayName: "Example Sword", price: 1250n });
   });
 
   test("switches to the newly current market session", async () => {

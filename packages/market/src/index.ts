@@ -7,6 +7,7 @@ export {
 } from "./market.ts";
 export { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
 export type { MarketLogBatch, MarketLogStatus } from "./live-log.ts";
+export { marketEventLogData, parseMarketEventLogData } from "./event-log.ts";
 export {
   FISHNET_MARKET_STAT_NAMES,
   fishNetMarketStatName,

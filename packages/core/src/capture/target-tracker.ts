@@ -7,6 +7,8 @@ interface OwnedEndpoint {
   processId: number;
 }
 
+const TARGET_REFRESH_INTERVAL_MS = 1_000;
+
 export interface TargetSnapshotProvider {
   snapshot(processName: string, protocols: readonly CaptureProtocol[]): Promise<{
     processIds: number[];
@@ -16,21 +18,24 @@ export interface TargetSnapshotProvider {
 
 export class WindowsTargetTracker {
   private processIds: number[] = [];
-  private endpoints: OwnedEndpoint[] = [];
+  private endpointKeys = new Set<string>();
   private timer?: ReturnType<typeof setInterval>;
   private refreshing = false;
   private published = false;
+  private lastRefreshError?: string;
 
   constructor(
     readonly processName: string,
     private readonly protocols: readonly CaptureProtocol[],
     private readonly onStatus: (status: CaptureTargetStatus) => void,
     private readonly provider: TargetSnapshotProvider = new CommandTargetSnapshotProvider(),
+    private readonly onWarning: (message: string) => void = () => {},
+    private readonly refreshIntervalMs = TARGET_REFRESH_INTERVAL_MS,
   ) {}
 
   async start(): Promise<void> {
     await this.refresh();
-    this.timer = setInterval(() => void this.refresh(), 250);
+    this.timer = setInterval(() => void this.refresh(), this.refreshIntervalMs);
   }
 
   stop(): void {
@@ -47,9 +52,9 @@ export class WindowsTargetTracker {
   }
 
   private matches(protocol: CaptureProtocol, address: string, port: number): boolean {
-    return this.endpoints.some((endpoint) => endpoint.protocol === protocol
-      && endpoint.port === port
-      && (endpoint.address === address || endpoint.address === "0.0.0.0" || endpoint.address === "::"));
+    return this.endpointKeys.has(endpointKey(protocol, address, port))
+      || this.endpointKeys.has(endpointKey(protocol, "0.0.0.0", port))
+      || this.endpointKeys.has(endpointKey(protocol, "::", port));
   }
 
   private async refresh(): Promise<void> {
@@ -57,10 +62,15 @@ export class WindowsTargetTracker {
     this.refreshing = true;
     try {
       const next = await this.provider.snapshot(this.processName, this.protocols);
+      this.lastRefreshError = undefined;
       const changed = !this.published || next.processIds.length !== this.processIds.length
         || next.processIds.some((processId, index) => processId !== this.processIds[index]);
       this.processIds = next.processIds;
-      this.endpoints = next.endpoints;
+      this.endpointKeys = new Set(next.endpoints.map((endpoint) => endpointKey(
+        endpoint.protocol,
+        endpoint.address,
+        endpoint.port,
+      )));
       if (changed) {
         this.published = true;
         this.onStatus({
@@ -68,6 +78,12 @@ export class WindowsTargetTracker {
           state: this.processIds.length > 0 ? "active" : "waiting",
           processIds: [...this.processIds],
         });
+      }
+    } catch (error) {
+      const message = `target refresh failed: ${errorMessage(error)}`;
+      if (message !== this.lastRefreshError) {
+        this.lastRefreshError = message;
+        try { this.onWarning(message); } catch { /* Warning handlers must not reject the refresh loop. */ }
       }
     } finally {
       this.refreshing = false;
@@ -128,4 +144,12 @@ function parseEndpoint(value: string): { address: string; port: number } | undef
   if (split < 0) return undefined;
   const port = Number(value.slice(split + 1));
   return Number.isInteger(port) ? { address: value.slice(0, split), port } : undefined;
+}
+
+function endpointKey(protocol: CaptureProtocol, address: string, port: number): string {
+  return `${protocol}\u0000${address}\u0000${port}`;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

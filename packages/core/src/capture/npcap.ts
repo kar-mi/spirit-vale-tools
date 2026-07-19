@@ -44,8 +44,10 @@ const ERROR_BUFFER_SIZE = 512;
 
 export class SystemNpcapRuntime implements NpcapRuntime {
   private api?: LoadedNpcap;
+  private readyStatus?: NpcapStatus;
 
   async status(): Promise<NpcapStatus> {
+    if (this.readyStatus) return this.readyStatus;
     if (process.platform !== "win32") {
       return { availability: "error", detail: "Npcap capture is supported only on Windows" };
     }
@@ -65,7 +67,8 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       if (!version.toLowerCase().includes("npcap")) {
         return { availability: "error", detail: "The loaded packet capture library is not Npcap" };
       }
-      return { availability: "ready", detail: "Npcap is ready", version };
+      this.readyStatus = { availability: "ready", detail: "Npcap is ready", version };
+      return this.readyStatus;
     } catch (error) {
       return { availability: "error", detail: errorMessage(error) };
     }

@@ -113,19 +113,20 @@ export class PacketCapture extends EventEmitter {
       if (!supportsDataLink(this.session.dataLink)) {
         throw new Error(`Npcap adapter uses unsupported data-link type ${this.session.dataLink}`);
       }
-      if (resolved.detail) this.emit("warning", resolved.detail);
+      if (resolved.detail) this.emitSafely("warning", resolved.detail);
       if (targetProcessName) {
         this.target = new WindowsTargetTracker(
           targetProcessName,
           protocols,
-          (status) => this.emit("targetStatus", status),
+          (status) => this.emitSafely("targetStatus", status),
           this.targetProvider,
+          (message) => this.emitSafely("warning", message),
         );
         await this.target.start();
       }
       this._state = "running";
       this.pollTimer = setInterval(() => void this.poll(), POLL_INTERVAL_MS);
-      this.emit("started");
+      this.emitSafely("started");
     } catch (error) {
       this.closeResources();
       this.resetDecoder();
@@ -140,7 +141,7 @@ export class PacketCapture extends EventEmitter {
     this.closeResources();
     this.resetDecoder();
     this._state = "stopped";
-    this.emit("stopped");
+    this.emitSafely("stopped");
   }
 
   private poll(): void {
@@ -177,7 +178,7 @@ export class PacketCapture extends EventEmitter {
       }
     } catch (error) {
       const failure = toError(error);
-      if (this.listenerCount("error") > 0) this.emit("error", failure);
+      if (this.listenerCount("error") > 0) this.emitSafely("error", failure);
       else console.error("[spiritvale-capture]", failure);
       void this.stop();
     } finally {
@@ -202,9 +203,9 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitTransportPacket(packet: CapturedTransportPacket): void {
-    if (packet.protocol === "tcp") this.emit("packet", packet);
-    else this.emit("udpPacket", packet);
-    this.emit("transportPacket", packet);
+    if (packet.protocol === "tcp") this.emitSafely("packet", packet);
+    else this.emitSafely("udpPacket", packet);
+    this.emitSafely("transportPacket", packet);
     if (packet.protocol === "udp" && this.decodeLiteNetLib) this.emitLiteNetLibPackets(packet);
   }
 
@@ -212,12 +213,12 @@ export class PacketCapture extends EventEmitter {
     try {
       for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
         const captured = { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket;
-        this.emit("liteNetPacket", captured);
+        this.emitSafely("liteNetPacket", captured);
         if (this.decodeFishNet) this.emitFishNetPacket(captured);
       }
     } catch (error) {
       const detail = error instanceof LiteNetLibProtocolError ? error.message : toError(error).message;
-      this.emit("warning", `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ${packet.destinationIP}:${packet.destinationPort}: ${detail}`);
+      this.emitSafely("warning", `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ${packet.destinationIP}:${packet.destinationPort}: ${detail}`);
     }
   }
 
@@ -241,12 +242,26 @@ export class PacketCapture extends EventEmitter {
         sequence: property === "channeled" ? packet.packet.sequence : undefined,
       });
       for (const decoded of decodedPackets ?? []) {
-        this.emit("fishNetPacket", { ...decoded, liteNetPacket: packet, connectionId } satisfies CapturedFishNetPacket);
+        this.emitSafely("fishNetPacket", { ...decoded, liteNetPacket: packet, connectionId } satisfies CapturedFishNetPacket);
       }
     } catch (error) {
       const detail = error instanceof FishNetProtocolError ? error.message : toError(error).message;
-      this.emit("warning", `skipped FishNet decode at LiteNetLib path ${packet.mergePath.join(".") || "root"}: ${detail}`);
+      this.emitSafely("warning", `skipped FishNet decode at LiteNetLib path ${packet.mergePath.join(".") || "root"}: ${detail}`);
     }
+  }
+
+  private emitSafely(event: string, ...args: unknown[]): boolean {
+    const listeners = this.rawListeners(event);
+    for (const listener of listeners) {
+      try {
+        Reflect.apply(listener, this, args);
+      } catch (error) {
+        const detail = `${event} listener failed: ${toError(error).message}`;
+        if (event === "warning" || event === "error") console.error("[spiritvale-capture]", detail);
+        else if (!this.emitSafely("warning", detail)) console.error("[spiritvale-capture]", detail);
+      }
+    }
+    return listeners.length > 0;
   }
 
   private closeResources(): void {

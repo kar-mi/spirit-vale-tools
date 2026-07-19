@@ -14,6 +14,7 @@ const session = await createLogSession({
   producer: "rewards-cli",
   streams: ["rewards"],
   ...(outputPath ? { outputPaths: { rewards: outputPath } } : {}),
+  onWriteError: ({ stream, error }) => console.error(`[logging error] ${stream}: ${error.message}`),
 });
 const logger = session.logger("rewards");
 const tracker = new FishNetMobRewardTracker();

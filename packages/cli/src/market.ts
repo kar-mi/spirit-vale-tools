@@ -1,4 +1,4 @@
-import { FishNetMarketTracker, parseFishNetMarketStatExpression } from "@spiritvale/market";
+import { FishNetMarketTracker, marketEventLogData, parseFishNetMarketStatExpression } from "@spiritvale/market";
 import { PacketCapture } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
 import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
@@ -63,6 +63,7 @@ const session = await createLogSession({
   producer: "market-cli",
   streams: ["market"],
   ...(outputPath ? { outputPaths: { market: outputPath } } : {}),
+  onWriteError: ({ stream, error }) => console.error(`[logging error] ${stream}: ${error.message}`),
 });
 const logger = session.logger("market");
 console.error(`logging market session ${session.id}`);
@@ -92,7 +93,8 @@ async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQ
   capture.on("fishNetPacket", (packet) => {
     try {
       const events = market.consume(packet);
-      if (events.length > 0) emit(market, marketQuery, output, { event: events.at(-1)?.kind });
+      for (const event of events) output.log("market.event", marketEventLogData(event));
+      if (events.length > 0) report(market, marketQuery);
     } catch (error) {
       const message = `skipped market payload: ${error instanceof Error ? error.message : String(error)}`;
       output.log("market.warning", { message });
@@ -139,6 +141,11 @@ function emit(
     results,
   }));
   console.error(`market: ${snapshot.catalog.length} catalog entries, ${snapshot.stalls.length} stalls, ${results.length} matches`);
+}
+
+function report(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery): void {
+  const snapshot = market.snapshot();
+  console.error(`market: ${snapshot.catalog.length} catalog entries, ${snapshot.stalls.length} stalls, ${market.query(marketQuery).length} matches`);
 }
 
 function jsonObject(value: unknown): JsonObject {

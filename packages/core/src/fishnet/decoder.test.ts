@@ -522,6 +522,22 @@ describe("FishNet bundles and sessions", () => {
     expect(incomplete.decode(first, { ...context, sequence: 20 })).toEqual([]);
   });
 
+  test("bounds and abandons invalid split reassembly", () => {
+    const context = { reliable: true, connectionId: "bounded-split", direction: "inbound" as const, channel: 0 };
+    const excessiveCount = tick(6, message(2, Buffer.concat([packed(1_025), Buffer.from([1])])));
+    expect(new FishNetSessionDecoder().decode(excessiveCount, { ...context, sequence: 1 })[0])
+      .toMatchObject({ packetName: "split" });
+
+    const oversized = tick(6, message(2, Buffer.concat([packed(2), Buffer.alloc(1024 * 1024 + 1)])));
+    expect(new FishNetSessionDecoder().decode(oversized, { ...context, sequence: 2 })[0])
+      .toMatchObject({ packetName: "split" });
+
+    const interrupted = new FishNetSessionDecoder();
+    const chunk = tick(6, message(2, Buffer.concat([packed(2), Buffer.from([1])])));
+    expect(interrupted.decode(chunk, { ...context, sequence: 10 })).toEqual([]);
+    expect(interrupted.decode(chunk, { ...context, sequence: 12 })[0]).toMatchObject({ packetName: "split" });
+  });
+
   test("despawn and authentication remove stale registrations", () => {
     const decoder = new FishNetSessionDecoder();
     const context = { reliable: true, connectionId: "lifecycle" };

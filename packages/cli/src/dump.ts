@@ -51,6 +51,7 @@ const session = await createLogSession({
   producer: "capture-cli",
   streams: [stream],
   ...(outputPath ? { outputPaths: { [stream]: outputPath } } : {}),
+  onWriteError: ({ stream: failedStream, error }) => console.error(`[logging error] ${failedStream}: ${error.message}`),
 });
 const logger = session.logger(stream);
 console.error(`logging ${stream} session ${session.id}`);

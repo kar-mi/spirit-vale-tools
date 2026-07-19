@@ -1,7 +1,8 @@
 import { open, stat } from "node:fs/promises";
 
 import { defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "@spiritvale/logging";
-import { resolveFishNetMarketListingDisplayName } from "./market.ts";
+import { parseMarketEventLogData } from "./event-log.ts";
+import { FishNetMarketTracker, resolveFishNetMarketListingDisplayName } from "./market.ts";
 import type { FishNetMarketListingView, FishNetMarketStat } from "./market.ts";
 
 export type MarketLogStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
@@ -18,12 +19,13 @@ export interface MarketLogBatch {
   sessionId?: string;
 }
 
-/** Incrementally follows snapshots written by the passive market CLI. */
+/** Incrementally follows event records and legacy snapshots written by passive capture. */
 export class MarketLogFollower {
   private offset = 0;
   private pending = "";
   private decoder = new TextDecoder();
   private listings: FishNetMarketListingView[] = [];
+  private readonly tracker = new FishNetMarketTracker();
   private status: MarketLogStatus = "watching";
   private observedAt?: string;
 
@@ -91,6 +93,19 @@ export class MarketLogFollower {
         changed = true;
         continue;
       }
+      if (record.type === "market.event") {
+        const event = parseMarketEventLogData(record.data);
+        if (!event) {
+          invalidLines += 1;
+          continue;
+        }
+        this.tracker.apply(event);
+        this.listings = this.tracker.query();
+        this.status = "ready";
+        this.observedAt = record.recordedAt;
+        changed = true;
+        continue;
+      }
       if (record.type !== "market.snapshot") continue;
       const listings = parseListings(record.data["listings"]);
       if (!listings) {
@@ -110,6 +125,7 @@ export class MarketLogFollower {
     this.pending = "";
     this.decoder = new TextDecoder();
     this.listings = [];
+    this.tracker.reset();
     this.status = "watching";
     this.observedAt = undefined;
   }

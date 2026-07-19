@@ -4,6 +4,7 @@ export {
   parseLogRecord,
   readCurrentLogStream,
 } from "./logger.ts";
+export type { CreateLogSessionOptions, LogWriteFailure } from "./logger.ts";
 export {
   defaultLogDirectory,
   currentStreamPointerPath,

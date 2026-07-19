@@ -14,10 +14,7 @@ export async function resolveCaptureDevice(
     const requested = devices.find((device) => device.name === requestedName);
     if (requested) return { device: requested, usedFallback: false };
   }
-  const defaultAddress = await defaultRouteAddress();
-  const automatic = (defaultAddress
-    ? devices.find((device) => device.addresses.includes(defaultAddress))
-    : undefined) ?? devices.find(isUsable) ?? devices[0];
+  const automatic = await defaultRouteDevice(devices) ?? devices.find(isUsable) ?? devices[0];
   return {
     device: automatic,
     usedFallback: Boolean(requestedName),
@@ -41,7 +38,7 @@ export function chooseDeviceByRouteOutput(devices: readonly NpcapDevice[], outpu
   return undefined;
 }
 
-async function defaultRouteAddress(): Promise<string | undefined> {
+async function defaultRouteDevice(devices: readonly NpcapDevice[]): Promise<NpcapDevice | undefined> {
   try {
     const child = Bun.spawn({
       cmd: ["route.exe", "PRINT", "0.0.0.0"],
@@ -50,13 +47,7 @@ async function defaultRouteAddress(): Promise<string | undefined> {
       windowsHide: true,
     });
     const output = await new Response(child.stdout).text();
-    if (await child.exited !== 0) return undefined;
-    const match = output.split(/\r?\n/).flatMap((line) => {
-      const columns = line.trim().split(/\s+/);
-      if (columns[0] !== "0.0.0.0" || columns[1] !== "0.0.0.0" || columns.length < 5) return [];
-      return [{ address: columns[3]!, metric: Number(columns[4]) }];
-    }).sort((left, right) => left.metric - right.metric)[0];
-    return match?.address;
+    return await child.exited === 0 ? chooseDeviceByRouteOutput(devices, output) : undefined;
   } catch {
     return undefined;
   }

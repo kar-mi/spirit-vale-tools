@@ -3,8 +3,8 @@ import type { FishNetActorIdentityEvent } from "@spiritvale/combat";
 import { PacketCapture } from "@spiritvale/core";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
-import type { JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream } from "@spiritvale/logging";
-import { FishNetMarketTracker } from "@spiritvale/market";
+import type { JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream, LogWriteFailure } from "@spiritvale/logging";
+import { FishNetMarketTracker, marketEventLogData } from "@spiritvale/market";
 import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 
 import type { CaptureStatus, LauncherState } from "../launcher-types.ts";
@@ -70,6 +70,7 @@ export class CaptureCoordinator {
           producer: "desktop-capture",
           streams,
           logDirectory: this.options.logDirectory,
+          onWriteError: (failure) => this.logWriteFailure(failure),
         });
         this.combatLog = this.session.logger("combat");
         this.rewardsLog = this.session.logger("rewards");
@@ -118,19 +119,33 @@ export class CaptureCoordinator {
     if (this.stopping) return;
     this.stopping = true;
     try {
-      await this.capture.stop();
-    } catch (error) {
-      this.logCaptureError(errorMessage(error));
+      try {
+        await this.capture.stop();
+      } catch (error) {
+        this.logCaptureError(errorMessage(error));
+      }
+      this.writeStoppedLifecycle();
+      this.actors.reset();
+      this.combat.reset();
+      this.rewards.reset();
+      this.market.reset();
+      this.activeConnectionId = undefined;
+      this.lastAuthenticated = undefined;
+      const session = this.session;
+      this.session = undefined;
+      this.combatLog = undefined;
+      this.rewardsLog = undefined;
+      this.marketLog = undefined;
+      this.otherLog = undefined;
+      try {
+        await session?.close();
+      } catch (error) {
+        console.error("[spiritvale-logging]", errorMessage(error));
+      }
+      this.setStatus("stopped", "Capture stopped");
+    } finally {
+      this.stopping = false;
     }
-    this.writeStoppedLifecycle();
-    this.actors.reset();
-    this.combat.reset();
-    this.rewards.reset();
-    this.market.reset();
-    this.activeConnectionId = undefined;
-    this.lastAuthenticated = undefined;
-    await this.session?.close();
-    this.setStatus("stopped", "Capture stopped");
   }
 
   private captureStarted(): void {
@@ -211,18 +226,7 @@ export class CaptureCoordinator {
     try {
       const events = this.market.consume(packet);
       handled ||= events.length > 0;
-      if (events.length > 0) {
-        const snapshot = this.market.snapshot();
-        this.marketLog?.log("market.snapshot", jsonObject({
-          event: events.at(-1)?.kind,
-          account: snapshot.account,
-          lastBalanceDelta: snapshot.lastBalanceDelta,
-          lastCollectedAmount: snapshot.lastCollectedAmount,
-          catalogCount: snapshot.catalog.length,
-          stallCount: snapshot.stalls.length,
-          listings: this.market.query(),
-        }));
-      }
+      for (const event of events) this.marketLog?.log("market.event", marketEventLogData(event));
     } catch (error) {
       handled = true;
       this.logDomainWarning("market", error);
@@ -292,6 +296,11 @@ export class CaptureCoordinator {
     this.rewardsLog?.log("rewards.error", { message });
     this.marketLog?.log("market.error", { message });
     this.otherLog?.log("capture.error", { message });
+  }
+
+  private logWriteFailure(failure: LogWriteFailure): void {
+    console.error("[spiritvale-logging]", `${failure.stream}: ${failure.error.message}`);
+    if (!this.stopping && this.status !== "unavailable") this.setStatus("unavailable", "Unable to write capture logs");
   }
 
   private writeStoppedLifecycle(): void {

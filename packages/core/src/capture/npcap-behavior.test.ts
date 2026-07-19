@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { chooseDeviceByRouteOutput } from "./adapter-selection.ts";
 import { DATA_LINK, extractIpPacket } from "./link-layer.ts";
 import { parseTransportPacket } from "./packet-parser.ts";
-import { parseNetstat, parseTaskList } from "./target-tracker.ts";
+import { WindowsTargetTracker, parseNetstat, parseTaskList } from "./target-tracker.ts";
 import type { NpcapDevice } from "./npcap.ts";
 
 const devices: NpcapDevice[] = [
@@ -47,6 +47,43 @@ describe("Npcap capture behavior", () => {
     expect(parseTaskList('"FictionalGame.exe","4242","Console","1","10,000 K"\r\n')).toEqual([4242]);
     const endpoints = parseNetstat("UDP    0.0.0.0:50000    *:*    4242\r\n", "udp");
     expect(endpoints).toEqual([{ protocol: "udp", address: "0.0.0.0", port: 50_000, processId: 4242 }]);
+  });
+
+  test("recovers after a target snapshot failure without losing the refresh loop", async () => {
+    let calls = 0;
+    const warnings: string[] = [];
+    const statuses: string[] = [];
+    const tracker = new WindowsTargetTracker(
+      "SyntheticGame.exe",
+      ["udp"],
+      ({ state }) => statuses.push(state),
+      {
+        snapshot: async () => {
+          calls += 1;
+          if (calls === 1) throw new Error("synthetic snapshot failure");
+          return {
+            processIds: [4242],
+            endpoints: [{ protocol: "udp", address: "192.0.2.10", port: 7777, processId: 4242 }],
+          };
+        },
+      },
+      (message) => warnings.push(message),
+      1,
+    );
+
+    await tracker.start();
+    await Bun.sleep(10);
+    tracker.stop();
+
+    expect(warnings).toEqual(["target refresh failed: synthetic snapshot failure"]);
+    expect(statuses).toContain("active");
+    expect(tracker.classify({
+      protocol: "udp",
+      sourceIP: "192.0.2.10",
+      sourcePort: 7777,
+      destinationIP: "198.51.100.20",
+      destinationPort: 8888,
+    } as never)).toBe("outbound");
   });
 });
 

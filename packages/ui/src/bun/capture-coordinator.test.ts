@@ -55,7 +55,7 @@ describe("central capture coordinator", () => {
       const other = streams[3]!;
       expect(combat.map((record) => record.type)).toContain("combat.actorIdentity");
       expect(rewards.map((record) => record.type)).toContain("rewards.unmatched");
-      expect(market.map((record) => record.type)).toContain("market.snapshot");
+      expect(market.map((record) => record.type)).toContain("market.event");
       expect(other.filter((record) => record.type === "fishnet.packet")).toHaveLength(2);
       expect(other.at(-1)?.type).toBe("capture.lifecycle");
     } finally {
@@ -203,6 +203,32 @@ describe("central capture coordinator", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  test("creates a fresh session and restores error handling after a full restart", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-restart-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+      const firstSession = (await readCurrentLogStream("combat", directory))?.sessionId;
+      await coordinator.stop();
+
+      await coordinator.start();
+      const secondSession = (await readCurrentLogStream("combat", directory))?.sessionId;
+      expect(secondSession).toBeDefined();
+      expect(secondSession).not.toBe(firstSession);
+
+      capture.fail(new Error("synthetic capture failure"));
+      expect(coordinator.state()).toMatchObject({ captureStatus: "unavailable" });
+      await coordinator.stop();
+      expect(coordinator.state()).toMatchObject({ captureStatus: "stopped" });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 class FakeCapture extends EventEmitter {
@@ -224,6 +250,10 @@ class FakeCapture extends EventEmitter {
 
   packet(packet: TestPacket): void {
     this.emit("fishNetPacket", { connectionId: "test-connection", ...packet } as CapturedFishNetPacket);
+  }
+
+  fail(error: Error): void {
+    this.emit("error", error);
   }
 }
 
