@@ -1,13 +1,17 @@
 import { EventEmitter } from "node:events";
-import { existsSync } from "node:fs";
-import path from "node:path";
 
 import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
 import { loadBundledFishNetRpcMap } from "../fishnet/builtin-maps.ts";
 import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoder.ts";
-import { NativeProtocolDecoder, NativeRecordType } from "./protocol.ts";
+import { resolveCaptureDevice } from "./adapter-selection.ts";
+import { extractIpPacket, supportsDataLink } from "./link-layer.ts";
+import { SystemNpcapRuntime } from "./npcap.ts";
+import { parseTransportPacket } from "./packet-parser.ts";
+import { WindowsTargetTracker } from "./target-tracker.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket, FishNetRpcMap } from "../fishnet/types.ts";
+import type { NpcapDevice, NpcapRuntime, NpcapSession, NpcapStatus } from "./npcap.ts";
+import type { TargetSnapshotProvider } from "./target-tracker.ts";
 import type {
   CaptureConfig,
   CaptureTargetStatus,
@@ -17,41 +21,51 @@ import type {
   CaptureState,
 } from "../types.ts";
 
-export interface NativeProcess {
-  readonly stdin: {
-    write(data: Uint8Array): number;
-    flush(): number | Promise<number>;
-    end(): number | Promise<number>;
-  };
-  readonly stdout: ReadableStream<Uint8Array>;
-  readonly stderr: ReadableStream<Uint8Array>;
-  readonly exited: Promise<number>;
-  kill(signal?: number | NodeJS.Signals): void;
+const POLL_INTERVAL_MS = 2;
+const MAX_POLL_BATCH = 128;
+const PENDING_PACKET_LIMIT = 4_096;
+const PENDING_PACKET_MAX_AGE_MS = 1_000;
+const systemRuntime = new SystemNpcapRuntime();
+
+export interface PacketCaptureDependencies {
+  runtime?: NpcapRuntime;
+  targetProvider?: TargetSnapshotProvider;
+  platform?: NodeJS.Platform;
 }
 
-export type NativeProcessFactory = (command: string[], cwd: string) => NativeProcess;
-
-interface Deferred {
-  promise: Promise<void>;
-  resolve(): void;
-  reject(error: Error): void;
+interface PendingPacket {
+  packet: CapturedTransportPacket;
+  observedAt: number;
 }
 
-const STOP_TIMEOUT_MS = 3000;
+export async function getNpcapStatus(): Promise<NpcapStatus> {
+  return systemRuntime.status();
+}
+
+export async function listNpcapDevices(): Promise<NpcapDevice[]> {
+  return systemRuntime.listDevices();
+}
 
 export class PacketCapture extends EventEmitter {
-  private process: NativeProcess | null = null;
-  private exitTask: Promise<void> | null = null;
-  private startDeferred: Deferred | null = null;
-  private sawStoppedRecord = false;
+  private readonly runtime: NpcapRuntime;
+  private readonly targetProvider?: TargetSnapshotProvider;
+  private readonly platform: NodeJS.Platform;
+  private session?: NpcapSession;
+  private target?: WindowsTargetTracker;
+  private pollTimer?: ReturnType<typeof setInterval>;
+  private pending: PendingPacket[] = [];
+  private polling = false;
   private decodeLiteNetLib = false;
   private decodeFishNet = false;
   private fishNetRpcMap: FishNetRpcMap | undefined;
   private fishNetSessionDecoder: FishNetSessionDecoder | null = null;
   private _state: CaptureState = "stopped";
 
-  constructor(private readonly spawnProcess: NativeProcessFactory = defaultSpawnProcess) {
+  constructor(dependencies: PacketCaptureDependencies = {}) {
     super();
+    this.runtime = dependencies.runtime ?? systemRuntime;
+    this.targetProvider = dependencies.targetProvider;
+    this.platform = dependencies.platform ?? process.platform;
   }
 
   get state(): CaptureState {
@@ -73,141 +87,124 @@ export class PacketCapture extends EventEmitter {
   }
 
   async start(config: CaptureConfig = {}): Promise<void> {
-    if (this._state !== "stopped") {
-      throw new Error(`cannot start capture while it is ${this._state}`);
-    }
-    if (process.platform !== "win32") {
-      throw new Error("live packet capture is supported only on Windows");
-    }
-
-    const helperPath = resolveHelperPath(config.helperPath);
-    validateRuntimeFiles(helperPath);
+    if (this._state !== "stopped") throw new Error(`cannot start capture while it is ${this._state}`);
+    if (this.platform !== "win32") throw new Error("live packet capture is supported only on Windows");
     const protocols = config.protocols ?? ["tcp", "udp"];
     if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
       throw new Error("protocols must contain tcp, udp, or both");
     }
-    const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
-    const command = [helperPath, "--filter", filter];
-    if (config.targetProcessName !== undefined) {
-      const processName = config.targetProcessName.trim();
-      if (processName.length === 0) throw new Error("targetProcessName must not be empty");
-      command.push("--process-name", processName);
-    }
-    const decodeFishNet = config.decodeFishNet ?? false;
-    const decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || decodeFishNet;
-    const fishNetRpcMap = decodeFishNet
-      ? config.fishNetRpcMap ?? loadBundledFishNetRpcMap(config.fishNetBuildFingerprint)
-      : undefined;
-    const spawned = this.spawnProcess(command, path.dirname(helperPath));
-
+    const targetProcessName = config.targetProcessName?.trim();
+    if (config.targetProcessName !== undefined && !targetProcessName) throw new Error("targetProcessName must not be empty");
     this._state = "starting";
-    this.process = spawned;
-    this.sawStoppedRecord = false;
-    this.decodeFishNet = decodeFishNet;
-    this.decodeLiteNetLib = decodeLiteNetLib;
-    this.fishNetRpcMap = fishNetRpcMap;
-    this.fishNetSessionDecoder = this.decodeFishNet ? new FishNetSessionDecoder(this.fishNetRpcMap) : null;
-    this.startDeferred = createDeferred();
-    const startPromise = this.startDeferred.promise;
-    const stdoutTask = this.consumeStdout(spawned).catch((error: unknown) => this.handleFailure(toError(error)));
-    void this.consumeStderr(spawned);
-    this.exitTask = this.observeExit(spawned, stdoutTask);
-    return startPromise;
+    try {
+      const decodeFishNet = config.decodeFishNet ?? false;
+      this.decodeFishNet = decodeFishNet;
+      this.decodeLiteNetLib = (config.decodeLiteNetLib ?? false) || decodeFishNet;
+      this.fishNetRpcMap = decodeFishNet
+        ? config.fishNetRpcMap ?? loadBundledFishNetRpcMap(config.fishNetBuildFingerprint)
+        : undefined;
+      this.fishNetSessionDecoder = decodeFishNet ? new FishNetSessionDecoder(this.fishNetRpcMap) : null;
+      const devices = await this.runtime.listDevices();
+      const resolved = await resolveCaptureDevice(devices, config.deviceName);
+      if (!resolved.device) throw new Error("Npcap did not report a usable network adapter");
+      const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
+      this.session = await this.runtime.open(resolved.device, filter);
+      if (!supportsDataLink(this.session.dataLink)) {
+        throw new Error(`Npcap adapter uses unsupported data-link type ${this.session.dataLink}`);
+      }
+      if (resolved.detail) this.emit("warning", resolved.detail);
+      if (targetProcessName) {
+        this.target = new WindowsTargetTracker(
+          targetProcessName,
+          protocols,
+          (status) => this.emit("targetStatus", status),
+          this.targetProvider,
+        );
+        await this.target.start();
+      }
+      this._state = "running";
+      this.pollTimer = setInterval(() => void this.poll(), POLL_INTERVAL_MS);
+      this.emit("started");
+    } catch (error) {
+      this.closeResources();
+      this.resetDecoder();
+      this._state = "stopped";
+      throw toError(error);
+    }
   }
 
   async stop(): Promise<void> {
-    const child = this.process;
-    const exitTask = this.exitTask;
-    if (!child || this._state === "stopped") return;
-    if (this._state !== "stopping") {
-      this._state = "stopping";
-      child.stdin.write(Uint8Array.of(1));
-      await child.stdin.flush();
-      await child.stdin.end();
-    }
-
-    const graceful = await Promise.race([
-      child.exited.then(() => true),
-      Bun.sleep(STOP_TIMEOUT_MS).then(() => false),
-    ]);
-    if (!graceful) {
-      child.kill();
-      await child.exited;
-    }
-    await exitTask;
+    if (this._state === "stopped") return;
+    this._state = "stopping";
+    this.closeResources();
+    this.resetDecoder();
+    this._state = "stopped";
+    this.emit("stopped");
   }
 
-  private async consumeStdout(child: NativeProcess): Promise<void> {
-    const decoder = new NativeProtocolDecoder();
-    for await (const chunk of child.stdout) {
-      for (const record of decoder.push(chunk)) {
-        switch (record.type) {
-          case NativeRecordType.Ready:
-            if (this._state !== "starting") throw new Error("capture helper sent duplicate ready record");
-            this._state = "running";
-            this.startDeferred?.resolve();
-            this.startDeferred = null;
-            this.emit("started");
-            break;
-          case NativeRecordType.TcpPacket:
-            if (this._state === "running") {
-              this.emit("packet", record.packet);
-              this.emit("transportPacket", record.packet);
-            }
-            break;
-          case NativeRecordType.UdpPacket:
-            if (this._state === "running") {
-              this.emit("udpPacket", record.packet);
-              this.emit("transportPacket", record.packet);
-              if (this.decodeLiteNetLib) this.emitLiteNetLibPackets(record.packet);
-            }
-            break;
-          case NativeRecordType.TargetStatus:
-            if (this._state === "running") this.emit("targetStatus", record.status);
-            break;
-          case NativeRecordType.Warning:
-            this.emit("warning", record.message);
-            break;
-          case NativeRecordType.Error:
-            this.handleFailure(new Error(record.message));
-            break;
-          case NativeRecordType.Stopped:
-            this.sawStoppedRecord = true;
-            this.markStopped();
-            break;
+  private poll(): void {
+    if (this.polling || this._state !== "running" || !this.session) return;
+    this.polling = true;
+    try {
+      this.flushPending();
+      for (let index = 0; index < MAX_POLL_BATCH; index += 1) {
+        const captured = this.session.nextPacket();
+        if (!captured) break;
+        const ipPacket = extractIpPacket(captured.data, this.session.dataLink);
+        if (!ipPacket) continue;
+        const provisionalDirection = inferDirection(ipPacket, this.session.device);
+        const packet = parseTransportPacket(ipPacket, {
+          capturedAt: captured.capturedAt,
+          timestampTicks: captured.timestampTicks,
+          interfaceIndex: 0,
+          direction: provisionalDirection,
+          loopback: this.session.device.loopback,
+        });
+        if (!packet) continue;
+        packet.truncated ||= captured.originalLength > captured.data.length;
+        if (!this.target) this.emitTransportPacket(packet);
+        else {
+          const direction = this.target.classify(packet);
+          if (direction) {
+            packet.direction = direction;
+            this.emitTransportPacket(packet);
+          } else {
+            this.pending.push({ packet, observedAt: Date.now() });
+            if (this.pending.length > PENDING_PACKET_LIMIT) this.pending.splice(0, this.pending.length - PENDING_PACKET_LIMIT);
+          }
         }
       }
+    } catch (error) {
+      const failure = toError(error);
+      if (this.listenerCount("error") > 0) this.emit("error", failure);
+      else console.error("[spiritvale-capture]", failure);
+      void this.stop();
+    } finally {
+      this.polling = false;
     }
-    decoder.finish();
   }
 
-  private async consumeStderr(child: NativeProcess): Promise<void> {
-    const decoder = new TextDecoder();
-    for await (const chunk of child.stderr) {
-      const message = decoder.decode(chunk, { stream: true }).trim();
-      if (message) console.error(message);
+  private flushPending(): void {
+    if (!this.target || this.pending.length === 0) return;
+    const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
+    const remaining: PendingPacket[] = [];
+    for (const candidate of this.pending) {
+      if (candidate.observedAt < cutoff) continue;
+      const direction = this.target.classify(candidate.packet);
+      if (!direction) remaining.push(candidate);
+      else {
+        candidate.packet.direction = direction;
+        this.emitTransportPacket(candidate.packet);
+      }
     }
-    const tail = decoder.decode().trim();
-    if (tail) console.error(tail);
+    this.pending = remaining;
   }
 
-  private async observeExit(child: NativeProcess, stdoutTask: Promise<void>): Promise<void> {
-    const exitCode = await child.exited;
-    await stdoutTask;
-    if (this.process !== child) return;
-    if (this._state === "starting" && this.startDeferred) {
-      this.handleFailure(new Error(`capture helper exited before becoming ready (exit code ${exitCode})`));
-    } else if (this._state === "running" && !this.sawStoppedRecord) {
-      this.handleFailure(new Error(`capture helper exited unexpectedly (exit code ${exitCode})`));
-    }
-    this.markStopped();
-  }
-
-  private handleFailure(error: Error): void {
-    this.startDeferred?.reject(error);
-    this.startDeferred = null;
-    if (this.listenerCount("error") > 0) this.emit("error", error);
-    else if (this._state !== "starting") console.error("[spiritvale-capture]", error);
+  private emitTransportPacket(packet: CapturedTransportPacket): void {
+    if (packet.protocol === "tcp") this.emit("packet", packet);
+    else this.emit("udpPacket", packet);
+    this.emit("transportPacket", packet);
+    if (packet.protocol === "udp" && this.decodeLiteNetLib) this.emitLiteNetLibPackets(packet);
   }
 
   private emitLiteNetLibPackets(packet: CapturedUdpPacket): void {
@@ -219,21 +216,14 @@ export class PacketCapture extends EventEmitter {
       }
     } catch (error) {
       const detail = error instanceof LiteNetLibProtocolError ? error.message : toError(error).message;
-      this.emit(
-        "warning",
-        `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ` +
-          `${packet.destinationIP}:${packet.destinationPort}: ${detail}`,
-      );
+      this.emit("warning", `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ${packet.destinationIP}:${packet.destinationPort}: ${detail}`);
     }
   }
 
   private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
     const { property, payload } = packet.packet;
     const udp = packet.udpPacket;
-    const endpoints = [
-      `${udp.sourceIP}:${udp.sourcePort}`,
-      `${udp.destinationIP}:${udp.destinationPort}`,
-    ].sort();
+    const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
     const connectionId = `${endpoints[0]}<->${endpoints[1]}#${packet.packet.connectionNumber}`;
     if (property === "connectRequest" || property === "connectAccept" || property === "disconnect") {
       this.fishNetSessionDecoder?.reset(connectionId);
@@ -258,72 +248,51 @@ export class PacketCapture extends EventEmitter {
     }
   }
 
-  private markStopped(): void {
-    const changed = this._state !== "stopped";
-    this._state = "stopped";
-    this.process = null;
-    this.exitTask = null;
-    this.startDeferred = null;
+  private closeResources(): void {
+    if (this.pollTimer) clearInterval(this.pollTimer);
+    this.pollTimer = undefined;
+    this.target?.stop();
+    this.target = undefined;
+    this.session?.close();
+    this.session = undefined;
+    this.pending = [];
+  }
+
+  private resetDecoder(): void {
     this.decodeLiteNetLib = false;
     this.decodeFishNet = false;
     this.fishNetRpcMap = undefined;
     this.fishNetSessionDecoder?.reset();
     this.fishNetSessionDecoder = null;
-    if (changed) this.emit("stopped");
   }
 }
 
-function defaultSpawnProcess(command: string[], cwd: string): NativeProcess {
-  return Bun.spawn({
-    cmd: command,
-    cwd,
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-    windowsHide: true,
-  }) as unknown as NativeProcess;
-}
-
-function findRepoRoot(startDir: string): string {
-  let dir = startDir;
-  while (true) {
-    if (existsSync(path.join(dir, "bun.lock"))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) return process.cwd();
-    dir = parent;
+function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "outbound" {
+  if ((ipPacket[0]! >> 4) === 4 && ipPacket.length >= 20) {
+    const source = `${ipPacket[12]}.${ipPacket[13]}.${ipPacket[14]}.${ipPacket[15]}`;
+    if (device.addresses.includes(source)) return "outbound";
+  } else if ((ipPacket[0]! >> 4) === 6 && ipPacket.length >= 40) {
+    const source = formatIpv6(ipPacket.subarray(8, 24));
+    if (device.addresses.includes(source)) return "outbound";
   }
+  return "inbound";
 }
 
-export function resolveHelperPath(override?: string): string {
-  const root = findRepoRoot(import.meta.dir);
-  const candidates = [
-    override,
-    process.env["SPIRITVALE_CAPTURE_HELPER"],
-    path.join(root, "dist", "native", "win-x64", "spiritvale-capture.exe"),
-    path.join(root, "native", "capture-helper", "target", "release", "spiritvale-capture.exe"),
-    path.join(root, "native", "capture-helper", "target", "debug", "spiritvale-capture.exe"),
-  ].filter((candidate): candidate is string => Boolean(candidate));
-  const found = candidates.find((candidate) => existsSync(candidate));
-  if (found) return path.resolve(found);
-  throw new Error(`capture helper was not found; checked: ${candidates.join(", ")}`);
-}
-
-function validateRuntimeFiles(helperPath: string): void {
-  const directory = path.dirname(helperPath);
-  for (const file of ["WinDivert.dll", "WinDivert64.sys"]) {
-    const runtimePath = path.join(directory, file);
-    if (!existsSync(runtimePath)) throw new Error(`missing WinDivert runtime file: ${runtimePath}`);
+function formatIpv6(data: Buffer): string {
+  const words = Array.from({ length: 8 }, (_, index) => data.readUInt16BE(index * 2));
+  let bestStart = -1;
+  let bestLength = 0;
+  for (let start = 0; start < words.length;) {
+    if (words[start] !== 0) { start += 1; continue; }
+    let end = start;
+    while (end < words.length && words[end] === 0) end += 1;
+    if (end - start > bestLength && end - start > 1) { bestStart = start; bestLength = end - start; }
+    start = end;
   }
-}
-
-function createDeferred(): Deferred {
-  let resolvePromise!: () => void;
-  let rejectPromise!: (error: Error) => void;
-  const promise = new Promise<void>((resolve, reject) => {
-    resolvePromise = resolve;
-    rejectPromise = reject;
-  });
-  return { promise, resolve: resolvePromise, reject: rejectPromise };
+  if (bestStart < 0) return words.map((word) => word.toString(16)).join(":");
+  const before = words.slice(0, bestStart).map((word) => word.toString(16)).join(":");
+  const after = words.slice(bestStart + bestLength).map((word) => word.toString(16)).join(":");
+  return `${before}::${after}`;
 }
 
 function toError(value: unknown): Error {

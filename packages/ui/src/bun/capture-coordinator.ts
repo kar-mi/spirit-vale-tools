@@ -10,12 +10,13 @@ import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 import type { CaptureStatus, LauncherState } from "../launcher-types.ts";
 
 const SPAWN_PAYLOAD_LOG_LIMIT = 2_048;
+type CaptureCoordinatorState = Pick<LauncherState, "captureStatus" | "statusDetail">;
 
 export interface CaptureCoordinatorOptions {
   logDirectory: string;
-  helperPath?: string;
+  deviceName?: string;
   captureFactory?: () => PacketCapture;
-  onStatus?: (state: LauncherState) => void;
+  onStatus?: (state: CaptureCoordinatorState) => void;
   /**
    * Adds an internal "other" stream containing capture diagnostics and unclassified
    * FishNet packets. Defaults to the SPIRIT_VALE_DIAGNOSTIC_LOGS environment variable.
@@ -38,6 +39,7 @@ export class CaptureCoordinator {
   private status: CaptureStatus = "stopped";
   private statusDetail = "Capture stopped";
   private stopping = false;
+  private reconfiguring = false;
   private lifecycleStopped = false;
   private activeConnectionId?: string;
   private lastAuthenticated?: { connectionId: string; tick: number };
@@ -53,32 +55,29 @@ export class CaptureCoordinator {
     this.capture.on("stopped", () => this.captureStopped());
   }
 
-  state(): LauncherState {
+  state(): CaptureCoordinatorState {
     return { captureStatus: this.status, statusDetail: this.statusDetail };
   }
 
   async start(): Promise<void> {
-    if (this.session || this.status === "starting" || this.status === "capturing") return;
+    if (this.status === "starting" || this.status === "capturing") return;
     this.setStatus("starting", "Starting centralized capture…");
     try {
-      const streams: LogStream[] = ["combat", "rewards", "market"];
-      if (this.diagnosticLogging) streams.push("other");
-      this.session = await createLogSession({
-        producer: "desktop-capture",
-        streams,
-        logDirectory: this.options.logDirectory,
-      });
-      this.combatLog = this.session.logger("combat");
-      this.rewardsLog = this.session.logger("rewards");
-      this.marketLog = this.session.logger("market");
-      this.otherLog = this.diagnosticLogging ? this.session.logger("other") : undefined;
+      if (!this.session) {
+        const streams: LogStream[] = ["combat", "rewards", "market"];
+        if (this.diagnosticLogging) streams.push("other");
+        this.session = await createLogSession({
+          producer: "desktop-capture",
+          streams,
+          logDirectory: this.options.logDirectory,
+        });
+        this.combatLog = this.session.logger("combat");
+        this.rewardsLog = this.session.logger("rewards");
+        this.marketLog = this.session.logger("market");
+        this.otherLog = this.diagnosticLogging ? this.session.logger("other") : undefined;
+      }
       this.otherLog?.log("capture.lifecycle", { state: "starting" });
-      await this.capture.start({
-        protocols: ["udp"],
-        targetProcessName: "SpiritVale.exe",
-        decodeFishNet: true,
-        helperPath: this.options.helperPath,
-      });
+      await this.startCapture();
     } catch (error) {
       const message = errorMessage(error);
       this.otherLog?.log("capture.error", { message });
@@ -86,6 +85,32 @@ export class CaptureCoordinator {
       this.marketLog?.log("market.error", { message });
       this.rewardsLog?.log("rewards.error", { message });
       this.setStatus("unavailable", "Unable to capture data");
+    }
+  }
+
+  async reconfigure(deviceName?: string): Promise<void> {
+    const previous = this.options.deviceName;
+    if (deviceName === previous && this.status === "capturing") return;
+    this.reconfiguring = true;
+    this.setStatus("starting", "Switching capture adapter…");
+    try {
+      await this.capture.stop();
+      this.options.deviceName = deviceName;
+      await this.startCapture();
+    } catch (error) {
+      const requestedError = errorMessage(error);
+      this.options.deviceName = previous;
+      try {
+        await this.capture.stop();
+        await this.startCapture();
+        throw new Error(`Could not switch capture adapter: ${requestedError}`);
+      } catch (rollbackError) {
+        if (errorMessage(rollbackError).startsWith("Could not switch capture adapter:")) throw rollbackError;
+        this.setStatus("unavailable", "Unable to capture data");
+        throw new Error(`Could not switch capture adapter and restore the previous adapter: ${requestedError}`);
+      }
+    } finally {
+      this.reconfiguring = false;
     }
   }
 
@@ -109,6 +134,7 @@ export class CaptureCoordinator {
   }
 
   private captureStarted(): void {
+    this.lifecycleStopped = false;
     this.combatLog?.log("combat.lifecycle", { state: "started" });
     this.rewardsLog?.log("rewards.lifecycle", { state: "started" });
     this.marketLog?.log("market.lifecycle", { state: "started" });
@@ -142,8 +168,18 @@ export class CaptureCoordinator {
   }
 
   private captureStopped(): void {
+    if (this.reconfiguring) return;
     this.writeStoppedLifecycle();
     if (!this.stopping && this.status !== "unavailable") this.setStatus("stopped", "Capture stopped");
+  }
+
+  private startCapture(): Promise<void> {
+    return this.capture.start({
+      protocols: ["udp"],
+      targetProcessName: "SpiritVale.exe",
+      decodeFishNet: true,
+      deviceName: this.options.deviceName,
+    });
   }
 
   private routePacket(packet: CapturedFishNetPacket): void {

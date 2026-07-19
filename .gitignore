@@ -2,6 +2,7 @@ node_modules/
 dist/
 native/vendor/
 native/capture-helper/target/
+packet-sniffer/
 *.log
 *.zip
 *.txt

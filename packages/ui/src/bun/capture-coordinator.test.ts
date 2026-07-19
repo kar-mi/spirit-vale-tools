@@ -175,13 +175,45 @@ describe("central capture coordinator", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  test("restarts capture for a new adapter and rolls back a failed selection", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-adapter-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        deviceName: "fictional-adapter-a",
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+      await coordinator.reconfigure("fictional-adapter-b");
+      expect(capture.configs.map((config) => config.deviceName)).toEqual(["fictional-adapter-a", "fictional-adapter-b"]);
+
+      capture.failDeviceName = "fictional-adapter-c";
+      await expect(coordinator.reconfigure("fictional-adapter-c")).rejects.toThrow("Could not switch capture adapter");
+      expect(capture.configs.map((config) => config.deviceName)).toEqual([
+        "fictional-adapter-a",
+        "fictional-adapter-b",
+        "fictional-adapter-c",
+        "fictional-adapter-b",
+      ]);
+      expect(coordinator.state().captureStatus).toBe("capturing");
+      await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 class FakeCapture extends EventEmitter {
+  readonly configs: CaptureConfig[] = [];
+  failDeviceName?: string;
   constructor(private readonly startError?: Error) { super(); }
 
-  async start(_config: CaptureConfig): Promise<void> {
+  async start(config: CaptureConfig): Promise<void> {
+    this.configs.push(config);
     if (this.startError) throw this.startError;
+    if (config.deviceName === this.failDeviceName) throw new Error("synthetic adapter unavailable");
     this.emit("started");
     this.emit("targetStatus", { processName: "SpiritVale.exe", state: "waiting", processIds: [] });
   }

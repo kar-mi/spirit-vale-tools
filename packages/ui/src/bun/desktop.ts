@@ -1,19 +1,30 @@
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
+import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core";
 
 import { createMarketWindow } from "../../../market-ui/src/bun/index.ts";
 import { createRewardsWindow } from "../../../rewards-ui/src/bun/index.ts";
 import type { LauncherRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
+import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createDpsWindow } from "./index.ts";
-import { resolveCaptureHelperPath, resolveLogDirectory } from "./paths.ts";
+import { resolveLogDirectory } from "./paths.ts";
 import { WindowSlot } from "./window-slot.ts";
 
 makeProcessDpiAware();
 
 const logDirectory = resolveLogDirectory();
+const settings = await loadLauncherSettings();
 let launcherWindow: BrowserWindow;
-let launcherState: LauncherState = { captureStatus: "starting", statusDetail: "Starting centralized capture…" };
+let launcherState: LauncherState = {
+  captureStatus: "starting",
+  statusDetail: "Checking Npcap…",
+  npcapAvailability: "checking",
+  npcapDetail: "Checking Npcap…",
+  selectedAdapter: settings.captureAdapter,
+  adapterFallback: false,
+  adapters: [],
+};
 let shuttingDown = false;
 
 const combatWindow = new WindowSlot((onClosed) => createDpsWindow({ logDirectory, onClosed }));
@@ -22,9 +33,9 @@ const marketWindow = new WindowSlot((onClosed) => createMarketWindow({ logDirect
 
 const capture = new CaptureCoordinator({
   logDirectory,
-  helperPath: resolveCaptureHelperPath(),
+  deviceName: settings.captureAdapter === "auto" ? undefined : settings.captureAdapter,
   onStatus: (state) => {
-    launcherState = state;
+    launcherState = { ...launcherState, ...state };
     publish();
   },
 });
@@ -38,6 +49,23 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
         await openTool(tool);
         return launcherState;
       },
+      setCaptureAdapter: async ({ deviceName }) => {
+        const nextSelection = deviceName ?? "auto";
+        await capture.reconfigure(deviceName ?? undefined);
+        settings.captureAdapter = nextSelection;
+        await saveLauncherSettings(settings);
+        launcherState = { ...launcherState, selectedAdapter: nextSelection };
+        await refreshCaptureDevices();
+        return launcherState;
+      },
+      refreshCaptureDevices: async () => {
+        await refreshCaptureDevices();
+        if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
+          await capture.start();
+        }
+        return launcherState;
+      },
+      openNpcapDownload: () => { Utils.openExternal("https://npcap.com/#download"); },
       windowAction: async ({ action }) => {
         if (action === "minimize") launcherWindow.minimize();
         else await shutdown();
@@ -68,7 +96,59 @@ launcherWindow.on("close", () => void shutdown());
 
 process.on("SIGINT", () => void shutdown());
 process.on("SIGTERM", () => void shutdown());
-void capture.start();
+void initializeCapture();
+
+async function initializeCapture(): Promise<void> {
+  await refreshCaptureDevices();
+  if (launcherState.npcapAvailability !== "ready") {
+    launcherState = { ...launcherState, captureStatus: "unavailable", statusDetail: launcherState.npcapDetail };
+    publish();
+    return;
+  }
+  await capture.start();
+}
+
+async function refreshCaptureDevices(): Promise<void> {
+  const status = await getNpcapStatus();
+  if (status.availability !== "ready") {
+    launcherState = {
+      ...launcherState,
+      npcapAvailability: status.availability,
+      npcapDetail: status.detail,
+      ...(status.version ? { npcapVersion: status.version } : {}),
+      adapters: [],
+      effectiveAdapter: undefined,
+      adapterFallback: false,
+    };
+    publish();
+    return;
+  }
+  try {
+    const devices = await listNpcapDevices();
+    const requested = settings.captureAdapter === "auto" ? undefined : settings.captureAdapter;
+    const resolved = await resolveCaptureDevice(devices, requested);
+    launcherState = {
+      ...launcherState,
+      npcapAvailability: "ready",
+      npcapDetail: status.detail,
+      ...(status.version ? { npcapVersion: status.version } : {}),
+      selectedAdapter: settings.captureAdapter,
+      effectiveAdapter: resolved.device?.name,
+      adapterFallback: resolved.usedFallback,
+      adapters: devices.map((device) => ({ id: device.name, label: device.description })),
+    };
+  } catch (error) {
+    launcherState = {
+      ...launcherState,
+      npcapAvailability: "error",
+      npcapDetail: error instanceof Error ? error.message : String(error),
+      adapters: [],
+      effectiveAdapter: undefined,
+      adapterFallback: false,
+    };
+  }
+  publish();
+}
 
 async function openTool(tool: ToolWindow): Promise<void> {
   if (tool === "combat") await combatWindow.open();

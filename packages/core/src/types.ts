@@ -3,14 +3,14 @@ import type { FishNetRpcMap } from "./fishnet/types.ts";
 export type CaptureProtocol = "tcp" | "udp";
 
 export interface CaptureConfig {
-  /** WinDivert filter syntax. Defaults to the selected protocols. */
+  /** Standard BPF capture filter syntax. Defaults to the selected protocols. */
   filter?: string;
   /** Transport protocols to parse. Defaults to both TCP and UDP. */
   protocols?: readonly CaptureProtocol[];
   /** Executable name to follow across starts and reconnects. Omit to capture every matching process. */
   targetProcessName?: string;
-  /** Override the bundled helper path, primarily for development and tests. */
-  helperPath?: string;
+  /** Stable Npcap device name. Omit to select the default-route adapter automatically. */
+  deviceName?: string;
   /** Decode captured UDP payloads as LiteNetLib 1.x packets. Defaults to false. */
   decodeLiteNetLib?: boolean;
   /** Decode verified FishNet headers inside LiteNetLib data packets. Implies decodeLiteNetLib. */

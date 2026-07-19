@@ -1,4 +1,5 @@
-export { PacketCapture, resolveHelperPath } from "./capture/packet-capture.ts";
+export { PacketCapture, getNpcapStatus, listNpcapDevices } from "./capture/packet-capture.ts";
+export { resolveCaptureDevice } from "./capture/adapter-selection.ts";
 export { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "./litenetlib/decoder.ts";
 export {
   decodeFishNetBundle,
@@ -23,6 +24,7 @@ export type {
   CapturedTransportPacket,
   CapturedUdpPacket,
 } from "./types.ts";
+export type { NpcapAvailability, NpcapDevice, NpcapStatus } from "./capture/npcap.ts";
 export type {
   CapturedLiteNetLibPacket,
   DecodedLiteNetLibPacket,

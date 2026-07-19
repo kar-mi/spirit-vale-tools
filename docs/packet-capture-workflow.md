@@ -1,356 +1,123 @@
 # Packet Capture Workflow
 
-This project captures Spirit Vale network traffic through a bundled Rust helper and exposes normalized TCP and UDP packets to Bun. The helper uses WinDivert for passive packet capture and Windows endpoint ownership tables to restrict emitted packets to a target executable.
+Spirit Vale Tools captures TCP and UDP traffic through the user's existing Npcap installation. Bun loads the Npcap API directly, selects a network adapter, normalizes link-layer frames, and restricts emitted packets to endpoints owned by the configured executable.
 
-## Architecture
-
-The capture path has four stages:
-
-1. Bun starts `spiritvale-capture.exe` with a WinDivert filter and optional process name.
-2. The Rust helper captures matching network-layer packets through WinDivert.
-3. The helper correlates packet endpoints with TCP and UDP endpoints owned by the target process.
-4. Normalized binary records are streamed over the helper's private stdout protocol and decoded into typed Bun events.
-
-The helper opens WinDivert with sniff and receive-only flags. It does not modify, drop, or inject network traffic.
+The application does not bundle Npcap, install drivers, inject packets, or alter traffic.
 
 ## Prerequisites
 
 - Windows 10 or 11 x64
-- Bun 1.3 or newer
-- Current stable Rust with the `x86_64-pc-windows-msvc` target
-- Visual Studio 2022 Build Tools with the **Desktop development with C++** workload
-- An elevated PowerShell terminal for live capture
+- Bun 1.3 or newer for development
+- A current Npcap installation from [npcap.com](https://npcap.com/#download)
 
-## Initial setup
+To run Spirit Vale Tools without elevation, install Npcap with **Restrict Npcap driver's access to Administrators only** unchecked. If that option is enabled, the launcher reports the installation as administrator-only and does not trigger an unexpected UAC prompt.
 
-Install the JavaScript dependencies:
+## Desktop capture settings
 
-```powershell
-bun install
-```
+Open the gear button on the main Tools launcher to view Packet capture settings.
 
-Build and bundle the native runtime:
+- **Backend** is always Npcap.
+- **Automatic** selects the adapter whose address owns Windows' lowest-metric default route.
+- A manually selected adapter is stored for future launches.
+- If a saved adapter is temporarily unavailable, capture falls back to automatic selection and reports the effective adapter.
+- Changing adapters restarts capture immediately. If the new adapter cannot be opened, the previous adapter is restored.
 
-```powershell
-bun run build:native
-```
+The settings panel also reports a missing, administrator-only, or unusable Npcap installation and links to the official download page.
 
-This workflow:
+## Command-line capture
 
-1. Downloads WinDivert 2.2.2 from its official distribution location.
-2. Verifies the archive using the pinned SHA-256 digest.
-3. Builds the Rust helper in release mode.
-4. Copies the helper, WinDivert runtime, license, and notices into `dist/native/win-x64`.
-
-The bundler preserves an identical `WinDivert64.sys` file when the Windows driver has the existing file locked.
-
-## Capturing Spirit Vale
-
-Start PowerShell as Administrator and run:
-
-```powershell
-bun run capture:dump
-```
-
-The CLI defaults to:
-
-- Executable: `SpiritVale.exe`
-- Protocols: TCP and UDP
-- WinDivert filter: `tcp or udp`
-
-The capture remains ready if the application is not running. It automatically follows new matching process IDs when Spirit Vale starts or restarts.
-
-Stop capture with Ctrl+C. The CLI creates a new session in the run-local
-`logs` directory and writes versioned JSON Lines to its stream file;
-stdout redirection is not required.
-
-In a verified live session, Spirit Vale exchanged bidirectional UDP datagrams with a game endpoint on `135.148.52.81:7007`. The default process-attributed capture does not hard-code the game endpoint. Payload bytes are emitted as raw hexadecimal data until their application-level meanings can be established from additional captures.
-
-A larger capture identified the UDP transport as the LiteNetLib 1.x wire format. To record transport datagrams and one structured record per logical packet, including children unpacked from merged envelopes, run:
-
-```powershell
-bun run capture:dump -- --protocols udp --decode-litenetlib
-```
-
-Enable the FishNet layer with:
-
-```powershell
-bun run capture:dump -- --protocols udp --decode-fishnet
-```
-
-The current verified build map is bundled and selected by default. Supply an
-external build-matched map to override it:
-
-```powershell
-bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-map <map.json>
-```
-
-Use `--fishnet-build <build-fingerprint>` to select another bundled version, or
-`--combat-only` to record only chronological actor-grouped activations and
-per-hit damage/death events. Death records indicate whether they duplicate an
-ordinary damage event, and aggregation is intentionally left to consumers.
-Combat sessions include every decoded RPC field in each combat record's
-`fields` object and also include public visible-player
-identity lifecycle records automatically. Consumers maintain the actor-ID to
-display-name join from `upsert`, `remove`, and `reset` operations; combat actors
-without an observed identity remain numeric.
-
-Every record uses the same envelope: schema version, session ID, sequence,
-UTC recording time, source, type, and structured data. Capture, combat, and
-market records are kept in separate JSONL stream files within each session.
-Per-stream current-session metadata lets the DPS display follow newly started
-combat sessions. Human lifecycle messages remain on stderr, and
-`--output <path>` can override a command's stream destination.
-
-The FishNet layer is session-aware. It parses multiple messages from a single
-transport tick, reassembles reliable split messages, registers length-delimited
-RPC Links from object spawns, and removes those registrations on despawn or
-connection lifecycle changes. A fixed RPC that selects exactly one mapped
-behaviour may establish a missing component binding for later packets. Object
-respawns replace stale bindings, while ambiguous hashes remain unnamed.
-Unsupported spawn layouts and ambiguous message boundaries remain opaque
-without preventing later transport packets from being decoded.
-
-Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, the
-FishNet packet identifier table, and 304 natively verified compact RPC
-registrations across game and FishNet behaviours. Generated method suffixes are
-not assumed to be wire hashes. A method name is shown only when behaviour,
-registered RPC kind, and compact hash select one verified mapping.
-Optional ordered parameter fields support conservative decoding of generated
-structured writers. Decoding stops at the first missing or invalid codec and
-preserves the remaining payload bytes.
-
-A sanitized replay of the latest capture mapped all observed spawn link
-registrations to unique behaviour fingerprints. It named 6,721 structurally
-resolved RPC Links and 1,434 fixed ServerRpc calls, associated 6,182 SyncType
-messages with behaviours, named all 84 broadcasts, and completed without
-replay failures.
-
-A controlled zone-bootstrap replay separated the final action epoch from scene
-loading and other actors. Six local-character `CastBegin_C`/`CastComplete_C`
-pairs matched two `Twin Cleave -> Vortex Slash -> Whirlwind` sequences. The
-decoded `dto.Id` values were `AxeArc`, `AxeVortex`, and `Whirlwind`
-respectively. Repeated Inventory and Skills Window openings showed no unique
-network transaction in their final action epochs.
-
-### Common options
-
-Capture for a fixed number of seconds:
+Run a process-attributed capture:
 
 ```powershell
 bun run capture:dump -- --duration 30
 ```
 
-Capture TCP only:
+Useful options:
 
 ```powershell
-bun run capture:dump -- --protocols tcp
-```
-
-Capture UDP only:
-
-```powershell
+# UDP only
 bun run capture:dump -- --protocols udp
-```
 
-Follow another executable:
+# Select a stable Npcap device name
+bun run capture:dump -- --adapter <device-name>
 
-```powershell
+# Follow another executable
 bun run capture:dump -- --process OtherGame.exe
-```
 
-Disable process attribution for diagnostics:
-
-```powershell
+# Capture without process attribution
 bun run capture:dump -- --all-processes
+
+# Apply a standard BPF capture filter
+bun run capture:dump -- --all-processes --filter "tcp port 443"
+
+# Decode LiteNetLib and FishNet
+bun run capture:dump -- --protocols udp --decode-fishnet
 ```
 
-Use a custom WinDivert filter:
+The default filter is derived from `--protocols`. Custom filters use standard libpcap/BPF syntax.
 
-```powershell
-bun run capture:dump -- --all-processes --filter "tcp.DstPort == 443"
-```
+## Capture path
 
-Use a specific helper build:
+1. The application verifies that the loaded capture library identifies itself as Npcap.
+2. Npcap enumerates available adapters and the selected adapter is opened in non-promiscuous, immediate, nonblocking mode.
+3. Ethernet, VLAN, loopback, raw-IP, and common VPN link-layer frames are reduced to IPv4 or IPv6 packets.
+4. TCP and UDP headers and payloads are normalized into the public TypeScript packet types.
+5. Windows process and endpoint tables are refreshed while capture is active. Only packets matching endpoints owned by the target executable are emitted.
+6. UDP payloads optionally continue through LiteNetLib and FishNet decoding.
 
-```powershell
-bun run capture:dump -- --helper native/capture-helper/target/release/spiritvale-capture.exe
-```
+Packets that arrive before a new socket appears in the endpoint table are retained only in memory for up to one second, with a maximum of 4,096 packets. Expired unmatched packets are discarded.
 
-The selected helper directory must also contain `WinDivert.dll` and `WinDivert64.sys`.
-
-## Bun API
+## Public API
 
 ```ts
-import { PacketCapture } from "@spiritvale/core";
+import { PacketCapture, getNpcapStatus, listNpcapDevices } from "@spiritvale/core";
+
+const status = await getNpcapStatus();
+const devices = status.availability === "ready" ? await listNpcapDevices() : [];
 
 const capture = new PacketCapture();
-
-capture.on("targetStatus", status => {
-  console.log(status.state, status.processName, status.processIds);
-});
-
-capture.on("packet", packet => {
-  // Existing TCP-only event.
-  console.log("tcp", packet.sourceIP, packet.destinationIP, packet.payload);
-});
-
-capture.on("udpPacket", packet => {
-  console.log("udp", packet.sourcePort, packet.destinationPort, packet.payload);
-});
-
-capture.on("transportPacket", packet => {
-  // Discriminated TCP | UDP union.
-  if (packet.protocol === "tcp") {
-    console.log(packet.sequenceNumber, packet.tcpFlags);
-  }
-});
-
-capture.on("liteNetPacket", decoded => {
-  console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
-});
-capture.on("fishNetPacket", decoded => {
-  console.log(decoded.tick, decoded.packetName, decoded.rpcHash, decoded.rpcName);
-});
+capture.on("targetStatus", target => console.log(target.state, target.processIds));
+capture.on("udpPacket", packet => console.log(packet.sourcePort, packet.destinationPort));
+capture.on("fishNetPacket", packet => console.log(packet.tick, packet.packetName));
 
 await capture.start({
+  protocols: ["udp"],
   targetProcessName: "SpiritVale.exe",
-  protocols: ["tcp", "udp"],
+  deviceName: devices[0]?.name,
   decodeFishNet: true,
 });
 ```
 
-Call `await capture.stop()` during application shutdown.
-
-### Events
-
-| Event | Value | Purpose |
-| --- | --- | --- |
-| `started` | none | The helper opened WinDivert and is ready. |
-| `targetStatus` | `CaptureTargetStatus` | Reports `waiting` or `active` and the matching process IDs. |
-| `packet` | `CapturedTcpPacket` | Preserved TCP-only packet event. |
-| `udpPacket` | `CapturedUdpPacket` | UDP packet event. |
-| `transportPacket` | `CapturedTransportPacket` | Receives both TCP and UDP packets. |
-| `liteNetPacket` | `CapturedLiteNetLibPacket` | Receives flattened LiteNetLib 1.x leaves when decoding is enabled. |
-| `fishNetPacket` | `CapturedFishNetPacket` | Receives one decoded FishNet message per safe bundle boundary, including registered RPC Link metadata. |
-| `warning` | `string` | Recoverable native warning. |
-| `error` | `Error` | Capture or protocol failure. |
-| `stopped` | none | Capture has stopped. |
-
-Omit `targetProcessName` to emit packets from every process allowed by the WinDivert filter.
-
-### LiteNetLib decoding
-
-`decodeLiteNetLibDatagram` is also exported as a strict pure function. It returns flattened logical packets with a `mergePath`; malformed input throws `LiteNetLibProtocolError` with the failing byte offset. Live capture handles that error recoverably: the raw UDP event is still emitted, a warning is raised, and only the decoded event is skipped.
-
-The decoder targets the observed LiteNetLib 1.x property table. It handles unreliable, channeled, acknowledgement, ping, pong, control, fragmented channeled, and recursively merged packets. `decodeFishNet` implies LiteNetLib decoding and adds stateful bundle, split-message, object-spawn registration, despawn cleanup, and RPC Link parsing. `decodeFishNetBundle` provides pure bundle parsing, while `FishNetSessionDecoder` retains link, component, and split state across payloads. Schema-v2 maps can add spawn identity, `networkBehaviourType`, verified RPC names and fields, SyncType ownership, and broadcast identity. Ambiguous bytes and names remain unresolved rather than guessed; schema-v1 maps remain supported.
-
-## Capture analysis
-
-| Transport | Packets | Payload bytes | Treatment |
-| --- | ---: | ---: | --- |
-| UDP game endpoint `167.114.209.119:7004` | 10,834 | 5,355,984 | LiteNetLib 1.x decoded. |
-| TCP/TLS remote endpoint `91.99.215.190:443` | 151 | 220,866 | Catalogued only; payload remains encrypted. |
-
-All 2,694 merged UDP datagrams validated structurally and contained 5,778 immediate children. Recursive decoding produced 13,918 leaf packets with no errors: 6,870 unreliable, 3,951 channeled, 2,708 acknowledgements, 195 pings, and 194 pongs. Game endpoints are not hard-coded.
-
-## Process attribution
-
-WinDivert's network layer provides packet payloads but not process IDs. The helper therefore joins two sources of information:
-
-- Tool Help process snapshots locate every process whose executable name matches the configured target.
-- Windows IP Helper tables provide TCP flows and UDP endpoints owned by those process IDs for IPv4 and IPv6.
-
-The ownership snapshot is refreshed every 100 milliseconds. Packet direction determines which endpoint is local:
-
-- Outbound packet: source is local and destination is remote.
-- Inbound packet: destination is local and source is remote.
-
-TCP attribution matches the complete local and remote endpoint tuple. UDP attribution matches the process-owned local address and port, including wildcard-bound addresses.
-
-New sockets can produce traffic before they appear in an ownership table. To cover that interval, the helper retains unmatched packets in memory for no more than one second, with a maximum of 4,096 packets. When the endpoint snapshot changes, newly attributable packets are replayed once. Unmatched packets expire without being emitted or persisted.
-
-## Native protocol
-
-The helper and Bun parent communicate through binary protocol version 2 over stdout. It contains records for:
-
-- Ready and stopped lifecycle notifications
-- Normalized TCP packets
-- Normalized UDP packets
-- Target process status
-- Warnings and fatal errors
-
-Human-readable diagnostics go to stderr so they cannot corrupt the binary stdout stream.
-
-The Bun decoder rejects invalid magic, unsupported versions, oversized records, incomplete records, and inconsistent payload lengths.
-
-## Development workflow
-
-After changing TypeScript:
-
-```powershell
-bun run typecheck
-bun test
-```
-
-After changing Rust:
-
-```powershell
-cargo fmt --manifest-path native/capture-helper/Cargo.toml
-cargo test --manifest-path native/capture-helper/Cargo.toml
-cargo clippy --manifest-path native/capture-helper/Cargo.toml --all-targets -- -D warnings
-cargo build --manifest-path native/capture-helper/Cargo.toml --release
-```
-
-Run the combined project checks:
-
-```powershell
-bun run check
-bun run format:native
-bun run lint:native
-```
-
-Refresh the distributable bundle after a release build:
-
-```powershell
-bun run bundle:native
-```
+Omit `deviceName` for automatic adapter selection. Omit `targetProcessName` only for unrestricted diagnostics.
 
 ## Troubleshooting
 
-### Administrator privileges are required
+### Npcap is not installed
 
-WinDivert could not open its capture handle. Close the current terminal, start PowerShell with **Run as administrator**, and run the command again.
+Use the launcher link to install the current Npcap release, then refresh the settings panel.
 
-### Target remains in `waiting`
+### Npcap is administrator-only
 
-- Confirm the executable is running.
-- Confirm its filename is exactly `SpiritVale.exe`, or pass the correct name through `--process`.
-- The match is case-insensitive and applies to the executable filename, not the window title.
+Reinstall Npcap with its administrator-only restriction unchecked. Spirit Vale Tools does not bypass that security setting.
+
+### No usable adapters are shown
+
+Confirm Npcap is running correctly and refresh the adapter list. VPN software may expose an additional adapter that must be selected manually.
+
+### Target remains waiting
+
+Confirm the executable is running and that its filename matches `targetProcessName`. The comparison uses the executable filename, not the window title.
 
 ### Capture is active but no packets appear
 
-- Generate network activity in the target application.
-- Remove a restrictive custom `--filter`.
-- Try `--all-processes` to determine whether capture works before process attribution.
-- Confirm the selected protocols include the traffic being generated.
+- Try Automatic adapter selection first, then the adapter carrying the game's route.
+- Remove a restrictive BPF filter.
+- Use `--all-processes` temporarily to separate adapter problems from process attribution problems.
+- Confirm the configured protocol includes the game's traffic.
 
-### Native runtime file is missing
+## Safety boundaries
 
-Run `bun run build:native` or `bun run bundle:native`. The helper directory must contain:
-
-- `spiritvale-capture.exe`
-- `WinDivert.dll`
-- `WinDivert64.sys`
-
-### The WinDivert driver file is locked
-
-Windows can keep the loaded driver file locked after a capture session. The bundler skips the driver copy when the source and destination are identical. If the driver version must change, stop applications using WinDivert or reboot before rebuilding the bundle.
-
-## Limitations and safety boundaries
-
-- Live capture currently requires an elevated Bun parent process.
-- UDP attribution is endpoint-based. If multiple processes deliberately share the same UDP address and port, network-layer packets cannot always be assigned uniquely.
-- Captured application payloads may still be encrypted by the application protocol.
-- The helper captures passively and does not inject or alter packets.
-- Delayed-attribution packets exist only in the bounded in-memory queue and are never written to disk by the helper.
+- Capture is passive and non-promiscuous; it does not inject, drop, or modify packets.
+- Npcap must be installed separately under its own license.
+- Device identifiers and adapter addresses remain in local settings/runtime state and are not written to tracked fixtures or diagnostic logs.
+- UDP attribution is endpoint-based; deliberate port sharing by multiple processes can be ambiguous.

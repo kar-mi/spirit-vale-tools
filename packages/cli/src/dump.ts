@@ -114,7 +114,7 @@ process.on("SIGTERM", () => void stop());
 
 await capture.start({
   filter: option("--filter"),
-  helperPath: option("--helper"),
+  deviceName: option("--adapter"),
   protocols: protocols as CaptureProtocol[],
   targetProcessName,
   decodeLiteNetLib,

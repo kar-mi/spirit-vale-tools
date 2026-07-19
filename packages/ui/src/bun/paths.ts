@@ -7,17 +7,6 @@ export function resolveLogDirectory(): string {
   return path.join(resolveWorkspaceRoot(), "logs");
 }
 
-export function resolveCaptureHelperPath(): string | undefined {
-  if (process.env.SPIRITVALE_CAPTURE_HELPER?.trim()) return undefined;
-  const root = resolveWorkspaceRoot();
-  const candidates = [
-    path.join(root, "dist", "native", "win-x64", "spiritvale-capture.exe"),
-    path.join(root, "native", "capture-helper", "target", "release", "spiritvale-capture.exe"),
-    path.join(root, "native", "capture-helper", "target", "debug", "spiritvale-capture.exe"),
-  ];
-  return candidates.find((candidate) => existsSync(candidate));
-}
-
 function resolveWorkspaceRoot(): string {
   let current = process.cwd();
   while (true) {
