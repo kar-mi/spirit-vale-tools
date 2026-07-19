@@ -24,6 +24,7 @@
       "dependencies": {
         "@spiritvale/core": "workspace:*",
         "@spiritvale/logging": "workspace:*",
+        "@spiritvale/skills": "workspace:*",
       },
     },
     "packages/core": {
@@ -71,6 +72,12 @@
         "electrobun": "1.18.1",
       },
     },
+    "packages/skills": {
+      "name": "@spiritvale/skills",
+      "dependencies": {
+        "@spiritvale/core": "workspace:*",
+      },
+    },
     "packages/ui": {
       "name": "@spiritvale/ui",
       "dependencies": {
@@ -112,6 +119,8 @@
     "@spiritvale/rewards": ["@spiritvale/rewards@workspace:packages/rewards"],
 
     "@spiritvale/rewards-ui": ["@spiritvale/rewards-ui@workspace:packages/rewards-ui"],
+
+    "@spiritvale/skills": ["@spiritvale/skills@workspace:packages/skills"],
 
     "@spiritvale/ui": ["@spiritvale/ui@workspace:packages/ui"],
 

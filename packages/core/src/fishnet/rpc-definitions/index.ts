@@ -1,4 +1,5 @@
 import type { FishNetRpcMap } from "../definitions/rpc-map.ts";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "../../game-build.ts";
 import { FishNetBroadcastDefinitions } from "./broadcasts.ts";
 import { BaseUnitControllerRpcDefinition } from "./game/base-unit-controller.ts";
 import { CombatComponentRpcDefinition } from "./game/combat-component.ts";
@@ -15,7 +16,7 @@ import { StatusComponentRpcDefinition } from "./game/status-component.ts";
 import { SummoningComponentRpcDefinition } from "./game/summoning-component.ts";
 
 export const FISHNET_RPC_MAP = {
-  buildFingerprint: "9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4",
+  buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
   metadataVersion: 31,
   behaviours: [
     BaseUnitControllerRpcDefinition.definition,

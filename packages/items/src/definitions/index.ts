@@ -1,4 +1,5 @@
 import type { FishNetItemCatalog } from "../catalog.ts";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import { ArtifactItemDefinitions } from "./artifacts.ts";
 import { CardItemDefinitions } from "./cards.ts";
 import { ConsumableItemDefinitions } from "./consumables.ts";
@@ -11,7 +12,7 @@ export class ItemCatalogDefinitions {
   private constructor() {}
 
   static readonly catalog = {
-    buildFingerprint: "9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4",
+    buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
     items: [
       ...JunkItemDefinitions.values,
       ...ConsumableItemDefinitions.values,

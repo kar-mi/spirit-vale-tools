@@ -5,6 +5,7 @@ import {
   CURRENT_FISHNET_BUILD_FINGERPRINT,
   loadBundledFishNetRpcMap,
 } from "./builtin-maps.ts";
+import { CURRENT_GAME_BUILD_FINGERPRINT, LEGACY_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
 import { FishNetSessionDecoder } from "./decoder.ts";
 
 function packed(value: number): Buffer {
@@ -58,8 +59,14 @@ describe("bundled FishNet maps", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.buildFingerprint).toBe(CURRENT_FISHNET_BUILD_FINGERPRINT);
     expect(loadBundledFishNetRpcMap()).toBe(map);
-    expect(BUNDLED_FISHNET_BUILD_FINGERPRINTS).toEqual([CURRENT_FISHNET_BUILD_FINGERPRINT]);
-    expect(() => loadBundledFishNetRpcMap("fictional-build")).toThrow(`supported: ${CURRENT_FISHNET_BUILD_FINGERPRINT}`);
+    expect(CURRENT_FISHNET_BUILD_FINGERPRINT).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
+    expect(BUNDLED_FISHNET_BUILD_FINGERPRINTS).toEqual([
+      LEGACY_GAME_BUILD_FINGERPRINT,
+      CURRENT_GAME_BUILD_FINGERPRINT,
+    ]);
+    expect(loadBundledFishNetRpcMap(LEGACY_GAME_BUILD_FINGERPRINT).buildFingerprint)
+      .toBe(LEGACY_GAME_BUILD_FINGERPRINT);
+    expect(() => loadBundledFishNetRpcMap("fictional-build")).toThrow("supported:");
   });
 
   test("assembles a complete map with unique behaviour-local identifiers", () => {

@@ -1,4 +1,4 @@
-import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import { ItemCatalogDefinitions } from "./definitions/index.ts";
 
 export type FishNetItemType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -33,7 +33,7 @@ export interface FishNetItemCatalog {
 const BUNDLED_CATALOG = ItemCatalogDefinitions.catalog;
 
 export function loadBundledItemCatalog(
-  buildFingerprint = CURRENT_FISHNET_BUILD_FINGERPRINT,
+  buildFingerprint = CURRENT_GAME_BUILD_FINGERPRINT,
 ): FishNetItemCatalog {
   if (buildFingerprint !== BUNDLED_CATALOG.buildFingerprint) {
     throw new Error(`unknown item catalog build ${JSON.stringify(buildFingerprint)}`);

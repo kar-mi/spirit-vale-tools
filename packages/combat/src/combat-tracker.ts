@@ -1,8 +1,10 @@
 import {
-  CURRENT_FISHNET_BUILD_FINGERPRINT,
+  CURRENT_GAME_BUILD_FINGERPRINT,
   loadBundledFishNetSemanticMap,
 } from "@spiritvale/core";
 import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetSemanticMap } from "@spiritvale/core";
+import { loadBundledSkillCatalog } from "@spiritvale/skills";
+import type { FishNetSkillCatalog } from "@spiritvale/skills";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";
@@ -16,6 +18,8 @@ export interface FishNetCombatTrackerOptions {
   activationMaxAgeTicks?: number;
   /** Semantic labels for skill wire identifiers. Defaults to the current bundled build. */
   semanticMap?: FishNetSemanticMap;
+  /** Extracted public skill metadata. Defaults to the current bundled build when available. */
+  skillCatalog?: FishNetSkillCatalog;
   buildFingerprint?: string;
 }
 
@@ -134,9 +138,18 @@ export class FishNetCombatTracker {
     const maxAge = options.activationMaxAgeTicks ?? 900;
     if (!Number.isInteger(maxAge) || maxAge < 1) throw new Error("activationMaxAgeTicks must be a positive integer");
     this.activationMaxAgeTicks = maxAge;
-    const semanticMap = options.semanticMap
-      ?? loadBundledFishNetSemanticMap(options.buildFingerprint ?? CURRENT_FISHNET_BUILD_FINGERPRINT);
-    this.skillLabels = new Map(semanticMap.verifiedSkillLabels.map(({ value, label }) => [value, label]));
+    const buildFingerprint = options.buildFingerprint
+      ?? options.skillCatalog?.buildFingerprint
+      ?? options.semanticMap?.buildFingerprint
+      ?? CURRENT_GAME_BUILD_FINGERPRINT;
+    assertMatchingBuild("skill catalog", options.skillCatalog?.buildFingerprint, buildFingerprint);
+    assertMatchingBuild("semantic map", options.semanticMap?.buildFingerprint, buildFingerprint);
+    const skillCatalog = options.skillCatalog ?? tryLoadBundledSkillCatalog(buildFingerprint);
+    const semanticMap = options.semanticMap ?? (skillCatalog
+      ? tryLoadBundledSemanticMap(buildFingerprint)
+      : loadBundledFishNetSemanticMap(buildFingerprint));
+    this.skillLabels = new Map(skillCatalog?.skills.map(({ id, displayName }) => [id, displayName]) ?? []);
+    for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
   }
 
   consume(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
@@ -468,4 +481,26 @@ function damageSignature(
   hitCode: number,
 ): string {
   return `${tick}\u0000${targetId}\u0000${actorId}\u0000${sourceId}\u0000${value}\u0000${hitCode}`;
+}
+
+function tryLoadBundledSkillCatalog(buildFingerprint: string): FishNetSkillCatalog | undefined {
+  try {
+    return loadBundledSkillCatalog(buildFingerprint);
+  } catch {
+    return undefined;
+  }
+}
+
+function tryLoadBundledSemanticMap(buildFingerprint: string): FishNetSemanticMap | undefined {
+  try {
+    return loadBundledFishNetSemanticMap(buildFingerprint);
+  } catch {
+    return undefined;
+  }
+}
+
+function assertMatchingBuild(label: string, candidate: string | undefined, expected: string): void {
+  if (candidate !== undefined && candidate !== expected) {
+    throw new Error(`${label} build ${JSON.stringify(candidate)} does not match ${JSON.stringify(expected)}`);
+  }
 }

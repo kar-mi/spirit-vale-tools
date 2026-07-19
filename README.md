@@ -90,11 +90,12 @@ selects exactly one behaviour; ambiguous hashes remain unnamed until stronger
 session evidence appears. Ordered structured parameters are decoded only when
 their generated writer codecs are present in the map.
 
-FishNet decoding uses the current bundled, build-fingerprinted TypeScript
+FishNet decoding uses the current bundled, game-build-fingerprinted TypeScript
 definitions by default. Typed map objects supplied through the core API override
-the bundled map.
-Bundled versions are selected by their full build fingerprint so older maps can
-remain available when a new game build is added.
+the bundled map. The fingerprint is an offline compatibility key for selecting
+matching protocol maps and game-data catalogs; FishNet does not exchange or
+require it during connection setup. Older maps remain selectable by their full
+fingerprint when a new game build is added.
 
 Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, and the
 FishNet packet identifier table used by the decoder. Native initialization
@@ -107,12 +108,10 @@ resolved RPC Links and 1,434 fixed ServerRpc calls, associated 6,182 SyncType
 messages with behaviours, named all 84 broadcasts, and completed without
 replay failures.
 
-A controlled zone-bootstrap replay isolated six local-character cast pairs in
-two repeated three-skill sequences. `SkillsComponent.CastBegin_C` field
-`dto.Id` mapped `AxeArc` to Twin Cleave, `AxeVortex` to Vortex Slash, and
-`Whirlwind` to Whirlwind. Both repetitions matched. Repeated Inventory and
-Skills Window openings produced no unique network transaction in their final
-action epochs.
+The build-scoped skill catalog contains 390 unique active, passive, and mastery
+IDs extracted from public game configuration. Shared passive/mastery records are
+represented once with both kinds. Combat labels resolve from this catalog, with
+compatible semantic maps retained as explicit overrides for legacy builds.
 
 `--filter` uses standard libpcap/BPF syntax. Use `--adapter <Npcap device name>` for a manual adapter override; omit it to follow Windows' default route automatically.
 
@@ -121,6 +120,7 @@ action epochs.
 ```ts
 import { FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "@spiritvale/core";
 import { FishNetCombatTracker } from "@spiritvale/combat";
+import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
 
 const capture = new PacketCapture();
 capture.on("packet", packet => {
@@ -148,6 +148,7 @@ declare const payload: Buffer;
 const messages = decodeFishNetBundle(payload, { reliable: true });
 const session = new FishNetSessionDecoder();
 const combat = new FishNetCombatTracker();
+console.log(resolveFishNetSkillDisplayName("Whirlwind"));
 const linked = session.decode(payload, {
   reliable: true,
   connectionId: "connection-1",
@@ -170,6 +171,11 @@ or summarize damage; consumers combine events using the stable actor and
 skills are matched by attacker and damage-source identifiers. Multiple eligible
 activations of the same source are reported as ambiguous with every candidate
 activation ID instead of being force-assigned.
+
+`@spiritvale/skills` exposes the immutable build-scoped skill catalog and lookup
+helpers. Definitions contain the wire ID, public display name, and one or more
+of the `active`, `passive`, and `mastery` kinds. Unknown combat source IDs remain
+unchanged so incomplete or older catalogs do not suppress events.
 
 `FishNetActorDirectory` consumes the same decoded packet stream and maintains
 public player display names by actor ID. Its identity records are lifecycle

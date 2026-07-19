@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import type { DecodedFishNetPacket, FishNetDecodedField } from "@spiritvale/core";
 import type { MobRewardCatalog } from "./catalog.ts";
 import { FishNetMobRewardTracker } from "./reward-tracker.ts";
 
 const catalog: MobRewardCatalog = {
-  buildFingerprint: CURRENT_FISHNET_BUILD_FINGERPRINT,
+  buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
   experienceRequirements: [100, 200, 300],
   mobs: [{ id: "training-mob", displayName: "Training Mob", level: 2, boss: false, baseExperience: 20, baseCoins: 6, drops: [] }],
 };

@@ -1,4 +1,5 @@
 import type { FishNetSemanticMap, FishNetSkillLabel } from "./semantic-map.ts";
+import { LEGACY_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
 
 export class FishNetSemanticDefinitions {
   private constructor() {}
@@ -33,7 +34,7 @@ export class FishNetSemanticDefinitions {
     }
   ] as const satisfies readonly FishNetSkillLabel[];
   static readonly map = {
-    buildFingerprint: "9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4",
+    buildFingerprint: LEGACY_GAME_BUILD_FINGERPRINT,
     verifiedSkillLabels: this.verifiedSkillLabels,
   } as const satisfies FishNetSemanticMap;
 }

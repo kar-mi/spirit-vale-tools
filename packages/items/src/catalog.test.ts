@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import {
   FishNetItemDirectory,
   loadBundledItemCatalog,
@@ -8,7 +8,7 @@ import {
 
 test("loads a complete build-scoped item catalog", () => {
   const catalog = loadBundledItemCatalog();
-  expect(catalog.buildFingerprint).toBe(CURRENT_FISHNET_BUILD_FINGERPRINT);
+  expect(catalog.buildFingerprint).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
   expect(countByType(catalog.items)).toEqual([280, 31, 647, 45, 327, 129, 1172]);
   expect(catalog.items.every((item) => item.id.length > 0 && item.displayName.length > 0)).toBe(true);
   expect(new Set(catalog.items.map((item) => `${item.itemType}\u0000${item.id}`)).size).toBe(catalog.items.length);

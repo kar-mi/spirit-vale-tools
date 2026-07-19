@@ -1,4 +1,4 @@
-import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
 import { MobRewardCatalogDefinitions } from "./definitions/index.ts";
 
 export type MobDropCategory = "equipment" | "artifact" | "card" | "gem" | "material" | "consumable" | "cosmetic";
@@ -36,7 +36,7 @@ export interface MobRewardCatalogQuery {
 
 const BUNDLED_CATALOG = MobRewardCatalogDefinitions.catalog;
 
-export function loadBundledMobRewardCatalog(buildFingerprint = CURRENT_FISHNET_BUILD_FINGERPRINT): MobRewardCatalog {
+export function loadBundledMobRewardCatalog(buildFingerprint = CURRENT_GAME_BUILD_FINGERPRINT): MobRewardCatalog {
   if (buildFingerprint !== BUNDLED_CATALOG.buildFingerprint) {
     throw new Error(`unknown mob reward catalog build ${JSON.stringify(buildFingerprint)}`);
   }

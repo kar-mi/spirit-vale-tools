@@ -1,4 +1,4 @@
-import { CURRENT_FISHNET_BUILD_FINGERPRINT } from "./builtin-maps.ts";
+import { CURRENT_GAME_BUILD_FINGERPRINT, LEGACY_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
 import { FishNetSemanticDefinitions } from "./semantic-definitions.ts";
 
 export interface FishNetSkillLabel {
@@ -17,11 +17,15 @@ export interface FishNetSemanticMap {
 }
 
 const SEMANTIC_MAPS = {
-  "9c7d0e597410eaabb7ae478aeba201152e556586acd1fd3dde14566c1c7acec4": FishNetSemanticDefinitions.map,
+  [LEGACY_GAME_BUILD_FINGERPRINT]: FishNetSemanticDefinitions.map,
+  [CURRENT_GAME_BUILD_FINGERPRINT]: {
+    buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
+    verifiedSkillLabels: [],
+  },
 } as const;
 
 export function loadBundledFishNetSemanticMap(
-  buildFingerprint: string = CURRENT_FISHNET_BUILD_FINGERPRINT,
+  buildFingerprint: string = CURRENT_GAME_BUILD_FINGERPRINT,
 ): FishNetSemanticMap {
   if (!Object.hasOwn(SEMANTIC_MAPS, buildFingerprint)) {
     throw new Error(`no bundled semantic map for FishNet build ${JSON.stringify(buildFingerprint)}`);

@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetCombatTracker } from "./combat-tracker.ts";
-import type { DecodedFishNetPacket, FishNetDecodedField } from "@spiritvale/core";
+import { LEGACY_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import type { DecodedFishNetPacket, FishNetDecodedField, FishNetSemanticMap } from "@spiritvale/core";
+import type { FishNetSkillCatalog } from "@spiritvale/skills";
 
 function packet(
   tick: number,
@@ -166,6 +168,39 @@ describe("FishNetCombatTracker", () => {
 
     expect(events[0]).toMatchObject({ kind: "activation", phase: "inferred" });
     expect(events[1]).toMatchObject({ kind: "damage", attribution: "inferred" });
+  });
+
+  test("prefers a compatible semantic override over an extracted catalog label", () => {
+    const skillCatalog: FishNetSkillCatalog = {
+      buildFingerprint: "synthetic-build",
+      skills: [{ id: "SyntheticArc", displayName: "Catalog Arc", kinds: ["active"] }],
+    };
+    const semanticMap: FishNetSemanticMap = {
+      buildFingerprint: "synthetic-build",
+      verifiedSkillLabels: [{
+        networkBehaviourType: "SkillsComponent",
+        rpcName: "CastBegin_C",
+        field: "dto.Id",
+        value: "SyntheticArc",
+        label: "Override Arc",
+        confidence: "synthetic",
+        repetitions: 2,
+      }],
+    };
+    const tracker = new FishNetCombatTracker({ skillCatalog, semanticMap });
+    expect(tracker.consume(cast(1, 10, "SyntheticArc"))[0]).toMatchObject({ sourceLabel: "Override Arc" });
+  });
+
+  test("rejects mismatched metadata builds and retains legacy semantic labels", () => {
+    const skillCatalog: FishNetSkillCatalog = {
+      buildFingerprint: "synthetic-build",
+      skills: [{ id: "SyntheticArc", displayName: "Catalog Arc", kinds: ["active"] }],
+    };
+    expect(() => new FishNetCombatTracker({ buildFingerprint: "other-build", skillCatalog }))
+      .toThrow("skill catalog build");
+
+    const legacy = new FishNetCombatTracker({ buildFingerprint: LEGACY_GAME_BUILD_FINGERPRINT });
+    expect(legacy.consume(cast(1, 10, "AxeArc"))[0]).toMatchObject({ sourceLabel: "Twin Cleave" });
   });
 
   test("emits lethal damage as a death event and identifies a paired damage event", () => {
