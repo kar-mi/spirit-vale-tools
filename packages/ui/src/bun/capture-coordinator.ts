@@ -3,7 +3,7 @@ import type { FishNetActorIdentityEvent } from "@spiritvale/combat";
 import { PacketCapture } from "@spiritvale/core";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
-import type { JsonData, JsonLinesLogger, JsonObject, LogSession } from "@spiritvale/logging";
+import type { JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream } from "@spiritvale/logging";
 import { FishNetMarketTracker } from "@spiritvale/market";
 import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 
@@ -17,16 +17,15 @@ export interface CaptureCoordinatorOptions {
   captureFactory?: () => PacketCapture;
   onStatus?: (state: LauncherState) => void;
   /**
-   * Writes unclassified fishnet.packet records to the "other" stream. Defaults to the
-   * SPIRIT_VALE_LOG_PACKETS environment variable; these records are the bulk of other.jsonl
-   * and are only needed when diagnosing protocol coverage.
+   * Adds an internal "other" stream containing capture diagnostics and unclassified
+   * FishNet packets. Defaults to the SPIRIT_VALE_DIAGNOSTIC_LOGS environment variable.
    */
-  logUnclassifiedPackets?: boolean;
+  diagnosticLogging?: boolean;
 }
 
 export class CaptureCoordinator {
   private readonly capture: PacketCapture;
-  private readonly logUnclassifiedPackets: boolean;
+  private readonly diagnosticLogging: boolean;
   private readonly actors = new FishNetActorDirectory();
   private readonly combat = new FishNetCombatTracker();
   private readonly rewards = new FishNetMobRewardTracker();
@@ -44,7 +43,7 @@ export class CaptureCoordinator {
   private lastAuthenticated?: { connectionId: string; tick: number };
 
   constructor(private readonly options: CaptureCoordinatorOptions) {
-    this.logUnclassifiedPackets = options.logUnclassifiedPackets ?? envFlag(Bun.env["SPIRIT_VALE_LOG_PACKETS"]);
+    this.diagnosticLogging = options.diagnosticLogging ?? envFlag(Bun.env["SPIRIT_VALE_DIAGNOSTIC_LOGS"]);
     this.capture = options.captureFactory?.() ?? new PacketCapture();
     this.capture.on("started", () => this.captureStarted());
     this.capture.on("targetStatus", (target) => this.targetStatus(target));
@@ -62,16 +61,18 @@ export class CaptureCoordinator {
     if (this.session || this.status === "starting" || this.status === "capturing") return;
     this.setStatus("starting", "Starting centralized capture…");
     try {
+      const streams: LogStream[] = ["combat", "rewards", "market"];
+      if (this.diagnosticLogging) streams.push("other");
       this.session = await createLogSession({
         producer: "desktop-capture",
-        streams: ["combat", "rewards", "market", "other"],
+        streams,
         logDirectory: this.options.logDirectory,
       });
       this.combatLog = this.session.logger("combat");
       this.rewardsLog = this.session.logger("rewards");
       this.marketLog = this.session.logger("market");
-      this.otherLog = this.session.logger("other");
-      this.otherLog.log("capture.lifecycle", { state: "starting" });
+      this.otherLog = this.diagnosticLogging ? this.session.logger("other") : undefined;
+      this.otherLog?.log("capture.lifecycle", { state: "starting" });
       await this.capture.start({
         protocols: ["udp"],
         targetProcessName: "SpiritVale.exe",
@@ -81,6 +82,7 @@ export class CaptureCoordinator {
     } catch (error) {
       const message = errorMessage(error);
       this.otherLog?.log("capture.error", { message });
+      this.combatLog?.log("combat.error", { message });
       this.marketLog?.log("market.error", { message });
       this.rewardsLog?.log("rewards.error", { message });
       this.setStatus("unavailable", "Unable to capture data");
@@ -93,7 +95,7 @@ export class CaptureCoordinator {
     try {
       await this.capture.stop();
     } catch (error) {
-      this.otherLog?.log("capture.error", { message: errorMessage(error) });
+      this.logCaptureError(errorMessage(error));
     }
     this.writeStoppedLifecycle();
     this.actors.reset();
@@ -128,11 +130,14 @@ export class CaptureCoordinator {
   }
 
   private captureWarning(message: string): void {
+    this.combatLog?.log("combat.warning", { message });
+    this.rewardsLog?.log("rewards.warning", { message });
+    this.marketLog?.log("market.warning", { message });
     this.otherLog?.log("capture.warning", { message });
   }
 
   private captureError(error: Error): void {
-    this.otherLog?.log("capture.error", { message: error.message });
+    this.logCaptureError(error.message);
     if (!this.stopping) this.setStatus("unavailable", "Unable to capture data");
   }
 
@@ -187,7 +192,7 @@ export class CaptureCoordinator {
       this.logDomainWarning("market", error);
     }
 
-    if (!handled && this.logUnclassifiedPackets) this.otherLog?.log("fishnet.packet", unclassifiedPacket(packet));
+    if (!handled && this.diagnosticLogging) this.otherLog?.log("fishnet.packet", unclassifiedPacket(packet));
   }
 
   /**
@@ -244,6 +249,13 @@ export class CaptureCoordinator {
     else if (domain === "rewards") this.rewardsLog?.log("rewards.warning", { message });
     else this.marketLog?.log("market.warning", { message });
     this.otherLog?.log("capture.warning", { domain, message });
+  }
+
+  private logCaptureError(message: string): void {
+    this.combatLog?.log("combat.error", { message });
+    this.rewardsLog?.log("rewards.error", { message });
+    this.marketLog?.log("market.error", { message });
+    this.otherLog?.log("capture.error", { message });
   }
 
   private writeStoppedLifecycle(): void {

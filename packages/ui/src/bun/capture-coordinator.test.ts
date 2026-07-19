@@ -4,20 +4,23 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { DpsSessionLogFollower } from "@spiritvale/combat";
 import type { CapturedFishNetPacket, CaptureConfig, PacketCapture } from "@spiritvale/core";
 import { readCurrentLogStream } from "@spiritvale/logging";
+import { MarketSessionLogFollower } from "@spiritvale/market";
+import { RewardSessionLogFollower } from "@spiritvale/rewards";
 
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 
 describe("central capture coordinator", () => {
-  test("publishes one four-stream session and routes domain and unclassified records", async () => {
+  test("adds the diagnostic stream only when development diagnostics are enabled", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-"));
     const capture = new FakeCapture();
     try {
       const coordinator = new CaptureCoordinator({
         logDirectory: directory,
         captureFactory: () => capture as unknown as PacketCapture,
-        logUnclassifiedPackets: true,
+        diagnosticLogging: true,
       });
       await coordinator.start();
 
@@ -60,6 +63,45 @@ describe("central capture coordinator", () => {
     }
   });
 
+  test("captures all three domains before their log followers are opened", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-late-open-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+        diagnosticLogging: false,
+      });
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      capture.packet(experiencePacket(2, 0, 0n));
+      capture.packet(experiencePacket(3, 10, 2n));
+      capture.packet({
+        tick: 4,
+        packetId: 1,
+        packetName: "rpcLink",
+        rpcName: "VendingCollectResult_T",
+        rpcResolution: "verified",
+        networkBehaviourType: "PlayerController",
+        raw: Buffer.from([1]),
+        payload: Buffer.from([1]),
+      });
+      await coordinator.stop();
+
+      const combat = await new DpsSessionLogFollower(directory).poll();
+      const rewards = await new RewardSessionLogFollower(directory).poll();
+      const market = await new MarketSessionLogFollower(directory).poll();
+      expect(new Set([combat.sessionId, rewards.sessionId, market.sessionId]).size).toBe(1);
+      expect(combat.events.length).toBeGreaterThan(0);
+      expect(rewards.snapshot.unmatched).toBeGreaterThan(0);
+      expect(market).toMatchObject({ missing: false, status: "stopped" });
+      expect(await readCurrentLogStream("other", directory)).toBeUndefined();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("keeps new-connection actor identities when a stale connection trails a map change", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reconnect-"));
     const capture = new FakeCapture();
@@ -67,7 +109,7 @@ describe("central capture coordinator", () => {
       const coordinator = new CaptureCoordinator({
         logDirectory: directory,
         captureFactory: () => capture as unknown as PacketCapture,
-        logUnclassifiedPackets: false,
+        diagnosticLogging: true,
       });
       await coordinator.start();
 
@@ -108,7 +150,7 @@ describe("central capture coordinator", () => {
       expect(misses).toHaveLength(1);
       expect(misses[0]!.data.objectId).toBe(40);
       expect(misses[0]!.data.spawnSyncPayload).toBe("01020304");
-      expect(other.some((record) => record.type === "fishnet.packet")).toBe(false);
+      expect(other.some((record) => record.type === "fishnet.packet")).toBe(true);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
@@ -127,7 +169,7 @@ describe("central capture coordinator", () => {
       expect(await readCurrentLogStream("combat", directory)).toBeDefined();
       expect(await readCurrentLogStream("rewards", directory)).toBeDefined();
       expect(await readCurrentLogStream("market", directory)).toBeDefined();
-      expect(await readCurrentLogStream("other", directory)).toBeDefined();
+      expect(await readCurrentLogStream("other", directory)).toBeUndefined();
       await coordinator.stop();
     } finally {
       await rm(directory, { recursive: true, force: true });

@@ -29,7 +29,7 @@ const follower = new MarketSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
 let status: MarketUiStatus = "waiting";
-let statusDetail = "Start a passive market session to populate listings.";
+let statusDetail = "Waiting for market data from the central capture.";
 let listings: FishNetMarketListingView[] = [];
 let query = "";
 let filters: MarketUiFilter[] = [];
@@ -169,7 +169,7 @@ async function pollMarket(): Promise<void> {
 function detailFor(nextStatus: MarketUiStatus, count: number, invalidLines: number): string {
   const skipped = invalidLines > 0 ? ` · ${invalidLines} malformed ${invalidLines === 1 ? "record" : "records"} skipped` : "";
   switch (nextStatus) {
-    case "waiting": return "Start a passive market session to populate listings.";
+    case "waiting": return "Waiting for market data from the central capture.";
     case "watching": return `Market session found. Open the in-game market to receive listings.${skipped}`;
     case "ready": return `${count.toLocaleString()} listings captured in the current session${skipped}`;
     case "stopped": return `Market session stopped; showing its last snapshot${skipped}`;

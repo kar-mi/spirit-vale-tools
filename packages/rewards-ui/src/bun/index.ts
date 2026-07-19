@@ -37,7 +37,7 @@ let window: BrowserWindow;
 let catalogWindow: BrowserWindow | undefined;
 let mode: RewardsAppMode = "live";
 let status: RewardsAppStatus = "waiting";
-let statusDetail = "Start a passive rewards session to observe kills.";
+let statusDetail = "Waiting for rewards data from the central capture.";
 let catalogQuery = "";
 let liveSnapshot = emptySnapshot();
 let replaySnapshot = emptySnapshot();
@@ -283,7 +283,7 @@ function detail(next: RewardLogStatus, invalidLines: number, unidentified: numbe
   const skipped = invalidLines > 0 ? ` · ${invalidLines} malformed records skipped` : "";
   const warmup = unidentified > 0 ? ` · ${unidentified} rewards missed mob identity from before capture` : "";
   switch (next) {
-    case "waiting": return "Start a passive rewards session to observe kills.";
+    case "waiting": return "Waiting for rewards data from the central capture.";
     case "watching": return `Rewards session found; waiting for a confirmed kill.${warmup}${skipped}`;
     case "ready": return `Tracking confirmed mob rewards.${warmup}${skipped}`;
     case "stopped": return `Rewards session stopped; showing its final state.${warmup}${skipped}`;
