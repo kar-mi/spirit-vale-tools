@@ -72,17 +72,19 @@ export function initWindowChrome(options: WindowChromeOptions): WindowChrome {
 
   function startResize(edge: Edge, event: PointerEvent): void {
     if (maximized) return;
-    trackPointer(event, (frame, dx, dy) => {
+    trackPointer(event, (frame, dx, dy, scale) => {
       let { x, y, width, height } = frame;
-      if (edge.includes("e")) width = Math.max(options.minWidth, width + dx);
-      if (edge.includes("s")) height = Math.max(options.minHeight, height + dy);
+      const minWidth = options.minWidth * scale;
+      const minHeight = options.minHeight * scale;
+      if (edge.includes("e")) width = Math.max(minWidth, width + dx);
+      if (edge.includes("s")) height = Math.max(minHeight, height + dy);
       if (edge.includes("w")) {
-        const newWidth = Math.max(options.minWidth, width - dx);
+        const newWidth = Math.max(minWidth, width - dx);
         x += width - newWidth;
         width = newWidth;
       }
       if (edge.includes("n")) {
-        const newHeight = Math.max(options.minHeight, height - dy);
+        const newHeight = Math.max(minHeight, height - dy);
         y += height - newHeight;
         height = newHeight;
       }
@@ -93,7 +95,7 @@ export function initWindowChrome(options: WindowChromeOptions): WindowChrome {
   /** Pointer-capture + rAF-throttled setFrame from screen-space deltas. */
   function trackPointer(
     event: PointerEvent,
-    apply: (initial: WindowFrame, dx: number, dy: number) => WindowFrame,
+    apply: (initial: WindowFrame, dx: number, dy: number, scale: number) => WindowFrame,
   ): void {
     const el = event.currentTarget as HTMLElement;
     el.setPointerCapture(event.pointerId);
@@ -116,7 +118,13 @@ export function initWindowChrome(options: WindowChromeOptions): WindowChrome {
       requestAnimationFrame(() => {
         rafScheduled = false;
         if (!initialFrame) return;
-        void options.setFrame(apply(initialFrame, lastScreenX - startX, lastScreenY - startY));
+        const scale = window.devicePixelRatio || 1;
+        void options.setFrame(apply(
+          initialFrame,
+          (lastScreenX - startX) * scale,
+          (lastScreenY - startY) * scale,
+          scale,
+        ));
       });
     }
 
