@@ -1,4 +1,4 @@
-import { resolveFishNetItem } from "@spiritvale/items";
+import { resolveFishNetItem, type FishNetItemEffect } from "@spiritvale/items";
 import { resolveFishNetSkill } from "@spiritvale/skills";
 import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
@@ -35,6 +35,14 @@ export function materializeGearStats(equipment: readonly CharacterEquipment[], a
     stats.push(...itemEffects(3, artifact.itemId, artifact.refine));
     for (const gem of artifact.gems) stats.push(...itemEffects(5, gem, 0));
   }
+  const sets = new Map<string, number>();
+  for (const artifact of artifacts) sets.set(artifact.itemId, (sets.get(artifact.itemId) ?? 0) + 1);
+  for (const [itemId, pieces] of sets) {
+    const set = resolveFishNetItem(3, itemId)?.artifactSet;
+    if (!set) continue;
+    stats.push(...effectsToStats(set.perPieceBase, 1), ...effectsToStats(set.perPiece, pieces));
+    if (pieces >= set.requiredPieces) stats.push(...effectsToStats(set.fullSet, 1));
+  }
   return stats;
 }
 
@@ -51,13 +59,17 @@ export function materializeSkillStats(skills: readonly CharacterSkill[]): Charac
 
 function itemEffects(itemType: number, itemId: string, refine: number): CharacterSubstat[] {
   const definition = resolveFishNetItem(itemType, itemId);
-  return (definition?.effects ?? [])
+  return [...effectsToStats(definition?.effects ?? [], 1), ...effectsToStats(definition?.refineEffects ?? [], refine)];
+}
+
+function effectsToStats(effects: readonly FishNetItemEffect[], multiplier: number): CharacterSubstat[] {
+  return effects
     .filter((effect) => effect.skillId === undefined)
     .map((effect) => ({
       type: effect.type,
       name: STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,
       roll: 0,
-      value: effect.value + (effect.perRefine ?? 0) * refine,
+      value: effect.value * multiplier,
       percent: PERCENT_STATS.has(effect.type),
     }));
 }

@@ -32,6 +32,17 @@ test("resolves duplicate ids independently by item type", () => {
   expect(resolveFishNetItem(2, "Axe")?.substatGroup).toBe("Melee");
 });
 
+test("includes standard artifact effects and refine scaling", () => {
+  expect(resolveFishNetItem(3, "Vampiric")).toMatchObject({
+    artifactSet: {
+      requiredPieces: 4,
+      perPiece: [{ type: 98, value: 3 }],
+      fullSet: expect.arrayContaining([{ type: 98, value: 3 }]),
+    },
+    refineEffects: [{ type: 98, value: 0.125 }],
+  });
+});
+
 function countByType(items: readonly { itemType: number }[]): number[] {
   return Array.from({ length: 7 }, (_, type) => items.filter((item) => item.itemType === type).length);
 }

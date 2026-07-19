@@ -7,22 +7,64 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Abomination",
-      "displayName": "Abomination Card"
+      "displayName": "Abomination Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 1
+        },
+        {
+          "type": 73,
+          "value": -1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Alien Big Blink",
-      "displayName": "Cosmic Entity Card"
+      "displayName": "Cosmic Entity Card",
+      "effects": [
+        {
+          "type": 70,
+          "value": 10
+        },
+        {
+          "type": 69,
+          "value": 10
+        },
+        {
+          "type": 71,
+          "value": -25
+        },
+        {
+          "type": 72,
+          "value": -25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Alien Biteroot",
-      "displayName": "Chomproot Card"
+      "displayName": "Chomproot Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Bleeding"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Alien Cyclops",
-      "displayName": "Voidspawn Card"
+      "displayName": "Voidspawn Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "TrueSight"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -32,7 +74,13 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Alien One Eye",
-      "displayName": "Voidgazer Card"
+      "displayName": "Voidgazer Card",
+      "effects": [
+        {
+          "type": 34,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -42,7 +90,19 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Alien Plant",
-      "displayName": "Chompbloom Card"
+      "displayName": "Chompbloom Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Slow"
+        },
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Bleeding"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -52,7 +112,13 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Alien Spike",
-      "displayName": "Cinderspike Card"
+      "displayName": "Cinderspike Card",
+      "effects": [
+        {
+          "type": 86,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -62,7 +128,14 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Alien Star",
-      "displayName": "Little Star Card"
+      "displayName": "Little Star Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Holy"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -72,32 +145,75 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Alien Twinkle",
-      "displayName": "Twinkle Card"
+      "displayName": "Twinkle Card",
+      "effects": [
+        {
+          "type": 67,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Alien Wheel",
-      "displayName": "Cinderwheel Card"
+      "displayName": "Cinderwheel Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Stun"
+        },
+        {
+          "type": 72,
+          "value": -25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Alien Wreck",
-      "displayName": "Cindermaw Card"
+      "displayName": "Cindermaw Card",
+      "effects": [
+        {
+          "type": 32,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Angel",
-      "displayName": "Angel Card"
+      "displayName": "Angel Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Holy"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Angel Mage",
-      "displayName": "Seraphim Arbiter Card"
+      "displayName": "Seraphim Arbiter Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Archangel",
-      "displayName": "Archangel Card"
+      "displayName": "Archangel Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Holy"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -112,22 +228,46 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Bat",
-      "displayName": "Bat Card"
+      "displayName": "Bat Card",
+      "effects": [
+        {
+          "type": 23,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bat Lord",
-      "displayName": "Night Baron Card"
+      "displayName": "Night Baron Card",
+      "effects": [
+        {
+          "type": 177,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bee",
-      "displayName": "Bee Card"
+      "displayName": "Bee Card",
+      "effects": [
+        {
+          "type": 76,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bird",
-      "displayName": "Rooster Card"
+      "displayName": "Rooster Card",
+      "effects": [
+        {
+          "type": 78,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -147,17 +287,39 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Bloom",
-      "displayName": "Nightbloom Card"
+      "displayName": "Nightbloom Card",
+      "effects": [
+        {
+          "type": 142,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Blossom",
-      "displayName": "Deathblossom Card"
+      "displayName": "Deathblossom Card",
+      "effects": [
+        {
+          "type": 142,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bomb",
-      "displayName": "Bomb Card"
+      "displayName": "Bomb Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 25
+        },
+        {
+          "type": 30,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -167,77 +329,190 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Boxy Robot",
-      "displayName": "Boxy Robot Card"
+      "displayName": "Boxy Robot Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 20,
+          "skillId": "Neutral"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bud",
-      "displayName": "Venom Bud Card"
+      "displayName": "Venom Bud Card",
+      "effects": [
+        {
+          "type": 65,
+          "value": 10
+        },
+        {
+          "type": 71,
+          "value": -5
+        },
+        {
+          "type": 72,
+          "value": -5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bumble",
-      "displayName": "Bumblebee Card"
+      "displayName": "Bumblebee Card",
+      "effects": [
+        {
+          "type": 76,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Bunny",
-      "displayName": "Bunny Card"
+      "displayName": "Bunny Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Neutral"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Burrow",
-      "displayName": "Digger Card"
+      "displayName": "Digger Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "Stomp"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Butterfly Fairy",
-      "displayName": "Fairy Card"
+      "displayName": "Fairy Card",
+      "effects": [
+        {
+          "type": 34,
+          "value": 1
+        },
+        {
+          "type": 72,
+          "value": -10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Butterfly Hue",
-      "displayName": "Sprite Card"
+      "displayName": "Sprite Card",
+      "effects": [
+        {
+          "type": 67,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Butterfly Pixie",
-      "displayName": "Pixie Card"
+      "displayName": "Pixie Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Holy"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cacti",
-      "displayName": "Cacti Card"
+      "displayName": "Cacti Card",
+      "effects": [
+        {
+          "type": 86,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cactus",
-      "displayName": "Cactus Card"
+      "displayName": "Cactus Card",
+      "effects": [
+        {
+          "type": 86,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cactus Boss",
-      "displayName": "Cactus King Card"
+      "displayName": "Cactus King Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 5,
+          "skillId": "Endure"
+        },
+        {
+          "type": 71,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cat Bolt",
-      "displayName": "Raiju Card"
+      "displayName": "Raiju Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 6
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cat Lightning",
-      "displayName": "Voltpaw Card"
+      "displayName": "Voltpaw Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Wind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cat Meow",
-      "displayName": "Sparkit Card"
+      "displayName": "Sparkit Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "Thunderbolt"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Chick",
-      "displayName": "Chick Card"
+      "displayName": "Chick Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -247,7 +522,13 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Creeper",
-      "displayName": "Crawler Card"
+      "displayName": "Crawler Card",
+      "effects": [
+        {
+          "type": 52,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -267,32 +548,68 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Cyclops",
-      "displayName": "Cyclops Card"
+      "displayName": "Cyclops Card",
+      "effects": [
+        {
+          "type": 74,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cyclops Bat",
-      "displayName": "Eyeclops Bat Card"
+      "displayName": "Eyeclops Bat Card",
+      "effects": [
+        {
+          "type": 48,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cyclops Bat Mage",
-      "displayName": "Eyeclops Mage Card"
+      "displayName": "Eyeclops Mage Card",
+      "effects": [
+        {
+          "type": 48,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cyclops Bat Wizard",
-      "displayName": "Eyeclops Arcanist Card"
+      "displayName": "Eyeclops Arcanist Card",
+      "effects": [
+        {
+          "type": 64,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cyclops Giant",
-      "displayName": "Cyclops Titan Card"
+      "displayName": "Cyclops Titan Card",
+      "effects": [
+        {
+          "type": 74,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Cyclops Minion",
-      "displayName": "Cyclopling Card"
+      "displayName": "Cyclopling Card",
+      "effects": [
+        {
+          "type": 74,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -312,17 +629,37 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Death",
-      "displayName": "Wight Card"
+      "displayName": "Wight Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Ghost"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Death Mage",
-      "displayName": "Abyss Archon Card"
+      "displayName": "Abyss Archon Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "Cloaking"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Delivery Robot",
-      "displayName": "Delivery Robot Card"
+      "displayName": "Delivery Robot Card",
+      "effects": [
+        {
+          "type": 101,
+          "value": 100
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -342,27 +679,66 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Direwolf",
-      "displayName": "Direwolf Card"
+      "displayName": "Direwolf Card",
+      "effects": [
+        {
+          "type": 79,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dog Bark",
-      "displayName": "Hound Card"
+      "displayName": "Hound Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "Fireball"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dog Bowwow",
-      "displayName": "Hellhound Card"
+      "displayName": "Hellhound Card",
+      "effects": [
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "Fireball"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "Firewall"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dog Pup",
-      "displayName": "Pup Card"
+      "displayName": "Pup Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "Firebolt"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Blizzard",
-      "displayName": "Frost Wyvern Card"
+      "displayName": "Frost Wyvern Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Frozen"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -372,27 +748,68 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Dragon Darkness",
-      "displayName": "Shadow Wyvern Card"
+      "displayName": "Shadow Wyvern Card",
+      "effects": [
+        {
+          "type": 69,
+          "value": 1
+        },
+        {
+          "type": 70,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": -50
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Dusk",
-      "displayName": "Dusk Drake Card"
+      "displayName": "Dusk Drake Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Curse"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Fire",
-      "displayName": "Flame Drake Card"
+      "displayName": "Flame Drake Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Fire"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Ice",
-      "displayName": "Rime Drake Card"
+      "displayName": "Rime Drake Card",
+      "effects": [
+        {
+          "type": 123,
+          "value": 1,
+          "skillId": "IceShard"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Inferno",
-      "displayName": "Inferno Wyvern Card"
+      "displayName": "Inferno Wyvern Card",
+      "effects": [
+        {
+          "type": 69,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -417,7 +834,13 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Dragon Nightfall",
-      "displayName": "Night Drake Card"
+      "displayName": "Night Drake Card",
+      "effects": [
+        {
+          "type": 52,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -432,27 +855,62 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Dragon Spark",
-      "displayName": "Spark Drake Card"
+      "displayName": "Spark Drake Card",
+      "effects": [
+        {
+          "type": 69,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragon Water",
-      "displayName": "Aqua Drake Card"
+      "displayName": "Aqua Drake Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Water"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragonfly Arrow",
-      "displayName": "Darter Card"
+      "displayName": "Darter Card",
+      "effects": [
+        {
+          "type": 14,
+          "value": 10
+        },
+        {
+          "type": 2,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragonfly Darner",
-      "displayName": "Skimmer Card"
+      "displayName": "Skimmer Card",
+      "effects": [
+        {
+          "type": 14,
+          "value": 20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Dragonfly Swift",
-      "displayName": "Hawker Card"
+      "displayName": "Hawker Card",
+      "effects": [
+        {
+          "type": 14,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -462,57 +920,133 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Egg",
-      "displayName": "Egg Card"
+      "displayName": "Egg Card",
+      "effects": [
+        {
+          "type": 7,
+          "value": 100
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Egglet",
-      "displayName": "Egglet Card"
+      "displayName": "Egglet Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 10
+        },
+        {
+          "type": 2,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Elder Wisp Blue",
-      "displayName": "Elder Frost Card"
+      "displayName": "Elder Frost Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Water"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Elder Wisp Purple",
-      "displayName": "Elder Lightning Card"
+      "displayName": "Elder Lightning Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Wind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Elder Wisp Yellow",
-      "displayName": "Elder Fire Card"
+      "displayName": "Elder Fire Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Fire"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Bat Blue",
-      "displayName": "Azure Gazer Card"
+      "displayName": "Azure Gazer Card",
+      "effects": [
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "HolyLight"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Bat Green",
-      "displayName": "Jade Gazer Card"
+      "displayName": "Jade Gazer Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Bat Red",
-      "displayName": "Ruby Gazer Card"
+      "displayName": "Ruby Gazer Card",
+      "effects": [
+        {
+          "type": 39,
+          "value": 1,
+          "skillId": "LifeDrainEnemy"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Creep Blue",
-      "displayName": "Azure Eyestalk Card"
+      "displayName": "Azure Eyestalk Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Creep Green",
-      "displayName": "Jade Eyestalk Card"
+      "displayName": "Jade Eyestalk Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Creep Red",
-      "displayName": "Ruby Eyestalk Card"
+      "displayName": "Ruby Eyestalk Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -522,62 +1056,154 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Eyeball Mage Blue",
-      "displayName": "Azure Beholder Card"
+      "displayName": "Azure Beholder Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 1
+        },
+        {
+          "type": 74,
+          "value": -1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Mage Green",
-      "displayName": "Jade Beholder Card"
+      "displayName": "Jade Beholder Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Mage Red",
-      "displayName": "Ruby Beholder Card"
+      "displayName": "Ruby Beholder Card",
+      "effects": [
+        {
+          "type": 98,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Eyeball Monster",
-      "displayName": "Kraken Card"
+      "displayName": "Kraken Card",
+      "effects": [
+        {
+          "type": 200,
+          "value": 3,
+          "skillId": "IceShard"
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "FreezingField"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fire",
-      "displayName": "Ember Card"
+      "displayName": "Ember Card",
+      "effects": [
+        {
+          "type": 75,
+          "value": 25
+        },
+        {
+          "type": 76,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fire Mage",
-      "displayName": "Fire Mage Card"
+      "displayName": "Fire Mage Card",
+      "effects": [
+        {
+          "type": 70,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "FIsh Blue",
-      "displayName": "Bluefin Card"
+      "displayName": "Bluefin Card",
+      "effects": [
+        {
+          "type": 192,
+          "value": -25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Man Blue",
-      "displayName": "Aqua Merling Card"
+      "displayName": "Aqua Merling Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Man Pink",
-      "displayName": "Roseate Merling Card"
+      "displayName": "Roseate Merling Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Man Yellow",
-      "displayName": "Canary Merling Card"
+      "displayName": "Canary Merling Card",
+      "effects": [
+        {
+          "type": 15,
+          "value": 5
+        },
+        {
+          "type": 52,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Merman Blue",
-      "displayName": "Sapphire Merman Card"
+      "displayName": "Sapphire Merman Card",
+      "effects": [
+        {
+          "type": 124,
+          "value": 2,
+          "skillId": "ShieldThrow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Merman Pink",
-      "displayName": "Coral Merman Card"
+      "displayName": "Coral Merman Card",
+      "effects": [
+        {
+          "type": 52,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -587,37 +1213,87 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Fish Pink",
-      "displayName": "Rosetail Card"
+      "displayName": "Rosetail Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        },
+        {
+          "type": 10,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fish Yellow",
-      "displayName": "Goldtail Card"
+      "displayName": "Goldtail Card",
+      "effects": [
+        {
+          "type": 121,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Flame",
-      "displayName": "Blaze Card"
+      "displayName": "Blaze Card",
+      "effects": [
+        {
+          "type": 211,
+          "value": 15,
+          "skillId": "Burning"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fledgling",
-      "displayName": "Fledgling Card"
+      "displayName": "Fledgling Card",
+      "effects": [
+        {
+          "type": 13,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Flora",
-      "displayName": "Flora Card"
+      "displayName": "Flora Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "IceShard"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Flower Pot Monster",
-      "displayName": "Mandrake Card"
+      "displayName": "Mandrake Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "EarthSpikes"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Fungi",
-      "displayName": "Fungi Card"
+      "displayName": "Fungi Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 5,
+          "skillId": "Heal"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -627,107 +1303,283 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Ghost",
-      "displayName": "Ghost Card"
+      "displayName": "Ghost Card",
+      "effects": [
+        {
+          "type": 122,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Gloom",
-      "displayName": "Spectre Card"
+      "displayName": "Spectre Card",
+      "effects": [
+        {
+          "type": 6,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": 5
+        },
+        {
+          "type": 72,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Glow Wisp Blue",
-      "displayName": "Frost Glimmer Card"
+      "displayName": "Frost Glimmer Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 1,
+          "skillId": "Water"
+        },
+        {
+          "type": 70,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Glow Wisp Purple",
-      "displayName": "Lightning Glimmer Card"
+      "displayName": "Lightning Glimmer Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 1,
+          "skillId": "Wind"
+        },
+        {
+          "type": 70,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Glow Wisp Yellow",
-      "displayName": "Fire Glimmer Card"
+      "displayName": "Fire Glimmer Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 1,
+          "skillId": "Fire"
+        },
+        {
+          "type": 70,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Giant",
-      "displayName": "Orc Card"
+      "displayName": "Orc Card",
+      "effects": [
+        {
+          "type": 71,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Giant Devil",
-      "displayName": "Orc Soldier Card"
+      "displayName": "Orc Soldier Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Giant Gold",
-      "displayName": "Orc King Card"
+      "displayName": "Orc King Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 7
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Giant Mage",
-      "displayName": "Orc Mage Card"
+      "displayName": "Orc Mage Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 1,
+          "skillId": "Earth"
+        },
+        {
+          "type": 70,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Minion",
-      "displayName": "Goblin Card"
+      "displayName": "Goblin Card",
+      "effects": [
+        {
+          "type": 106,
+          "value": 3,
+          "skillId": "Bash"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Trooper",
-      "displayName": "Goblin Grunt Card"
+      "displayName": "Goblin Grunt Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Trooper Assassin",
-      "displayName": "Goblin Assassin Card"
+      "displayName": "Goblin Assassin Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "ShadowStep"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Trooper Mage",
-      "displayName": "Goblin Mage Card"
+      "displayName": "Goblin Mage Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "FreeCast"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Trooper Soldier",
-      "displayName": "Goblin Soldier Card"
+      "displayName": "Goblin Soldier Card",
+      "effects": [
+        {
+          "type": 7,
+          "value": 50
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Warblade",
-      "displayName": "Orc Reaver Card"
+      "displayName": "Orc Reaver Card",
+      "effects": [
+        {
+          "type": 86,
+          "value": 30
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Warchief",
-      "displayName": "Orc Warchief Card"
+      "displayName": "Orc Warchief Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Fire"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Water"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Wind"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Warcrusher",
-      "displayName": "Orc Crusher Card"
+      "displayName": "Orc Crusher Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Goblin Warlock",
-      "displayName": "Orc Warlock Card"
+      "displayName": "Orc Warlock Card",
+      "effects": [
+        {
+          "type": 70,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Golem Earth",
-      "displayName": "Stone Golem Card"
+      "displayName": "Stone Golem Card",
+      "effects": [
+        {
+          "type": 73,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Golem Fire",
-      "displayName": "Magma Golem Card"
+      "displayName": "Magma Golem Card",
+      "effects": [
+        {
+          "type": 73,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Golem Ice",
-      "displayName": "Rime Golem Card"
+      "displayName": "Rime Golem Card",
+      "effects": [
+        {
+          "type": 73,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -737,27 +1589,63 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Grim Reaper",
-      "displayName": "Reaper Card"
+      "displayName": "Reaper Card",
+      "effects": [
+        {
+          "type": 47,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Gripper Robot",
-      "displayName": "Gripper Robot Card"
+      "displayName": "Gripper Robot Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 10,
+          "skillId": "Neutral"
+        },
+        {
+          "type": 71,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Hare",
-      "displayName": "Vorpal Hare Card"
+      "displayName": "Vorpal Hare Card",
+      "effects": [
+        {
+          "type": 65,
+          "value": 20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Haunt",
-      "displayName": "Banshee Card"
+      "displayName": "Banshee Card",
+      "effects": [
+        {
+          "type": 122,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Hermit King",
-      "displayName": "Hermit King Card"
+      "displayName": "Hermit King Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "HydroVortex"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -772,37 +1660,88 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Horror",
-      "displayName": "Horror Card"
+      "displayName": "Horror Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Shadow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Housefly Icky",
-      "displayName": "Gadfly Card"
+      "displayName": "Gadfly Card",
+      "effects": [
+        {
+          "type": 15,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Housefly Junk",
-      "displayName": "Bluebottle Card"
+      "displayName": "Bluebottle Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Housefly Nom",
-      "displayName": "Blowfly Card"
+      "displayName": "Blowfly Card",
+      "effects": [
+        {
+          "type": 15,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice",
-      "displayName": "Ice Card"
+      "displayName": "Ice Card",
+      "effects": [
+        {
+          "type": 36,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice Bear A",
-      "displayName": "Ice Bear Card"
+      "displayName": "Ice Bear Card",
+      "effects": [
+        {
+          "type": 7,
+          "value": 800
+        },
+        {
+          "type": 72,
+          "value": -15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice Bear B",
-      "displayName": "Festive Bear Card"
+      "displayName": "Festive Bear Card",
+      "effects": [
+        {
+          "type": 73,
+          "value": 5
+        },
+        {
+          "type": 74,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -817,47 +1756,117 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Ice Mage",
-      "displayName": "Ice Mage Card"
+      "displayName": "Ice Mage Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 5
+        },
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Frozen"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice Starflake A",
-      "displayName": "Starflake Card"
+      "displayName": "Starflake Card",
+      "effects": [
+        {
+          "type": 90,
+          "value": -15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice Starflake B",
-      "displayName": "Vanilla Ice Card"
+      "displayName": "Vanilla Ice Card",
+      "effects": [
+        {
+          "type": 76,
+          "value": 25
+        },
+        {
+          "type": 90,
+          "value": -10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Ice Starflake C",
-      "displayName": "Shadow Ice Card"
+      "displayName": "Shadow Ice Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Shadow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Icicle",
-      "displayName": "Icicle Card"
+      "displayName": "Icicle Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Slow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Imp Demon",
-      "displayName": "Imp Card"
+      "displayName": "Imp Card",
+      "effects": [
+        {
+          "type": 65,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Imp Devil",
-      "displayName": "Demon Lord Card"
+      "displayName": "Demon Lord Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 5,
+          "skillId": "Meteor"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Imp Mischief",
-      "displayName": "Gremlin Card"
+      "displayName": "Gremlin Card",
+      "effects": [
+        {
+          "type": 94,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Jellyfish Robot",
-      "displayName": "Stormjelly Card"
+      "displayName": "Stormjelly Card",
+      "effects": [
+        {
+          "type": 76,
+          "value": 50
+        },
+        {
+          "type": 75,
+          "value": -50
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -867,12 +1876,30 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Lurker",
-      "displayName": "Lurker Card"
+      "displayName": "Lurker Card",
+      "effects": [
+        {
+          "type": 52,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mega Ice Golem",
-      "displayName": "Ice Titan Card"
+      "displayName": "Ice Titan Card",
+      "effects": [
+        {
+          "type": 39,
+          "value": 1,
+          "skillId": "IceShard"
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "FreezingEdge"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -882,42 +1909,92 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Mimic Barrel",
-      "displayName": "Barrel Mimic Card"
+      "displayName": "Barrel Mimic Card",
+      "effects": [
+        {
+          "type": 1,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mimic Book",
-      "displayName": "Book Mimic Card"
+      "displayName": "Book Mimic Card",
+      "effects": [
+        {
+          "type": 4,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mimic Candle",
-      "displayName": "Candle Mimic Card"
+      "displayName": "Candle Mimic Card",
+      "effects": [
+        {
+          "type": 3,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mimic Living Trap",
-      "displayName": "Trap Mimic Card"
+      "displayName": "Trap Mimic Card",
+      "effects": [
+        {
+          "type": 2,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mimic Sword",
-      "displayName": "Sword Mimic Card"
+      "displayName": "Sword Mimic Card",
+      "effects": [
+        {
+          "type": 0,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mimic Treasure Chest",
-      "displayName": "Chest Mimic Card"
+      "displayName": "Chest Mimic Card",
+      "effects": [
+        {
+          "type": 5,
+          "value": 3
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mini Ice Bear A",
-      "displayName": "Ice Baby Card"
+      "displayName": "Ice Baby Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Frozen"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mini Ice Bear B",
-      "displayName": "Festive Baby Card"
+      "displayName": "Festive Baby Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Holy"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -932,57 +2009,130 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Mole Rat",
-      "displayName": "Mole Card"
+      "displayName": "Mole Card",
+      "effects": [
+        {
+          "type": 71,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mole Rat King",
-      "displayName": "Dire Mole Card"
+      "displayName": "Dire Mole Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Monster Bat",
-      "displayName": "Nightwing Card"
+      "displayName": "Nightwing Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Monster Bat King",
-      "displayName": "Nightlord Card"
+      "displayName": "Nightlord Card",
+      "effects": [
+        {
+          "type": 177,
+          "value": 3
+        },
+        {
+          "type": 72,
+          "value": -50
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mosquito Bug",
-      "displayName": "Gnat Card"
+      "displayName": "Gnat Card",
+      "effects": [
+        {
+          "type": 98,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mosquito Pester",
-      "displayName": "Mosquito Card"
+      "displayName": "Mosquito Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Wind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mosquito Stinger",
-      "displayName": "Bloodsucker Card"
+      "displayName": "Bloodsucker Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 5,
+          "skillId": "Haste"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Moth Celestial",
-      "displayName": "Celestial Moth Card"
+      "displayName": "Celestial Moth Card",
+      "effects": [
+        {
+          "type": 64,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Moth Luna",
-      "displayName": "Luna Moth Card"
+      "displayName": "Luna Moth Card",
+      "effects": [
+        {
+          "type": 64,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Moth Moon",
-      "displayName": "Moon Moth Card"
+      "displayName": "Moon Moth Card",
+      "effects": [
+        {
+          "type": 122,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Mushroom",
-      "displayName": "Shroom Card"
+      "displayName": "Shroom Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -992,17 +2142,36 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Nightmare",
-      "displayName": "Apparition Card"
+      "displayName": "Apparition Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Ghost"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareAcolyte",
-      "displayName": "Umbral Acolyte Card"
+      "displayName": "Umbral Acolyte Card",
+      "effects": [
+        {
+          "type": 211,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareBerserker",
-      "displayName": "Umbral Berserker Card"
+      "displayName": "Umbral Berserker Card",
+      "effects": [
+        {
+          "type": 193,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1012,7 +2181,21 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareGunslinger",
-      "displayName": "Umbral Gunslinger Card"
+      "displayName": "Umbral Gunslinger Card",
+      "effects": [
+        {
+          "type": 195,
+          "value": 3
+        },
+        {
+          "type": 102,
+          "value": 1
+        },
+        {
+          "type": 25,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1022,17 +2205,39 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareKnight",
-      "displayName": "Umbral Knight Card"
+      "displayName": "Umbral Knight Card",
+      "effects": [
+        {
+          "type": 192,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareMage",
-      "displayName": "Umbral Mage Card"
+      "displayName": "Umbral Mage Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 5
+        },
+        {
+          "type": 194,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareNecromancer",
-      "displayName": "Umbral Necromancer Card"
+      "displayName": "Umbral Necromancer Card",
+      "effects": [
+        {
+          "type": 194,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1042,7 +2247,17 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmarePaladin",
-      "displayName": "Umbral Paladin Card"
+      "displayName": "Umbral Paladin Card",
+      "effects": [
+        {
+          "type": 139,
+          "value": 1
+        },
+        {
+          "type": 72,
+          "value": -2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1052,7 +2267,17 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmarePriest",
-      "displayName": "Umbral Priest Card"
+      "displayName": "Umbral Priest Card",
+      "effects": [
+        {
+          "type": 67,
+          "value": 2
+        },
+        {
+          "type": 90,
+          "value": -2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1062,22 +2287,59 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareRogue",
-      "displayName": "Umbral Rogue Card"
+      "displayName": "Umbral Rogue Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 5
+        },
+        {
+          "type": 77,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareScout",
-      "displayName": "Umbral Scout Card"
+      "displayName": "Umbral Scout Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        },
+        {
+          "type": 78,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareShadow",
-      "displayName": "Curse Manifestation Card"
+      "displayName": "Curse Manifestation Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Ghost"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareShinobi",
-      "displayName": "Umbral Shinobi Card"
+      "displayName": "Umbral Shinobi Card",
+      "effects": [
+        {
+          "type": 182,
+          "value": 1
+        },
+        {
+          "type": 90,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1087,17 +2349,43 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareSummoner",
-      "displayName": "Umbral Summoner Card"
+      "displayName": "Umbral Summoner Card",
+      "effects": [
+        {
+          "type": 135,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareWarrior",
-      "displayName": "Umbral Warrior Card"
+      "displayName": "Umbral Warrior Card",
+      "effects": [
+        {
+          "type": 52,
+          "value": 5
+        },
+        {
+          "type": 193,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareWizard",
-      "displayName": "Umbral Wizard Card"
+      "displayName": "Umbral Wizard Card",
+      "effects": [
+        {
+          "type": 48,
+          "value": 1
+        },
+        {
+          "type": 189,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1107,42 +2395,95 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Nose Robot",
-      "displayName": "Nose Robot Card"
+      "displayName": "Nose Robot Card",
+      "effects": [
+        {
+          "type": 39,
+          "value": 1,
+          "skillId": "FirePillar"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Nozzle Robot",
-      "displayName": "Nozzle Robot Card"
+      "displayName": "Nozzle Robot Card",
+      "effects": [
+        {
+          "type": 101,
+          "value": 100
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus Baby Blue",
-      "displayName": "Azure Squid Card"
+      "displayName": "Azure Squid Card",
+      "effects": [
+        {
+          "type": 77,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus Baby Orange",
-      "displayName": "Amber Squid Card"
+      "displayName": "Amber Squid Card",
+      "effects": [
+        {
+          "type": 77,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus Baby Purple",
-      "displayName": "Plum Squid Card"
+      "displayName": "Plum Squid Card",
+      "effects": [
+        {
+          "type": 77,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus King Blue",
-      "displayName": "Azure Octopus Card"
+      "displayName": "Azure Octopus Card",
+      "effects": [
+        {
+          "type": 102,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus King Orange",
-      "displayName": "Amber Octopus Card"
+      "displayName": "Amber Octopus Card",
+      "effects": [
+        {
+          "type": 25,
+          "value": 1
+        },
+        {
+          "type": 63,
+          "value": -20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Octopus King Purple",
-      "displayName": "Violet Octopus Card"
+      "displayName": "Violet Octopus Card",
+      "effects": [
+        {
+          "type": 102,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1162,187 +2503,468 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Petal",
-      "displayName": "Nautilus Card"
+      "displayName": "Nautilus Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Water"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Phantom",
-      "displayName": "Phantom Card"
+      "displayName": "Phantom Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Ghost"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Plant Chewer",
-      "displayName": "Man-Eater Card"
+      "displayName": "Man-Eater Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Neutral"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Plant Monster",
-      "displayName": "Snapvine Card"
+      "displayName": "Snapvine Card",
+      "effects": [
+        {
+          "type": 142,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Plant Shooter",
-      "displayName": "Spitter Card"
+      "displayName": "Spitter Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Plant Worm",
-      "displayName": "Vinecrawler Card"
+      "displayName": "Vinecrawler Card",
+      "effects": [
+        {
+          "type": 142,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Poison Bomb",
-      "displayName": "Miasma Card"
+      "displayName": "Miasma Card",
+      "effects": [
+        {
+          "type": 211,
+          "value": 15,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Pollen",
-      "displayName": "Pollen Card"
+      "displayName": "Pollen Card",
+      "effects": [
+        {
+          "type": 14,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Posy",
-      "displayName": "Sea Blossom Card"
+      "displayName": "Sea Blossom Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "Icebolt"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Queen Worm",
-      "displayName": "Broodmother Card"
+      "displayName": "Broodmother Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 1,
+          "skillId": "VenomCoating"
+        },
+        {
+          "type": 40,
+          "value": 1,
+          "skillId": "VenomStrike"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Rabbit",
-      "displayName": "Rabbit Card"
+      "displayName": "Rabbit Card",
+      "effects": [
+        {
+          "type": 65,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Rat Dark",
-      "displayName": "Sewer Rat Card"
+      "displayName": "Sewer Rat Card",
+      "effects": [
+        {
+          "type": 14,
+          "value": 10
+        },
+        {
+          "type": 2,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Rat Grey",
-      "displayName": "Plague Rat Card"
+      "displayName": "Plague Rat Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Poison"
+        },
+        {
+          "type": 1,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Rat White",
-      "displayName": "Albino Rat Card"
+      "displayName": "Albino Rat Card",
+      "effects": [
+        {
+          "type": 13,
+          "value": 10
+        },
+        {
+          "type": 3,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Razor Robot",
-      "displayName": "Razor Robot Card"
+      "displayName": "Razor Robot Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 5
+        },
+        {
+          "type": 65,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Scorpion",
-      "displayName": "Scorpion Card"
+      "displayName": "Scorpion Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Fire"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Scorpion King",
-      "displayName": "Scorpion King Card"
+      "displayName": "Scorpion King Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Scorpling",
-      "displayName": "Scorpling Card"
+      "displayName": "Scorpling Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Fire"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Seed",
-      "displayName": "Seedling Card"
+      "displayName": "Seedling Card",
+      "effects": [
+        {
+          "type": 7,
+          "value": 100
+        },
+        {
+          "type": 1,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shade",
-      "displayName": "Shade Card"
+      "displayName": "Shade Card",
+      "effects": [
+        {
+          "type": 6,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": 5
+        },
+        {
+          "type": 72,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shadow",
-      "displayName": "Nightfiend Card"
+      "displayName": "Nightfiend Card",
+      "effects": [
+        {
+          "type": 6,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": 5
+        },
+        {
+          "type": 72,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shark",
-      "displayName": "Bull Shark Card"
+      "displayName": "Bull Shark Card",
+      "effects": [
+        {
+          "type": 192,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shark Baby",
-      "displayName": "Sharkling Card"
+      "displayName": "Sharkling Card",
+      "effects": [
+        {
+          "type": 192,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shark Humanoid",
-      "displayName": "Shark Buccaneer Card"
+      "displayName": "Shark Buccaneer Card",
+      "effects": [
+        {
+          "type": 192,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shell",
-      "displayName": "Conch Card"
+      "displayName": "Conch Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 10,
+          "skillId": "Neutral"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Shell Robot",
-      "displayName": "Shell Robot Card"
+      "displayName": "Shell Robot Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Skeleton",
-      "displayName": "Skeleton Card"
+      "displayName": "Skeleton Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Skeleton Giant",
-      "displayName": "Skeleton Giant Card"
+      "displayName": "Skeleton Giant Card",
+      "effects": [
+        {
+          "type": 47,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Skeleton Mage",
-      "displayName": "Skeleton Mage Card"
+      "displayName": "Skeleton Mage Card",
+      "effects": [
+        {
+          "type": 70,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Slime",
-      "displayName": "Slime Card"
+      "displayName": "Slime Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Slime Jelly",
-      "displayName": "Jellooze Card"
+      "displayName": "Jellooze Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Slime Monster",
-      "displayName": "Oozelord Card"
+      "displayName": "Oozelord Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Snake",
-      "displayName": "Viper Card"
+      "displayName": "Viper Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "VenomStrike"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Snake Naga",
-      "displayName": "Naga Card"
+      "displayName": "Naga Card",
+      "effects": [
+        {
+          "type": 80,
+          "value": 30
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Snakelet",
-      "displayName": "Adder Card"
+      "displayName": "Adder Card",
+      "effects": [
+        {
+          "type": 80,
+          "value": 20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Snout Robot",
-      "displayName": "Snout Robot Card"
+      "displayName": "Snout Robot Card",
+      "effects": [
+        {
+          "type": 212,
+          "value": 1,
+          "skillId": "FirePillar"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Snow Bomb",
-      "displayName": "Snowball Card"
+      "displayName": "Snowball Card",
+      "effects": [
+        {
+          "type": 211,
+          "value": 15,
+          "skillId": "Frozen"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1352,97 +2974,251 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Soul",
-      "displayName": "Soul Card"
+      "displayName": "Soul Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Ghost"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Soul Mage",
-      "displayName": "Soul Mage Card"
+      "displayName": "Soul Mage Card",
+      "effects": [
+        {
+          "type": 64,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spider",
-      "displayName": "Spider Card"
+      "displayName": "Spider Card",
+      "effects": [
+        {
+          "type": 199,
+          "value": 3,
+          "skillId": "ShadowStep"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spider King",
-      "displayName": "Arachne Card"
+      "displayName": "Arachne Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spider Queen Robot",
-      "displayName": "Suphara Card"
+      "displayName": "Suphara Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Holy"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Shadow"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Poison"
+        },
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spider Robot",
-      "displayName": "Spider Robot Card"
+      "displayName": "Spider Robot Card",
+      "effects": [
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "JumpShot"
+        },
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "ShrapnelShot"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spider Toxin",
-      "displayName": "Widow Card"
+      "displayName": "Widow Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spiderling Robot",
-      "displayName": "Spiderling Robot Card"
+      "displayName": "Spiderling Robot Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Shadow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spike",
-      "displayName": "Hermit Card"
+      "displayName": "Hermit Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spike Robot",
-      "displayName": "Spike Robot Card"
+      "displayName": "Spike Robot Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spook",
-      "displayName": "Spook Card"
+      "displayName": "Spook Card",
+      "effects": [
+        {
+          "type": 34,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Spore",
-      "displayName": "Spore Card"
+      "displayName": "Spore Card",
+      "effects": [
+        {
+          "type": 71,
+          "value": 1
+        },
+        {
+          "type": 1,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Sprout",
-      "displayName": "Sprout Card"
+      "displayName": "Sprout Card",
+      "effects": [
+        {
+          "type": 42,
+          "value": 3,
+          "skillId": "Earthbolt"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Squid Baby",
-      "displayName": "Squidling Card"
+      "displayName": "Squidling Card",
+      "effects": [
+        {
+          "type": 8,
+          "value": 10
+        },
+        {
+          "type": 72,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Sting",
-      "displayName": "Vespa Card"
+      "displayName": "Vespa Card",
+      "effects": [
+        {
+          "type": 185,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Stinger Robot",
-      "displayName": "Stormstinger Card"
+      "displayName": "Stormstinger Card",
+      "effects": [
+        {
+          "type": 76,
+          "value": 100
+        },
+        {
+          "type": 72,
+          "value": -50
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Sun Blossom",
-      "displayName": "Nymph Card"
+      "displayName": "Nymph Card",
+      "effects": [
+        {
+          "type": 67,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Sunflora Pixie",
-      "displayName": "Lady Fey Card"
+      "displayName": "Lady Fey Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Silence"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Sunflower Fairy",
-      "displayName": "Sylvie Card"
+      "displayName": "Sylvie Card",
+      "effects": [
+        {
+          "type": 67,
+          "value": 15
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1457,57 +3233,138 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Tentacles Robot",
-      "displayName": "Stormcoil Card"
+      "displayName": "Stormcoil Card",
+      "effects": [
+        {
+          "type": 65,
+          "value": 20
+        },
+        {
+          "type": 72,
+          "value": -20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Titan Turtle Sci Blue",
-      "displayName": "Hydro Turtle Card"
+      "displayName": "Hydro Turtle Card",
+      "effects": [
+        {
+          "type": 109,
+          "value": 1,
+          "skillId": "FreezingField"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Titan Turtle Sci Green",
-      "displayName": "Solar Turtle Card"
+      "displayName": "Solar Turtle Card",
+      "effects": [
+        {
+          "type": 69,
+          "value": 4
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Titan Turtle Sci Pink",
-      "displayName": "Storm Turtle Card"
+      "displayName": "Storm Turtle Card",
+      "effects": [
+        {
+          "type": 124,
+          "value": 2,
+          "skillId": "ChainLightning"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Toadstool",
-      "displayName": "Toadstool Card"
+      "displayName": "Toadstool Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Water"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Forest Autumn",
-      "displayName": "Maple Ancient Card"
+      "displayName": "Maple Ancient Card",
+      "effects": [
+        {
+          "type": 62,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Forest Evergreen",
-      "displayName": "Pine Ancient Card"
+      "displayName": "Pine Ancient Card",
+      "effects": [
+        {
+          "type": 75,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Minion Autumn",
-      "displayName": "Maple Sapling Card"
+      "displayName": "Maple Sapling Card",
+      "effects": [
+        {
+          "type": 8,
+          "value": 20
+        },
+        {
+          "type": 76,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Minion Evergreen",
-      "displayName": "Pine Sapling Card"
+      "displayName": "Pine Sapling Card",
+      "effects": [
+        {
+          "type": 7,
+          "value": 100
+        },
+        {
+          "type": 75,
+          "value": 25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Tree Autumn",
-      "displayName": "Maple Treant Card"
+      "displayName": "Maple Treant Card",
+      "effects": [
+        {
+          "type": 72,
+          "value": 20
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Treant Tree Evergreen",
-      "displayName": "Pine Treant Card"
+      "displayName": "Pine Treant Card",
+      "effects": [
+        {
+          "type": 71,
+          "value": 20
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1517,47 +3374,116 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Turtle",
-      "displayName": "Turtle Baby Card"
+      "displayName": "Turtle Baby Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Stun"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Turtle King",
-      "displayName": "Turtle Champion Card"
+      "displayName": "Turtle Champion Card",
+      "effects": [
+        {
+          "type": 49,
+          "value": 17,
+          "skillId": "TetraVortex"
+        },
+        {
+          "type": 108,
+          "value": 100,
+          "skillId": "TetraVortex"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Turtle Monster Blue",
-      "displayName": "Azure Terrapin Card"
+      "displayName": "Azure Terrapin Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Blind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Turtle Monster Green",
-      "displayName": "Verdant Terrapin Card"
+      "displayName": "Verdant Terrapin Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Decay"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Turtle Monster Red",
-      "displayName": "Crimson Terrapin Card"
+      "displayName": "Crimson Terrapin Card",
+      "effects": [
+        {
+          "type": 26,
+          "value": 50,
+          "skillId": "Burning"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Vampire Bat",
-      "displayName": "Nosferatu Card"
+      "displayName": "Nosferatu Card",
+      "effects": [
+        {
+          "type": 176,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Werewolf",
-      "displayName": "Lycanthrope Card"
+      "displayName": "Lycanthrope Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 2
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Whirlwind",
-      "displayName": "Breeze Card"
+      "displayName": "Breeze Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Wind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wind",
-      "displayName": "Gale Card"
+      "displayName": "Gale Card",
+      "effects": [
+        {
+          "type": 8,
+          "value": 10
+        },
+        {
+          "type": 72,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1567,47 +3493,109 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Wisp Blue",
-      "displayName": "Frost Wisp Card"
+      "displayName": "Frost Wisp Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Water"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wisp Purple",
-      "displayName": "Lightning Wisp Card"
+      "displayName": "Lightning Wisp Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Wind"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wisp Red",
-      "displayName": "Fire Wisp Card"
+      "displayName": "Fire Wisp Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Fire"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wisp Yellow",
-      "displayName": "Earth Wisp Card"
+      "displayName": "Earth Wisp Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Earth"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wolf",
-      "displayName": "Wolf Card"
+      "displayName": "Wolf Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 25,
+          "skillId": "Shadow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Wolf Pup",
-      "displayName": "Wolf Cub Card"
+      "displayName": "Wolf Cub Card",
+      "effects": [
+        {
+          "type": 46,
+          "value": 6,
+          "skillId": "Shadow"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Worm",
-      "displayName": "Worm Card"
+      "displayName": "Worm Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Worm Creep",
-      "displayName": "Devourer Card"
+      "displayName": "Devourer Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Worm Rot",
-      "displayName": "Maggot Card"
+      "displayName": "Maggot Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 15,
+          "skillId": "Poison"
+        }
+      ]
     },
     {
       "itemType": 4,
@@ -1617,27 +3605,70 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "Wraith",
-      "displayName": "Wraith King Card"
+      "displayName": "Wraith King Card",
+      "effects": [
+        {
+          "type": 185,
+          "value": 2
+        },
+        {
+          "type": 71,
+          "value": -25
+        },
+        {
+          "type": 72,
+          "value": -25
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Zombie Goblin Giant",
-      "displayName": "Zombie Orc Card"
+      "displayName": "Zombie Orc Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Zombie Goblin King",
-      "displayName": "Zombie Orc Lord Card"
+      "displayName": "Zombie Orc Lord Card",
+      "effects": [
+        {
+          "type": 19,
+          "value": 8
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Zombie Goblin Minion",
-      "displayName": "Zombie Goblin Card"
+      "displayName": "Zombie Goblin Card",
+      "effects": [
+        {
+          "type": 44,
+          "value": 10,
+          "skillId": "Undead"
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "Zombie Goblin Soldier",
-      "displayName": "Zombie Grunt Card"
+      "displayName": "Zombie Grunt Card",
+      "effects": [
+        {
+          "type": 71,
+          "value": 25
+        },
+        {
+          "type": 68,
+          "value": -50
+        }
+      ]
     }
   ] as const satisfies readonly FishNetItemDefinition[];
 }

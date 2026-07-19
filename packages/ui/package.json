@@ -11,6 +11,7 @@
     "@spiritvale/character": "workspace:*",
     "@spiritvale/combat": "workspace:*",
     "@spiritvale/core": "workspace:*",
+    "@spiritvale/items": "workspace:*",
     "@spiritvale/logging": "workspace:*",
     "@spiritvale/market": "workspace:*",
     "@spiritvale/rewards": "workspace:*",

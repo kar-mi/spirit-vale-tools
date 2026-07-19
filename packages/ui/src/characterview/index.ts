@@ -1,6 +1,7 @@
 import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
-import type { CharacterStatBreakdown, CharacterViewState, GearStatTotal } from "@spiritvale/character";
+import { resolveFishNetItem } from "@spiritvale/items";
+import { PERCENT_STATS, STAT_NAMES, type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
 
 const ATTRIBUTE_NAMES = ["STR", "VIT", "AGI", "DEX", "INT", "LUK"] as const;
@@ -48,11 +49,13 @@ function render(state: CharacterViewState): void {
   element("loadout-label").textContent = `${character.activeLoadout} loadout · rolled substats shown at their in-game scaled values`;
   renderBuild("equipment", character.equipment.map((item) => ({
     slot: item.slot, name: item.itemId, refine: item.refine,
-    details: [substatText(item.substats), item.cards.length ? `Cards: ${item.cards.join(", ")}` : ""].filter(Boolean).join(" · "),
+    details: [itemEffectText(2, item.itemId, item.refine), substatText(item.substats), item.cards.length ? `Cards: ${item.cards.map((card) => `${card}${itemEffectText(4, card, 0, true)}`).join(", ")}` : ""].filter(Boolean).join(" · "),
   })));
+  const artifactCounts = new Map<string, number>();
+  for (const artifact of character.artifacts) artifactCounts.set(artifact.itemId, (artifactCounts.get(artifact.itemId) ?? 0) + 1);
   renderBuild("artifacts", character.artifacts.map((item) => ({
     slot: item.slot, name: item.itemId, refine: item.refine,
-    details: [substatText(item.substats), item.gems.length ? `Gems: ${item.gems.join(", ")}` : ""].filter(Boolean).join(" · "),
+    details: [itemEffectText(3, item.itemId, item.refine, false, artifactCounts.get(item.itemId) ?? 0), substatText(item.substats), item.gems.length ? `Gems: ${item.gems.map((gem) => `${gem}${itemEffectText(5, gem, 0, true)}`).join(", ")}` : ""].filter(Boolean).join(" · "),
   })));
   renderStats("basic-stat-groups", state.stats, "basic");
   renderStats("advanced-stat-groups", state.stats, "advanced");
@@ -79,6 +82,24 @@ function renderBuild(id: string, items: Array<{ slot: string; name: string; refi
 function substatText(stats: Array<{ name: string; value?: number; roll: number; percent: boolean }>): string {
   return stats.map((stat) => stat.value === undefined ? `${stat.name} (roll ${stat.roll})` : `${stat.name} ${stat.value}${stat.percent ? "%" : ""}`).join(" · ");
 }
+
+function itemEffectText(itemType: number, itemId: string, refine: number, compact = false, pieces?: number): string {
+  const definition = resolveFishNetItem(itemType, itemId);
+  if (!definition) return "";
+  const show = (effects: readonly { type: number; value: number }[]) => effects.map((effect) => `${statName(effect.type)} ${signed(effect.value, isPercent(effect.type) ? "%" : undefined)}`).join(", ");
+  const parts = [show(definition.effects ?? [])];
+  if (refine && definition.refineEffects?.length) parts.push(`Refine ${show(definition.refineEffects.map((effect) => ({ ...effect, value: effect.value * refine })))}`);
+  if (definition.artifactSet && pieces !== undefined) {
+    const set = definition.artifactSet;
+    const perPiece = show(set.perPiece.map((effect) => ({ ...effect, value: effect.value * pieces })));
+    if (perPiece) parts.push(`${pieces}/${set.requiredPieces} set: ${perPiece}`);
+    if (pieces >= set.requiredPieces) { const full = show(set.fullSet); if (full) parts.push(`Full set: ${full}`); }
+  }
+  const value = parts.filter(Boolean).join(" · ");
+  return value ? compact ? ` (${value})` : `Base: ${value}` : "";
+}
+function statName(type: number): string { return STAT_NAMES[type] ?? `Stat ${type}`; }
+function isPercent(type: number): boolean { return PERCENT_STATS.has(type); }
 
 function renderGearTotals(totals: GearStatTotal[]): void {
   const root = element("gear-totals");

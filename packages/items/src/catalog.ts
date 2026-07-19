@@ -18,10 +18,17 @@ export type FishNetItemSubstatGroup =
 export interface FishNetItemEffect {
   readonly type: number;
   readonly value: number;
-  /** Additional value for each refine level, when the config scales it. */
-  readonly perRefine?: number;
   /** Present for effects that apply to one named skill rather than the character sheet. */
   readonly skillId?: string;
+}
+
+export interface FishNetArtifactSetEffects {
+  readonly requiredPieces: number;
+  /** Set effects applied once whenever at least one matching piece is equipped. */
+  readonly perPieceBase: readonly FishNetItemEffect[];
+  /** Set effects repeated for every matching equipped artifact. */
+  readonly perPiece: readonly FishNetItemEffect[];
+  readonly fullSet: readonly FishNetItemEffect[];
 }
 
 export interface FishNetItemDefinition {
@@ -30,6 +37,10 @@ export interface FishNetItemDefinition {
   readonly displayName: string;
   readonly substatGroup?: FishNetItemSubstatGroup;
   readonly effects?: readonly FishNetItemEffect[];
+  /** Effects added once for every refine level on this item. */
+  readonly refineEffects?: readonly FishNetItemEffect[];
+  /** Set-count effects for artifact definitions. */
+  readonly artifactSet?: FishNetArtifactSetEffects;
 }
 
 export interface FishNetEquipmentItemDefinition extends FishNetItemDefinition {

@@ -2,7 +2,7 @@ import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat"
 import type { FishNetActorIdentityEvent } from "@spiritvale/combat";
 import { FishNetCharacterTracker } from "@spiritvale/character";
 import type { CharacterSnapshot, CharacterViewState } from "@spiritvale/character";
-import { PacketCapture } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
 import { createLogSession } from "@spiritvale/logging";
 import type { JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream, LogWriteFailure } from "@spiritvale/logging";

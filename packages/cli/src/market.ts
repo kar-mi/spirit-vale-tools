@@ -1,5 +1,5 @@
 import { FishNetMarketTracker, marketEventLogData, parseFishNetMarketStatExpression } from "@spiritvale/market";
-import { PacketCapture } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import { createLogSession } from "@spiritvale/logging";
 import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
 import type { FishNetMarketQuery } from "@spiritvale/market";

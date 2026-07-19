@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats } from "./formulas.ts";
 import type { CharacterArtifact, CharacterEquipment, CharacterSubstat } from "./types.ts";
 
 describe("calculateCharacterStats", () => {
@@ -46,6 +46,14 @@ describe("calculateCharacterStats", () => {
     const advanced = calculateAdvancedGearStats(totals);
     expect(advanced).toHaveLength(1);
     expect(advanced[0]).toMatchObject({ id: "gear-stat-63", tab: "advanced", base: 0, gear: 4, value: 4 });
+  });
+
+  test("applies artifact per-piece, refine, and full-set effects", () => {
+    const artifact = (refine: number): CharacterArtifact => ({ slot: "Rune", itemId: "Vampiric", refine, gems: [], substats: [] });
+    const leech = (artifacts: CharacterArtifact[]) => materializeGearStats([], artifacts).filter((stat) => stat.type === 98).reduce((total, stat) => total + (stat.value ?? 0), 0);
+    expect(leech([artifact(0)])).toBe(3);
+    expect(leech([artifact(4)])).toBe(3.5);
+    expect(leech([artifact(0), artifact(0), artifact(0), artifact(0)])).toBe(15);
   });
 });
 

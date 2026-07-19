@@ -10,6 +10,7 @@ export type {
   FishNetItemCatalog,
   FishNetItemDefinition,
   FishNetItemEffect,
+  FishNetArtifactSetEffects,
   FishNetItemSubstatGroup,
   FishNetItemType,
 } from "./catalog.ts";

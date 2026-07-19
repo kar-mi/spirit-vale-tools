@@ -531,7 +531,7 @@ export class JunkItemDefinitions {
     },
     {
       "itemType": 0,
-      "id": "Goldribbon Soapfish ",
+      "id": "Goldribbon Soapfish",
       "displayName": "Goldribbon Soapfish"
     },
     {

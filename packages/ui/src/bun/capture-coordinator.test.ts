@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { DpsSessionLogFollower } from "@spiritvale/combat";
-import type { CapturedFishNetPacket, CaptureConfig, PacketCapture } from "@spiritvale/core";
+import type { CapturedFishNetPacket, CaptureConfig } from "@spiritvale/core";
+import type { PacketCapture } from "@spiritvale/core/capture";
 import { readCurrentLogStream } from "@spiritvale/logging";
 import { MarketSessionLogFollower } from "@spiritvale/market";
 import { RewardSessionLogFollower } from "@spiritvale/rewards";

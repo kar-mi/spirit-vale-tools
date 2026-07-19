@@ -1,4 +1,4 @@
-import { PacketCapture } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import { createLogSession } from "@spiritvale/logging";
 import { FishNetMobRewardTracker, MobRewardSession } from "@spiritvale/rewards";
 import type { FishNetMobRewardEvent } from "@spiritvale/rewards";

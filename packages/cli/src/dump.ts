@@ -1,8 +1,8 @@
 import {
   BUNDLED_FISHNET_BUILD_FINGERPRINTS,
-  PacketCapture,
   loadBundledFishNetSemanticMap,
 } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import type { CaptureProtocol } from "@spiritvale/core";
 import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
 import { createLogSession } from "@spiritvale/logging";

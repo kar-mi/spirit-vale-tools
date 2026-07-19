@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./wire-reader": "./src/fishnet/wire-reader.ts"
+    "./wire-reader": "./src/fishnet/wire-reader.ts",
+    "./capture": "./src/capture.ts"
   }
 }

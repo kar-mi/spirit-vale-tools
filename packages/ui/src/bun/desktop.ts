@@ -1,6 +1,6 @@
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
-import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core";
+import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core/capture";
 
 import { createMarketWindow } from "../../../market-ui/src/bun/index.ts";
 import { createRewardsWindow } from "../../../rewards-ui/src/bun/index.ts";
