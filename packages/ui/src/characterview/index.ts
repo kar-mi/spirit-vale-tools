@@ -1,6 +1,7 @@
 import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
-import { resolveFishNetItem } from "@spiritvale/items";
+import { resolveFishNetItem, type FishNetArtifactSlot } from "@spiritvale/items";
+import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
 import { PERCENT_STATS, STAT_NAMES, type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
 
@@ -60,7 +61,7 @@ function render(state: CharacterViewState): void {
   renderBuild("artifacts", character.artifacts.map((item) => ({
     slot: item.slot, name: item.itemId, refine: item.refine,
     sections: [
-      ...itemEffectSections(3, item.itemId, item.refine, artifactCounts.get(item.itemId) ?? 0),
+      ...itemEffectSections(3, item.itemId, item.refine, artifactCounts.get(item.itemId) ?? 0, item.slot),
       ...(item.substats.length ? [{ label: "Rolled stats", value: substatText(item.substats) }] : []),
       ...(item.gems.length ? [{ label: "Gems", value: item.gems.map((gem) => `${gem}${itemEffectSummary(5, gem)}`).join(" · ") }] : []),
     ],
@@ -93,14 +94,25 @@ function substatText(stats: Array<{ name: string; value?: number; roll: number; 
   return stats.map((stat) => stat.value === undefined ? `${stat.name} (roll ${stat.roll})` : `${stat.name} ${stat.value}${stat.percent ? "%" : ""}`).join(" · ");
 }
 
-function itemEffectSections(itemType: number, itemId: string, refine: number, pieces?: number): BuildSection[] {
+function itemEffectSections(itemType: number, itemId: string, refine: number, pieces?: number, artifactSlot?: string): BuildSection[] {
   const definition = resolveFishNetItem(itemType, itemId);
   if (!definition) return [];
-  const show = (effects: readonly { type: number; value: number }[]) => effects.map((effect) => `${statName(effect.type)} ${signed(effect.value, isPercent(effect.type) ? "%" : undefined)}`).join(", ");
+  const show = (effects: readonly { type: number; value: number; skillId?: string }[]) => effects.map((effect) => `${effect.skillId ? `${resolveFishNetSkillDisplayName(effect.skillId) ?? effect.skillId} damage` : statName(effect.type)} ${signed(effect.value, isPercent(effect.type) ? "%" : undefined)}`).join(", ");
   const sections: BuildSection[] = [];
-  const base = show(definition.effects ?? []);
+  const slot = isArtifactSlot(artifactSlot) ? artifactSlot : undefined;
+  const baseEffects = [...(definition.effects ?? []), ...(slot ? definition.artifactSlotEffects?.[slot] ?? [] : [])];
+  const base = show(baseEffects.filter((effect) => effect.skillId === undefined));
   if (base) sections.push({ label: "Base", value: base });
-  if (refine && definition.refineEffects?.length) sections.push({ label: `Refine +${refine}`, value: show(definition.refineEffects.map((effect) => ({ ...effect, value: effect.value * refine }))), tone: "active" });
+  const baseSkills = show(baseEffects.filter((effect) => effect.skillId !== undefined));
+  if (baseSkills) sections.push({ label: "Affects skills", value: baseSkills, tone: "active" });
+  const refineEffects = [...(definition.refineEffects ?? []), ...(slot ? definition.artifactSlotRefineEffects?.[slot] ?? [] : [])];
+  if (refine && refineEffects.length) {
+    const refined = refineEffects.map((effect) => ({ ...effect, value: effect.value * refine }));
+    const stats = show(refined.filter((effect) => effect.skillId === undefined));
+    const skills = show(refined.filter((effect) => effect.skillId !== undefined));
+    if (stats) sections.push({ label: `Refine +${refine}`, value: stats, tone: "active" });
+    if (skills) sections.push({ label: `Skill refine +${refine}`, value: skills, tone: "active" });
+  }
   if (definition.artifactSet && pieces !== undefined) {
     const set = definition.artifactSet;
     const perPiece = show(set.perPiece.map((effect) => ({ ...effect, value: effect.value * pieces })));
@@ -111,6 +123,7 @@ function itemEffectSections(itemType: number, itemId: string, refine: number, pi
   return sections;
 }
 function itemEffectSummary(itemType: number, itemId: string): string { const values = itemEffectSections(itemType, itemId, 0).map((section) => section.value).join(", "); return values ? ` (${values})` : ""; }
+function isArtifactSlot(value: string | undefined): value is FishNetArtifactSlot { return value === "Rune" || value === "Jewel" || value === "Scroll" || value === "Relic"; }
 function statName(type: number): string { return STAT_NAMES[type] ?? `Stat ${type}`; }
 function isPercent(type: number): boolean { return PERCENT_STATS.has(type); }
 

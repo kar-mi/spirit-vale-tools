@@ -32,7 +32,7 @@ export function materializeGearStats(equipment: readonly CharacterEquipment[], a
     for (const card of item.cards) stats.push(...itemEffects(4, card, 0));
   }
   for (const artifact of artifacts) {
-    stats.push(...itemEffects(3, artifact.itemId, artifact.refine));
+    stats.push(...itemEffects(3, artifact.itemId, artifact.refine, artifact.slot));
     for (const gem of artifact.gems) stats.push(...itemEffects(5, gem, 0));
   }
   const sets = new Map<string, number>();
@@ -57,10 +57,14 @@ export function materializeSkillStats(skills: readonly CharacterSkill[]): Charac
   })));
 }
 
-function itemEffects(itemType: number, itemId: string, refine: number): CharacterSubstat[] {
+function itemEffects(itemType: number, itemId: string, refine: number, artifactSlot?: string): CharacterSubstat[] {
   const definition = resolveFishNetItem(itemType, itemId);
-  return [...effectsToStats(definition?.effects ?? [], 1), ...effectsToStats(definition?.refineEffects ?? [], refine)];
+  const slotEffects = artifactSlot && isArtifactSlot(artifactSlot) ? definition?.artifactSlotEffects?.[artifactSlot] ?? [] : [];
+  const slotRefineEffects = artifactSlot && isArtifactSlot(artifactSlot) ? definition?.artifactSlotRefineEffects?.[artifactSlot] ?? [] : [];
+  return [...effectsToStats(definition?.effects ?? [], 1), ...effectsToStats(slotEffects, 1), ...effectsToStats(definition?.refineEffects ?? [], refine), ...effectsToStats(slotRefineEffects, refine)];
 }
+
+function isArtifactSlot(value: string): value is "Rune" | "Jewel" | "Scroll" | "Relic" { return ["Rune", "Jewel", "Scroll", "Relic"].includes(value); }
 
 function effectsToStats(effects: readonly FishNetItemEffect[], multiplier: number): CharacterSubstat[] {
   return effects

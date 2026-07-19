@@ -31,6 +31,8 @@ export interface FishNetArtifactSetEffects {
   readonly fullSet: readonly FishNetItemEffect[];
 }
 
+export type FishNetArtifactSlot = "Rune" | "Jewel" | "Scroll" | "Relic";
+
 export interface FishNetItemDefinition {
   readonly itemType: FishNetItemType;
   readonly id: string;
@@ -41,6 +43,9 @@ export interface FishNetItemDefinition {
   readonly refineEffects?: readonly FishNetItemEffect[];
   /** Set-count effects for artifact definitions. */
   readonly artifactSet?: FishNetArtifactSetEffects;
+  /** Individual artifact effects keyed by the artifact slot they belong to. */
+  readonly artifactSlotEffects?: Partial<Record<FishNetArtifactSlot, readonly FishNetItemEffect[]>>;
+  readonly artifactSlotRefineEffects?: Partial<Record<FishNetArtifactSlot, readonly FishNetItemEffect[]>>;
 }
 
 export interface FishNetEquipmentItemDefinition extends FishNetItemDefinition {

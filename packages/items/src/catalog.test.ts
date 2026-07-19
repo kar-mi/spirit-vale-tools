@@ -43,6 +43,15 @@ test("includes standard artifact effects and refine scaling", () => {
   });
 });
 
+test("keeps class-rune skill effects bound to their artifact slots", () => {
+  expect(resolveFishNetItem(3, "Warrior")).toMatchObject({
+    artifactSlotEffects: {
+      Rune: [{ type: 49, value: 5, skillId: "Bash" }],
+      Jewel: [{ type: 49, value: 5, skillId: "AxeArc" }],
+    },
+  });
+});
+
 function countByType(items: readonly { itemType: number }[]): number[] {
   return Array.from({ length: 7 }, (_, type) => items.filter((item) => item.itemType === type).length);
 }

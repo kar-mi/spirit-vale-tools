@@ -11,6 +11,7 @@ export type {
   FishNetItemDefinition,
   FishNetItemEffect,
   FishNetArtifactSetEffects,
+  FishNetArtifactSlot,
   FishNetItemSubstatGroup,
   FishNetItemType,
 } from "./catalog.ts";

@@ -8,38 +8,52 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Acolyte",
       "displayName": "Holy Vow",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "HolyLight"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Heal"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "HolyLight"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Heal"
-        },
-        {
-          "type": 67,
-          "value": 1
-        },
-        {
-          "type": 90,
-          "value": -2
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "HolyLight"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Heal"
+          }
+        ],
+        "Scroll": [],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "HolyLight"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Heal"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 67,
+            "value": 1
+          }
+        ],
+        "Relic": [
+          {
+            "type": 90,
+            "value": -2
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -138,24 +152,32 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Bastion",
       "displayName": "Bastion",
-      "effects": [
-        {
-          "type": 32,
-          "value": 1
-        },
-        {
-          "type": 35,
-          "value": 1
-        },
-        {
-          "type": 34,
-          "value": 1
-        },
-        {
-          "type": 36,
-          "value": 1
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 32,
+            "value": 1
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 35,
+            "value": 1
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 34,
+            "value": 1
+          }
+        ],
+        "Relic": [
+          {
+            "type": 36,
+            "value": 1
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -180,50 +202,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Berserker_1",
       "displayName": "Bloodfury",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Execute"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Cyclone"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "AxeThrow"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "DarkClaw"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Execute"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Cyclone"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "AxeThrow"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "DarkClaw"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Execute"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Cyclone"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "AxeThrow"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "DarkClaw"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Execute"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Cyclone"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "AxeThrow"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "DarkClaw"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -516,50 +554,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Gunslinger_1",
       "displayName": "Deadeye",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "PanicBurst"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "PointBlankShot"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "SniperShot"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ExplosiveGrenade"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "PanicBurst"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "PointBlankShot"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "SniperShot"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ExplosiveGrenade"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "PanicBurst"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "PointBlankShot"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "SniperShot"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ExplosiveGrenade"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "PanicBurst"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "PointBlankShot"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "SniperShot"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ExplosiveGrenade"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -692,28 +746,6 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Immune",
       "displayName": "Nullmark",
-      "effects": [
-        {
-          "type": 26,
-          "value": 50,
-          "skillId": "Blind"
-        },
-        {
-          "type": 26,
-          "value": 50,
-          "skillId": "Silence"
-        },
-        {
-          "type": 26,
-          "value": 50,
-          "skillId": "Poison"
-        },
-        {
-          "type": 26,
-          "value": 50,
-          "skillId": "Bleeding"
-        }
-      ],
       "refineEffects": [
         {
           "type": 26,
@@ -721,6 +753,36 @@ export class ArtifactItemDefinitions {
           "skillId": "Stun"
         }
       ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 26,
+            "value": 50,
+            "skillId": "Blind"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 26,
+            "value": 50,
+            "skillId": "Silence"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 26,
+            "value": 50,
+            "skillId": "Poison"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 26,
+            "value": 50,
+            "skillId": "Bleeding"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -742,50 +804,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Knight",
       "displayName": "Honored Oath",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "SpearThrust"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "SpearStab"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "SpearSlice"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "WeaponThrow"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "SpearThrust"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "SpearStab"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "SpearSlice"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "WeaponThrow"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "SpearThrust"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "SpearStab"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "SpearSlice"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "WeaponThrow"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "SpearThrust"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "SpearStab"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "SpearSlice"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "WeaponThrow"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -837,50 +915,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Mage",
       "displayName": "Arcane Origin",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Fireball"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "IceShard"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "EarthSpikes"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ThunderStorm"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Fireball"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "IceShard"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "EarthSpikes"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ThunderStorm"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Fireball"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "IceShard"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "EarthSpikes"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ThunderStorm"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Fireball"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "IceShard"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "EarthSpikes"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ThunderStorm"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1104,50 +1198,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Necromancer_1",
       "displayName": "Gravebound",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "BoneSpikes"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "DeathSpiral"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "DeathNova"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "CorpseExplosionEnemy"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "BoneSpikes"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "DeathSpiral"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "DeathNova"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "CorpseExplosionEnemy"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "BoneSpikes"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "DeathSpiral"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "DeathNova"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "CorpseExplosionEnemy"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "BoneSpikes"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "DeathSpiral"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "DeathNova"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "CorpseExplosionEnemy"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1232,50 +1342,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Paladin_1",
       "displayName": "Aegis Light",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "GrandCross"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "JudgementBlade"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ShieldThrow"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Consecration"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "GrandCross"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "JudgementBlade"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ShieldThrow"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Consecration"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "GrandCross"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "JudgementBlade"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ShieldThrow"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Consecration"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "GrandCross"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "JudgementBlade"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ShieldThrow"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Consecration"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1292,50 +1418,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Priest_1",
       "displayName": "Sanctum Grace",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Exorcism"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "HolyWrath"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "TurnUndead"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Smite"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Exorcism"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "HolyWrath"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "TurnUndead"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Smite"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Exorcism"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "HolyWrath"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "TurnUndead"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Smite"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Exorcism"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "HolyWrath"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "TurnUndead"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Smite"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1462,44 +1604,59 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Rogue",
       "displayName": "Silent Death",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "VenomStrike"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ShadowStep"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "BladeDance"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "VenomStrike"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ShadowStep"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "BladeDance"
-        },
-        {
-          "type": 142,
-          "value": 2
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "VenomStrike"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ShadowStep"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "BladeDance"
+          }
+        ],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "VenomStrike"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ShadowStep"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "BladeDance"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 142,
+            "value": 2
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1516,50 +1673,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Scout",
       "displayName": "Far Sight",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "StrafingVolley"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ForceShot"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "VolatileBolt"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ArrowShower"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "StrafingVolley"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ForceShot"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "VolatileBolt"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ArrowShower"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "StrafingVolley"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ForceShot"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "VolatileBolt"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ArrowShower"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "StrafingVolley"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ForceShot"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "VolatileBolt"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ArrowShower"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1576,50 +1749,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Shinobi_1",
       "displayName": "Umbral Veil",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FlameOrb"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FrostBlade"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "LightningStrike"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ShadowRelease"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FlameOrb"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FrostBlade"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "LightningStrike"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ShadowRelease"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FlameOrb"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FrostBlade"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "LightningStrike"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ShadowRelease"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FlameOrb"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FrostBlade"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "LightningStrike"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ShadowRelease"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1636,50 +1825,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Summoner",
       "displayName": "Spirit Pact",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "SoulStrike"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FieldCurse"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FieldHealing"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FieldDamage"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "SoulStrike"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FieldCurse"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FieldHealing"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FieldDamage"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "SoulStrike"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FieldCurse"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FieldHealing"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FieldDamage"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "SoulStrike"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FieldCurse"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FieldHealing"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FieldDamage"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1727,50 +1932,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Warrior",
       "displayName": "Iron Wake",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Bash"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "AxeArc"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "AxeVortex"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Stomp"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Bash"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "AxeArc"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "AxeVortex"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Stomp"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Bash"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "AxeArc"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "AxeVortex"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Stomp"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Bash"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "AxeArc"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "AxeVortex"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Stomp"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1787,50 +2008,66 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Weaver_1",
       "displayName": "Fateweave",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Firebolt"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Icebolt"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Thunderbolt"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Earthbolt"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Firebolt"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Icebolt"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Thunderbolt"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Earthbolt"
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Firebolt"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Icebolt"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Thunderbolt"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Earthbolt"
+          }
+        ]
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Firebolt"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Icebolt"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Thunderbolt"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Earthbolt"
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1847,44 +2084,59 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Wizard_1",
       "displayName": "Tempest Engine",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Tempest"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ChainLightning"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "ThunderStorm"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Tempest"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ChainLightning"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "ThunderStorm"
-        },
-        {
-          "type": 64,
-          "value": 1
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Tempest"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ChainLightning"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "ThunderStorm"
+          }
+        ],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Tempest"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ChainLightning"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "ThunderStorm"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 64,
+            "value": 1
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1901,44 +2153,59 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Wizard_2",
       "displayName": "Frozen Dominion",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FreezingField"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "IceShard"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FrozenGround"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FreezingField"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "IceShard"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FrozenGround"
-        },
-        {
-          "type": 76,
-          "value": 2
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FreezingField"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "IceShard"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FrozenGround"
+          }
+        ],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FreezingField"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "IceShard"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FrozenGround"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 76,
+            "value": 2
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -1955,44 +2222,59 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Wizard_3",
       "displayName": "Meteoric Cataclysm",
-      "effects": [
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Meteor"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "FirePillar"
-        },
-        {
-          "type": 49,
-          "value": 5,
-          "skillId": "Combustion"
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Meteor"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "FirePillar"
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "skillId": "Combustion"
-        },
-        {
-          "type": 70,
-          "value": 1
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Meteor"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "FirePillar"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 5,
+            "skillId": "Combustion"
+          }
+        ],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Meteor"
+          }
+        ],
+        "Jewel": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "FirePillar"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 49,
+            "value": 2,
+            "skillId": "Combustion"
+          }
+        ],
+        "Relic": [
+          {
+            "type": 70,
+            "value": 1
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],
@@ -2009,27 +2291,39 @@ export class ArtifactItemDefinitions {
       "itemType": 3,
       "id": "Wizard_4",
       "displayName": "Arcane Elementalist",
-      "effects": [
-        {
-          "type": 34,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 42,
-          "value": 0.5,
-          "skillId": "FreeCast"
-        },
-        {
-          "type": 64,
-          "value": 1
-        },
-        {
-          "type": 76,
-          "value": 2
-        }
-      ],
+      "artifactSlotEffects": {
+        "Rune": [
+          {
+            "type": 34,
+            "value": 1
+          }
+        ],
+        "Jewel": [],
+        "Scroll": [],
+        "Relic": []
+      },
+      "artifactSlotRefineEffects": {
+        "Rune": [],
+        "Jewel": [
+          {
+            "type": 42,
+            "value": 0.5,
+            "skillId": "FreeCast"
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 64,
+            "value": 1
+          }
+        ],
+        "Relic": [
+          {
+            "type": 76,
+            "value": 2
+          }
+        ]
+      },
       "artifactSet": {
         "requiredPieces": 4,
         "perPieceBase": [],

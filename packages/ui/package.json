@@ -15,6 +15,7 @@
     "@spiritvale/logging": "workspace:*",
     "@spiritvale/market": "workspace:*",
     "@spiritvale/rewards": "workspace:*",
+    "@spiritvale/skills": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*"
   },
   "devDependencies": {
