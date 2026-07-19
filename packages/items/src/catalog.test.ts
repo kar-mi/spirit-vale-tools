@@ -52,6 +52,12 @@ test("keeps class-rune skill effects bound to their artifact slots", () => {
   });
 });
 
+test("includes gem base and per-refine skill damage", () => {
+  expect(resolveFishNetItem(5, "Bash Gem")).toMatchObject({
+    refineEffects: [{ type: 49, value: 2, skillId: "Bash" }],
+  });
+});
+
 function countByType(items: readonly { itemType: number }[]): number[] {
   return Array.from({ length: 7 }, (_, type) => items.filter((item) => item.itemType === type).length);
 }

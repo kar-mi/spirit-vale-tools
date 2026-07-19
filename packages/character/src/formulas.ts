@@ -33,7 +33,7 @@ export function materializeGearStats(equipment: readonly CharacterEquipment[], a
   }
   for (const artifact of artifacts) {
     stats.push(...itemEffects(3, artifact.itemId, artifact.refine, artifact.slot));
-    for (const gem of artifact.gems) stats.push(...itemEffects(5, gem, 0));
+    for (const gem of artifact.gems) stats.push(...itemEffects(5, gem.id, gem.refine));
   }
   const sets = new Map<string, number>();
   for (const artifact of artifacts) sets.set(artifact.itemId, (sets.get(artifact.itemId) ?? 0) + 1);

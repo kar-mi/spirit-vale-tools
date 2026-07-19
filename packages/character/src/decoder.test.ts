@@ -17,7 +17,7 @@ describe("decodeCharacterRpcPayload", () => {
       jobExperience: 678,
       attributes: { STR: 60, VIT: 30, AGI: 10, DEX: 20, INT: 5, LUK: 15 },
       equipment: [{ slot: "Main hand", itemId: "Example Sword", refine: 5, cards: ["Example Card"] }],
-      artifacts: [{ slot: "Rune", itemId: "Example Rune", refine: 3, gems: ["Example Gem"] }],
+      artifacts: [{ slot: "Rune", itemId: "Example Rune", refine: 3, gems: [{ id: "Example Gem", refine: 1 }] }],
       skills: [{ id: "Multistrike", displayName: "Multistrike", level: 3, effects: [{ type: 80, label: "DoubleAttack", value: 30, percent: true }] }],
       playtimeSeconds: 3600,
       monsterKills: 25,

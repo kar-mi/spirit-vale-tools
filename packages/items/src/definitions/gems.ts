@@ -8,7 +8,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "AerialShot Gem",
       "displayName": "Aerial Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -20,7 +20,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ArrowShower Gem",
       "displayName": "Arrow Shower Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -35,7 +35,13 @@ export class GemItemDefinitions {
       "effects": [
         {
           "type": 63,
-          "value": 6
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 63,
+          "value": 1
         }
       ]
     },
@@ -43,7 +49,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "AxeArc Gem",
       "displayName": "Twin Cleave Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -55,7 +61,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "AxeThrow Gem",
       "displayName": "Axe Throw Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -67,7 +73,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "AxeVortex Gem",
       "displayName": "Vortex Slash Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -79,7 +85,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Bash Gem",
       "displayName": "Bash Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -91,7 +97,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "BladeDance Gem",
       "displayName": "Blade Dance Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -103,7 +109,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "BoneSpear Gem",
       "displayName": "Bone Spear Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -115,7 +121,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "BoneSpikes Gem",
       "displayName": "Bone Spikes Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -127,7 +133,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "CastSpd Gem",
       "displayName": "Focus Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 64,
           "value": 2
@@ -138,7 +144,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ChainLightning Gem",
       "displayName": "Chain Lightning Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -150,7 +156,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Consecration Gem",
       "displayName": "Consecration Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -167,7 +173,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "CorpseExplosion Gem",
       "displayName": "Corpse Explosion Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -179,7 +185,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "CounterSlash Gem",
       "displayName": "Counter Slash Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -194,7 +200,13 @@ export class GemItemDefinitions {
       "effects": [
         {
           "type": 52,
-          "value": 6
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 52,
+          "value": 1
         }
       ]
     },
@@ -202,7 +214,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "CritDef Gem",
       "displayName": "Deflect Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 120,
           "value": 3
@@ -213,7 +225,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Cyclone Gem",
       "displayName": "Cyclone Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -225,7 +237,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Damnation Gem",
       "displayName": "Damnation Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -237,7 +249,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DarkClaw Gem",
       "displayName": "Dark Claw Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -249,7 +261,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DeathCoil Gem",
       "displayName": "Death Coil Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -266,7 +278,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DeathNova Gem",
       "displayName": "Death Nova Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -283,7 +295,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DeathSpiral Gem",
       "displayName": "Death Spiral Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -295,7 +307,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DefMult Gem",
       "displayName": "Bastion Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 73,
           "value": 2
@@ -308,13 +320,15 @@ export class GemItemDefinitions {
       "displayName": "Seer Gem",
       "effects": [
         {
-          "type": 195,
-          "value": 2
-        },
-        {
           "type": 42,
           "value": 1,
           "skillId": "TrueSight"
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 195,
+          "value": 2
         }
       ]
     },
@@ -322,7 +336,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DivinePunishment Gem",
       "displayName": "Divine Punishment Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -334,7 +348,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "DoubleAttack Gem",
       "displayName": "Echo Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 80,
           "value": 3
@@ -345,7 +359,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Earth Gem",
       "displayName": "Earth Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -357,7 +371,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Earthbolt Gem",
       "displayName": "Earthbolt Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -369,7 +383,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Earthquake Gem",
       "displayName": "Earthquake Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -381,7 +395,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "EarthSpikes Gem",
       "displayName": "Earth Spikes Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -393,7 +407,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Execute Gem",
       "displayName": "Execute Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -405,7 +419,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Exorcism Gem",
       "displayName": "Exorcism Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -422,7 +436,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ExplosiveGrenade Gem",
       "displayName": "Explosive Grenade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -434,7 +448,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FanFire Gem",
       "displayName": "Fan Fire Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -446,7 +460,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FanOfKnives Gem",
       "displayName": "Fan Of Knives Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -458,7 +472,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FieldCurse Gem",
       "displayName": "Banishment Field Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -470,7 +484,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FieldDamage Gem",
       "displayName": "Dissonance Well Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -482,7 +496,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FieldHealing Gem",
       "displayName": "Resonance Well Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -494,7 +508,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FieldSilence Gem",
       "displayName": "Suppression Field Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -506,7 +520,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Fire Gem",
       "displayName": "Fire Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -518,7 +532,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Fireball Gem",
       "displayName": "Fireball Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -535,7 +549,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Firebolt Gem",
       "displayName": "Firebolt Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -547,7 +561,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FirePillar Gem",
       "displayName": "Fire Pillar Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -559,7 +573,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FireRelease Gem",
       "displayName": "Fire Release Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -571,7 +585,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FlameOrb Gem",
       "displayName": "Flame Orb Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -583,7 +597,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FlashGrenade Gem",
       "displayName": "Flash Grenade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -595,7 +609,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Flee Gem",
       "displayName": "Evasion Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 14,
           "value": 3
@@ -610,7 +624,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ForceShot Gem",
       "displayName": "Force Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -622,7 +636,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FreezeGrenade Gem",
       "displayName": "Freeze Grenade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -634,7 +648,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FreezingField Gem",
       "displayName": "Blizzard Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -646,7 +660,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "FrostBlade Gem",
       "displayName": "Binding Spiral Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -658,7 +672,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "GrandCross Gem",
       "displayName": "Grand Cross Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -670,7 +684,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "GroundSlam Gem",
       "displayName": "Earth Splitter Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -682,7 +696,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "GunkShot Gem",
       "displayName": "Gunk Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -694,7 +708,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Harvest Gem",
       "displayName": "Harvest Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -706,7 +720,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Heal Gem",
       "displayName": "Heal Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -718,7 +732,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Healing Gem",
       "displayName": "Grace Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 67,
           "value": 2
@@ -729,7 +743,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "HighHeal Gem",
       "displayName": "High Heal Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -741,7 +755,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Hit Gem",
       "displayName": "Precision Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 13,
           "value": 3
@@ -756,7 +770,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Holy Gem",
       "displayName": "Holy Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -768,7 +782,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "HolyLight Gem",
       "displayName": "Holy Light Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -780,7 +794,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "HolyWrath Gem",
       "displayName": "Holy Wrath Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -797,7 +811,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "HpMult Gem",
       "displayName": "Heart Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 71,
           "value": 2
@@ -808,7 +822,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "HydroVortex Gem",
       "displayName": "Hydro Vortex Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -820,7 +834,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Icebolt Gem",
       "displayName": "Icebolt Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -832,7 +846,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "IceRelease Gem",
       "displayName": "Ice Release Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -844,7 +858,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "IceShard Gem",
       "displayName": "Ice Shard Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -856,7 +870,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "JudgementBlade Gem",
       "displayName": "Judgement Blade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -868,7 +882,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "JumpShot Gem",
       "displayName": "Jump Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -880,7 +894,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Leech Gem",
       "displayName": "Bloodfang Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 98,
           "value": 0.5
@@ -891,7 +905,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "LeechMp Gem",
       "displayName": "Soulfang Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 177,
           "value": 0.30000001192092896
@@ -902,7 +916,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "LifeDrain Gem",
       "displayName": "Life Drain Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -914,7 +928,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "LightningRelease Gem",
       "displayName": "Lightning Release Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -926,7 +940,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "LightningStrike Gem",
       "displayName": "Flash Step Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -938,7 +952,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Matk Gem",
       "displayName": "Overcharge Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 70,
           "value": 1
@@ -953,7 +967,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "MdefMult Gem",
       "displayName": "Ward Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 74,
           "value": 2
@@ -964,7 +978,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Meteor Gem",
       "displayName": "Meteor Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -976,7 +990,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "MoveSpd Gem",
       "displayName": "Stride Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 65,
           "value": 2
@@ -987,7 +1001,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "MpCost Gem",
       "displayName": "Channel Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 90,
           "value": -2
@@ -998,7 +1012,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "MpMult Gem",
       "displayName": "Mind Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 72,
           "value": 2
@@ -1016,7 +1030,13 @@ export class GemItemDefinitions {
         },
         {
           "type": 64,
-          "value": -9
+          "value": -10
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 64,
+          "value": 1
         }
       ]
     },
@@ -1031,7 +1051,13 @@ export class GemItemDefinitions {
         },
         {
           "type": 71,
-          "value": -9
+          "value": -10
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 71,
+          "value": 1
         }
       ]
     },
@@ -1046,7 +1072,13 @@ export class GemItemDefinitions {
         },
         {
           "type": 65,
-          "value": -9
+          "value": -10
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 65,
+          "value": 1
         }
       ]
     },
@@ -1054,7 +1086,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "PanicBurst Gem",
       "displayName": "Panic Burst Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1073,7 +1105,13 @@ export class GemItemDefinitions {
         },
         {
           "type": 72,
-          "value": -9
+          "value": -10
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 72,
+          "value": 1
         }
       ]
     },
@@ -1081,7 +1119,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "PiercingShot Gem",
       "displayName": "Piercing Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1093,7 +1131,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "PointBlankShot Gem",
       "displayName": "Point Blank Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1105,7 +1143,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Poison Gem",
       "displayName": "Poison Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -1117,7 +1155,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "PoisonGrenade Gem",
       "displayName": "Poison Grenade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1129,7 +1167,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Reap Gem",
       "displayName": "Reap Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1141,7 +1179,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ReflectDamage Gem",
       "displayName": "Spike Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 86,
           "value": 3
@@ -1152,7 +1190,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ReflectSpell Gem",
       "displayName": "Mirror Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 94,
           "value": 2
@@ -1163,7 +1201,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Regen Gem",
       "displayName": "Vitalis Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 75,
           "value": 3
@@ -1178,7 +1216,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Sanctuary Gem",
       "displayName": "Sanctuary Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1190,7 +1228,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Shadow Gem",
       "displayName": "Shadow Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -1202,7 +1240,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShadowRelease Gem",
       "displayName": "Black Blade Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1214,7 +1252,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShadowStep Gem",
       "displayName": "Shadow Step Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1226,7 +1264,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShieldBash Gem",
       "displayName": "Shield Bash Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1238,7 +1276,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShieldThrow Gem",
       "displayName": "Shield Throw Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1250,7 +1288,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShoutStun Gem",
       "displayName": "Fearsome Cry Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1262,7 +1300,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShrapnelShot Gem",
       "displayName": "Shrapnel Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1274,7 +1312,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ShurikenFan Gem",
       "displayName": "Shuriken Fan Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1286,7 +1324,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Smite Gem",
       "displayName": "Smite Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1298,7 +1336,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SniperShot Gem",
       "displayName": "Sniper Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1310,7 +1348,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SoulStrike Gem",
       "displayName": "Soul Strike Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1322,7 +1360,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SpearSlice Gem",
       "displayName": "Air Cutter Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1334,7 +1372,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SpearStab Gem",
       "displayName": "Impale Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1346,7 +1384,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SpearThrust Gem",
       "displayName": "Piercing Flurry Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1358,7 +1396,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "StatusResist Gem",
       "displayName": "Tenacity Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 26,
           "value": 1,
@@ -1375,7 +1413,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Stomp Gem",
       "displayName": "Stomp Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1387,7 +1425,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "StrafingVolley Gem",
       "displayName": "Strafing Volley Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1399,7 +1437,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "SuppressiveShot Gem",
       "displayName": "Suppressive Shot Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1411,7 +1449,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Tempest Gem",
       "displayName": "Tempest Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1423,7 +1461,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "TetraVortex Gem",
       "displayName": "Elemental Overload Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1435,7 +1473,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Threat Gem",
       "displayName": "Gaze Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 192,
           "value": 10
@@ -1446,7 +1484,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Thunderbolt Gem",
       "displayName": "Thunderbolt Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1458,7 +1496,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "ThunderStorm Gem",
       "displayName": "Thunder Storm Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1475,7 +1513,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "TurnUndead Gem",
       "displayName": "Turn Undead Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1487,7 +1525,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "TwistOfFate Gem",
       "displayName": "Twist Of Fate Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1499,7 +1537,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Undead Gem",
       "displayName": "Undead Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -1511,7 +1549,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "VenomStrike Gem",
       "displayName": "Venom Strike Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1523,7 +1561,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "VolatileBolt Gem",
       "displayName": "Volatile Bolt Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1535,7 +1573,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Water Gem",
       "displayName": "Water Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,
@@ -1547,7 +1585,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "WeaponThrow Gem",
       "displayName": "Weapon Throw Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1559,7 +1597,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "WeightLimit Gem",
       "displayName": "Carrier Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 101,
           "value": 200
@@ -1570,7 +1608,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Whirlwind Gem",
       "displayName": "Whirlwind Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1582,7 +1620,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "WildCharge Gem",
       "displayName": "Wild Charge Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 49,
           "value": 2,
@@ -1594,7 +1632,7 @@ export class GemItemDefinitions {
       "itemType": 5,
       "id": "Wind Gem",
       "displayName": "Wind Gem",
-      "effects": [
+      "refineEffects": [
         {
           "type": 46,
           "value": 1,

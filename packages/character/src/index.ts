@@ -13,6 +13,7 @@ export type {
   CharacterSnapshot,
   CharacterSkill,
   CharacterSkillEffect,
+  CharacterRefinableItem,
   CharacterStatBreakdown,
   CharacterViewState,
 } from "./types.ts";

@@ -53,8 +53,13 @@ export interface CharacterArtifact {
   slot: string;
   itemId: string;
   refine: number;
-  gems: string[];
+  gems: CharacterRefinableItem[];
   substats: CharacterSubstat[];
+}
+
+export interface CharacterRefinableItem {
+  id: string;
+  refine: number;
 }
 
 /** A learned skill as sent by the character callback. */

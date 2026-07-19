@@ -16,7 +16,12 @@ export async function loadCharacterSnapshot(file = defaultFile): Promise<Charact
       ...value,
       activeLoadout: value.activeLoadout ?? "Normal",
       equipment: Array.isArray(value.equipment) ? value.equipment : [],
-      artifacts: Array.isArray(value.artifacts) ? value.artifacts : [],
+      artifacts: Array.isArray(value.artifacts) ? value.artifacts.map((artifact) => ({
+        ...(artifact as unknown as Record<string, unknown>),
+        gems: Array.isArray((artifact as { gems?: unknown }).gems)
+          ? (artifact as { gems: unknown[] }).gems.flatMap((gem) => typeof gem === "string" ? [{ id: gem, refine: 0 }] : gem && typeof gem === "object" && typeof (gem as { id?: unknown }).id === "string" && typeof (gem as { refine?: unknown }).refine === "number" ? [gem] : [])
+          : [],
+      })) as CharacterSnapshot["artifacts"] : [],
       skills: Array.isArray(value.skills) ? value.skills.map((skill) => ({
         ...(skill as unknown as Record<string, unknown>),
         effects: Array.isArray((skill as unknown as { effects?: unknown }).effects) ? (skill as unknown as { effects: unknown[] }).effects : [],

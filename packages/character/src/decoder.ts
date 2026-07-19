@@ -115,7 +115,7 @@ function readArtifactData(reader: CharacterReader): CharacterArtifact | undefine
   if (!reader.object()) return undefined;
   const rawStats: Array<{ type: number; roll: number } | undefined> = reader.list(() => readRawSubstat(reader));
   const slotIndex = reader.packed();
-  const gems = reader.list(() => readRefinableItem(reader)).filter((value): value is string => Boolean(value));
+  const gems = reader.list(() => readRefinableItem(reader)).filter((value): value is { id: string; refine: number } => value !== undefined);
   reader.string(80);
   const refine = reader.packed();
   const itemId = reader.string(256) ?? "Unknown artifact";
@@ -193,13 +193,13 @@ function skipCosmetic(reader: CharacterReader): void {
   reader.packed(); reader.boolean(); reader.string(80); reader.packed(); reader.string(256); reader.boolean();
 }
 
-function readRefinableItem(reader: CharacterReader): string | undefined {
+function readRefinableItem(reader: CharacterReader): { id: string; refine: number } | undefined {
   if (!reader.object()) return undefined;
   reader.string(80);
-  reader.packed();
+  const refine = reader.packed();
   const id = reader.string(256) ?? undefined;
   reader.boolean();
-  return id;
+  return id ? { id, refine } : undefined;
 }
 
 function readRawSubstat(reader: CharacterReader): { type: number; roll: number } | undefined {

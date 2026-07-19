@@ -63,7 +63,7 @@ function render(state: CharacterViewState): void {
     sections: [
       ...itemEffectSections(3, item.itemId, item.refine, artifactCounts.get(item.itemId) ?? 0, item.slot),
       ...(item.substats.length ? [{ label: "Rolled stats", value: substatText(item.substats) }] : []),
-      ...(item.gems.length ? [{ label: "Gems", value: item.gems.map((gem) => `${gem}${itemEffectSummary(5, gem)}`).join(" · ") }] : []),
+      ...(item.gems.length ? [{ label: "Gems", value: item.gems.map((gem) => `${gem.id}${gem.refine ? ` +${gem.refine}` : ""}${itemEffectSummary(5, gem.id, gem.refine)}`).join(" · ") }] : []),
     ],
   })));
   renderStats("basic-stat-groups", state.stats, "basic");
@@ -115,14 +115,14 @@ function itemEffectSections(itemType: number, itemId: string, refine: number, pi
   }
   if (definition.artifactSet && pieces !== undefined) {
     const set = definition.artifactSet;
-    const perPiece = show(set.perPiece.map((effect) => ({ ...effect, value: effect.value * pieces })));
+    const perPiece = show(set.perPiece);
     if (perPiece) sections.push({ label: `Set ${pieces}/${set.requiredPieces}`, value: perPiece, tone: "active" });
     const full = show(set.fullSet);
     if (full) sections.push({ label: "Full set", value: full, tone: pieces >= set.requiredPieces ? "active" : "muted" });
   }
   return sections;
 }
-function itemEffectSummary(itemType: number, itemId: string): string { const values = itemEffectSections(itemType, itemId, 0).map((section) => section.value).join(", "); return values ? ` (${values})` : ""; }
+function itemEffectSummary(itemType: number, itemId: string, refine = 0): string { const values = itemEffectSections(itemType, itemId, refine).map((section) => section.value).join(", "); return values ? ` (${values})` : ""; }
 function isArtifactSlot(value: string | undefined): value is FishNetArtifactSlot { return value === "Rune" || value === "Jewel" || value === "Scroll" || value === "Relic"; }
 function statName(type: number): string { return STAT_NAMES[type] ?? `Stat ${type}`; }
 function isPercent(type: number): boolean { return PERCENT_STATS.has(type); }
