@@ -29,6 +29,7 @@ describe("market log follower", () => {
     expect(snapshot).toMatchObject({ status: "ready", changed: true, invalidLines: 0 });
     expect(snapshot.listings[0]).toMatchObject({
       id: "listing-example",
+      displayName: "Example Sword",
       sellerName: "Merchant Example",
       price: 1250n,
       stats: [{ name: "Str", value: 3 }],

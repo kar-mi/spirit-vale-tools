@@ -4,6 +4,9 @@ import { fishNetMarketStatName, resolveFishNetMarketStat } from "./market-stats.
 import type { FishNetMarketStatName } from "./market-stats.ts";
 import { calculateFishNetMarketStatValues } from "./market-stat-values.ts";
 import type { DecodedFishNetPacket } from "@spiritvale/core";
+import { FishNetItemDirectory } from "@spiritvale/items";
+
+const DEFAULT_ITEM_DIRECTORY = new FishNetItemDirectory();
 
 export interface FishNetMarketListing {
   id: string | null;
@@ -76,6 +79,7 @@ export type FishNetMarketEvent =
   | { kind: "collectResult"; tick: number; success: boolean };
 
 export interface FishNetMarketListingView extends FishNetMarketListing {
+  displayName: string | null;
   searchText: string | null;
   shopName: string | null;
   mapId: string | null;
@@ -119,6 +123,10 @@ export interface FishNetMarketSnapshot {
   lastCollectedAmount?: bigint;
 }
 
+export interface FishNetMarketTrackerOptions {
+  itemDirectory?: FishNetItemDirectory;
+}
+
 export function decodeFishNetMarketPacket(packet: DecodedFishNetPacket): FishNetMarketEvent[] {
   const reader = new MarketReader(packet.payload);
   let event: FishNetMarketEvent | undefined;
@@ -152,6 +160,7 @@ export function decodeFishNetMarketPacket(packet: DecodedFishNetPacket): FishNet
 }
 
 export class FishNetMarketTracker {
+  private readonly itemDirectory: FishNetItemDirectory;
   private catalog: FishNetMarketCatalogItem[] = [];
   private readonly listings = new Map<string, {
     listing: FishNetMarketListing;
@@ -163,6 +172,10 @@ export class FishNetMarketTracker {
   private lastBalanceDelta?: bigint;
   private lastCollectedAmount?: bigint;
   private awaitingCollectAccount = false;
+
+  constructor(options: FishNetMarketTrackerOptions = {}) {
+    this.itemDirectory = options.itemDirectory ?? DEFAULT_ITEM_DIRECTORY;
+  }
 
   consume(packet: DecodedFishNetPacket): FishNetMarketEvent[] {
     const events = decodeFishNetMarketPacket(packet);
@@ -183,7 +196,14 @@ export class FishNetMarketTracker {
     const listings: FishNetMarketListingView[] = [];
     for (const { listing, searchText, stats } of this.listings.values()) {
       const stall = listing.sellerId === null ? undefined : this.stalls.get(listing.sellerId);
-      listings.push({ ...listing, searchText, shopName: stall?.shopName ?? null, mapId: stall?.mapId ?? null, stats });
+      listings.push({
+        ...listing,
+        displayName: resolveFishNetMarketListingDisplayName(listing, searchText, this.itemDirectory),
+        searchText,
+        shopName: stall?.shopName ?? null,
+        mapId: stall?.mapId ?? null,
+        stats,
+      });
     }
     return queryFishNetMarketListings(listings, query);
   }
@@ -266,7 +286,7 @@ export function queryFishNetMarketListings(
   if (statMode !== "all" && statMode !== "any") throw new Error(`unknown market stat mode ${JSON.stringify(statMode)}`);
   const result: FishNetMarketListingView[] = [];
   for (const listing of listings) {
-    const { searchText, stats } = listing;
+    const { displayName, searchText, stats } = listing;
     if (query.itemType !== undefined && listing.itemType !== query.itemType) continue;
     if (query.minPrice !== undefined && listing.price < query.minPrice) continue;
     if (query.maxPrice !== undefined && listing.price > query.maxPrice) continue;
@@ -281,6 +301,7 @@ export function queryFishNetMarketListings(
       if (statMode === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) continue;
     }
     if (needle && ![
+      displayName,
       searchText,
       listing.itemId,
       listing.sellerName,
@@ -297,6 +318,33 @@ export function queryFishNetMarketListings(
   const offset = query.offset === undefined ? 0 : Math.max(0, Math.trunc(query.offset));
   const limit = query.limit === undefined ? result.length : Math.max(0, Math.trunc(query.limit));
   return result.slice(offset, offset + limit);
+}
+
+export function resolveFishNetMarketListingDisplayName(
+  listing: Pick<FishNetMarketListing, "itemId" | "itemType" | "json">,
+  searchText: string | null,
+  itemDirectory: FishNetItemDirectory = DEFAULT_ITEM_DIRECTORY,
+): string | null {
+  const direct = itemDirectory.resolve(listing.itemType, listing.itemId);
+  if (direct) return direct.displayName;
+  const serializedId = listing.itemType === 2 || listing.itemType === 3
+    ? serializedItemId(listing.json)
+    : undefined;
+  const serialized = itemDirectory.resolve(listing.itemType, serializedId);
+  if (serialized) return serialized.displayName;
+  const liveName = searchText?.trim();
+  if (liveName) return liveName;
+  return listing.itemId;
+}
+
+function serializedItemId(json: string | null): string | undefined {
+  if (json === null) return undefined;
+  try {
+    const value: unknown = JSON.parse(json);
+    return isRecord(value) && typeof value["Id"] === "string" ? value["Id"] : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function parseFishNetMarketStats(json: string | null, itemType = 2): FishNetMarketStat[] | undefined {

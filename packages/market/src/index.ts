@@ -3,6 +3,7 @@ export {
   FishNetMarketTracker,
   parseFishNetMarketStats,
   queryFishNetMarketListings,
+  resolveFishNetMarketListingDisplayName,
 } from "./market.ts";
 export { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
 export type { MarketLogBatch, MarketLogStatus } from "./live-log.ts";
@@ -26,4 +27,5 @@ export type {
   FishNetMarketStall,
   FishNetMarketStat,
   FishNetMarketStatFilter,
+  FishNetMarketTrackerOptions,
 } from "./market.ts";

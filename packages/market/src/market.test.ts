@@ -1,10 +1,50 @@
 import { describe, expect, test } from "bun:test";
 
-import { FishNetMarketTracker, decodeFishNetMarketPacket } from "./market.ts";
+import {
+  FishNetMarketTracker,
+  decodeFishNetMarketPacket,
+  resolveFishNetMarketListingDisplayName,
+} from "./market.ts";
 import { FishNetProtocolError } from "@spiritvale/core";
+import { FishNetItemDirectory } from "@spiritvale/items";
 import type { DecodedFishNetPacket } from "@spiritvale/core";
 
 describe("FishNet market decoding", () => {
+  test("resolves build names before live names and safe fallbacks", () => {
+    const directory = new FishNetItemDirectory({
+      buildFingerprint: "synthetic-build",
+      items: [
+        { itemType: 2, id: "item-example", displayName: "Mapped Example" },
+        { itemType: 3, id: "artifact-example", displayName: "Mapped Artifact" },
+      ],
+    });
+    const tracker = new FishNetMarketTracker({ itemDirectory: directory });
+    tracker.consume(packet("RequestVendorItemList_T", list([
+      catalogItem("Live Example", listing("listing-name", "item-example", 2, 75n, "Merchant Example")),
+    ])));
+
+    expect(tracker.query({ text: "mapped example" })[0]).toMatchObject({
+      id: "listing-name",
+      displayName: "Mapped Example",
+      searchText: "Live Example",
+    });
+    expect(resolveFishNetMarketListingDisplayName({
+      itemId: "instance-example",
+      itemType: 3,
+      json: JSON.stringify({ Id: "artifact-example" }),
+    }, null, directory)).toBe("Mapped Artifact");
+    expect(resolveFishNetMarketListingDisplayName({
+      itemId: "unknown-example",
+      itemType: 5,
+      json: null,
+    }, "Live Fallback", directory)).toBe("Live Fallback");
+    expect(resolveFishNetMarketListingDisplayName({
+      itemId: "unknown-example",
+      itemType: 5,
+      json: "{invalid}",
+    }, null, directory)).toBe("unknown-example");
+  });
+
   test("decodes catalog listings and supports deterministic local queries", () => {
     const tracker = new FishNetMarketTracker();
     tracker.consume(packet("RequestVendorItemList_T", list([

@@ -129,7 +129,7 @@ function appState(): MarketUiState {
 function listingView(listing: FishNetMarketListingView, index: number): MarketUiListing {
   return {
     key: listing.id ?? `${listing.sellerId ?? "seller"}-${listing.itemId ?? "item"}-${listing.price}-${index}`,
-    name: listing.searchText ?? listing.itemId ?? "Unknown item",
+    name: listing.displayName ?? listing.itemId ?? "Unknown item",
     ...(listing.itemId ? { itemId: listing.itemId } : {}),
     ...(listing.sellerName ? { seller: listing.sellerName } : {}),
     ...(listing.shopName ? { shopName: listing.shopName } : {}),

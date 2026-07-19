@@ -29,6 +29,12 @@
     "packages/core": {
       "name": "@spiritvale/core",
     },
+    "packages/items": {
+      "name": "@spiritvale/items",
+      "dependencies": {
+        "@spiritvale/core": "workspace:*",
+      },
+    },
     "packages/logging": {
       "name": "@spiritvale/logging",
     },
@@ -36,6 +42,7 @@
       "name": "@spiritvale/market",
       "dependencies": {
         "@spiritvale/core": "workspace:*",
+        "@spiritvale/items": "workspace:*",
         "@spiritvale/logging": "workspace:*",
       },
     },
@@ -52,6 +59,7 @@
       "dependencies": {
         "@spiritvale/combat": "workspace:*",
         "@spiritvale/core": "workspace:*",
+        "@spiritvale/items": "workspace:*",
         "@spiritvale/logging": "workspace:*",
       },
     },
@@ -92,6 +100,8 @@
     "@spiritvale/combat": ["@spiritvale/combat@workspace:packages/combat"],
 
     "@spiritvale/core": ["@spiritvale/core@workspace:packages/core"],
+
+    "@spiritvale/items": ["@spiritvale/items@workspace:packages/items"],
 
     "@spiritvale/logging": ["@spiritvale/logging@workspace:packages/logging"],
 

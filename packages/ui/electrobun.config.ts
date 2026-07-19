@@ -40,7 +40,7 @@ export default {
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src", "../core/src/fishnet", "../market-ui/src", "../rewards-ui/src", "../ui-theme"],
+    watch: ["src", "../core/src/fishnet", "../items/src", "../market-ui/src", "../rewards-ui/src", "../ui-theme"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

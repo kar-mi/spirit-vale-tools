@@ -1,6 +1,7 @@
 import { open, stat } from "node:fs/promises";
 
 import { defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "@spiritvale/logging";
+import { resolveFishNetMarketListingDisplayName } from "./market.ts";
 import type { FishNetMarketListingView, FishNetMarketStat } from "./market.ts";
 
 export type MarketLogStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
@@ -182,7 +183,7 @@ function parseListing(value: unknown): FishNetMarketListingView | undefined {
     || !nullableString(value["mapId"])) return undefined;
   const stats = value["stats"] === undefined ? undefined : parseStats(value["stats"]);
   if (value["stats"] !== undefined && !stats) return undefined;
-  return {
+  const listing = {
     id: value["id"],
     sellerId: value["sellerId"],
     sellerName: value["sellerName"],
@@ -197,6 +198,10 @@ function parseListing(value: unknown): FishNetMarketListingView | undefined {
     shopName: value["shopName"],
     mapId: value["mapId"],
     ...(stats ? { stats } : {}),
+  };
+  return {
+    ...listing,
+    displayName: resolveFishNetMarketListingDisplayName(listing, value["searchText"]),
   };
 }
 

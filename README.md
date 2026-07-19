@@ -197,6 +197,8 @@ Equipment IDs from the supported build use a build-matched substat table, includ
 weapons, armor, accessories, eyewear, back equipment, and grimoires. An unknown item ID
 falls back to stat-based inference; if that cannot distinguish two tables with different
 caps, output shows `roll:<value>` and a minimum filter does not match the unresolved value.
+Listing names use a build-matched item catalog for all market item types. When an ID is
+not in that catalog, the decoder falls back to the live market name and then the raw ID.
 Market snapshots and query results are always written to `market.jsonl`;
 64-bit prices, balances, and timestamps are represented as decimal strings.
 
