@@ -31,6 +31,7 @@ export interface FishNetUnmatchedRewardEvent {
   tick: number;
   reason: "ambiguous" | "expired" | "unidentified";
   reward: "experience" | "pickup";
+  drops: RewardItem[];
 }
 
 export type FishNetMobRewardEvent = FishNetConfirmedMobKill | FishNetUnmatchedRewardEvent;
@@ -180,6 +181,7 @@ export class FishNetMobRewardTracker {
         tick,
         reason: candidates.length === 0 ? "expired" : "ambiguous",
         reward,
+        drops: reward === "pickup" ? (value as RewardItem[]).map((item) => ({ ...item })) : [],
       });
       return;
     }
@@ -198,9 +200,21 @@ export class FishNetMobRewardTracker {
       if (kill.ambiguous) {
         continue;
       } else if (!kill.mob) {
-        if (kill.gain || kill.drops.length > 0) events.push({ kind: "unmatched", tick: kill.tick, reason: "unidentified", reward: kill.gain ? "experience" : "pickup" });
+        if (kill.gain || kill.drops.length > 0) events.push({
+          kind: "unmatched",
+          tick: kill.tick,
+          reason: "unidentified",
+          reward: kill.gain ? "experience" : "pickup",
+          drops: kill.drops.map((item) => ({ ...item })),
+        });
       } else if (!kill.gain) {
-        if (kill.drops.length > 0) events.push({ kind: "unmatched", tick: kill.tick, reason: "expired", reward: "pickup" });
+        if (kill.drops.length > 0) events.push({
+          kind: "unmatched",
+          tick: kill.tick,
+          reason: "expired",
+          reward: "pickup",
+          drops: kill.drops.map((item) => ({ ...item })),
+        });
       } else {
         events.push({ kind: "kill", id: kill.id, tick: kill.tick, mob: kill.mob, ...kill.gain, drops: kill.drops });
       }

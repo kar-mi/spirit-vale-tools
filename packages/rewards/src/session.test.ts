@@ -19,18 +19,20 @@ test("mob reward session preserves optional log timestamps on confirmed kills", 
 
 test("mob reward session separates identity misses from other unmatched rewards", () => {
   const session = new MobRewardSession();
-  session.consume({ kind: "unmatched", tick: 10, reason: "unidentified", reward: "experience" });
-  session.consume({ kind: "unmatched", tick: 11, reason: "expired", reward: "pickup" });
-  session.consume({ kind: "unmatched", tick: 12, reason: "ambiguous", reward: "experience" });
+  session.consume({ kind: "unmatched", tick: 10, reason: "unidentified", reward: "experience", drops: [] });
+  session.consume({ kind: "unmatched", tick: 11, reason: "expired", reward: "pickup", drops: [{ category: "material", itemId: "training-material", count: 2 }] });
+  session.consume({ kind: "unmatched", tick: 12, reason: "ambiguous", reward: "experience", drops: [{ category: "material", itemId: "training-material", count: 3 }] });
 
   expect(session.snapshot()).toMatchObject({
     unmatched: 3,
+    unmatchedDrops: [{ category: "material", itemId: "training-material", count: 5 }],
     unmatchedByReason: { unidentified: 1, expired: 1, ambiguous: 1 },
   });
 
   session.reset();
   expect(session.snapshot()).toMatchObject({
     unmatched: 0,
+    unmatchedDrops: [],
     unmatchedByReason: { unidentified: 0, expired: 0, ambiguous: 0 },
   });
 });

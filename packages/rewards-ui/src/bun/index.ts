@@ -188,6 +188,7 @@ function appState(): RewardsAppState {
     totalJobExperience: snapshot.totalJobExperience,
     totalCoins: snapshot.totalCoins.toString(),
     unmatched: snapshot.unmatched,
+    unmatchedDrops: snapshot.unmatchedDrops.map((drop) => ({ ...drop, itemName: itemName(drop.itemId) })),
     unidentified: snapshot.unmatchedByReason.unidentified,
   };
 }
@@ -326,7 +327,7 @@ async function shutdown(): Promise<void> {
 
 function emptySnapshot(): MobRewardSessionSnapshot {
   return {
-    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0,
+    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0, unmatchedDrops: [],
     unmatchedByReason: { ambiguous: 0, expired: 0, unidentified: 0 },
   };
 }

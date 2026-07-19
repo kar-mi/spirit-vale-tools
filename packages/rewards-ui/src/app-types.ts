@@ -58,6 +58,7 @@ export interface RewardsAppState {
   totalJobExperience: number;
   totalCoins: string;
   unmatched: number;
+  unmatchedDrops: RewardsUiDrop[];
   unidentified: number;
 }
 

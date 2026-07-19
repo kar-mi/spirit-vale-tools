@@ -113,12 +113,19 @@ function render(next: RewardsAppState): void {
 
 function renderSession(next: RewardsAppState): void {
   const summaries = element("summary-list");
-  summaries.replaceChildren(...(next.summaries.length ? next.summaries.map((mob) => row(
+  const summaryRows = next.summaries.map((mob) => row(
     mob.displayName,
     `Level ${mob.level} · ${mob.kills} ${mob.kills === 1 ? "kill" : "kills"}`,
     [`${format.format(mob.experience)} XP`, `${format.format(mob.jobExperience)} job XP`, `${formatDecimal(mob.coins)} coins`],
     mob.drops,
-  )) : [empty(next.mode === "replay" ? "No confirmed mob totals in this replay." : "Confirmed mob totals will appear here.")]));
+  ));
+  if (next.unmatchedDrops.length) summaryRows.push(row(
+    "Unmatched",
+    "Items picked up without mob correlation",
+    [],
+    next.unmatchedDrops,
+  ));
+  summaries.replaceChildren(...(summaryRows.length ? summaryRows : [empty(next.mode === "replay" ? "No confirmed mob totals in this replay." : "Confirmed mob totals will appear here.")]));
   const kills = element("kill-list");
   kills.replaceChildren(...(next.kills.length ? next.kills.map((kill) => row(
     kill.displayName,

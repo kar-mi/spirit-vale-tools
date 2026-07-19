@@ -141,7 +141,11 @@ function parseRewardEvent(value: unknown): FishNetMobRewardEvent | undefined {
     const reason = value["reason"];
     const reward = value["reward"];
     if ((reason !== "ambiguous" && reason !== "expired" && reason !== "unidentified") || (reward !== "experience" && reward !== "pickup")) return undefined;
-    return { kind: "unmatched", tick: value["tick"], reason, reward };
+    const rawDrops = value["drops"];
+    if (rawDrops !== undefined && !Array.isArray(rawDrops)) return undefined;
+    const drops = (rawDrops ?? []).map((drop: unknown) => parseDrop(drop));
+    if (drops.some((drop: ReturnType<typeof parseDrop>) => drop === undefined)) return undefined;
+    return { kind: "unmatched", tick: value["tick"], reason, reward, drops: drops as NonNullable<(typeof drops)[number]>[] };
   }
   if (value["kind"] !== "kill" || typeof value["id"] !== "string" || !record(value["mob"])
     || typeof value["experience"] !== "number" || typeof value["jobExperience"] !== "number"
@@ -179,7 +183,7 @@ function parseDrop(value: unknown): { category: import("./reward-decoder.ts").Re
 
 function emptySnapshot(): MobRewardSessionSnapshot {
   return {
-    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0,
+    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0, unmatchedDrops: [],
     unmatchedByReason: { ambiguous: 0, expired: 0, unidentified: 0 },
   };
 }

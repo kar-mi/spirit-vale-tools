@@ -35,9 +35,22 @@ describe("mob reward tracker", () => {
     tracker.consume(death(3, 50));
     tracker.consume(death(3, 51));
     expect(tracker.consume(experience(4, 10, 1, 5, 1, 1n))).toContainEqual({
-      kind: "unmatched", tick: 4, reason: "ambiguous", reward: "experience",
+      kind: "unmatched", tick: 4, reason: "ambiguous", reward: "experience", drops: [],
     });
     expect(tracker.flush().some((event) => event.kind === "kill")).toBe(false);
+  });
+
+  test("preserves item details for a pickup without a correlated death", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    const events = tracker.consume(pickup(10, "training-material", 3));
+
+    expect(events).toContainEqual({
+      kind: "unmatched",
+      tick: 10,
+      reason: "expired",
+      reward: "pickup",
+      drops: [{ category: "material", itemId: "training-material", count: 3 }],
+    });
   });
 
   test("identifies map-load mobs from initial SyncTypes embedded in their spawn", () => {
@@ -84,6 +97,16 @@ function death(tick: number, objectId: number): DecodedFishNetPacket {
     field("dmg.Element", 0), field("dmg.WeaponType", 0), field("dmg.Range", 1),
   ];
   return { tick, packetId: 3, packetName: "observersRpc", raw: Buffer.alloc(0), payload: Buffer.alloc(0), objectId, networkBehaviourType: "HealthComponent", rpcName: "Death_C", decodedFields: fields };
+}
+
+function pickup(tick: number, itemId: string, count: number): DecodedFishNetPacket {
+  const empty = packed(0);
+  const material = Buffer.concat([
+    packed(1), string("synthetic-uid"),
+    Buffer.from([0]), packed(count), string(itemId), Buffer.from([0]),
+  ]);
+  const payload = Buffer.concat([Buffer.from([0]), empty, empty, empty, empty, empty, material, empty, empty]);
+  return { tick, packetId: 4, packetName: "targetRpc", raw: payload, payload, rpcName: "PickupItems_T" };
 }
 
 function field(name: string, value: number): FishNetDecodedField { return { name, codec: "packedInt32", value }; }

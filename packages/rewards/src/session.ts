@@ -20,6 +20,7 @@ export interface MobRewardSessionSnapshot {
   totalJobExperience: number;
   totalCoins: bigint;
   unmatched: number;
+  unmatchedDrops: RewardItem[];
   unmatchedByReason: {
     ambiguous: number;
     expired: number;
@@ -38,12 +39,14 @@ export interface MobRewardSessionConsumeContext {
 export class MobRewardSession {
   private readonly kills = new Map<string, RecordedMobRewardKill>();
   private unmatched = 0;
+  private unmatchedDrops: RewardItem[] = [];
   private readonly unmatchedByReason = { ambiguous: 0, expired: 0, unidentified: 0 };
 
   consume(event: FishNetMobRewardEvent, context: MobRewardSessionConsumeContext = {}): void {
     if (event.kind === "unmatched") {
       this.unmatched += 1;
       this.unmatchedByReason[event.reason] += 1;
+      this.unmatchedDrops = mergeItems(this.unmatchedDrops, event.drops);
     }
     else this.kills.set(event.id, cloneKill({ ...event, ...context }));
   }
@@ -83,6 +86,7 @@ export class MobRewardSession {
       totalJobExperience,
       totalCoins,
       unmatched: this.unmatched,
+      unmatchedDrops: this.unmatchedDrops.map((item) => ({ ...item })),
       unmatchedByReason: { ...this.unmatchedByReason },
     };
   }
@@ -90,6 +94,7 @@ export class MobRewardSession {
   reset(): void {
     this.kills.clear();
     this.unmatched = 0;
+    this.unmatchedDrops = [];
     this.unmatchedByReason.ambiguous = 0;
     this.unmatchedByReason.expired = 0;
     this.unmatchedByReason.unidentified = 0;
