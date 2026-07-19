@@ -14,7 +14,7 @@ export class FishNetCharacterTracker {
   }
 
   consume(packet: CapturedFishNetPacket): boolean {
-    if (!CHARACTER_RPCS.has(packet.rpcName ?? "") || packet.networkBehaviourType !== "PlayerSave") return false;
+    if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
     this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
     this.publish();

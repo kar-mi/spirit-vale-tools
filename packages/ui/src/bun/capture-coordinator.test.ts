@@ -198,7 +198,6 @@ describe("central capture coordinator", () => {
         packetName: "rpcLink",
         rpcName: "CharacterCallback_T",
         rpcResolution: "verified",
-        networkBehaviourType: "PlayerSave",
         raw: Buffer.alloc(0),
         payload: Buffer.alloc(0),
         connectionId: "conn-b",
