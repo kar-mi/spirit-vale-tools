@@ -1,6 +1,6 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
 import { decodeCharacterRpcPayload } from "./decoder.ts";
-import { calculateCharacterStats } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats } from "./formulas.ts";
 import type { CharacterSnapshot, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
@@ -39,6 +39,7 @@ export class FishNetCharacterTracker {
     if (this.unsupportedDetail) return {
       ...(this.snapshot ? { snapshot: structuredClone(this.snapshot) } : {}),
       stats: this.snapshot ? calculateStats(this.snapshot) : [],
+      gearTotals: this.snapshot ? calculateGearTotals(this.snapshot) : [],
       status: "unsupported",
       statusDetail: this.unsupportedDetail,
     };
@@ -46,10 +47,12 @@ export class FishNetCharacterTracker {
       status: "waiting",
       statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
       stats: [],
+      gearTotals: [],
     };
     return {
       snapshot: structuredClone(this.snapshot),
       stats: calculateStats(this.snapshot),
+      gearTotals: calculateGearTotals(this.snapshot),
       status: this.snapshot.source,
       statusDetail: this.snapshot.source === "live"
         ? "Live character data"
@@ -69,12 +72,17 @@ export class FishNetCharacterTracker {
 }
 
 function calculateStats(snapshot: CharacterSnapshot): CharacterViewState["stats"] {
+  const gearTotals = calculateGearTotals(snapshot);
   return calculateCharacterStats(
     snapshot.level,
     snapshot.attributes,
     [...snapshot.equipment, ...snapshot.artifacts].flatMap((item) => item.substats),
     snapshot.archetypes,
-  );
+  ).concat(calculateAdvancedGearStats(gearTotals));
+}
+
+function calculateGearTotals(snapshot: CharacterSnapshot): CharacterViewState["gearTotals"] {
+  return aggregateGearSubstats(snapshot.equipment, snapshot.artifacts);
 }
 
 function errorMessage(error: unknown): string {

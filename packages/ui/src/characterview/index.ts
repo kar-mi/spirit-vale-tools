@@ -1,9 +1,11 @@
 import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
-import type { CharacterStatBreakdown, CharacterViewState } from "@spiritvale/character";
+import type { CharacterStatBreakdown, CharacterViewState, GearStatTotal } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
 
 const ATTRIBUTE_NAMES = ["STR", "VIT", "AGI", "DEX", "INT", "LUK"] as const;
+type Tab = "basic" | "gear" | "advanced";
+let activeTab: Tab = "basic";
 
 const rpc = Electroview.defineRPC<CharacterRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });
 const electroview = new Electroview({ rpc });
@@ -16,6 +18,7 @@ initWindowChrome({
   setFrame: (frame) => void electroview.rpc?.request.setWindowFrame(frame),
 });
 void electroview.rpc?.request.getState({}).then(render);
+for (const tab of document.querySelectorAll<HTMLButtonElement>(".tab-button")) tab.addEventListener("click", () => setActiveTab(tab.dataset.tab as Tab));
 
 function render(state: CharacterViewState): void {
   const empty = element("empty-state");
@@ -51,7 +54,10 @@ function render(state: CharacterViewState): void {
     slot: item.slot, name: item.itemId, refine: item.refine,
     details: [substatText(item.substats), item.gems.length ? `Gems: ${item.gems.join(", ")}` : ""].filter(Boolean).join(" · "),
   })));
-  renderStats(state.stats);
+  renderStats("basic-stat-groups", state.stats, "basic");
+  renderStats("advanced-stat-groups", state.stats, "advanced");
+  renderGearTotals(state.gearTotals);
+  setActiveTab(activeTab);
 }
 
 function renderBuild(id: string, items: Array<{ slot: string; name: string; refine: number; details: string }>): void {
@@ -67,17 +73,26 @@ function substatText(stats: Array<{ name: string; value?: number; roll: number; 
   return stats.map((stat) => stat.value === undefined ? `${stat.name} (roll ${stat.roll})` : `${stat.name} ${stat.value}${stat.percent ? "%" : ""}`).join(" · ");
 }
 
-function renderStats(stats: CharacterStatBreakdown[]): void {
-  const root = element("stat-groups");
-  const categories = [...new Set(stats.map((stat) => stat.category))];
+function renderGearTotals(totals: GearStatTotal[]): void {
+  const root = element("gear-totals");
+  if (!totals.length) { root.replaceChildren(node("div", "build-empty", "No rolled substats captured in this loadout.")); return; }
+  root.replaceChildren(...totals.map((stat) => node("div", "gear-total", [node("span", "", stat.name), node("strong", "", `${signed(stat.total)}${stat.percent ? "%" : ""}${stat.unresolvedRolls ? ` · roll ${stat.unresolvedRolls}` : ""}`)])));
+}
+
+function renderStats(id: string, stats: CharacterStatBreakdown[], tab: CharacterStatBreakdown["tab"]): void {
+  const root = element(id);
+  const displayed = stats.filter((stat) => stat.tab === tab);
+  if (!displayed.length) { root.replaceChildren(node("div", "build-empty", tab === "advanced" ? "No additional gear-granted stats in this loadout." : "No calculated stats available.")); return; }
+  const categories = [...new Set(displayed.map((stat) => stat.category))];
   root.replaceChildren(...categories.map((category) => {
     const group = node("section", "stat-group");
     group.append(node("h3", "", category));
-    for (const stat of stats.filter((entry) => entry.category === category)) {
+    group.append(node("div", "stat-column-headings", [node("span", "", ""), node("span", "", "Base"), node("span", "", "Gear"), node("span", "", "Total")]));
+    for (const stat of displayed.filter((entry) => entry.category === category)) {
       const details = document.createElement("details");
       details.className = "stat-row";
       const summary = document.createElement("summary");
-      summary.append(node("span", "stat-label", stat.label), node("span", "stat-value", `${format(stat.value)}${stat.unit ?? ""}`));
+      summary.append(node("span", "stat-label", stat.label), node("span", "stat-value", valueText(stat.base, stat.unit)), node("span", `stat-value gear-value${stat.gear ? " nonzero" : ""}`, signed(stat.gear, stat.unit)), node("span", "stat-value", valueText(stat.value, stat.unit)));
       const inputs = Object.entries(stat.inputs).map(([key, value]) => `${key} ${format(value)}`).join(" · ");
       const breakdown = node("div", "breakdown", [node("div", "formula", stat.formula), node("div", "inputs", inputs)]);
       details.append(summary, breakdown);
@@ -85,6 +100,12 @@ function renderStats(stats: CharacterStatBreakdown[]): void {
     }
     return group;
   }));
+}
+
+function setActiveTab(tab: Tab): void {
+  activeTab = tab;
+  for (const panel of document.querySelectorAll<HTMLElement>(".tab-panel")) panel.hidden = panel.id !== `${tab}-panel`;
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".tab-button")) { const selected = button.dataset.tab === tab; button.classList.toggle("active", selected); button.setAttribute("aria-selected", String(selected)); }
 }
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", content?: string | Node[]): HTMLElementTagNameMap[K] {
@@ -95,6 +116,8 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", con
   return value;
 }
 function format(value: number): string { return new Intl.NumberFormat().format(value); }
+function valueText(value: number, unit?: "%"): string { return `${format(value)}${unit ?? ""}`; }
+function signed(value: number, unit?: "%"): string { return `${value > 0 ? "+" : ""}${valueText(value, unit)}`; }
 function duration(seconds: number): string { const hours = Math.floor(seconds / 3600); const minutes = Math.floor(seconds % 3600 / 60); return `${format(hours)}h ${minutes}m`; }
 function element(id: string): HTMLElement { const value = document.getElementById(id); if (!value) throw new Error(`missing #${id}`); return value; }
 function button(id: string): HTMLButtonElement { return element(id) as HTMLButtonElement; }

@@ -59,16 +59,28 @@ export interface CharacterArtifact {
 export interface CharacterStatBreakdown {
   id: string;
   label: string;
-  category: "Offense" | "Accuracy" | "Defense" | "Resources" | "Recovery";
+  category: "Offense" | "Accuracy" | "Defense" | "Resources" | "Recovery" | "Speed" | "Sustain" | "Mitigation" | "Utility";
+  tab: "basic" | "advanced";
+  base: number;
+  gear: number;
   value: number;
   unit?: "%";
   formula: string;
   inputs: Record<string, number>;
 }
 
+export interface GearStatTotal {
+  type: number;
+  name: string;
+  total: number;
+  percent: boolean;
+  unresolvedRolls: number;
+}
+
 export interface CharacterViewState {
   snapshot?: CharacterSnapshot;
   stats: CharacterStatBreakdown[];
+  gearTotals: GearStatTotal[];
   status: "waiting" | "cached" | "live" | "unsupported";
   statusDetail: string;
 }
