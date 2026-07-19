@@ -16,9 +16,9 @@ const defaults: RewardsAppSettings = {
   pinned: false,
   view: "summary",
 };
-const settingsPath = path.join(Utils.paths.userData, "rewards-settings.json");
+const defaultSettingsPath = path.join(Utils.paths.userData, "rewards-settings.json");
 
-export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
+export async function loadRewardsSettings(settingsPath = defaultSettingsPath): Promise<RewardsAppSettings> {
   try {
     const value = JSON.parse(await readFile(settingsPath, "utf8")) as Partial<RewardsAppSettings>;
     return {
@@ -30,7 +30,7 @@ export async function loadRewardsSettings(): Promise<RewardsAppSettings> {
   } catch { return { ...defaults, frame: { ...defaults.frame }, catalogFrame: { ...defaults.catalogFrame } }; }
 }
 
-export async function saveRewardsSettings(settings: RewardsAppSettings): Promise<void> {
+export async function saveRewardsSettings(settings: RewardsAppSettings, settingsPath = defaultSettingsPath): Promise<void> {
   await mkdir(path.dirname(settingsPath), { recursive: true });
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }

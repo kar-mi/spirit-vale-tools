@@ -26,11 +26,12 @@ const catalog = loadBundledMobRewardCatalog();
 
 export interface RewardsWindowOptions {
   logDirectory: string;
+  settingsPath?: string;
   onClosed?: () => void;
 }
 
 export async function createRewardsWindow(options: RewardsWindowOptions) {
-const settings = await loadRewardsSettings();
+const settings = await loadRewardsSettings(options.settingsPath);
 const follower = new RewardSessionLogFollower(options.logDirectory);
 
 let window: BrowserWindow;
@@ -311,7 +312,7 @@ function clampCatalogFrame(frame: typeof settings.catalogFrame): typeof settings
 function scheduleSave(): void {
   if (shuttingDown) return;
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => void saveRewardsSettings(settings), 250);
+  saveTimer = setTimeout(() => void saveRewardsSettings(settings, options.settingsPath), 250);
 }
 
 async function shutdown(): Promise<void> {
@@ -322,7 +323,7 @@ async function shutdown(): Promise<void> {
   if (saveTimer) clearTimeout(saveTimer);
   catalogWindow?.close();
   settings.frame = clampFrame(window.getFrame());
-  await saveRewardsSettings(settings);
+  await saveRewardsSettings(settings, options.settingsPath);
 }
 
 function emptySnapshot(): MobRewardSessionSnapshot {

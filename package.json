@@ -6,14 +6,17 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "bun run --filter @spiritvale/ui build",
+    "build:stable": "bun run --filter @spiritvale/ui build -- --env=stable",
     "capture:dump": "bun run packages/cli/src/dump.ts",
     "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-only",
     "market": "bun run packages/cli/src/market.ts",
+    "package:portable": "bun run scripts/package-portable.ts",
     "rewards": "bun run packages/cli/src/rewards.ts",
     "check": "bun run typecheck && bun test",
     "dev": "bun run --filter @spiritvale/ui dev",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:portable": "bun run scripts/verify-portable.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

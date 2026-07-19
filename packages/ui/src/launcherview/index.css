@@ -63,12 +63,12 @@ html, body {
 .capture-status strong { font-size: 13px; }
 .capture-status p { margin: 3px 0 0; color: var(--on-surface-variant); font-size: 12px; }
 
-.tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
 .tool-button {
   display: grid;
   gap: 7px;
-  min-height: 118px;
+  min-height: 86px;
   padding: 16px 12px;
   border: 1px solid var(--outline-variant);
   border-radius: var(--shape-md);

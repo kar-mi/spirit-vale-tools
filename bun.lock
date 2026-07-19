@@ -9,6 +9,12 @@
         "typescript": "latest",
       },
     },
+    "packages/character": {
+      "name": "@spiritvale/character",
+      "dependencies": {
+        "@spiritvale/core": "workspace:*",
+      },
+    },
     "packages/cli": {
       "name": "@spiritvale/cli",
       "dependencies": {
@@ -81,6 +87,7 @@
     "packages/ui": {
       "name": "@spiritvale/ui",
       "dependencies": {
+        "@spiritvale/character": "workspace:*",
         "@spiritvale/combat": "workspace:*",
         "@spiritvale/core": "workspace:*",
         "@spiritvale/logging": "workspace:*",
@@ -101,6 +108,8 @@
     "@babylonjs/core": ["@babylonjs/core@7.54.3", "", {}, "sha512-P5ncXVd8GEUJLhwloP9V0oVwQYIrvZztguVeLlvd5Rx+9aQnenKjpV8auJ6SRsUlAmNZU4pFTKzwF6o2EUfhAw=="],
 
     "@malept/cross-spawn-promise": ["@malept/cross-spawn-promise@1.1.1", "", { "dependencies": { "cross-spawn": "^7.0.1" } }, "sha512-RTBGWL5FWQcg9orDOCcp4LvItNzUPcyEU9bwaeJX0rJ1IQxzucC48Y0/sQLp/g6t99IQgAlGIaesJS+gTn7tVQ=="],
+
+    "@spiritvale/character": ["@spiritvale/character@workspace:packages/character"],
 
     "@spiritvale/cli": ["@spiritvale/cli@workspace:packages/cli"],
 
