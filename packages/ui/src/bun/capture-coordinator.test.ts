@@ -14,6 +14,36 @@ import { RewardSessionLogFollower } from "@spiritvale/rewards";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 
 describe("central capture coordinator", () => {
+  test("reports game and data activity after target status arrives before capture startup", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-status-"));
+    const capture = new FakeCapture();
+    capture.initialTargetState = "active";
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      expect(coordinator.state()).toEqual({
+        captureStatus: "capturing",
+        statusDetail: "Capture Active - Waiting on data (change channel/map if recently launched).",
+      });
+
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      expect(coordinator.state().statusDetail).toBe("Capture Active");
+
+      capture.target("waiting");
+      expect(coordinator.state().statusDetail).toBe("Capture Active - Game not running");
+
+      capture.target("active", [4242]);
+      expect(coordinator.state().statusDetail).toBe("Capture Active - Waiting on data (change channel/map if recently launched).");
+      await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("adds the diagnostic stream only when development diagnostics are enabled", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-"));
     const capture = new FakeCapture();
@@ -289,14 +319,15 @@ describe("central capture coordinator", () => {
 class FakeCapture extends EventEmitter {
   readonly configs: CaptureConfig[] = [];
   failDeviceName?: string;
+  initialTargetState: "waiting" | "active" = "waiting";
   constructor(private readonly startError?: Error) { super(); }
 
   async start(config: CaptureConfig): Promise<void> {
     this.configs.push(config);
     if (this.startError) throw this.startError;
-    if (config.deviceName === this.failDeviceName) throw new Error("synthetic adapter unavailable");
+    if (this.failDeviceName !== undefined && config.deviceName === this.failDeviceName) throw new Error("synthetic adapter unavailable");
+    this.target(this.initialTargetState, this.initialTargetState === "active" ? [4242] : []);
     this.emit("started");
-    this.emit("targetStatus", { processName: "SpiritVale.exe", state: "waiting", processIds: [] });
   }
 
   async stop(): Promise<void> {
@@ -309,6 +340,10 @@ class FakeCapture extends EventEmitter {
 
   fail(error: Error): void {
     this.emit("error", error);
+  }
+
+  target(state: "waiting" | "active", processIds: number[] = []): void {
+    this.emit("targetStatus", { processName: "SpiritVale.exe", state, processIds });
   }
 }
 

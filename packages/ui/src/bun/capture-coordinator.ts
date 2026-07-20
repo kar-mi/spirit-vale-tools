@@ -12,6 +12,9 @@ import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 import type { CaptureStatus, LauncherState } from "../launcher-types.ts";
 
 const SPAWN_PAYLOAD_LOG_LIMIT = 2_048;
+const GAME_NOT_RUNNING_DETAIL = "Capture Active - Game not running";
+const WAITING_FOR_DATA_DETAIL = "Capture Active - Waiting on data (change channel/map if recently launched).";
+const CAPTURE_ACTIVE_DETAIL = "Capture Active";
 type CaptureCoordinatorState = Pick<LauncherState, "captureStatus" | "statusDetail">;
 
 export interface CaptureCoordinatorOptions {
@@ -44,6 +47,8 @@ export class CaptureCoordinator {
   private stopping = false;
   private reconfiguring = false;
   private lifecycleStopped = false;
+  private targetState: CaptureTargetStatus["state"] = "waiting";
+  private receivedDataForCurrentGame = false;
   private activeConnectionId?: string;
   private lastAuthenticated?: { connectionId: string; tick: number };
 
@@ -140,6 +145,8 @@ export class CaptureCoordinator {
       this.combat.reset();
       this.rewards.reset();
       this.market.reset();
+      this.targetState = "waiting";
+      this.receivedDataForCurrentGame = false;
       this.activeConnectionId = undefined;
       this.lastAuthenticated = undefined;
       const session = this.session;
@@ -165,7 +172,7 @@ export class CaptureCoordinator {
     this.rewardsLog?.log("rewards.lifecycle", { state: "started" });
     this.marketLog?.log("market.lifecycle", { state: "started" });
     this.otherLog?.log("capture.lifecycle", { state: "started" });
-    this.setStatus("capturing", "Capture active; waiting for Spirit Vale ...");
+    this.setStatus("capturing", this.captureDetail());
   }
 
   private targetStatus(target: CaptureTargetStatus): void {
@@ -174,11 +181,9 @@ export class CaptureCoordinator {
       state: target.state,
       processIds: target.processIds,
     });
-    if (this.status !== "capturing") return;
-    this.setStatus(
-      "capturing",
-      target.state === "active" ? "Capturing Spirit Vale data" : "Capture active; waiting for Spirit Vale ...",
-    );
+    this.targetState = target.state;
+    if (target.state === "waiting") this.receivedDataForCurrentGame = false;
+    this.refreshCaptureDetail();
   }
 
   private captureWarning(message: string): void {
@@ -209,6 +214,10 @@ export class CaptureCoordinator {
   }
 
   private routePacket(packet: CapturedFishNetPacket): void {
+    if (!this.receivedDataForCurrentGame) {
+      this.receivedDataForCurrentGame = true;
+      this.refreshCaptureDetail();
+    }
     let characterHandled = false;
     try {
       // PlayerSave callbacks describe the local character and may arrive while game-server
@@ -349,9 +358,20 @@ export class CaptureCoordinator {
   }
 
   private setStatus(status: CaptureStatus, statusDetail: string): void {
+    if (this.status === status && this.statusDetail === statusDetail) return;
     this.status = status;
     this.statusDetail = statusDetail;
     this.options.onStatus?.(this.state());
+  }
+
+  private refreshCaptureDetail(): void {
+    if (this.status !== "capturing") return;
+    this.setStatus("capturing", this.captureDetail());
+  }
+
+  private captureDetail(): string {
+    if (this.targetState === "waiting") return GAME_NOT_RUNNING_DETAIL;
+    return this.receivedDataForCurrentGame ? CAPTURE_ACTIVE_DETAIL : WAITING_FOR_DATA_DETAIL;
   }
 }
 
