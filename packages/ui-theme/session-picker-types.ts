@@ -10,6 +10,7 @@ export interface SessionPickerItem {
 
 export interface SessionPickerState {
   title: string;
+  canOpenLogFolder: boolean;
   status: "loading" | "ready" | "error";
   statusDetail: string;
   sessions: SessionPickerItem[];
@@ -25,6 +26,7 @@ export type SessionPickerRpc = {
     messages: {
       refresh: Record<string, never>;
       openSession: { id: string };
+      openLogFolder: Record<string, never>;
       chooseFile: Record<string, never>;
       windowAction: { action: "minimize" | "close" };
     };

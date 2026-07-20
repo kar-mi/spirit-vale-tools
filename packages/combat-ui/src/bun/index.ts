@@ -13,6 +13,7 @@ import { loadDpsAppSettings, normalizeDpsOpacity, saveDpsAppSettings } from "../
 import type { DpsAppRpc, DpsAppState, DpsAppStatus, DpsSettingsRpc, DpsSettingsState } from "../app-types.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
+import { Utils } from "electrobun/bun";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
 
 const MINIMUM_WIDTH = 320;
@@ -56,6 +57,7 @@ const replayPicker = createSessionPicker({
   title: "Combat log analysis",
   summarize: formatCombatReplaySummary,
   loadReplay: (selectedPath) => analysisWindow.open(selectedPath),
+  openLogFolder: () => { void Utils.openPath(options.logDirectory); },
 });
 
 const rpc = BrowserView.defineRPC<DpsAppRpc>({

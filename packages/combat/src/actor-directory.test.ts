@@ -190,34 +190,27 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
-  test("reads a player identity from a captured full-state spawn payload", () => {
-    // Real spawn SyncType area captured from session 20260718T221603923Z-24c5859c (object 47650).
+  test("reads a player identity from a synthetic full-state spawn payload", () => {
+    // Synthetic payload containing unrelated bytes before VisualData.
     // VisualData (index 5) sits mid-payload after entries with codecs the rpc map cannot skip.
-    const captured = Buffer.from(
-      "000c12001100101e234339423045432c234138444441380f5e633a34623133636563652d303138342d343164612d61323666"
-      + "2d3633383163333462663938363a33633435383339380e10426c657373696e670d0a4d657263790c000b0000000009010701"
-      + "061c050c4461797669641c003e04080c180a020000140026436f6465782042696e64696e67204c6967687402144d61676520"
-      + "47756172640426576869746520426973686f70277320486f6f6406104d6167654c65677308104d616765466565740a124d61"
-      + "676543686573740c185363726f6c6c20436861726d0e14436c6f7564204c6f6f70121249726f6e2048616c6f1018466c616d"
-      + "6520537069726974001600000100000001010100000e000a1643686573745f557262616e060000061a4c6567735f50726965"
-      + "73745f4d060000081a43617375616c5f466565745f370600000e2248616e64735f5472616e73706172656e74060000121a43"
-      + "617375616c5f4261636b5f37060000101e5363686f6c617220476c617373657300000014164d6f6e73746572204261740000"
-      + "0102019a990d410006020201f24d00f24d0302010800cdcc8c3f0c6666663f010004040c220000004006cecc4c3fcecc4c3f"
-      + "cecc4c3f000000000c000000000000404000000000000000000000404000000000040201a61600a616050605100400030002"
-      + "6401ae01000c4461797669641c000702010000fa4300223736353631313937393933393736343132",
-      "hex",
-    );
+    const captured = Buffer.concat([
+      Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]),
+      Buffer.from([5]),
+      packedString("Synthetic Ranger"),
+      packed(14),
+      Buffer.from([0x11, 0x22, 0x33]),
+    ]);
 
     const directory = new FishNetActorDirectory();
-    const events = directory.consume(spawn(1, 47650, 2651, "PlayerController", captured));
+    const events = directory.consume(spawn(1, 476, 265, "PlayerController", captured));
     expect(events).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
-      actorId: 47650,
-      displayName: "Dayvid",
+      actorId: 476,
+      displayName: "Synthetic Ranger",
       archetype: 14,
-      ownerConnectionId: 2651,
+      ownerConnectionId: 265,
     }]);
   });
 
@@ -234,18 +227,19 @@ describe("FishNetActorDirectory", () => {
       tick: 2,
       actorId: 62698,
       displayName: "rak",
+      uid: syntheticUid,
       ownerConnectionId: 21,
     }]);
   });
 
-  test("names a delta spawn from the account cache across a map change", () => {
+  test("names a delta spawn from the UID cache across a map change", () => {
     const directory = new FishNetActorDirectory();
     const fullSpawn = Buffer.concat([
       Buffer.from([0, 2, 5]), // component index, written SyncType count, VisualData index
       packedString("Delta Ranger"),
       packed(6),
-      Buffer.from([7]), // account entry sync index
-      packedString("76561198040785673"),
+      Buffer.from([7]), // synthetic UID entry sync index
+      packedString(syntheticUid),
     ]);
     expect(directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn))).toMatchObject([
       { operation: "upsert", actorId: 60, displayName: "Delta Ranger", archetype: 6 },
@@ -253,24 +247,21 @@ describe("FishNetActorDirectory", () => {
 
     directory.consume(packet(2, "authenticated"));
 
-    // Real delta spawn captured from session 20260718T224705686Z-bf379ac3 (object 4622):
-    // no VisualData, only the owning account id.
-    const deltaSpawn = Buffer.from(
-      "00010ac2e50601010006030101080702010000fa4300223736353631313938303430373835363733",
-      "hex",
-    );
+    // Synthetic delta spawn with no VisualData, carrying only the UID.
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString(syntheticUid)]);
     expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 3,
       actorId: 70,
       displayName: "Delta Ranger",
+      uid: syntheticUid,
       archetype: 6,
       ownerConnectionId: 44,
     }]);
   });
 
-  test("names a delta spawn from an account learned via CharacterCallback_T", () => {
+  test("names a delta spawn from a UID learned via CharacterCallback_T", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 62698, 21, "PlayerController"));
     directory.consume({
@@ -280,33 +271,34 @@ describe("FishNetActorDirectory", () => {
     });
     directory.consume(packet(3, "authenticated"));
 
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString("76561198383878845")]);
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString(syntheticUid)]);
     expect(directory.consume(spawn(4, 71, 30, "PlayerController", deltaSpawn))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 4,
       actorId: 71,
       displayName: "rak",
+      uid: syntheticUid,
       ownerConnectionId: 30,
     }]);
   });
 
-  test("leaves empty delta spawns unnamed and wipes the account cache on reset", () => {
+  test("leaves empty delta spawns unnamed and wipes the UID cache on reset", () => {
     const directory = new FishNetActorDirectory();
     const fullSpawn = Buffer.concat([
       Buffer.from([0, 1, 5]),
       packedString("Delta Ranger"),
       packed(6),
-      packedString("76561198040785673"),
+      packedString(syntheticUid),
     ]);
     directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn));
 
-    // Real empty delta spawn (8 bytes) seen for remote players: nothing to name from.
+    // Empty synthetic delta spawn: nothing to name from.
     expect(directory.consume(spawn(2, 61, 13, "PlayerController", Buffer.from("0101000603010108", "hex"))))
       .toEqual([]);
 
     directory.reset();
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString("76561198040785673")]);
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString(syntheticUid)]);
     expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([]);
   });
 
@@ -337,14 +329,11 @@ describe("FishNetActorDirectory", () => {
   });
 });
 
-// Real prefix captured from session 20260718T224705686Z-bf379ac3 (object 62698, name "rak",
-// account 76561198383878845).
-const characterCallbackPayload = Buffer.from(
-  "04004861366331636634652d626334312d343739352d613236642d633065336563333763633433"
-  + "223736353631313938333833383738383435ac534837323931396164382d313634312d343834"
-  + "652d383865642d6461656234656231646563380c6d656d6265720672616b000c262e22240c0a0a00",
-  "hex",
-);
+const syntheticUid = "00000000-0000-4000-8000-000000000001";
+const characterCallbackPayload = Buffer.concat([
+  packed(2), packedString(""), packedString(syntheticUid), packedString("account-example"), packed(0),
+  packedString(""), packedString("member"), packedString("rak"),
+]);
 
 function section(componentIndex: number, data: Buffer): Buffer {
   const header = Buffer.alloc(5);

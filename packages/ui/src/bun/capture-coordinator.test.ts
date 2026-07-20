@@ -141,7 +141,7 @@ describe("central capture coordinator", () => {
 
       const combatPointer = await readCurrentLogStream("combat", directory);
       const combatRecords = records(await readFile(combatPointer!.path, "utf8"));
-      expect(combatRecords.some((record) => record.type === "combat.spawnIdentityMiss")).toBe(true);
+      expect(combatRecords.some((record) => record.type === "combat.spawnIdentityMiss")).toBe(false);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
@@ -189,11 +189,7 @@ describe("central capture coordinator", () => {
         ["upsert", "Bravo"],
       ]);
 
-      const misses = combatRecords
-        .filter((record) => record.type === "combat.spawnIdentityMiss") as unknown as Array<{ data: { objectId: number; spawnSyncPayload: string } }>;
-      expect(misses).toHaveLength(1);
-      expect(misses[0]!.data.objectId).toBe(40);
-      expect(misses[0]!.data.spawnSyncPayload).toBe("01020304");
+      expect(combatRecords.some((record) => record.type === "combat.spawnIdentityMiss")).toBe(false);
 
       const otherPointer = await readCurrentLogStream("other", directory);
       const other = records(await readFile(otherPointer!.path, "utf8"));

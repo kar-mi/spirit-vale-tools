@@ -11,6 +11,7 @@ import type {
   LogSessionMetadata,
   LogStream,
 } from "./types.ts";
+import { sanitizeCombatData } from "./combat-sanitizer.ts";
 
 export interface CreateLogSessionOptions {
   producer: string;
@@ -48,6 +49,8 @@ export class JsonLinesLogger {
   }
 
   log(type: string, data: JsonObject): void {
+    const safeData = this.options.stream === "combat" ? sanitizeCombatData(type, data) : data;
+    if (!safeData) return;
     const record: LogRecord = {
       schemaVersion: 1,
       sessionId: this.sessionId,
@@ -55,7 +58,7 @@ export class JsonLinesLogger {
       recordedAt: new Date().toISOString(),
       source: this.source,
       type,
-      data,
+      data: safeData,
     };
     const line = `${JSON.stringify(record)}\n`;
     this.pending = this.pending

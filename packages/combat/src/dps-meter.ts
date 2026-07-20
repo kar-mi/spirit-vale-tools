@@ -76,6 +76,7 @@ interface ActorAggregate {
   displayName?: string;
   archetype?: number;
   ownerConnectionId?: number;
+  uid?: string;
   activeIdentity: boolean;
   damage: number;
   hits: number;
@@ -114,6 +115,7 @@ export class FishNetDpsMeter {
     displayName: string;
     archetype?: number;
     ownerConnectionId?: number;
+    uid?: string;
   }>();
   private current?: EncounterAggregate;
   private nextEncounter = 1;
@@ -156,6 +158,7 @@ export class FishNetDpsMeter {
       displayName: event.displayName,
       ...(event.archetype === undefined ? {} : { archetype: event.archetype }),
       ...(event.ownerConnectionId === undefined ? {} : { ownerConnectionId: event.ownerConnectionId }),
+      ...(event.uid === undefined ? {} : { uid: event.uid }),
     });
     if (!this.current) return;
 
@@ -168,6 +171,7 @@ export class FishNetDpsMeter {
     actor.displayName = event.displayName;
     actor.archetype = event.archetype;
     actor.ownerConnectionId = event.ownerConnectionId;
+    actor.uid = event.uid;
     actor.activeIdentity = true;
   }
 
@@ -365,7 +369,9 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
   for (const actor of actors) {
     if (actor.damage <= 0) continue;
     const displayName = actor.displayName?.trim() || `Player ${actor.actorId}`;
-    const key = actor.ownerConnectionId !== undefined
+    const key = actor.uid !== undefined
+      ? `uid:${actor.uid}`
+      : actor.ownerConnectionId !== undefined
       ? `owner:${actor.ownerConnectionId}`
       : actor.displayName
         ? `name:${normalizeName(displayName)}`
@@ -381,6 +387,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
         criticalHits: 0,
         kills: 0,
         ...(actor.ownerConnectionId === undefined ? {} : { ownerConnectionId: actor.ownerConnectionId }),
+        ...(actor.uid === undefined ? {} : { uid: actor.uid }),
       };
       merged.set(key, target);
     }

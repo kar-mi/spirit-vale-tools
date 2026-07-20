@@ -76,11 +76,18 @@ command creates a session in the run-local `logs` directory and writes
 separate `capture.jsonl`, `combat.jsonl`, or `market.jsonl` streams. Human
 status remains on stderr. `--output <path>` overrides the stream destination.
 
-Combat records
-include their RPC name, tick, payload byte count, normalized properties, and a
-`fields` object containing every decoded RPC field. Visible-player identity
-records are emitted automatically when available; combat is still emitted when
-an actor has no known display name.
+Diagnostic capture records can include RPC names, ticks, payload sizes,
+normalized properties, and decoded fields. Combat streams are reduced to the
+replay-safe event fields described below. Visible-player identity records are
+emitted automatically when available; combat is still emitted when an actor
+has no known display name.
+
+Combat JSONL streams are share-safe: combat writes retain replay data, visible
+IGNs, character UIDs, actor IDs, owner connection IDs, and timestamps, while
+excluding account identifiers, Steam identifiers, raw packet bytes, arbitrary
+decoded fields, coordinates, and diagnostic payloads. Use the Combat window's
+Open the combat-log folder from the Combat window's log picker to share an
+existing share-safe session file.
 
 ## Passive market decoding
 

@@ -55,6 +55,12 @@ market consumers before their resulting events are written to separate log
 streams. The CLI uses the same core types for live dumps and replay; replay
 retains a session decoder so link and split state behave like live capture.
 
+Combat identity matching uses the CharacterData UID as an internal stable key;
+Steam and account identifiers are not used. Shareable combat records may retain
+the UID, visible IGN, actor ID, owner connection ID, and replay timing, but
+exclude raw protocol payloads, arbitrary decoded fields, coordinates, and
+diagnostics.
+
 ## Adding a new packet consumer
 
 1. Prefer `DecodedFishNetPacket` unless the feature truly needs connection or

@@ -13,6 +13,7 @@ export interface SessionPickerOptions {
   title: string;
   summarize: (path: string) => Promise<string>;
   loadReplay: (path: string) => Promise<void>;
+  openLogFolder?: () => void;
 }
 
 export interface SessionPicker {
@@ -36,6 +37,7 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
       messages: {
         refresh: () => { void refresh(); },
         openSession: ({ id }) => { void selectManaged(id); },
+        openLogFolder: () => { options.openLogFolder?.(); },
         chooseFile: () => { void chooseFile(); },
         windowAction: ({ action }) => {
           if (action === "minimize") window?.minimize();
@@ -106,11 +108,12 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
         status: "ready",
         statusDetail: items.length === 0 ? "No managed sessions found." : `${items.length} recent session${items.length === 1 ? "" : "s"}`,
         sessions: items,
+        canOpenLogFolder: options.openLogFolder !== undefined,
       };
     } catch {
       if (sequence !== refreshSequence) return;
       paths.clear();
-      state = { title: options.title, status: "error", statusDetail: "Recent sessions could not be scanned.", sessions: [] };
+      state = { title: options.title, status: "error", statusDetail: "Recent sessions could not be scanned.", sessions: [], canOpenLogFolder: options.openLogFolder !== undefined };
     }
     publish();
   }
@@ -148,5 +151,5 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
 }
 
 function loadingState(title: string): SessionPickerState {
-  return { title, status: "loading", statusDetail: "Scanning recent sessions…", sessions: [] };
+  return { title, status: "loading", statusDetail: "Scanning recent sessions…", sessions: [], canOpenLogFolder: false };
 }

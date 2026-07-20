@@ -7,6 +7,7 @@ export interface FishNetActorIdentity {
   readonly archetype?: number;
   /** Session-local FishNet owner used to group related player objects. */
   readonly ownerConnectionId?: number;
+  readonly uid?: string;
 }
 
 export interface FishNetActorIdentityUpsertEvent extends FishNetActorIdentity {
@@ -35,7 +36,9 @@ export type FishNetActorIdentityEvent =
 
 export interface FishNetLocalIdentity {
   displayName: string;
-  accountId: string;
+  uid?: string;
+  /** @deprecated retained for backwards-compatible callers; never used for matching. */
+  accountId?: string;
 }
 
 export interface FishNetActorDirectoryOptions {
@@ -55,8 +58,8 @@ export class FishNetActorDirectory {
   private readonly ownerObjects = new Map<number, Set<number>>();
   private readonly identitySources = new Map<number, FishNetActorIdentity>();
   private readonly sourceRevisions = new Map<number, number>();
-  /** Account-keyed names survive map-change resets: delta respawns omit VisualData but repeat the account id. */
-  private readonly accountIdentities = new Map<string, { displayName: string; archetype?: number }>();
+  /** UID-keyed names survive map-change resets when delta respawns repeat the UID. */
+  private readonly uidIdentities = new Map<string, { displayName: string; archetype?: number }>();
   private nextSourceRevision = 1;
   private localIdentity?: FishNetLocalIdentity;
 
@@ -88,6 +91,7 @@ export class FishNetActorDirectory {
           actorId: packet.objectId,
           displayName: embeddedIdentity.displayName,
           ...(embeddedIdentity.archetype === undefined ? {} : { archetype: embeddedIdentity.archetype }),
+          ...(embeddedIdentity.uid === undefined ? {} : { uid: embeddedIdentity.uid }),
         };
         this.identitySources.set(packet.objectId, next);
         this.sourceRevisions.set(packet.objectId, this.nextSourceRevision++);
@@ -119,11 +123,11 @@ export class FishNetActorDirectory {
     if (packet.objectId !== undefined && packet.rpcName !== undefined && CHARACTER_RPC_NAMES.has(packet.rpcName)) {
       const character = decodeCharacterDataName(packet.payload);
       if (character === undefined) return [];
-      this.learnAccountIdentity(character.accountId, { displayName: character.displayName });
+      this.learnUidIdentity(character.uid, { displayName: character.displayName });
       this.updateLocalIdentity(character);
       return this.applyIdentitySource(
         packet.objectId,
-        { actorId: packet.objectId, displayName: character.displayName },
+        { actorId: packet.objectId, displayName: character.displayName, uid: character.uid },
         packet.tick,
       );
     }
@@ -167,41 +171,42 @@ export class FishNetActorDirectory {
   }
 
   reset(): void {
-    this.accountIdentities.clear();
+    this.uidIdentities.clear();
     this.clear();
     this.seedLocalIdentity();
   }
 
   private seedLocalIdentity(): void {
     if (!this.localIdentity) return;
-    this.learnAccountIdentity(this.localIdentity.accountId, { displayName: this.localIdentity.displayName });
+    if (this.localIdentity.uid) this.learnUidIdentity(this.localIdentity.uid, { displayName: this.localIdentity.displayName });
   }
 
   private updateLocalIdentity(identity: FishNetLocalIdentity): void {
     if (this.localIdentity?.displayName === identity.displayName
-      && this.localIdentity.accountId === identity.accountId) return;
+      && this.localIdentity.uid === identity.uid) return;
     this.localIdentity = identity;
     this.options.onLocalIdentity?.(identity);
   }
 
-  /** Names a spawn from its embedded VisualData, falling back to the account cache for delta spawns. */
-  private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number } | undefined {
+  /** Names a spawn from embedded VisualData, falling back to the UID cache for delta spawns. */
+  private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number; uid?: string } | undefined {
     const embedded = decodeSpawnIdentity(packet);
-    const accountId = packet.spawnSyncPayload && hasPlayerControllerRegistration(packet)
-      ? scanSpawnAccountId(packet.spawnSyncPayload)
+    const uid = packet.spawnSyncPayload && hasPlayerControllerRegistration(packet)
+      ? scanSpawnUid(packet.spawnSyncPayload)
       : undefined;
     if (embedded) {
-      if (accountId !== undefined) this.learnAccountIdentity(accountId, embedded);
-      return embedded;
+      if (uid !== undefined) this.learnUidIdentity(uid, embedded);
+      return uid === undefined ? embedded : { ...embedded, uid };
     }
-    return accountId !== undefined ? this.accountIdentities.get(accountId) : undefined;
+    const learned = uid === undefined ? undefined : this.uidIdentities.get(uid);
+    return learned ? { ...learned, uid } : undefined;
   }
 
-  private learnAccountIdentity(accountId: string, identity: { displayName: string; archetype?: number }): void {
-    const current = this.accountIdentities.get(accountId);
+  private learnUidIdentity(uid: string, identity: { displayName: string; archetype?: number }): void {
+    const current = this.uidIdentities.get(uid);
     const archetype = identity.archetype
       ?? (current?.displayName === identity.displayName ? current.archetype : undefined);
-    this.accountIdentities.set(accountId, {
+    this.uidIdentities.set(uid, {
       displayName: identity.displayName,
       ...(archetype === undefined ? {} : { archetype }),
     });
@@ -257,6 +262,7 @@ export class FishNetActorDirectory {
         actorId: objectId,
         displayName: source.displayName,
         ...(source.archetype === undefined ? {} : { archetype: source.archetype }),
+        ...(source.uid === undefined ? {} : { uid: source.uid }),
         ownerConnectionId,
       };
       events.push(...this.reconcile(objectId, identity, tick));
@@ -276,7 +282,8 @@ export class FishNetActorDirectory {
     }
     if (current?.displayName === next.displayName
       && current.archetype === next.archetype
-      && current.ownerConnectionId === next.ownerConnectionId) return [];
+      && current.ownerConnectionId === next.ownerConnectionId
+      && current.uid === next.uid) return [];
     this.identities.set(actorId, next);
     return [{ kind: "actorIdentity", operation: "upsert", tick, ...next }];
   }
@@ -330,20 +337,17 @@ function hasPlayerControllerRegistration(packet: DecodedFishNetPacket): boolean 
     ?.some(({ networkBehaviourType }) => networkBehaviourType === "PlayerController") ?? false;
 }
 
-const ACCOUNT_ID_PATTERN = /^7656119\d{10}$/;
-const ACCOUNT_ID_LENGTH = 17;
-
-/**
- * Player spawn state embeds the owning account's SteamID64 as a packed string (length prefix
- * 0x22 = 17 << 1) even when the delta payload omits VisualData. The fixed `7656119` prefix makes
- * the scan unambiguous; multiple disagreeing matches are rejected like the identity scan.
- */
-function scanSpawnAccountId(payload: Buffer): string | undefined {
+/** Scan packed strings for a GUID UID in spawn state; accept only one unambiguous match. */
+function scanSpawnUid(payload: Buffer): string | undefined {
   const matches = new Set<string>();
-  for (let offset = 0; offset + 1 + ACCOUNT_ID_LENGTH <= payload.length; offset += 1) {
-    if (payload[offset] !== ACCOUNT_ID_LENGTH << 1) continue;
-    const candidate = payload.subarray(offset + 1, offset + 1 + ACCOUNT_ID_LENGTH).toString("latin1");
-    if (ACCOUNT_ID_PATTERN.test(candidate)) matches.add(candidate);
+  for (let offset = 0; offset < payload.length - 1; offset += 1) {
+    try {
+      const length = readSignedPackedWhole(payload, offset);
+      if (length.value < 8 || length.value > 80) continue;
+      const end = checkedEnd(payload, length.nextOffset, length.value);
+      const candidate = new TextDecoder("utf-8", { fatal: true }).decode(payload.subarray(length.nextOffset, end));
+      if (GUID_PATTERN.test(candidate)) matches.add(candidate);
+    } catch { /* not a packed string */ }
   }
   return matches.size === 1 ? matches.values().next().value : undefined;
 }
@@ -399,28 +403,26 @@ const CHARACTER_RPC_NAMES = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Extracts the display name and account id from a CharacterData DTO:
- * [empty string][character GUID][account digits][packed number][guild GUID or empty]
+ * Extracts the display name and UID from a CharacterData DTO.
  * [guild role or empty][display name]. CharacterCallback_T prefixes the DTO with a
  * packed update-type enum; LoadCharacter_T carries the DTO directly, so both offsets
  * are attempted and every field is validated before the name is trusted.
  */
-function decodeCharacterDataName(payload: Buffer): { displayName: string; accountId: string } | undefined {
+function decodeCharacterDataName(payload: Buffer): { displayName: string; uid: string } | undefined {
   for (const skipEnum of [true, false]) {
     try {
       let offset = 0;
       if (skipEnum) offset = readSignedPackedWhole(payload, offset).nextOffset;
       const lead = readCharacterString(payload, offset, 64);
-      const characterId = readCharacterString(payload, lead.nextOffset, 40);
-      if (!GUID_PATTERN.test(characterId.value)) continue;
-      const account = readCharacterString(payload, characterId.nextOffset, 24);
-      if (!/^\d{5,20}$/.test(account.value)) continue;
+      const uid = readCharacterString(payload, lead.nextOffset, 40);
+      if (!GUID_PATTERN.test(uid.value)) continue;
+      const account = readCharacterString(payload, uid.nextOffset, 24);
       const counter = readSignedPackedWhole(payload, account.nextOffset);
       const guildId = readCharacterString(payload, counter.nextOffset, 40);
       if (guildId.value.length > 0 && !GUID_PATTERN.test(guildId.value)) continue;
       const role = readCharacterString(payload, guildId.nextOffset, 32);
       const name = readCharacterString(payload, role.nextOffset, 32);
-      if (name.value.trim().length > 0) return { displayName: name.value, accountId: account.value };
+      if (name.value.trim().length > 0) return { displayName: name.value, uid: uid.value };
     } catch {
       // Fall through to the next candidate offset.
     }

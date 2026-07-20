@@ -11,12 +11,14 @@ const electroview = new Electroview({ rpc });
 const list = element("session-list");
 const status = element("picker-status");
 const openButton = button("open-button");
+const openLogFolderButton = button("open-log-folder-button");
 
 button("minimize-button").addEventListener("click", () => electroview.rpc?.send.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => electroview.rpc?.send.windowAction({ action: "close" }));
 button("refresh-button").addEventListener("click", () => electroview.rpc?.send.refresh({}));
 button("choose-file-button").addEventListener("click", () => electroview.rpc?.send.chooseFile({}));
 openButton.addEventListener("click", openSelected);
+openLogFolderButton.addEventListener("click", () => electroview.rpc?.send.openLogFolder({}));
 
 initWindowChrome({
   titlebar: element("titlebar"), minWidth: 480, minHeight: 400,
@@ -38,6 +40,7 @@ function render(next: SessionPickerState): void {
   else if (next.sessions.length === 0) list.append(empty(next.status === "error" ? "Refresh to try scanning again." : "You can still choose a specific JSON file."));
   else for (const session of next.sessions) list.append(sessionRow(session));
   openButton.disabled = selectedId === undefined;
+  openLogFolderButton.hidden = !next.canOpenLogFolder;
 }
 
 function sessionRow(session: SessionPickerState["sessions"][number]): HTMLElement {
