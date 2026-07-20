@@ -69,8 +69,13 @@ body {
 }
 
 .meter-table-scroll { width: 100%; }
-.meter-table { min-width: 610px; }
-.meter-table :is(th, td) { padding: 6px 8px; }
+.meter-table { min-width: 480px; }
+.meter-table :is(th, td) { padding: 4px 7px; }
+.meter-table thead th.sortable-column { padding: 0; }
+.sort-button { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; padding: 4px 7px; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.sort-button:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
+.sort-indicator { width: 10px; opacity: 0.35; font-size: 8px; }
+.sort-indicator.active { opacity: 1; color: var(--primary); }
 .meter-table-row { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container-low) var(--row-fill) 100%) !important; }
 .meter-table-row:nth-child(even) { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container) var(--row-fill) 100%) !important; }
 

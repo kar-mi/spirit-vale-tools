@@ -1,5 +1,5 @@
 import { render } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
@@ -19,6 +19,10 @@ const STATUS_TONE: Record<DpsAppState["status"], StatusTone> = {
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+
+type ActorSortKey = "dps" | "damage" | "contribution" | "critRate" | "kills";
+type SortDirection = "ascending" | "descending";
+interface ActorSort { key: ActorSortKey; direction: SortDirection }
 
 const state = signal<DpsAppState | undefined>(undefined);
 
@@ -51,9 +55,15 @@ function formatCritRate(hits: number, criticalHits: number): string {
   return hits === 0 ? "—" : formatPercent(criticalHits / hits);
 }
 
+function actorSortValue(actor: NonNullable<DpsAppState["snapshot"]>["actors"][number], key: ActorSortKey): number {
+  if (key === "critRate") return actor.hits === 0 ? 0 : actor.criticalHits / actor.hits;
+  return actor[key];
+}
+
 function App() {
   const next = state.value;
   const personalNameRef = useRef<HTMLInputElement>(null);
+  const [actorSort, setActorSort] = useState<ActorSort>({ key: "dps", direction: "descending" });
 
   // Only sync from server state when the user isn't actively editing the field —
   // mirrors the original imperative guard against clobbering keystrokes.
@@ -69,6 +79,17 @@ function App() {
   if (!next) return <main class="app-shell" />;
 
   const actors = next.snapshot?.actors ?? [];
+  const sortedActors = [...actors].sort((left, right) => {
+    const difference = actorSortValue(left, actorSort.key) - actorSortValue(right, actorSort.key);
+    if (difference !== 0) return actorSort.direction === "ascending" ? difference : -difference;
+    return left.displayName.localeCompare(right.displayName);
+  });
+  const sortActorsBy = (key: ActorSortKey): void => {
+    setActorSort((current) => ({
+      key,
+      direction: current.key === key && current.direction === "descending" ? "ascending" : "descending",
+    }));
+  };
   const personalSkills = next.snapshot?.personal?.skills ?? [];
   const personalMatch = next.snapshot?.personalMatch ?? (next.personalName ? "missing" : "unconfigured");
   const allActive = next.tab === "all";
@@ -131,15 +152,20 @@ function App() {
           ? <div class="empty-state">Player damage will appear when combat begins and identities are visible.</div>
           : <div class="table-scroll meter-table-scroll">
               <table class="data-table meter-table" aria-label="Party damage">
-                <thead><tr><th>Player</th><th>DPS</th><th>Damage</th><th>Share</th><th>Hits</th><th>Crits</th><th>Crit rate</th><th>Kills</th></tr></thead>
-                <tbody>{actors.map((actor) => (
+                <thead><tr>
+                  <th>IGN</th>
+                  <SortableHeader label="DPS" sortKey="dps" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="Damage" sortKey="damage" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="Dmg share" sortKey="contribution" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="Crit" sortKey="critRate" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="Kills" sortKey="kills" sort={actorSort} onSort={sortActorsBy} />
+                </tr></thead>
+                <tbody>{sortedActors.map((actor) => (
                   <tr key={actor.actorIds[0]} class="meter-table-row" style={`--row-fill:${Math.max(0, Math.min(100, actor.contribution * 100))}%`}>
                     <th scope="row">{actor.displayName}</th>
                     <td>{formatDps(actor.dps)}</td>
                     <td>{compactFormat.format(actor.damage)}</td>
                     <td>{formatPercent(actor.contribution)}</td>
-                    <td>{numberFormat.format(actor.hits)}</td>
-                    <td>{numberFormat.format(actor.criticalHits)}</td>
                     <td>{formatCritRate(actor.hits, actor.criticalHits)}</td>
                     <td>{numberFormat.format(actor.kills)}</td>
                   </tr>
@@ -208,6 +234,29 @@ function App() {
             </div>}
       </section>
     </main>
+  );
+}
+
+interface SortableHeaderProps {
+  label: string;
+  sortKey: ActorSortKey;
+  sort: ActorSort;
+  onSort(key: ActorSortKey): void;
+}
+
+function SortableHeader({ label, sortKey, sort, onSort }: SortableHeaderProps) {
+  const active = sort.key === sortKey;
+  return (
+    <th class="sortable-column" aria-sort={active ? sort.direction : undefined}>
+      <button
+        class="sort-button"
+        type="button"
+        onClick={() => onSort(sortKey)}
+      >
+        <span>{label}</span>
+        <span class={active ? "sort-indicator active" : "sort-indicator"} aria-hidden="true">{active ? (sort.direction === "descending" ? "▼" : "▲") : "↕"}</span>
+      </button>
+    </th>
   );
 }
 

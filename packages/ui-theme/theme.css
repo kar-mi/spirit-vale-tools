@@ -327,6 +327,8 @@ button { cursor: pointer; }
 .summary-table tbody td { font-size: 15px; font-weight: 500; }
 
 .combat-table { min-width: 640px; }
+.combat-table tbody tr,
+.combat-table tbody tr:nth-child(even) { background: var(--surface-container); }
 
 /* ---- lists (filled cards) ---- */
 
