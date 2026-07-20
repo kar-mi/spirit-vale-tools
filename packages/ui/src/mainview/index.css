@@ -100,6 +100,7 @@ html, body {
 }
 
 .meter-percent { text-align: right; }
+.meter-kills { grid-column: 1 / -1; }
 
 .personal-form { margin: 10px 0 6px; }
 .personal-form label { display: block; margin: 0 0 5px 1px; }

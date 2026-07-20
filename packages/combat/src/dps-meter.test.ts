@@ -92,7 +92,7 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()?.personal).toMatchObject({ damage: 150, hits: 2 });
   });
 
-  test("filters enemies and non-positive damage and does not double-count lethal records", () => {
+  test("filters enemies and non-positive damage while counting each credited lethal record once", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat(damage(101, 100), 0);
@@ -101,7 +101,7 @@ describe("FishNetDpsMeter", () => {
     meter.consumeCombat(damage(101, 500, "EnemyStrike", "Enemy Strike", 1), 100);
     meter.consumeCombat(damage(101, 0), 100);
 
-    expect(meter.getLatestSnapshot()).toMatchObject({ totalDamage: 125, partyDps: 125 });
+    expect(meter.getLatestSnapshot()).toMatchObject({ totalDamage: 125, partyDps: 125, actors: [{ kills: 2 }] });
   });
 
   test("splits idle encounters, supports resets, and converts replay ticks", () => {
@@ -169,6 +169,20 @@ describe("FishNetDpsMeter", () => {
       actors: [{ actorIds: [101, 202], displayName: "Aster Vale", damage: 250 }],
       personal: { actorIds: [101, 202], damage: 250 },
     });
+  });
+
+  test("merges credited kills across same-owner combat aliases", () => {
+    const meter = new FishNetDpsMeter();
+    meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
+    meter.consumeIdentity(identity(202, "Aster Vale", 1, 7), 0);
+    meter.consumeCombat(damage(101, 100), 0);
+    meter.consumeCombat(death(101, 100, true), 1);
+    meter.consumeCombat(damage(202, 100), 2);
+    meter.consumeCombat(death(202, 100, true), 3);
+
+    expect(meter.getLatestSnapshot()?.actors).toMatchObject([
+      { actorIds: [101, 202], damage: 200, kills: 2 },
+    ]);
   });
 
   test("keeps identical display names separate when they belong to different owners", () => {

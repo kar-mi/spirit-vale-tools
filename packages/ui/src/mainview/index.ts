@@ -176,12 +176,14 @@ function meterRow(name: string, row: FishNetDpsActorRow | FishNetDpsSkillRow, wi
   bar.style.width = `${Math.max(0, Math.min(100, width * 100))}%`;
   const content = document.createElement("div");
   content.className = "meter-content";
-  content.append(
+  const details = [
     text("span", "meter-name", name),
     text("strong", "meter-value", `${formatDps(row.dps)} DPS`),
     text("span", "meter-detail", `${compactFormat.format(row.damage)} damage · ${numberFormat.format(row.hits)} hits`),
     text("span", "meter-detail meter-percent", `${Math.round(row.contribution * 100)}%`),
-  );
+  ];
+  if ("kills" in row) details.push(text("span", "meter-detail meter-kills", `Kills: ${numberFormat.format(row.kills)}`));
+  content.append(...details);
   container.append(bar, content);
   return container;
 }

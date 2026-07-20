@@ -29,6 +29,7 @@ export interface FishNetDpsActorRow {
   dps: number;
   contribution: number;
   hits: number;
+  kills: number;
   skills: FishNetDpsSkillRow[];
 }
 
@@ -65,6 +66,7 @@ interface ActorAggregate {
   activeIdentity: boolean;
   damage: number;
   hits: number;
+  kills: number;
   skills: Map<string, SkillAggregate>;
 }
 
@@ -147,10 +149,13 @@ export class FishNetDpsMeter {
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
     requireTimestamp(observedAtMs);
-    if (!isCountedDamage(event)) return;
+    const countedDamage = isCountedDamage(event);
+    const countedKill = isCountedKill(event);
+    if (!countedDamage && !countedKill) return;
     if (this.current && observedAtMs - this.current.lastDamageAtMs >= this.idleGapMs) {
       this.finishCurrent(this.current.lastDamageAtMs + this.idleGapMs);
     }
+    if (!this.current && !countedDamage) return;
     if (!this.current) {
       const actors = [...this.identities].map(([actorId, identity]) => ({
         ...createActor(actorId),
@@ -165,7 +170,7 @@ export class FishNetDpsMeter {
         activeActors: new Map(actors.map((actor) => [actor.actorId, actor])),
       };
     }
-    this.current.lastDamageAtMs = observedAtMs;
+    if (countedDamage) this.current.lastDamageAtMs = observedAtMs;
 
     let actor = this.current.activeActors.get(event.actorId);
     if (!actor) {
@@ -173,23 +178,26 @@ export class FishNetDpsMeter {
       this.current.actors.push(actor);
       this.current.activeActors.set(event.actorId, actor);
     }
-    actor.damage += event.value;
-    actor.hits += 1;
-    let skill = actor.skills.get(event.sourceId);
-    if (!skill) {
-      skill = {
-        sourceId: event.sourceId,
-        sourceLabel: event.sourceLabel,
-        damage: 0,
-        hits: 0,
-        criticalHits: 0,
-      };
-      actor.skills.set(event.sourceId, skill);
+    if (countedDamage) {
+      actor.damage += event.value;
+      actor.hits += 1;
+      let skill = actor.skills.get(event.sourceId);
+      if (!skill) {
+        skill = {
+          sourceId: event.sourceId,
+          sourceLabel: event.sourceLabel,
+          damage: 0,
+          hits: 0,
+          criticalHits: 0,
+        };
+        actor.skills.set(event.sourceId, skill);
+      }
+      skill.sourceLabel = event.sourceLabel;
+      skill.damage += event.value;
+      skill.hits += 1;
+      if (event.hitResult === "critical") skill.criticalHits += 1;
     }
-    skill.sourceLabel = event.sourceLabel;
-    skill.damage += event.value;
-    skill.hits += 1;
-    if (event.hitResult === "critical") skill.criticalHits += 1;
+    if (countedKill) actor.kills += 1;
   }
 
   /** Finalizes an idle encounter. Calling this regularly keeps live status current. */
@@ -304,12 +312,16 @@ export class FishNetDpsMeter {
 }
 
 function createActor(actorId: number): ActorAggregate {
-  return { actorId, actorIds: [actorId], activeIdentity: false, damage: 0, hits: 0, skills: new Map() };
+  return { actorId, actorIds: [actorId], activeIdentity: false, damage: 0, hits: 0, kills: 0, skills: new Map() };
 }
 
 function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
   if (event.kind === "activation" || event.team !== 0 || !Number.isFinite(event.value) || event.value <= 0) return false;
   return event.kind === "damage" || !event.duplicatesDamageEvent;
+}
+
+function isCountedKill(event: FishNetCombatEvent): event is FishNetCombatDeathEvent {
+  return event.kind === "death" && event.team === 0 && Number.isFinite(event.value) && event.value > 0;
 }
 
 function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
@@ -330,6 +342,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
         activeIdentity: actor.activeIdentity,
         damage: 0,
         hits: 0,
+        kills: 0,
         ...(actor.ownerConnectionId === undefined ? {} : { ownerConnectionId: actor.ownerConnectionId }),
       };
       merged.set(key, target);
@@ -338,6 +351,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     target.activeIdentity ||= actor.activeIdentity;
     target.damage += actor.damage;
     target.hits += actor.hits;
+    target.kills += actor.kills;
     target.actorIds = [...new Set([...target.actorIds, ...actor.actorIds])];
     for (const skill of actor.skills.values()) {
       const current = target.skills.get(skill.sourceId);
@@ -369,6 +383,7 @@ function actorRow(actor: ActorAggregate, durationMs: number, partyDamage: number
     dps: perSecond(actor.damage, durationMs),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
     hits: actor.hits,
+    kills: actor.kills,
     skills,
   };
 }
