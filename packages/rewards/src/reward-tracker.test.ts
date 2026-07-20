@@ -77,6 +77,34 @@ describe("mob reward tracker", () => {
       mob: expect.objectContaining({ mobId: "training-mob", displayName: "Training Mob" }),
     }));
   });
+
+  test("flushes complete rewards and resets correlation state at a connection boundary", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1_000, 50));
+    tracker.consume(experience(1_001, 0, 1, 0, 1, 0n));
+    tracker.consume(death(1_002, 50));
+    tracker.consume(experience(1_003, 20, 1, 10, 1, 6n));
+
+    const boundary = tracker.consume(lifecycle(50, "authenticated"));
+    expect(boundary).toContainEqual(expect.objectContaining({
+      kind: "kill",
+      mob: expect.objectContaining({ mobId: "training-mob" }),
+      experience: 20,
+      coins: 6n,
+    }));
+
+    tracker.consume(monsterSync(51, 60));
+    expect(tracker.consume(experience(52, 5, 1, 2, 1, 1n))).toEqual([]);
+    tracker.consume(death(53, 60));
+    tracker.consume(experience(54, 15, 1, 7, 1, 4n));
+    expect(tracker.flush()).toContainEqual(expect.objectContaining({
+      kind: "kill",
+      mob: expect.objectContaining({ objectId: 60 }),
+      experience: 10,
+      jobExperience: 5,
+      coins: 3n,
+    }));
+  });
 });
 
 function monsterSync(tick: number, objectId: number): DecodedFishNetPacket {
@@ -107,6 +135,10 @@ function pickup(tick: number, itemId: string, count: number): DecodedFishNetPack
   ]);
   const payload = Buffer.concat([Buffer.from([0]), empty, empty, empty, empty, empty, material, empty, empty]);
   return { tick, packetId: 4, packetName: "targetRpc", raw: payload, payload, rpcName: "PickupItems_T" };
+}
+
+function lifecycle(tick: number, packetName: "authenticated" | "disconnect"): DecodedFishNetPacket {
+  return { tick, packetId: 0, packetName, raw: Buffer.alloc(0), payload: Buffer.alloc(0) };
 }
 
 function field(name: string, value: number): FishNetDecodedField { return { name, codec: "packedInt32", value }; }

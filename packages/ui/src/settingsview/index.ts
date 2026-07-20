@@ -9,6 +9,7 @@ const npcapStatus = element("npcap-status");
 const npcapDetail = element("npcap-detail");
 const adapterDetail = element("adapter-detail");
 const installNpcapButton = button("install-npcap-button");
+const storageWarning = element("storage-warning");
 
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
@@ -31,6 +32,8 @@ initWindowChrome({
 void electroview.rpc?.request.getState({}).then(render);
 
 function render(state: LauncherState): void {
+  storageWarning.hidden = state.storageWarning === undefined;
+  storageWarning.textContent = state.storageWarning ?? "";
   npcapStatus.textContent = availabilityLabel(state.npcapAvailability);
   npcapDetail.textContent = state.npcapVersion ? `${state.npcapDetail} · ${state.npcapVersion}` : state.npcapDetail;
   installNpcapButton.hidden = state.npcapAvailability === "ready" || state.npcapAvailability === "checking";

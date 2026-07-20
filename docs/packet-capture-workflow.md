@@ -70,7 +70,7 @@ Packets that arrive before a new socket appears in the endpoint table are retain
 ## Public API
 
 ```ts
-import { PacketCapture, getNpcapStatus, listNpcapDevices } from "@spiritvale/core";
+import { PacketCapture, getNpcapStatus, listNpcapDevices } from "@spiritvale/core/capture";
 
 const status = await getNpcapStatus();
 const devices = status.availability === "ready" ? await listNpcapDevices() : [];

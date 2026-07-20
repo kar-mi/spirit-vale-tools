@@ -11,8 +11,10 @@ import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "./index.ts";
 import { resolveLogDirectory } from "./paths.ts";
+import { SafeSaveQueue } from "./safe-save.ts";
 import { WindowSlot } from "./window-slot.ts";
 import { resolveDesktopStoragePaths } from "./portable-paths.ts";
+import type { CharacterSnapshot } from "@spiritvale/character";
 
 makeProcessDpiAware();
 
@@ -35,6 +37,19 @@ let launcherState: LauncherState = {
   adapters: [],
 };
 let shuttingDown = false;
+let characterStorageWarning: string | undefined;
+let launcherSettingsStorageWarning: string | undefined;
+
+const launcherSettingsPersistence = new SafeSaveQueue<typeof settings>({
+  label: "launcher settings",
+  save: (value) => saveLauncherSettings(value, storagePaths.launcherSettingsPath),
+  onWarning: (warning) => { launcherSettingsStorageWarning = warning; updateStorageWarning(); },
+});
+const characterPersistence = new SafeSaveQueue<CharacterSnapshot>({
+  label: "character snapshot",
+  save: (value) => saveCharacterSnapshot(value, storagePaths.characterStatePath),
+  onWarning: (warning) => { characterStorageWarning = warning; updateStorageWarning(); },
+});
 
 const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
   logDirectory,
@@ -57,11 +72,9 @@ const capture = new CaptureCoordinator({
   },
 });
 capture.setCachedCharacter(await loadCharacterSnapshot(storagePaths.characterStatePath));
-let characterSaveTimer: ReturnType<typeof setTimeout> | undefined;
 const unsubscribeCharacterPersistence = capture.subscribeCharacter((state) => {
   if (!state.snapshot || state.snapshot.source !== "live") return;
-  if (characterSaveTimer) clearTimeout(characterSaveTimer);
-  characterSaveTimer = setTimeout(() => void saveCharacterSnapshot(state.snapshot!, storagePaths.characterStatePath), 250);
+  characterPersistence.schedule(state.snapshot);
 });
 const characterWindow = new WindowSlot((onClosed) => createCharacterWindow({
   getState: () => capture.characterState(),
@@ -230,7 +243,7 @@ async function setCaptureAdapter(deviceName: string | null): Promise<LauncherSta
   const nextSelection = deviceName ?? "auto";
   await capture.reconfigure(deviceName ?? undefined);
   settings.captureAdapter = nextSelection;
-  await saveLauncherSettings(settings, storagePaths.launcherSettingsPath);
+  await launcherSettingsPersistence.flush(settings);
   launcherState = { ...launcherState, selectedAdapter: nextSelection };
   await refreshCaptureDevices();
   return launcherState;
@@ -242,16 +255,27 @@ function publish(): void {
   try { settingsRpc.send.stateChanged(launcherState); } catch { /* The view may still be connecting. */ }
 }
 
+function updateStorageWarning(): void {
+  launcherState = {
+    ...launcherState,
+    storageWarning: characterStorageWarning ?? launcherSettingsStorageWarning,
+  };
+  publish();
+}
+
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   launcherWindow.hide();
   settingsWindow?.close();
-  await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
-  unsubscribeCharacterPersistence();
-  if (characterSaveTimer) clearTimeout(characterSaveTimer);
-  const character = capture.characterState().snapshot;
-  if (character) await saveCharacterSnapshot(character, storagePaths.characterStatePath);
-  await capture.stop();
-  Utils.quit();
+  try {
+    await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
+    unsubscribeCharacterPersistence();
+    const character = capture.characterState().snapshot;
+    if (character) await characterPersistence.flush(character);
+    else await characterPersistence.flush();
+    await launcherSettingsPersistence.flush();
+  } finally {
+    try { await capture.stop(); } finally { Utils.quit(); }
+  }
 }

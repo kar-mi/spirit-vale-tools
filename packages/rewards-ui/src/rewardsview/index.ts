@@ -87,6 +87,9 @@ function render(next: RewardsAppState): void {
   pin.classList.toggle("active", next.pinned);
   element("status-text").textContent = next.statusDetail;
   element("status-dot").className = `status-dot ${STATUS_TONE[next.status]}`;
+  const storageWarning = element("storage-warning");
+  storageWarning.hidden = next.storageWarning === undefined;
+  storageWarning.textContent = next.storageWarning ?? "";
   element("summary-panel").hidden = next.view !== "summary";
   element("recent-panel").hidden = next.view !== "recent";
   element("trends-panel").hidden = next.view !== "trends";

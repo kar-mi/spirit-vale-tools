@@ -16,6 +16,7 @@ const electroview = new Electroview({ rpc });
 const statusPanel = element("capture-status");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
+const storageWarning = element("storage-warning");
 
 for (const candidate of document.querySelectorAll<HTMLButtonElement>("[data-tool]")) {
   candidate.addEventListener("click", () => {
@@ -55,6 +56,8 @@ function render(state: LauncherState): void {
   statusPanel.classList.toggle("is-error", unavailable);
   statusDot.className = `status-dot ${unavailable ? "is-err" : state.captureStatus === "capturing" ? "is-ok" : "is-idle"}`;
   statusText.textContent = state.statusDetail;
+  storageWarning.hidden = state.storageWarning === undefined;
+  storageWarning.textContent = state.storageWarning ?? "";
 }
 
 function element(id: string): HTMLElement {

@@ -19,6 +19,7 @@ import type {
 } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
 import { formatRewardsReplaySummary } from "../../../ui/src/bun/replay-summaries.ts";
+import { SafeSaveQueue } from "../../../ui/src/bun/safe-save.ts";
 import { createSessionPicker } from "../../../ui/src/bun/session-picker.ts";
 
 const POLL_MS = 1_000;
@@ -46,7 +47,13 @@ let replayFileName: string | undefined;
 let replayWarnings = 0;
 let polling = false;
 let shuttingDown = false;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let storageWarning: string | undefined;
+
+const settingsPersistence = new SafeSaveQueue<typeof settings>({
+  label: "rewards settings",
+  save: (value) => saveRewardsSettings(value, options.settingsPath),
+  onWarning: (warning) => { storageWarning = warning; publish(); },
+});
 
 const replayPicker = createSessionPicker({
   logDirectory: options.logDirectory,
@@ -160,6 +167,7 @@ function appState(): RewardsAppState {
     view: settings.view,
     status: mode === "replay" ? (replayFileName ? "ready" : "stopped") : status,
     statusDetail: mode === "replay" ? (replayFileName ? `Replay: ${replayFileName}` : "Choose a rewards log") : statusDetail,
+    ...(storageWarning ? { storageWarning } : {}),
     pinned: settings.pinned,
     ...(replayFileName ? { replayFileName } : {}),
     replayWarnings,
@@ -311,8 +319,7 @@ function clampCatalogFrame(frame: typeof settings.catalogFrame): typeof settings
 
 function scheduleSave(): void {
   if (shuttingDown) return;
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => void saveRewardsSettings(settings, options.settingsPath), 250);
+  settingsPersistence.schedule(settings);
 }
 
 async function shutdown(): Promise<void> {
@@ -320,10 +327,9 @@ async function shutdown(): Promise<void> {
   shuttingDown = true;
   replayPicker.close();
   clearInterval(timer);
-  if (saveTimer) clearTimeout(saveTimer);
   catalogWindow?.close();
   settings.frame = clampFrame(window.getFrame());
-  await saveRewardsSettings(settings, options.settingsPath);
+  await settingsPersistence.flush(settings);
 }
 
 function emptySnapshot(): MobRewardSessionSnapshot {

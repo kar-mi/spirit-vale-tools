@@ -12,6 +12,7 @@ export interface CaptureAdapterOption {
 export interface LauncherState {
   captureStatus: CaptureStatus;
   statusDetail: string;
+  storageWarning?: string;
   npcapAvailability: NpcapAvailability;
   npcapDetail: string;
   npcapVersion?: string;

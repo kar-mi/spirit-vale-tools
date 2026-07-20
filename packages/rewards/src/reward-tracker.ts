@@ -126,6 +126,11 @@ export class FishNetMobRewardTracker {
   }
 
   consume(packet: DecodedFishNetPacket): FishNetMobRewardEvent[] {
+    if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
+      const events = this.flush();
+      this.reset();
+      return events;
+    }
     const events = this.finalizeBefore(packet.tick - this.correlationWindowTicks);
     this.mobs.consume(packet);
     for (const event of this.combat.consume(packet)) {

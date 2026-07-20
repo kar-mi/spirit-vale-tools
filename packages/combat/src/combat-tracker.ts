@@ -153,6 +153,10 @@ export class FishNetCombatTracker {
   }
 
   consume(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
+    if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
+      this.reset();
+      return [];
+    }
     this.pruneExpired(packet.tick);
     if (this.recentDamageTick !== packet.tick) {
       this.recentDamageTick = packet.tick;

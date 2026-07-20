@@ -13,6 +13,7 @@ import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
 import { formatCombatReplaySummary } from "./replay-summaries.ts";
+import { SafeSaveQueue } from "./safe-save.ts";
 import { createSessionPicker } from "./session-picker.ts";
 
 const MINIMUM_WIDTH = 320;
@@ -43,8 +44,14 @@ let manualPersonalActorId: number | undefined;
 const liveLog = liveLogOverride ? new DpsLogFollower(liveLogOverride) : new DpsSessionLogFollower(options.logDirectory);
 let liveLogPolling = false;
 let publishing = false;
-let settingsSaveTimer: ReturnType<typeof setTimeout> | undefined;
 let shuttingDown = false;
+let storageWarning: string | undefined;
+
+const settingsPersistence = new SafeSaveQueue<typeof settings>({
+  label: "DPS settings",
+  save: (value) => saveDpsAppSettings(value, options.settingsPath),
+  onWarning: (warning) => { storageWarning = warning; publish(); },
+});
 
 const replayPicker = createSessionPicker({
   logDirectory: options.logDirectory,
@@ -201,6 +208,7 @@ function appState(): DpsAppState {
     tab: settings.tab,
     status,
     statusDetail,
+    ...(storageWarning ? { storageWarning } : {}),
     pinned: settings.pinned,
     personalName: settings.personalName,
     ...(activeMeter().getPersonalActorId() === undefined ? {} : { personalActorId: activeMeter().getPersonalActorId() }),
@@ -288,8 +296,7 @@ function clampFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
 type DpsAppSettingsFrame = typeof settings.frame;
 
 function scheduleSettingsSave(): void {
-  if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
-  settingsSaveTimer = setTimeout(() => void saveDpsAppSettings(settings, options.settingsPath), 250);
+  settingsPersistence.schedule(settings);
 }
 
 async function shutdown(): Promise<void> {
@@ -298,7 +305,6 @@ async function shutdown(): Promise<void> {
   replayPicker.close();
   settings.frame = clampFrame(window.getFrame());
   clearInterval(liveLogTimer);
-  if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
-  await saveDpsAppSettings(settings, options.settingsPath);
+  await settingsPersistence.flush(settings);
 }
 }

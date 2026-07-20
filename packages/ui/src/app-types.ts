@@ -16,6 +16,7 @@ export interface DpsAppState {
   tab: DpsAppTab;
   status: DpsAppStatus;
   statusDetail: string;
+  storageWarning?: string;
   pinned: boolean;
   personalName: string;
   personalActorId?: number;

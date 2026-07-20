@@ -48,6 +48,7 @@ export interface RewardsAppState {
   view: RewardsAppView;
   status: RewardsAppStatus;
   statusDetail: string;
+  storageWarning?: string;
   pinned: boolean;
   replayFileName?: string;
   replayWarnings: number;

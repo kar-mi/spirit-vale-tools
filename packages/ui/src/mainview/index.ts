@@ -86,6 +86,9 @@ function render(next: DpsAppState): void {
   pinButton.textContent = next.pinned ? "◆" : "◇";
   statusDot.className = `status-dot ${STATUS_TONE[next.status]}`;
   statusText.textContent = next.statusDetail;
+  const storageWarning = element("storage-warning");
+  storageWarning.hidden = next.storageWarning === undefined;
+  storageWarning.textContent = next.storageWarning ?? "";
   partyDps.textContent = formatDps(next.snapshot?.partyDps ?? 0);
   encounterDuration.textContent = next.snapshot
     ? `${formatDuration(next.snapshot.durationMs)} · ${compactFormat.format(next.snapshot.totalDamage)} total`

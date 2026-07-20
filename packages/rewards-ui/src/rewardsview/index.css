@@ -41,7 +41,7 @@ main {
   gap: 8px;
 }
 
-#replay-banner { margin-bottom: 12px; }
+#replay-banner, #storage-warning { margin-bottom: 12px; }
 
 .totals {
   grid-template-columns: repeat(4, 1fr);

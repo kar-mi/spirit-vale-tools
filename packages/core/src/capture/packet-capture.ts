@@ -218,7 +218,7 @@ export class PacketCapture extends EventEmitter {
       }
     } catch (error) {
       const detail = error instanceof LiteNetLibProtocolError ? error.message : toError(error).message;
-      this.emitSafely("warning", `skipped LiteNetLib decode for ${packet.sourceIP}:${packet.sourcePort} -> ${packet.destinationIP}:${packet.destinationPort}: ${detail}`);
+      this.emitSafely("warning", `skipped LiteNetLib decode: ${detail}`);
     }
   }
 

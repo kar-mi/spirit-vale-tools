@@ -170,6 +170,19 @@ describe("FishNetCombatTracker", () => {
     expect(events[1]).toMatchObject({ kind: "damage", attribution: "inferred" });
   });
 
+  test("clears activations at authentication and disconnect boundaries", () => {
+    for (const packetName of ["authenticated", "disconnect"] as const) {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(cast(1_000, 10, "AxeArc"));
+      tracker.consume({ tick: 50, packetId: 0, packetName, raw: Buffer.alloc(0), payload: Buffer.alloc(0) });
+
+      const events = tracker.consume(damage(1_001, 20, 10, "AxeArc", 12));
+
+      expect(events[0]).toMatchObject({ kind: "activation", phase: "inferred" });
+      expect(events[1]).toMatchObject({ kind: "damage", attribution: "inferred" });
+    }
+  });
+
   test("prefers a compatible semantic override over an extracted catalog label", () => {
     const skillCatalog: FishNetSkillCatalog = {
       buildFingerprint: "synthetic-build",

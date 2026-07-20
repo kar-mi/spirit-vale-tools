@@ -119,7 +119,11 @@ describe("PacketCapture Npcap lifecycle", () => {
     await capture.start({ protocols: ["udp"], decodeLiteNetLib: true });
     await Bun.sleep(10);
     expect(rawPackets).toBe(1);
-    expect(warnings[0]).toContain("192.0.2.10:50000 -> 198.51.100.20:7004");
+    expect(warnings[0]).toContain("unknown LiteNetLib 1.x property 18");
+    expect(warnings[0]).not.toContain("192.0.2.10");
+    expect(warnings[0]).not.toContain("198.51.100.20");
+    expect(warnings[0]).not.toContain("50000");
+    expect(warnings[0]).not.toContain("7004");
     await capture.stop();
   });
 
