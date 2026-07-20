@@ -24,6 +24,8 @@ export class DpsLogFollower {
   private offset = 0;
   private pending = "";
   private decoder?: TextDecoder;
+  private recordedAtOriginMs?: number;
+  private lastObservedAtMs = 0;
   private originTick?: number;
   private lastTick?: number;
 
@@ -81,23 +83,36 @@ export class DpsLogFollower {
         invalidLines += 1;
         continue;
       }
-      if (this.lastTick !== undefined && event.tick < this.lastTick) this.originTick = undefined;
-      this.originTick ??= event.tick;
-      this.lastTick = event.tick;
-      const observedAtMs = ((event.tick - this.originTick) * 1_000) / this.ticksPerSecond;
+      const observedAtMs = this.observedAt(record.recordedAt, event.tick);
       events.push({ event, observedAtMs });
-      if (event.kind === "actorIdentity" && event.operation === "reset") {
-        this.originTick = undefined;
-        this.lastTick = undefined;
-      }
     }
     return { events, invalidLines };
+  }
+
+  private observedAt(recordedAt: string, tick: number): number {
+    const recordedAtMs = Date.parse(recordedAt);
+    if (Number.isFinite(recordedAtMs)) {
+      this.recordedAtOriginMs ??= recordedAtMs;
+      this.lastObservedAtMs = Math.max(this.lastObservedAtMs, recordedAtMs - this.recordedAtOriginMs);
+      return this.lastObservedAtMs;
+    }
+
+    if (this.lastTick !== undefined && tick < this.lastTick) this.originTick = undefined;
+    this.originTick ??= tick;
+    this.lastTick = tick;
+    this.lastObservedAtMs = Math.max(
+      this.lastObservedAtMs,
+      ((tick - this.originTick) * 1_000) / this.ticksPerSecond,
+    );
+    return this.lastObservedAtMs;
   }
 
   private resetReader(): void {
     this.offset = 0;
     this.pending = "";
     this.decoder = undefined;
+    this.recordedAtOriginMs = undefined;
+    this.lastObservedAtMs = 0;
     this.originTick = undefined;
     this.lastTick = undefined;
   }

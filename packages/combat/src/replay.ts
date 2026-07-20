@@ -13,6 +13,7 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
   const meter = new FishNetDpsMeter({ personalName });
   let invalidLines = 0;
   let originTick: number | undefined;
+  let recordedAtOriginMs: number | undefined;
   let lastTime = 0;
 
   for await (const line of readLines(Bun.file(path).stream())) {
@@ -35,8 +36,14 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
       invalidLines += 1;
       continue;
     }
-    originTick ??= event.tick;
-    lastTime = meter.replayTimeMs(event.tick, originTick);
+    const recordedAtMs = Date.parse(record.recordedAt);
+    if (Number.isFinite(recordedAtMs)) {
+      recordedAtOriginMs ??= recordedAtMs;
+      lastTime = Math.max(lastTime, recordedAtMs - recordedAtOriginMs);
+    } else {
+      originTick ??= event.tick;
+      lastTime = Math.max(lastTime, meter.replayTimeMs(event.tick, originTick));
+    }
     if (event.kind === "actorIdentity") meter.consumeIdentity(event, lastTime);
     else meter.consumeCombat(event, lastTime);
   }

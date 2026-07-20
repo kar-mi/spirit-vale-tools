@@ -12,7 +12,7 @@ describe("loadDpsReplay", () => {
       logRecord(2, "combat.event", combatDamage(300, 101, 120)),
       "not-json",
       logRecord(3, "combat.event", { kind: "unknown", tick: 301 }),
-      logRecord(4, "combat.event", combatDamage(1_200, 101, 30)),
+      logRecord(4, "combat.event", combatDamage(1_200, 101, 30), "2026-07-16T12:00:34.000Z"),
     ];
     const text = records.map((record) => typeof record === "string" ? record : JSON.stringify(record)).join("\n");
     await Bun.write(file, text);
@@ -47,12 +47,17 @@ function combatDamage(tick: number, actorId: number, value: number): Record<stri
   };
 }
 
-function logRecord(sequence: number, type: string, data: Record<string, unknown>): Record<string, unknown> {
+function logRecord(
+  sequence: number,
+  type: string,
+  data: Record<string, unknown>,
+  recordedAt = `2026-07-16T12:00:0${sequence}.000Z`,
+): Record<string, unknown> {
   return {
     schemaVersion: 1,
     sessionId: "synthetic-session",
     sequence,
-    recordedAt: `2026-07-16T12:00:0${sequence}.000Z`,
+    recordedAt,
     source: "synthetic-test",
     type,
     data,

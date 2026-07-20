@@ -9,8 +9,10 @@ import { readCombatReplaySummary, readRewardsReplaySummary } from "./replay-summ
 describe("replay picker summaries", () => {
   test("aggregates combat encounters, damage, and duration", async () => {
     await withReplay([
-      record(1, "combat.event", damage(300, 100)), record(2, "combat.event", damage(360, 50)),
-      record(3, "combat.event", damage(1_500, 25)), record(4, "combat.event", damage(1_530, 75)),
+      record(1, "combat.event", damage(300, 100), "2026-01-01T00:00:00.000Z"),
+      record(2, "combat.event", damage(360, 50), "2026-01-01T00:00:02.000Z"),
+      record(3, "combat.event", damage(1_500, 25), "2026-01-01T00:00:33.000Z"),
+      record(4, "combat.event", damage(1_530, 75), "2026-01-01T00:00:34.000Z"),
     ], async (file) => {
       expect(await readCombatReplaySummary(file)).toEqual({ encounters: 2, totalDamage: 250, durationMs: 3_000, invalidLines: 0 });
     });
@@ -56,6 +58,11 @@ function kill(id: string, mobId: string, experience: number, coins: string) {
   return { kind: "kill", id, tick: 100 + experience, mob: { objectId: 700 + experience, mobId, displayName: "Fictional Creature", level: 1, boss: false }, experience, jobExperience: 0, coins, drops: [] };
 }
 
-function record(sequence: number, type: string, data: Record<string, unknown>) {
-  return { schemaVersion: 1, sessionId: "synthetic-session", sequence, recordedAt: `2026-01-01T00:00:0${sequence}.000Z`, source: "synthetic-test", type, data };
+function record(
+  sequence: number,
+  type: string,
+  data: Record<string, unknown>,
+  recordedAt = `2026-01-01T00:00:0${sequence}.000Z`,
+) {
+  return { schemaVersion: 1, sessionId: "synthetic-session", sequence, recordedAt, source: "synthetic-test", type, data };
 }

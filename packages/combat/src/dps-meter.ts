@@ -116,8 +116,11 @@ export class FishNetDpsMeter {
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
     requireTimestamp(observedAtMs);
     if (event.operation === "reset") {
-      this.finishCurrent(observedAtMs);
       this.identities.clear();
+      if (this.current) {
+        for (const actor of this.current.actors) actor.activeIdentity = false;
+        this.current.activeActors.clear();
+      }
       return;
     }
     if (event.operation === "remove") {

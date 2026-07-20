@@ -37,6 +37,23 @@ describe("DpsLogFollower", () => {
       expect(second.events).toHaveLength(1);
       expect(second.events[0]?.observedAtMs).toBe(1_000);
 
+      const boundary = JSON.stringify({
+        schemaVersion: 1, sessionId: "synthetic-session", sequence: 3,
+        recordedAt: "2026-07-16T12:00:02.000Z", source: "synthetic-test", type: "combat.actorIdentity",
+        data: { kind: "actorIdentity", operation: "reset", tick: 10 },
+      });
+      const laterDamage = JSON.stringify({
+        schemaVersion: 1, sessionId: "synthetic-session", sequence: 4,
+        recordedAt: "2026-07-16T12:00:03.000Z", source: "synthetic-test", type: "combat.event",
+        data: {
+          kind: "damage", tick: 900_000, actorId: 7, targetId: 99, team: 0,
+          sourceId: "skill:training-strike", sourceLabel: "Training Strike", value: 30, hitResult: "normal",
+        },
+      });
+      await appendFile(path, `${boundary}\n${laterDamage}\n`, "utf8");
+      const acrossBoundary = await follower.poll();
+      expect(acrossBoundary.events.map(({ observedAtMs }) => observedAtMs)).toEqual([2_000, 3_000]);
+
       await writeFile(path, "", "utf8");
       const truncated = await follower.poll();
       expect(truncated.reset).toBe(true);

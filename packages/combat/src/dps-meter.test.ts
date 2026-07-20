@@ -117,6 +117,22 @@ describe("FishNetDpsMeter", () => {
     expect(meter.replayTimeMs(330, 300)).toBe(1_000);
   });
 
+  test("preserves the current encounter across connection identity resets", () => {
+    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
+    meter.consumeCombat(damage(101, 100), 0);
+    meter.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 2 }, 1_000);
+    meter.consumeIdentity(identity(202, "Aster Vale", 3, 8), 1_100);
+    meter.consumeCombat(damage(202, 50), 2_000);
+
+    expect(meter.getSnapshots()).toHaveLength(1);
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      durationMs: 2_000,
+      totalDamage: 150,
+      personalMatch: "matched",
+    });
+  });
+
   test("clears encounter history while retaining identity and personal selection", () => {
     const meter = new FishNetDpsMeter({ personalName: "Aster Vale", personalActorId: 101 });
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
