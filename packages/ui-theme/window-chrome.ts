@@ -35,6 +35,7 @@ const EDGES: readonly Edge[] = ["n", "s", "e", "w", "nw", "ne", "sw", "se"];
 
 export function initWindowChrome(options: WindowChromeOptions): WindowChrome {
   let maximized = false;
+  const handleHost = options.titlebar.parentElement ?? document.body;
 
   const handles = EDGES.map((edge) => {
     const handle = document.createElement("div");
@@ -42,7 +43,7 @@ export function initWindowChrome(options: WindowChromeOptions): WindowChrome {
       ? `resize-handle resize-edge-${edge}`
       : `resize-handle resize-corner resize-corner-${edge}`;
     handle.addEventListener("pointerdown", (event) => startResize(edge, event));
-    document.body.append(handle);
+    handleHost.append(handle);
     return handle;
   });
 

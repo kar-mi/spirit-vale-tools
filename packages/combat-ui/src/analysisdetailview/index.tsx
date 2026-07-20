@@ -3,7 +3,6 @@ import { useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
-import { ListRow, RowHead } from "@spiritvale/ui-theme/list-row";
 
 import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
 import type { CombatAnalysisDetailRpc, CombatAnalysisDetailState } from "../app-types.ts";
@@ -65,14 +64,12 @@ function App() {
             <button type="button" class={metric === "dps" ? "active" : undefined} onClick={() => setMetric("dps")}>DPS / 5 sec</button>
           </div>
         </section>
-        <section class="stat-tiles totals" aria-label="Player totals">
-          {metrics.map(([label, value]) => (
-            <article class="stat-tile" key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-            </article>
-          ))}
-        </section>
+        <div class="table-scroll totals">
+          <table class="data-table summary-table" aria-label="Player totals">
+            <thead><tr>{metrics.map(([label]) => <th key={label}>{label}</th>)}</tr></thead>
+            <tbody><tr>{metrics.map(([label, value]) => <td key={label}>{value}</td>)}</tr></tbody>
+          </table>
+        </div>
         <section class="chart-section">
           <div class="section-head">
             <h2>Damage over time</h2>
@@ -87,25 +84,24 @@ function App() {
             <h2>Skill breakdown</h2>
             <p>Damage, DPS, hits, and critical-hit performance.</p>
           </div>
-          <div class="list">
-            {player.skills.map((skill) => (
-              <ListRow
-                key={skill.sourceId}
-                chips={[
-                  `${numberFormat.format(skill.hits)} hits`,
-                  `${numberFormat.format(skill.criticalHits)} crit hits`,
-                  `Crit rate ${skill.hits === 0 ? "—" : percentFormat.format(skill.criticalHits / skill.hits)}`,
-                ]}
-              >
-                <RowHead
-                  titleTag="h3"
-                  title={skill.sourceLabel}
-                  meta={`${numberFormat.format(skill.hits)} hits`}
-                  values={[compactFormat.format(skill.damage), `${numberFormat.format(skill.dps)} DPS`]}
-                />
-              </ListRow>
-            ))}
-          </div>
+          {player.skills.length === 0
+            ? <p class="empty-state">No skill damage was found for this player.</p>
+            : <div class="table-scroll">
+                <table class="data-table combat-table" aria-label="Skill breakdown">
+                  <thead><tr><th>Skill</th><th>Damage</th><th>DPS</th><th>Share</th><th>Hits</th><th>Crits</th><th>Crit rate</th></tr></thead>
+                  <tbody>{player.skills.map((skill) => (
+                    <tr key={skill.sourceId}>
+                      <th scope="row">{skill.sourceLabel}</th>
+                      <td>{compactFormat.format(skill.damage)}</td>
+                      <td>{numberFormat.format(skill.dps)}</td>
+                      <td>{percentFormat.format(skill.contribution)}</td>
+                      <td>{numberFormat.format(skill.hits)}</td>
+                      <td>{numberFormat.format(skill.criticalHits)}</td>
+                      <td>{skill.hits === 0 ? "—" : percentFormat.format(skill.criticalHits / skill.hits)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>}
         </section>
       </section>
     </main>

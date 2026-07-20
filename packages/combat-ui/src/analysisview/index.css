@@ -7,13 +7,13 @@ html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 .toolbar-meta .pill { overflow: hidden; text-overflow: ellipsis; }
 #status { justify-content: flex-end; }
 #warning { margin-bottom: 12px; }
-.totals { grid-template-columns: repeat(4, 1fr); margin-bottom: 16px; }
+.totals { margin-bottom: 16px; }
 .players-section { min-height: 0; }
 .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .section-head h1 { margin: 0; font-size: 14px; font-weight: 500; }
 .section-head p { margin: 0; color: var(--on-surface-variant); font-size: 12px; }
 .player-row { cursor: default; }
 .player-row:hover, .player-row:focus { outline: none; background: var(--secondary-container); }
-.player-row:hover .row-meta, .player-row:focus .row-meta { color: var(--on-secondary-container); }
+.player-row:hover > *, .player-row:focus > * { color: var(--on-secondary-container); }
 .empty-state { margin: 0; }
-@media (max-width: 760px) { .toolbar { flex-wrap: wrap; } .toolbar-meta { justify-content: flex-start; } .totals { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .toolbar { flex-wrap: wrap; } .toolbar-meta { justify-content: flex-start; } }

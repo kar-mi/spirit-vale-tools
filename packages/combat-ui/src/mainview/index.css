@@ -29,10 +29,6 @@ body {
   background: var(--surface-container-low);
 }
 
-.stat-tile {
-  background: var(--surface-container);
-}
-
 .icon-button.active,
 .seg > button.active {
   background: var(--secondary-container);
@@ -56,12 +52,10 @@ body {
   padding: 6px 12px;
 }
 
-.dps-tiles { grid-template-columns: 1fr 1fr; gap: 6px; }
-.dps-tiles .stat-tile { padding: 8px 10px; }
-.stat-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
-.stat-metric { display: grid; min-width: 0; gap: 2px; }
-.dps-tiles .t-label { font-size: 10px; }
-.dps-tiles .t-data { overflow: hidden; font-size: 16px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.summary-table-scroll { width: 100%; }
+.summary-table { min-width: 390px; }
+.summary-table :is(th, td) { padding: 5px 8px; }
+.summary-table tbody td { font-size: 14px; }
 
 #storage-warning { margin: 0 12px 10px; }
 
@@ -74,60 +68,15 @@ body {
   padding: 0 12px 14px;
 }
 
-.meter-list { display: grid; gap: 6px; }
-
-.meter-row {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--shape-md);
-  background: var(--surface-container-low);
-}
+.meter-table-scroll { width: 100%; }
+.meter-table { min-width: 610px; }
+.meter-table :is(th, td) { padding: 6px 8px; }
+.meter-table-row { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container-low) var(--row-fill) 100%) !important; }
+.meter-table-row:nth-child(even) { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container) var(--row-fill) 100%) !important; }
 
 @media (max-width: 380px) {
   .brand > span:not(.brand-tag) { display: none; }
 }
-
-.meter-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  min-width: 2px;
-  border-right: 2px solid var(--primary);
-  background: var(--primary-container);
-  opacity: 0.55;
-}
-
-.meter-content {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 10px;
-  padding: 8px 12px;
-}
-
-.meter-name {
-  overflow: hidden;
-  color: var(--on-surface);
-  font-size: 13px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.meter-value {
-  color: var(--on-surface);
-  font-size: 13px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.meter-detail {
-  color: var(--on-surface-variant);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.meter-percent { text-align: right; }
-.meter-kills { grid-column: 1 / -1; }
 
 .personal-form { margin: 10px 0 6px; }
 .personal-form label { display: block; margin: 0 0 5px 1px; }

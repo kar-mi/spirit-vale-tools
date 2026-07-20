@@ -1,8 +1,8 @@
 import { render } from "preact";
+import type { JSX } from "preact";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
-import { ListRow, RowHead } from "@spiritvale/ui-theme/list-row";
 
 import type { CombatAnalysisRpc, CombatAnalysisState } from "../app-types.ts";
 
@@ -22,6 +22,12 @@ void electroview.rpc?.request.getState({}).then((next) => { state.value = next; 
 function formatDuration(milliseconds: number): string {
   const seconds = Math.round(milliseconds / 1_000);
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function activateRow(event: JSX.TargetedKeyboardEvent<HTMLTableRowElement>, activate: () => void): void {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  activate();
 }
 
 function App() {
@@ -63,36 +69,44 @@ function App() {
         <p id="warning" class="banner is-warn" hidden={next.invalidLines === 0}>
           {next.invalidLines === 0 ? "" : `${next.invalidLines} malformed record${next.invalidLines === 1 ? " was" : "s were"} skipped.`}
         </p>
-        <section class="stat-tiles totals" aria-label="Encounter totals">
-          <article class="stat-tile"><span class="t-label">Party DPS</span><strong class="t-data">{numberFormat.format(next.snapshot?.partyDps ?? 0)}</strong></article>
-          <article class="stat-tile"><span class="t-label">Total damage</span><strong class="t-data">{compactFormat.format(next.snapshot?.totalDamage ?? 0)}</strong></article>
-          <article class="stat-tile"><span class="t-label">Duration</span><strong class="t-data">{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</strong></article>
-          <article class="stat-tile"><span class="t-label">Players</span><strong class="t-data">{numberFormat.format(rows.length)}</strong></article>
-        </section>
+        <div class="table-scroll totals">
+          <table class="data-table summary-table" aria-label="Encounter totals">
+            <thead><tr><th>Party DPS</th><th>Total damage</th><th>Duration</th><th>Players</th></tr></thead>
+            <tbody><tr>
+              <td>{numberFormat.format(next.snapshot?.partyDps ?? 0)}</td>
+              <td>{compactFormat.format(next.snapshot?.totalDamage ?? 0)}</td>
+              <td>{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</td>
+              <td>{numberFormat.format(rows.length)}</td>
+            </tr></tbody>
+          </table>
+        </div>
         <section class="players-section" aria-label="Player analysis">
           <div class="section-head"><h1>Player damage</h1><p>Double-click a player for skills and damage over time.</p></div>
-          <div class="list">
-            {rows.map((player) => (
-              <ListRow
-                key={player.actorIds[0]}
-                className="player-row"
-                title="Double-click for player detail"
-                tabIndex={0}
-                onActivate={() => void electroview.rpc?.request.openPlayerDetails({ actorId: player.actorIds[0]! })}
-                chips={[
-                  `${numberFormat.format(player.hits)} hits`,
-                  `${numberFormat.format(player.kills)} kills`,
-                  `Crit rate ${player.hits === 0 ? "—" : percentFormat.format(player.criticalHits / player.hits)}`,
-                ]}
-              >
-                <RowHead
-                  title={player.displayName}
-                  meta={`${numberFormat.format(player.hits)} total hits`}
-                  values={[compactFormat.format(player.damage), `${numberFormat.format(player.dps)} DPS`]}
-                />
-              </ListRow>
-            ))}
-          </div>
+          {rows.length > 0 && <div class="table-scroll">
+            <table class="data-table combat-table" aria-label="Player damage">
+              <thead><tr><th>Player</th><th>Damage</th><th>DPS</th><th>Share</th><th>Hits</th><th>Crits</th><th>Crit rate</th><th>Kills</th></tr></thead>
+              <tbody>{rows.map((player) => {
+                const activate = () => void electroview.rpc?.request.openPlayerDetails({ actorId: player.actorIds[0]! });
+                return <tr
+                  key={player.actorIds[0]}
+                  class="player-row"
+                  title="Double-click for player detail"
+                  tabIndex={0}
+                  onDblClick={activate}
+                  onKeyDown={(event) => activateRow(event, activate)}
+                >
+                  <th scope="row">{player.displayName}</th>
+                  <td>{compactFormat.format(player.damage)}</td>
+                  <td>{numberFormat.format(player.dps)}</td>
+                  <td>{percentFormat.format(player.contribution)}</td>
+                  <td>{numberFormat.format(player.hits)}</td>
+                  <td>{numberFormat.format(player.criticalHits)}</td>
+                  <td>{player.hits === 0 ? "—" : percentFormat.format(player.criticalHits / player.hits)}</td>
+                  <td>{numberFormat.format(player.kills)}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+          </div>}
           {next.status === "ready" && rows.length === 0 && (
             <p id="empty-state" class="empty-state">No player damage was found for this encounter.</p>
           )}
