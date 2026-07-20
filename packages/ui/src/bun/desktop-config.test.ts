@@ -13,6 +13,12 @@ test("Electrobun does not copy runtime definition JSON", () => {
   expect(destinations.some((destination) => destination.startsWith("bun/maps/"))).toBe(false);
 });
 
+test("Electrobun builds and copies the DPS settings view", () => {
+  expect(config.build.views.dpssettingsview).toEqual({ entrypoint: "src/dpssettingsview/index.ts" });
+  expect(config.build.copy["src/dpssettingsview/index.html"]).toBe("views/dpssettingsview/index.html");
+  expect(config.build.copy["src/dpssettingsview/index.css"]).toBe("views/dpssettingsview/index.css");
+});
+
 test("Electrobun uses the bundled eggplant artwork for the Windows application icon", () => {
   const icon = config.build.win.icon;
   expect(icon).toBe("../../static/icon/eggplant_icon_320px.png");

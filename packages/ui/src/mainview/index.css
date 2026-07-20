@@ -26,24 +26,8 @@ body {
 }
 
 .titlebar {
-  gap: 6px;
   background: var(--surface-container-low);
 }
-
-.opacity-control {
-  display: grid;
-  grid-template-columns: auto minmax(48px, 1fr) auto;
-  flex: 1 1 auto;
-  align-items: center;
-  min-width: 0;
-  gap: 6px;
-  font-size: 12px;
-  user-select: none;
-}
-
-.opacity-control label,
-.opacity-control output { color: var(--on-surface-variant); font-variant-numeric: tabular-nums; }
-.opacity-control input { width: 100%; min-width: 0; margin: 0; accent-color: var(--primary); }
 
 .stat-tile {
   background: var(--surface-container);
@@ -68,11 +52,16 @@ body {
 
 .status-strip {
   display: grid;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 8px 12px;
 }
 
-.dps-tiles { grid-template-columns: 1fr 1fr; }
+.dps-tiles { grid-template-columns: 1fr 1fr; gap: 6px; }
+.dps-tiles .stat-tile { padding: 8px 10px; }
+.stat-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
+.stat-metric { display: grid; min-width: 0; gap: 2px; }
+.dps-tiles .t-label { font-size: 10px; }
+.dps-tiles .t-data { overflow: hidden; font-size: 16px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
 
 #storage-warning { margin: 0 12px 10px; }
 
@@ -82,8 +71,8 @@ body {
   font-size: 12px;
 }
 
-.tabs { margin: 0 12px 10px; }
-.tabs > button { flex: 1; }
+.tabs { margin: 0 12px 8px; }
+.tabs > button { flex: 1; padding: 5px 10px; font-size: 11px; }
 
 .panel {
   min-height: 0;

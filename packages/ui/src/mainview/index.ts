@@ -35,13 +35,13 @@ const liveModeButton = button("live-mode-button");
 const replayModeButton = button("replay-mode-button");
 const openReplayButton = button("open-replay-button");
 const resetButton = button("reset-button");
-const opacitySlider = input("opacity-slider");
-const opacityValue = element("opacity-value");
 const pinButton = button("pin-button");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
 const partyDps = element("party-dps");
+const totalDamage = element("total-damage");
 const encounterDuration = element("encounter-duration");
+const totalKills = element("total-kills");
 const encounterSelect = select("encounter-select");
 const personalForm = form("personal-form");
 const personalName = input("personal-name");
@@ -50,11 +50,7 @@ const personalHint = element("personal-hint");
 
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
-opacitySlider.addEventListener("input", () => {
-  const opacity = Number(opacitySlider.value) / 100;
-  applyOpacity(opacity);
-  void electroview.rpc?.request.setOpacity({ opacity });
-});
+button("settings-button").addEventListener("click", () => void electroview.rpc?.request.openSettings({}));
 pinButton.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
 liveModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "live" }));
 replayModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "replay" }));
@@ -98,9 +94,9 @@ function render(next: DpsAppState): void {
   storageWarning.hidden = next.storageWarning === undefined;
   storageWarning.textContent = next.storageWarning ?? "";
   partyDps.textContent = formatDps(next.snapshot?.partyDps ?? 0);
-  encounterDuration.textContent = next.snapshot
-    ? `${formatDuration(next.snapshot.durationMs)} · ${compactFormat.format(next.snapshot.totalDamage)} total`
-    : next.replayFileName ?? "No encounter";
+  totalDamage.textContent = compactFormat.format(next.snapshot?.totalDamage ?? 0);
+  encounterDuration.textContent = next.snapshot ? formatDuration(next.snapshot.durationMs) : "—";
+  totalKills.textContent = numberFormat.format(next.snapshot?.actors.reduce((total, actor) => total + actor.kills, 0) ?? 0);
   renderEncounterSelect(next);
   renderTab(next.tab);
   renderAll(next);
@@ -108,10 +104,7 @@ function render(next: DpsAppState): void {
 }
 
 function applyOpacity(opacity: number): void {
-  const percentage = Math.round(opacity * 100);
   document.documentElement.style.setProperty("--dps-window-opacity", String(opacity));
-  opacitySlider.value = String(percentage);
-  opacityValue.textContent = `${percentage}%`;
 }
 
 function renderEncounterSelect(next: DpsAppState): void {
