@@ -263,11 +263,12 @@ export class FishNetCombatTracker {
 
   private consumeDamage(packet: DecodedFishNetPacket, death: boolean): FishNetCombatEvent[] {
     const actorId = requiredNumberField(packet, "dmg.AttackerId");
-    const sourceId = nullableStringField(packet, "dmg.DamageSourceId") ?? "unknown";
+    const damageType = requiredNumberField(packet, "dmg.Type");
+    const rawSourceId = nullableStringField(packet, "dmg.DamageSourceId");
+    const { sourceId, sourceLabel } = resolveDamageSource(rawSourceId, damageType, this.skillLabels);
     const value = requiredNumberField(packet, "dmg.Value");
     const hitCode = requiredNumberField(packet, "dmg.Hit");
     const hitResult = HIT_RESULTS[hitCode] ?? hitCode;
-    const sourceLabel = this.skillLabels.get(sourceId) ?? sourceId;
     const targetId = packet.objectId!;
     const exactCandidates = this.eligibleActivations(packet.tick, actorId)
       .filter((activation) => activation.sourceId === sourceId);
@@ -334,7 +335,7 @@ export class FishNetCombatTracker {
       value,
       hitResult,
       wireHits: requiredNumberField(packet, "dmg.Hits"),
-      damageType: requiredNumberField(packet, "dmg.Type"),
+      damageType,
       team: requiredNumberField(packet, "dmg.Team"),
       element: requiredNumberField(packet, "dmg.Element"),
       weaponType: requiredNumberField(packet, "dmg.WeaponType"),
@@ -485,6 +486,32 @@ function damageSignature(
   hitCode: number,
 ): string {
   return `${tick}\u0000${targetId}\u0000${actorId}\u0000${sourceId}\u0000${value}\u0000${hitCode}`;
+}
+
+interface DamageSource {
+  sourceId: string;
+  sourceLabel: string;
+}
+
+const DAMAGE_TYPE_SOURCES = new Map<number, DamageSource>([
+  [4, { sourceId: "reflect", sourceLabel: "Reflect Damage" }],
+]);
+
+function resolveDamageSource(
+  rawSourceId: string | null | undefined,
+  damageType: number,
+  skillLabels: ReadonlyMap<string, string>,
+): DamageSource {
+  if (typeof rawSourceId === "string") {
+    return {
+      sourceId: rawSourceId,
+      sourceLabel: skillLabels.get(rawSourceId) ?? rawSourceId,
+    };
+  }
+  return (rawSourceId === null ? DAMAGE_TYPE_SOURCES.get(damageType) : undefined) ?? {
+    sourceId: "unknown",
+    sourceLabel: "unknown",
+  };
 }
 
 function tryLoadBundledSkillCatalog(buildFingerprint: string): FishNetSkillCatalog | undefined {

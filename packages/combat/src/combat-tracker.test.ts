@@ -25,14 +25,16 @@ function packet(
   };
 }
 
-function field(name: string, value: boolean | number | string | number[]): FishNetDecodedField {
-  const codec = typeof value === "boolean"
-    ? "boolean"
-    : typeof value === "string"
-      ? "stringUtf8Packed"
-      : Array.isArray(value)
-        ? "vector3"
-        : "packedInt32";
+function field(name: string, value: boolean | number | string | number[] | null): FishNetDecodedField {
+  const codec = value === null
+    ? "stringUtf8Packed"
+    : typeof value === "boolean"
+      ? "boolean"
+      : typeof value === "string"
+        ? "stringUtf8Packed"
+        : Array.isArray(value)
+          ? "vector3"
+          : "packedInt32";
   return { name, codec, value };
 }
 
@@ -48,14 +50,15 @@ function damage(
   tick: number,
   targetId: number,
   actorId: number,
-  sourceId: string,
+  sourceId: string | null,
   value: number,
   hit = 0,
+  damageType = 0,
 ): DecodedFishNetPacket {
   return packet(tick, targetId, "HealthComponent", "ApplyDamage_C", [
     field("dmg.Team", 0),
     field("dmg.Value", value),
-    field("dmg.Type", 0),
+    field("dmg.Type", damageType),
     field("dmg.Hit", hit),
     field("dmg.Hits", 1),
     field("dmg.DamageSourceId", sourceId),
@@ -74,11 +77,12 @@ function death(
   tick: number,
   targetId: number,
   actorId: number,
-  sourceId: string,
+  sourceId: string | null,
   value: number,
   hit = 0,
+  damageType = 0,
 ): DecodedFishNetPacket {
-  const result = damage(tick, targetId, actorId, sourceId, value, hit);
+  const result = damage(tick, targetId, actorId, sourceId, value, hit, damageType);
   result.rpcName = "Death_C";
   result.decodedFields = result.decodedFields?.filter(({ name }) => name !== "position" && name !== "origin");
   return result;
@@ -237,5 +241,58 @@ describe("FishNetCombatTracker", () => {
       duplicatesDamageEvent: true,
     });
     expect(unpairedDeath).toMatchObject({ kind: "death", value: 26, duplicatesDamageEvent: false });
+  });
+
+  test("labels null-source type-four damage as reflected damage", () => {
+    const tracker = new FishNetCombatTracker();
+    const [activation, hit] = tracker.consume(damage(1, 20, 10, null, 75, 0, 4));
+
+    expect(activation).toMatchObject({
+      kind: "activation",
+      actorId: 10,
+      sourceId: "reflect",
+      sourceLabel: "Reflect Damage",
+    });
+    expect(hit).toMatchObject({
+      kind: "damage",
+      actorId: 10,
+      targetId: 20,
+      damageType: 4,
+      sourceId: "reflect",
+      sourceLabel: "Reflect Damage",
+    });
+
+    const [pairedDeath] = tracker.consume(death(1, 20, 10, null, 75, 0, 4));
+    expect(pairedDeath).toMatchObject({
+      kind: "death",
+      sourceId: "reflect",
+      sourceLabel: "Reflect Damage",
+      duplicatesDamageEvent: true,
+    });
+  });
+
+  test("retains unknown for other null-source damage", () => {
+    const tracker = new FishNetCombatTracker();
+    const [activation, hit] = tracker.consume(damage(1, 20, 10, null, 75));
+
+    expect(activation).toMatchObject({ sourceId: "unknown", sourceLabel: "unknown" });
+    expect(hit).toMatchObject({
+      kind: "damage",
+      damageType: 0,
+      sourceId: "unknown",
+      sourceLabel: "unknown",
+    });
+  });
+
+  test("prefers an explicit source over a damage-type fallback", () => {
+    const tracker = new FishNetCombatTracker();
+    const [, hit] = tracker.consume(damage(1, 20, 10, "AxeArc", 75, 0, 4));
+
+    expect(hit).toMatchObject({
+      kind: "damage",
+      damageType: 4,
+      sourceId: "AxeArc",
+      sourceLabel: "Twin Cleave",
+    });
   });
 });
