@@ -9,76 +9,7 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <header id="titlebar" class="titlebar">
-    <div class="brand"><img class="brand-icon" src="views://assets/app-icon.png" alt="" /><span>Spirit Vale</span><span class="brand-tag">Rewards</span></div>
-    <div class="window-controls">
-      <button id="pin-button" class="icon-button" type="button" aria-label="Toggle always on top" title="Always on top">◇</button>
-      <button id="minimize-button" class="icon-button" type="button" aria-label="Minimize" title="Minimize">−</button>
-      <button id="maximize-button" class="icon-button" type="button" aria-label="Maximize" title="Maximize">▢</button>
-      <button id="close-button" class="icon-button close-button" type="button" aria-label="Close" title="Close">×</button>
-    </div>
-  </header>
-  <main>
-    <nav class="toolbar">
-      <div class="seg" aria-label="Session view">
-        <button id="summary-tab" type="button">Summary</button>
-        <button id="recent-tab" type="button">Recent kills</button>
-        <button id="trends-tab" type="button">Trends</button>
-      </div>
-      <div class="status-readout"><span id="status-dot" class="status-dot is-idle"></span><span id="status-text">Connecting…</span></div>
-      <div class="toolbar-actions">
-        <button id="catalog-button" class="btn" type="button">Catalog</button>
-        <button id="replay-button" class="btn" type="button">Replay</button>
-      </div>
-    </nav>
-
-    <div id="replay-banner" class="banner is-info" hidden>
-      <span id="replay-banner-text"></span>
-      <button id="return-live" class="btn" type="button">Return to live</button>
-    </div>
-
-    <div id="storage-warning" class="banner is-warn" aria-live="polite" hidden></div>
-
-    <div class="stat-tiles totals">
-      <article class="stat-tile"><span class="t-label">Character XP</span><strong id="total-xp" class="t-data">0</strong></article>
-      <article class="stat-tile"><span class="t-label">Job XP</span><strong id="total-job-xp" class="t-data">0</strong></article>
-      <article class="stat-tile"><span class="t-label">Coins</span><strong id="total-coins" class="t-data is-value">0</strong></article>
-      <article class="stat-tile"><span class="t-label">Unmatched</span><strong id="unmatched" class="t-data">0</strong></article>
-    </div>
-
-    <div id="identity-warning" class="banner is-warn" hidden></div>
-
-    <section id="summary-panel">
-      <div class="section-head"><h1>Mob summary</h1><p>Confirmed rewards grouped by mob, plus unmatched pickups.</p></div>
-      <div id="summary-list" class="list"></div>
-    </section>
-    <section id="recent-panel" hidden>
-      <div class="section-head"><h1>Recent kills</h1><p>Newest confirmed attribution first.</p></div>
-      <div id="kill-list" class="list"></div>
-    </section>
-    <section id="trends-panel" hidden>
-      <div class="section-head"><h1>Reward trends</h1><p>Session gains over wall-clock time.</p></div>
-      <div class="trend-controls">
-        <div class="seg" aria-label="Trend metric">
-          <button id="trend-xp" class="active" type="button">Character XP</button>
-          <button id="trend-job-xp" type="button">Job XP</button>
-          <button id="trend-coins" type="button">Coins</button>
-        </div>
-        <div class="seg" aria-label="Trend calculation">
-          <button id="trend-rate" class="active" type="button">Rate/sec</button>
-          <button id="trend-cumulative" type="button">Cumulative</button>
-        </div>
-        <button id="trend-reset" class="btn" type="button" hidden>Reset zoom</button>
-      </div>
-      <div id="trend-chart" class="trend-chart" tabindex="0" aria-label="Rewards trend graph">
-        <svg id="trend-svg" role="img" aria-labelledby="trend-chart-title"></svg>
-        <span id="trend-chart-title" class="sr-only">Rewards trend graph</span>
-        <div id="trend-empty" class="trend-empty">Confirmed rewards will appear here.</div>
-        <div id="trend-tooltip" class="trend-tooltip" hidden></div>
-      </div>
-    </section>
-  </main>
-
+  <div id="root"></div>
   <script type="module" src="index.js"></script>
 </body>
 </html>

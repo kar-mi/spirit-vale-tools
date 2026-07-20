@@ -8,6 +8,9 @@
     "./theme.css": "./theme.css",
     "./win32": "./win32.ts",
     "./window-chrome": "./window-chrome.ts",
+    "./title-bar": "./title-bar.tsx",
+    "./status-dot": "./status-dot.tsx",
+    "./list-row": "./list-row.tsx",
     "./safe-save": "./safe-save.ts",
     "./session-picker": "./session-picker.ts",
     "./session-picker-types": "./session-picker-types.ts",
@@ -15,7 +18,9 @@
     "./window-publish": "./window-publish.ts"
   },
   "dependencies": {
+    "@preact/signals": "^2.9.4",
     "@spiritvale/logging": "workspace:*",
-    "electrobun": "1.18.1"
+    "electrobun": "1.18.1",
+    "preact": "^10.29.7"
   }
 }

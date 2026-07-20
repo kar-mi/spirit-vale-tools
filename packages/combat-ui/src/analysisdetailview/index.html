@@ -10,29 +10,6 @@
     <script type="module" src="views://analysisdetailview/index.js"></script>
   </head>
   <body>
-    <main class="app-shell">
-      <header id="titlebar" class="titlebar">
-        <div class="brand"><span>Spirit Vale</span><span class="brand-tag">Player detail</span></div>
-        <div class="window-controls">
-          <button id="minimize-button" class="icon-button" type="button" aria-label="Minimize" title="Minimize">−</button>
-          <button id="close-button" class="icon-button close-button" type="button" aria-label="Close" title="Close">×</button>
-        </div>
-      </header>
-      <section class="detail-content">
-        <section class="toolbar">
-          <div><h1 id="player-name">Player</h1><p id="encounter-label"></p></div>
-          <div class="seg"><button id="cumulative-button" type="button">Cumulative</button><button id="dps-button" type="button">DPS / 5 sec</button></div>
-        </section>
-        <section id="metrics" class="stat-tiles totals" aria-label="Player totals"></section>
-        <section class="chart-section">
-          <div class="section-head"><h2>Damage over time</h2><p id="chart-caption">Cumulative damage across the encounter.</p></div>
-          <div class="chart-card"><svg id="chart" viewBox="0 0 760 280" role="img" aria-label="Damage over time chart"></svg></div>
-        </section>
-        <section class="skills-section">
-          <div class="section-head"><h2>Skill breakdown</h2><p>Damage, DPS, hits, and critical-hit performance.</p></div>
-          <div id="skill-list" class="list"></div>
-        </section>
-      </section>
-    </main>
+    <div id="root"></div>
   </body>
 </html>
