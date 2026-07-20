@@ -1,5 +1,5 @@
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
 
 import {
   FISHNET_MARKET_STAT_NAMES,
@@ -110,7 +110,7 @@ window = new BrowserWindow({
   transparent: false,
   rpc,
 });
-applyRoundedCorners(window.ptr);
+mountRoundedWindow(window);
 
 Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; height: number } }) => {
   const width = Math.max(520, event.data.width);
@@ -175,7 +175,7 @@ function openFilters(): void {
     rpc: filterRpc,
   });
   filterWindow = nextWindow;
-  applyRoundedCorners(nextWindow.ptr);
+  mountRoundedWindow(nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
     const width = Math.max(520, event.data.width);
     const height = Math.max(480, event.data.height);
@@ -237,11 +237,7 @@ function detailFor(nextStatus: MarketUiStatus, count: number, invalidLines: numb
 
 function publish(): void {
   if (!window) return;
-  try {
-    rpc.send.stateChanged(appState());
-  } catch {
-    // The webview may still be completing its RPC handshake.
-  }
+  publishSafely(() => rpc.send.stateChanged(appState()));
 }
 
 function stopPolling(): void {

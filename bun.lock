@@ -104,7 +104,9 @@
         "@spiritvale/core": "workspace:*",
         "@spiritvale/items": "workspace:*",
         "@spiritvale/market": "workspace:*",
+        "@spiritvale/market-ui": "workspace:*",
         "@spiritvale/rewards": "workspace:*",
+        "@spiritvale/rewards-ui": "workspace:*",
         "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
@@ -114,6 +116,10 @@
     "packages/ui-theme": {
       "name": "@spiritvale/ui-theme",
       "version": "0.1.0",
+      "dependencies": {
+        "@spiritvale/logging": "workspace:*",
+        "electrobun": "1.18.1",
+      },
     },
   },
   "packages": {

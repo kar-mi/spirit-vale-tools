@@ -1,14 +1,16 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
 import {
+  emptySnapshot,
+  formatRewardsReplaySummary,
   loadBundledMobRewardCatalog,
   loadRewardReplay,
   queryMobRewardCatalog,
   RewardSessionLogFollower,
 } from "@spiritvale/rewards";
-import type { MobRewardSessionSnapshot, RewardLogStatus } from "@spiritvale/rewards";
+import type { RewardLogStatus } from "@spiritvale/rewards";
 import type {
   RewardsAppMode,
   RewardsAppRpc,
@@ -18,9 +20,8 @@ import type {
   RewardsCatalogState,
 } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
-import { formatRewardsReplaySummary } from "../../../ui/src/bun/replay-summaries.ts";
-import { SafeSaveQueue } from "../../../ui/src/bun/safe-save.ts";
-import { createSessionPicker } from "../../../ui/src/bun/session-picker.ts";
+import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
+import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
 
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();
@@ -138,7 +139,7 @@ window = new BrowserWindow({
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
-applyRoundedCorners(window.ptr);
+mountRoundedWindow(window);
 
 Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => { settings.frame = clampFrame(event.data); scheduleSave(); });
 Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.frame }) => {
@@ -228,7 +229,7 @@ function openCatalog(): void {
   });
   catalogWindow = nextWindow;
   nextWindow.setAlwaysOnTop(settings.pinned);
-  applyRoundedCorners(nextWindow.ptr);
+  mountRoundedWindow(nextWindow);
 
   Electrobun.events.on(`move-${nextWindow.id}`, (event: { data: typeof settings.catalogFrame }) => {
     settings.catalogFrame = clampCatalogFrame(event.data);
@@ -302,11 +303,11 @@ function detail(next: RewardLogStatus, invalidLines: number, unidentified: numbe
 }
 
 function publish(): void {
-  try { rpc.send.stateChanged(appState()); } catch { /* webview handshake is not complete yet */ }
+  publishSafely(() => rpc.send.stateChanged(appState()));
 }
 
 function publishCatalog(): void {
-  try { catalogRpc.send.stateChanged(catalogState()); } catch { /* webview handshake is not complete yet */ }
+  publishSafely(() => catalogRpc.send.stateChanged(catalogState()));
 }
 
 function clampFrame(frame: typeof settings.frame): typeof settings.frame {
@@ -330,12 +331,5 @@ async function shutdown(): Promise<void> {
   catalogWindow?.close();
   settings.frame = clampFrame(window.getFrame());
   await settingsPersistence.flush(settings);
-}
-
-function emptySnapshot(): MobRewardSessionSnapshot {
-  return {
-    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0, unmatchedDrops: [],
-    unmatchedByReason: { ambiguous: 0, expired: 0, unidentified: 0 },
-  };
 }
 }

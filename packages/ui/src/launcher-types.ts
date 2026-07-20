@@ -1,4 +1,5 @@
 import type { RPCSchema } from "electrobun";
+import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 
 export type CaptureStatus = "starting" | "capturing" | "unavailable" | "stopped";
 export type ToolWindow = "combat" | "rewards" | "market" | "character";
@@ -22,34 +23,27 @@ export interface LauncherState {
   adapters: CaptureAdapterOption[];
 }
 
+type LauncherSharedRequests = {
+  getState: { params: Record<string, never>; response: LauncherState };
+  setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
+  refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
+  openNpcapDownload: { params: Record<string, never>; response: void };
+  windowAction: { params: { action: "minimize" | "close" }; response: void };
+  getWindowFrame: { params: Record<string, never>; response: WindowFrame };
+  setWindowFrame: { params: WindowFrame; response: void };
+};
+
 export type LauncherRpc = {
   bun: RPCSchema<{
-    requests: {
-      getState: { params: Record<string, never>; response: LauncherState };
+    requests: LauncherSharedRequests & {
       openTool: { params: { tool: ToolWindow }; response: LauncherState };
       openSettings: { params: Record<string, never>; response: void };
-      setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
-      refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
-      openNpcapDownload: { params: Record<string, never>; response: void };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: LauncherState } }>;
 };
 
 export type LauncherSettingsRpc = {
-  bun: RPCSchema<{
-    requests: {
-      getState: { params: Record<string, never>; response: LauncherState };
-      setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
-      refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
-      openNpcapDownload: { params: Record<string, never>; response: void };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
-    };
-  }>;
+  bun: RPCSchema<{ requests: LauncherSharedRequests }>;
   webview: RPCSchema<{ messages: { stateChanged: LauncherState } }>;
 };

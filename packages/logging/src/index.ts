@@ -12,6 +12,12 @@ export {
   sessionStreamPath,
 } from "./paths.ts";
 export { listLogSessions } from "./sessions.ts";
+export { decimal, isMissing, isRecord, nullableString } from "./predicates.ts";
+export type { LiveLogStatus } from "./predicates.ts";
+export { JsonlTailReader } from "./jsonl-tail-reader.ts";
+export type { JsonlTailReadResult, JsonlTailReaderOptions } from "./jsonl-tail-reader.ts";
+export { LiveLogSessionFollower } from "./session-follower.ts";
+export type { LiveLogSessionFollowerOptions } from "./session-follower.ts";
 export type {
   CurrentLogStream,
   JsonData,

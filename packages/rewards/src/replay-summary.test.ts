@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { readRewardsReplaySummary } from "./replay-summaries.ts";
+import { readRewardsReplaySummary } from "./replay-summary.ts";
 
 describe("replay picker summaries", () => {
   test("aggregates confirmed rewards by kills, mobs, XP, and coins", async () => {

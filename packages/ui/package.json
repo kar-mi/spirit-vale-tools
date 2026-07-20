@@ -13,7 +13,9 @@
     "@spiritvale/core": "workspace:*",
     "@spiritvale/items": "workspace:*",
     "@spiritvale/market": "workspace:*",
+    "@spiritvale/market-ui": "workspace:*",
     "@spiritvale/rewards": "workspace:*",
+    "@spiritvale/rewards-ui": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*"
   },
   "devDependencies": {

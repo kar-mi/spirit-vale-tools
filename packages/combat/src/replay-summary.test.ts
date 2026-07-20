@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { readCombatReplaySummary } from "./combat-replay-summary.ts";
+import { readCombatReplaySummary } from "./replay-summary.ts";
 
 test("combat replay summaries remain owned by combat UI", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-combat-summary-"));

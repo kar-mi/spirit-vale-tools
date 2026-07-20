@@ -2,6 +2,7 @@ import { appendFile, mkdir, readFile, rename, writeFile } from "node:fs/promises
 import path from "node:path";
 
 import { currentStreamPointerPath, defaultLogDirectory, sessionDirectory, sessionStreamPath } from "./paths.ts";
+import { isMissing, isRecord } from "./predicates.ts";
 import type {
   CurrentLogStream,
   JsonObject,
@@ -124,10 +125,10 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
 }
 
 export function parseLogRecord(value: unknown): LogRecord | undefined {
-  if (!isObject(value) || value["schemaVersion"] !== 1) return undefined;
+  if (!isRecord(value) || value["schemaVersion"] !== 1) return undefined;
   if (!isNonEmptyString(value["sessionId"]) || !Number.isSafeInteger(value["sequence"]) || (value["sequence"] as number) < 1) return undefined;
   if (!isIsoDate(value["recordedAt"]) || !isNonEmptyString(value["source"]) || !isNonEmptyString(value["type"])) return undefined;
-  if (!isObject(value["data"])) return undefined;
+  if (!isRecord(value["data"])) return undefined;
   return value as unknown as LogRecord;
 }
 
@@ -142,7 +143,7 @@ export async function readCurrentLogStream(
     if (isMissing(error) || error instanceof SyntaxError) return undefined;
     throw error;
   }
-  if (!isObject(value) || value["schemaVersion"] !== 1 || value["stream"] !== stream
+  if (!isRecord(value) || value["schemaVersion"] !== 1 || value["stream"] !== stream
     || !isNonEmptyString(value["sessionId"]) || !isIsoDate(value["startedAt"])
     || !isNonEmptyString(value["relativePath"])) return undefined;
   const resolved = path.resolve(logDirectory, value["relativePath"]);
@@ -163,20 +164,12 @@ async function writeAtomicJson(target: string, value: unknown): Promise<void> {
   await rename(temporary, target);
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
 function isIsoDate(value: unknown): value is string {
   return isNonEmptyString(value) && Number.isFinite(Date.parse(value));
-}
-
-function isMissing(error: unknown): boolean {
-  return isObject(error) && error["code"] === "ENOENT";
 }
 
 function toError(error: unknown): Error {

@@ -1,11 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Utils } from "electrobun/bun";
+import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import type { RewardsAppView } from "./app-types.ts";
 
 export interface RewardsAppSettings {
-  frame: { x: number; y: number; width: number; height: number };
-  catalogFrame: { x: number; y: number; width: number; height: number };
+  frame: WindowFrame;
+  catalogFrame: WindowFrame;
   pinned: boolean;
   view: RewardsAppView;
 }

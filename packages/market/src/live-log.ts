@@ -1,11 +1,17 @@
-import { open, stat } from "node:fs/promises";
-
-import { defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "@spiritvale/logging";
+import {
+  decimal,
+  isRecord,
+  JsonlTailReader,
+  LiveLogSessionFollower,
+  nullableString,
+  parseLogRecord,
+} from "@spiritvale/logging";
+import type { LiveLogStatus } from "@spiritvale/logging";
 import { parseMarketEventLogData } from "./event-log.ts";
 import { FishNetMarketTracker, resolveFishNetMarketListingDisplayName } from "./market.ts";
 import type { FishNetMarketListingView, FishNetMarketStat } from "./market.ts";
 
-export type MarketLogStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
+export type MarketLogStatus = LiveLogStatus;
 
 export interface MarketLogBatch {
   listings: FishNetMarketListingView[];
@@ -21,46 +27,25 @@ export interface MarketLogBatch {
 
 /** Incrementally follows event records and legacy snapshots written by passive capture. */
 export class MarketLogFollower {
-  private offset = 0;
-  private pending = "";
-  private decoder = new TextDecoder();
+  private readonly reader: JsonlTailReader;
   private listings: FishNetMarketListingView[] = [];
   private readonly tracker = new FishNetMarketTracker();
   private status: MarketLogStatus = "watching";
   private observedAt?: string;
 
-  constructor(private readonly path: string) {}
-
-  async poll(): Promise<MarketLogBatch> {
-    let size: number;
-    try {
-      size = (await stat(this.path)).size;
-    } catch (error) {
-      if (isMissingFile(error)) return this.batch({ missing: true, reset: false, changed: false, invalidLines: 0 });
-      throw error;
-    }
-
-    const reset = size < this.offset;
-    if (reset) this.resetReader();
-    if (size === this.offset) return this.batch({ missing: false, reset, changed: false, invalidLines: 0 });
-
-    const length = size - this.offset;
-    const bytes = Buffer.allocUnsafe(length);
-    const file = await open(this.path, "r");
-    try {
-      const { bytesRead } = await file.read(bytes, 0, length, this.offset);
-      this.offset += bytesRead;
-      const consumed = this.consume(bytes.subarray(0, bytesRead));
-      return this.batch({ missing: false, reset, ...consumed });
-    } finally {
-      await file.close();
-    }
+  constructor(path: string) {
+    this.reader = new JsonlTailReader(path);
   }
 
-  private consume(bytes: Uint8Array): Pick<MarketLogBatch, "changed" | "invalidLines"> {
-    this.pending += this.decoder.decode(bytes, { stream: true });
-    const lines = this.pending.split(/\r?\n/);
-    this.pending = lines.pop() ?? "";
+  async poll(): Promise<MarketLogBatch> {
+    const { missing, reset, lines } = await this.reader.read();
+    if (missing) return this.batch({ missing: true, reset: false, changed: false, invalidLines: 0 });
+    if (reset) this.resetState();
+    const consumed = this.consume(lines);
+    return this.batch({ missing: false, reset, ...consumed });
+  }
+
+  private consume(lines: string[]): Pick<MarketLogBatch, "changed" | "invalidLines"> {
     let invalidLines = 0;
     let changed = false;
     for (const line of lines) {
@@ -120,10 +105,7 @@ export class MarketLogFollower {
     return { invalidLines, changed };
   }
 
-  private resetReader(): void {
-    this.offset = 0;
-    this.pending = "";
-    this.decoder = new TextDecoder();
+  private resetState(): void {
     this.listings = [];
     this.tracker.reset();
     this.status = "watching";
@@ -142,32 +124,24 @@ export class MarketLogFollower {
 
 /** Follows whichever market session is named by the shared current-stream pointer. */
 export class MarketSessionLogFollower {
-  private sessionId?: string;
-  private follower?: MarketLogFollower;
+  private readonly inner: LiveLogSessionFollower<MarketLogFollower, MarketLogBatch>;
 
-  constructor(private readonly logDirectory = defaultLogDirectory()) {}
+  constructor(logDirectory?: string) {
+    this.inner = new LiveLogSessionFollower({
+      stream: "market",
+      logDirectory,
+      createFollower: (path) => new MarketLogFollower(path),
+      mergeSessionChange: (batch, changedSession) => ({
+        ...batch,
+        reset: batch.reset || changedSession,
+        changed: batch.changed || changedSession,
+      }),
+      noStreamBatch: (reset) => ({ listings: [], invalidLines: 0, missing: true, reset, changed: reset, status: "waiting" }),
+    });
+  }
 
-  async poll(): Promise<MarketLogBatch> {
-    const current = await readCurrentLogStream("market", this.logDirectory);
-    if (!current) {
-      const reset = this.follower !== undefined;
-      this.follower = undefined;
-      this.sessionId = undefined;
-      return { listings: [], invalidLines: 0, missing: true, reset, changed: reset, status: "waiting" };
-    }
-    const changedSession = current.sessionId !== this.sessionId;
-    if (changedSession) {
-      this.sessionId = current.sessionId;
-      this.follower = new MarketLogFollower(current.path);
-    }
-    const batch = await this.follower!.poll();
-    return {
-      ...batch,
-      reset: batch.reset || changedSession,
-      changed: batch.changed || changedSession,
-      path: current.path,
-      sessionId: current.sessionId,
-    };
+  poll(): Promise<MarketLogBatch> {
+    return this.inner.poll();
   }
 }
 
@@ -244,20 +218,4 @@ function parseStats(value: unknown): FishNetMarketStat[] | undefined {
     });
   }
   return stats;
-}
-
-function decimal(value: unknown): value is string {
-  return typeof value === "string" && /^-?\d+$/.test(value);
-}
-
-function nullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isMissingFile(error: unknown): boolean {
-  return isRecord(error) && error["code"] === "ENOENT";
 }

@@ -1,5 +1,5 @@
 import {
-  BUNDLED_FISHNET_BUILD_FINGERPRINTS,
+  BUNDLED_GAME_BUILD_FINGERPRINTS,
   loadBundledFishNetSemanticMap,
 } from "@spiritvale/core";
 import { PacketCapture } from "@spiritvale/core/capture";
@@ -39,7 +39,7 @@ const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishN
 const fishNetBuildFingerprint = option("--fishnet-build");
 const combatFingerprint = fishNetBuildFingerprint;
 const semanticMap = combatOnly && combatFingerprint
-  && BUNDLED_FISHNET_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
+  && BUNDLED_GAME_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
   ? loadBundledFishNetSemanticMap(combatFingerprint)
   : undefined;
 const combatTracker = combatOnly

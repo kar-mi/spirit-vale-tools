@@ -1,4 +1,5 @@
-import { loadDpsReplay } from "@spiritvale/combat";
+import { compact, count, warnings } from "@spiritvale/core";
+import { loadDpsReplay } from "./replay.ts";
 
 export interface CombatReplaySummary {
   encounters: number;
@@ -23,10 +24,7 @@ export async function formatCombatReplaySummary(path: string): Promise<string> {
   return `${count(summary.encounters, "encounter")} · ${compact(summary.totalDamage)} damage · ${duration(summary.durationMs)}${warnings(summary.invalidLines)}`;
 }
 
-function count(value: number, label: string): string { return `${value} ${label}${value === 1 ? "" : "s"}`; }
-function compact(value: number): string { return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(value); }
 function duration(milliseconds: number): string {
   const seconds = Math.round(milliseconds / 1_000);
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
-function warnings(value: number): string { return value === 0 ? "" : ` · ${value} skipped`; }

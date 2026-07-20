@@ -2,6 +2,9 @@
   "name": "@spiritvale/rewards-ui",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@spiritvale/rewards": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*",

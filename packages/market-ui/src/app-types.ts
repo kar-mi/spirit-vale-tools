@@ -1,6 +1,8 @@
 import type { RPCSchema } from "electrobun";
+import type { MarketLogStatus } from "@spiritvale/market";
+import type { MaximizableWindowChromeRequests, WindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
 
-export type MarketUiStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
+export type MarketUiStatus = MarketLogStatus;
 
 export interface MarketUiFilter {
   stat: number;
@@ -48,16 +50,12 @@ export interface MarketFiltersState {
 
 export type MarketUiRpc = {
   bun: RPCSchema<{
-    requests: {
+    requests: MaximizableWindowChromeRequests & {
       getState: { params: Record<string, never>; response: MarketUiState };
       setQuery: { params: { query: string }; response: MarketUiState };
       setFilters: { params: { filters: MarketUiFilter[] }; response: MarketUiState };
       openFilters: { params: Record<string, never>; response: void };
       loadMore: { params: Record<string, never>; response: MarketUiState };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
-      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
     };
   }>;
   webview: RPCSchema<{
@@ -69,12 +67,9 @@ export type MarketUiRpc = {
 
 export type MarketFiltersRpc = {
   bun: RPCSchema<{
-    requests: {
+    requests: WindowChromeRequests & {
       getState: { params: Record<string, never>; response: MarketFiltersState };
       setFilters: { params: { filters: MarketUiFilter[] }; response: MarketFiltersState };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
     };
   }>;
   webview: RPCSchema<{ messages: Record<string, never> }>;

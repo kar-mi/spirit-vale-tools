@@ -1,9 +1,10 @@
 import { FISHNET_RPC_MAP } from "./rpc-definitions/index.ts";
 import type { FishNetRpcMap } from "./types.ts";
-import { CURRENT_GAME_BUILD_FINGERPRINT, LEGACY_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
-
-/** @deprecated Use CURRENT_GAME_BUILD_FINGERPRINT. */
-export const CURRENT_FISHNET_BUILD_FINGERPRINT = CURRENT_GAME_BUILD_FINGERPRINT;
+import {
+  BUNDLED_GAME_BUILD_FINGERPRINTS,
+  CURRENT_GAME_BUILD_FINGERPRINT,
+  LEGACY_GAME_BUILD_FINGERPRINT,
+} from "../game-build.ts";
 
 const LEGACY_FISHNET_RPC_MAP = {
   ...FISHNET_RPC_MAP,
@@ -17,18 +18,13 @@ const MAPS = {
 
 export type BundledFishNetBuildFingerprint = keyof typeof MAPS;
 
-/** @deprecated Use BUNDLED_GAME_BUILD_FINGERPRINTS. */
-export const BUNDLED_FISHNET_BUILD_FINGERPRINTS = Object.freeze(
-  Object.keys(MAPS) as BundledFishNetBuildFingerprint[],
-);
-
 export function loadBundledFishNetRpcMap(
-  buildFingerprint: string = CURRENT_FISHNET_BUILD_FINGERPRINT,
+  buildFingerprint: string = CURRENT_GAME_BUILD_FINGERPRINT,
 ): FishNetRpcMap {
   if (!isBundledFingerprint(buildFingerprint)) {
     throw new Error(
       `unsupported bundled FishNet build fingerprint ${JSON.stringify(buildFingerprint)}; supported: ` +
-        BUNDLED_FISHNET_BUILD_FINGERPRINTS.join(", "),
+        BUNDLED_GAME_BUILD_FINGERPRINTS.join(", "),
     );
   }
   return MAPS[buildFingerprint];

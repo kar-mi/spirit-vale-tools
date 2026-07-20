@@ -1,8 +1,10 @@
 import type { RPCSchema } from "electrobun";
+import type { RewardLogStatus } from "@spiritvale/rewards";
+import type { MaximizableWindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
 
 export type RewardsAppMode = "live" | "replay";
 export type RewardsAppView = "summary" | "recent" | "trends";
-export type RewardsAppStatus = "waiting" | "watching" | "ready" | "stopped" | "error";
+export type RewardsAppStatus = RewardLogStatus;
 
 export interface RewardsUiDrop { category: string; itemId: string; itemName: string; count: number; chance?: number }
 export interface RewardsUiMob {
@@ -65,17 +67,13 @@ export interface RewardsAppState {
 
 export type RewardsAppRpc = {
   bun: RPCSchema<{
-    requests: {
+    requests: MaximizableWindowChromeRequests & {
       getState: { params: Record<string, never>; response: RewardsAppState };
       setMode: { params: { mode: RewardsAppMode }; response: RewardsAppState };
       setView: { params: { view: RewardsAppView }; response: RewardsAppState };
       openCatalog: { params: Record<string, never>; response: void };
       openReplayPicker: { params: Record<string, never>; response: void };
       setPinned: { params: { pinned: boolean }; response: RewardsAppState };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
-      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: RewardsAppState } }>;
@@ -89,13 +87,9 @@ export interface RewardsCatalogState {
 
 export type RewardsCatalogRpc = {
   bun: RPCSchema<{
-    requests: {
+    requests: MaximizableWindowChromeRequests & {
       getState: { params: Record<string, never>; response: RewardsCatalogState };
       setQuery: { params: { query: string }; response: RewardsCatalogState };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
-      toggleMaximize: { params: Record<string, never>; response: { maximized: boolean } };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: RewardsCatalogState } }>;

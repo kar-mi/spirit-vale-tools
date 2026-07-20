@@ -7,6 +7,15 @@
   "exports": {
     "./theme.css": "./theme.css",
     "./win32": "./win32.ts",
-    "./window-chrome": "./window-chrome.ts"
+    "./window-chrome": "./window-chrome.ts",
+    "./safe-save": "./safe-save.ts",
+    "./session-picker": "./session-picker.ts",
+    "./session-picker-types": "./session-picker-types.ts",
+    "./window-rpc": "./window-rpc.ts",
+    "./window-publish": "./window-publish.ts"
+  },
+  "dependencies": {
+    "@spiritvale/logging": "workspace:*",
+    "electrobun": "1.18.1"
   }
 }

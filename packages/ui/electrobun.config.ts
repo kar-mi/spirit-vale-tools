@@ -10,6 +10,16 @@ const packageJson = JSON.parse(
 ) as PackageJson;
 if (!packageJson.version) throw new Error("package.json must define a version before building Electrobun.");
 
+/**
+ * Electrobun's `copy` config is a plain `{ [sourcePath]: destPath }` map, so copying the
+ * same `theme.css` into every view's own folder needs a textually distinct source key per
+ * view even though every one resolves to the same file — otherwise the object literal would
+ * silently collapse duplicate keys and most views would end up without a theme.css.
+ */
+function themeCssSource(variant: number): string {
+  return `../ui-theme/${"./".repeat(variant)}theme.css`;
+}
+
 export default {
   app: {
     name: "Spirit Vale",
@@ -37,40 +47,40 @@ export default {
       "../../static/icon/eggplant_icon_320px.png": "views/assets/app-icon.png",
       "src/launcherview/index.html": "views/launcherview/index.html",
       "src/launcherview/index.css": "views/launcherview/index.css",
-      "../ui-theme/theme.css": "views/launcherview/theme.css",
+      [themeCssSource(0)]: "views/launcherview/theme.css",
       "src/settingsview/index.html": "views/settingsview/index.html",
       "src/settingsview/index.css": "views/settingsview/index.css",
-      "../ui-theme/../../packages/ui-theme/../ui-theme/theme.css": "views/settingsview/theme.css",
+      [themeCssSource(1)]: "views/settingsview/theme.css",
       "../combat-ui/src/mainview/index.html": "views/mainview/index.html",
       "../combat-ui/src/mainview/index.css": "views/mainview/index.css",
-      "../ui-theme/./theme.css": "views/mainview/theme.css",
+      [themeCssSource(2)]: "views/mainview/theme.css",
       "../combat-ui/src/dpssettingsview/index.html": "views/dpssettingsview/index.html",
       "../combat-ui/src/dpssettingsview/index.css": "views/dpssettingsview/index.css",
-      "../ui-theme/../ui-theme/./theme.css": "views/dpssettingsview/theme.css",
+      [themeCssSource(3)]: "views/dpssettingsview/theme.css",
       "src/characterview/index.html": "views/characterview/index.html",
       "src/characterview/index.css": "views/characterview/index.css",
-      "../ui-theme/./../ui-theme/./theme.css": "views/characterview/theme.css",
+      [themeCssSource(4)]: "views/characterview/theme.css",
       "../market-ui/src/marketview/index.html": "views/marketview/index.html",
       "../market-ui/src/marketview/index.css": "views/marketview/index.css",
-      "../ui-theme/../ui-theme/theme.css": "views/marketview/theme.css",
+      [themeCssSource(5)]: "views/marketview/theme.css",
       "../market-ui/src/marketfiltersview/index.html": "views/marketfiltersview/index.html",
       "../market-ui/src/marketfiltersview/index.css": "views/marketfiltersview/index.css",
-      "../ui-theme/../../packages/ui-theme/./theme.css": "views/marketfiltersview/theme.css",
+      [themeCssSource(6)]: "views/marketfiltersview/theme.css",
       "../rewards-ui/src/rewardsview/index.html": "views/rewardsview/index.html",
       "../rewards-ui/src/rewardsview/index.css": "views/rewardsview/index.css",
-      "../ui-theme/../../packages/ui-theme/theme.css": "views/rewardsview/theme.css",
+      [themeCssSource(7)]: "views/rewardsview/theme.css",
       "../rewards-ui/src/catalogview/index.html": "views/rewardscatalogview/index.html",
       "../rewards-ui/src/catalogview/index.css": "views/rewardscatalogview/index.css",
-      "../ui-theme/././theme.css": "views/rewardscatalogview/theme.css",
+      [themeCssSource(8)]: "views/rewardscatalogview/theme.css",
       "src/sessionpickerview/index.html": "views/sessionpickerview/index.html",
       "src/sessionpickerview/index.css": "views/sessionpickerview/index.css",
-      "../ui-theme/./../ui-theme/theme.css": "views/sessionpickerview/theme.css",
+      [themeCssSource(9)]: "views/sessionpickerview/theme.css",
       "../combat-ui/src/analysisview/index.html": "views/analysisview/index.html",
       "../combat-ui/src/analysisview/index.css": "views/analysisview/index.css",
-      "../ui-theme/./../ui-theme/../ui-theme/theme.css": "views/analysisview/theme.css",
+      [themeCssSource(10)]: "views/analysisview/theme.css",
       "../combat-ui/src/analysisdetailview/index.html": "views/analysisdetailview/index.html",
       "../combat-ui/src/analysisdetailview/index.css": "views/analysisdetailview/index.css",
-      "../ui-theme/../ui-theme/./../ui-theme/../ui-theme/theme.css": "views/analysisdetailview/theme.css",
+      [themeCssSource(11)]: "views/analysisdetailview/theme.css",
     },
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",

@@ -2,8 +2,8 @@ import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
 import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core/capture";
 
-import { createMarketWindow } from "../../../market-ui/src/bun/index.ts";
-import { createRewardsWindow } from "../../../rewards-ui/src/bun/index.ts";
+import { createMarketWindow } from "@spiritvale/market-ui";
+import { createRewardsWindow } from "@spiritvale/rewards-ui";
 import type { LauncherRpc, LauncherSettingsRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings.ts";
 import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-storage.ts";
@@ -11,10 +11,11 @@ import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
 import { resolveLogDirectory } from "./paths.ts";
-import { SafeSaveQueue } from "./safe-save.ts";
+import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { WindowSlot } from "./window-slot.ts";
 import { resolveDesktopStoragePaths } from "./portable-paths.ts";
 import type { CharacterSnapshot } from "@spiritvale/character";
+import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 
 makeProcessDpiAware();
 
@@ -82,31 +83,37 @@ const characterWindow = new WindowSlot((onClosed) => createCharacterWindow({
   onClosed,
 }));
 
+function sharedLauncherHandlers(getWindow: () => BrowserWindow | undefined, fallbackFrame: WindowFrame) {
+  return {
+    getState: () => launcherState,
+    setCaptureAdapter: ({ deviceName }: { deviceName: string | null }) => setCaptureAdapter(deviceName),
+    refreshCaptureDevices: async () => {
+      await refreshCaptureDevices();
+      if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
+        await capture.start();
+      }
+      return launcherState;
+    },
+    openNpcapDownload: () => { Utils.openExternal("https://npcap.com/#download"); },
+    getWindowFrame: () => getWindow()?.getFrame() ?? fallbackFrame,
+    setWindowFrame: ({ x, y, width, height }: WindowFrame) => { getWindow()?.setFrame(x, y, width, height); },
+  };
+}
+
 const rpc = BrowserView.defineRPC<LauncherRpc>({
   maxRequestTime: 30_000,
   handlers: {
     requests: {
-      getState: () => launcherState,
+      ...sharedLauncherHandlers(() => launcherWindow, { x: 80, y: 80, width: 960, height: 430 }),
       openTool: async ({ tool }) => {
         await openTool(tool);
         return launcherState;
       },
       openSettings: () => { openSettings(); },
-      setCaptureAdapter: ({ deviceName }) => setCaptureAdapter(deviceName),
-      refreshCaptureDevices: async () => {
-        await refreshCaptureDevices();
-        if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
-          await capture.start();
-        }
-        return launcherState;
-      },
-      openNpcapDownload: () => { Utils.openExternal("https://npcap.com/#download"); },
       windowAction: async ({ action }) => {
         if (action === "minimize") launcherWindow.minimize();
         else await shutdown();
       },
-      getWindowFrame: () => launcherWindow.getFrame(),
-      setWindowFrame: ({ x, y, width, height }) => launcherWindow.setFrame(x, y, width, height),
     },
     messages: {},
   },
@@ -116,20 +123,11 @@ const settingsRpc = BrowserView.defineRPC<LauncherSettingsRpc>({
   maxRequestTime: 30_000,
   handlers: {
     requests: {
-      getState: () => launcherState,
-      setCaptureAdapter: ({ deviceName }) => setCaptureAdapter(deviceName),
-      refreshCaptureDevices: async () => {
-        await refreshCaptureDevices();
-        if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") await capture.start();
-        return launcherState;
-      },
-      openNpcapDownload: () => { Utils.openExternal("https://npcap.com/#download"); },
+      ...sharedLauncherHandlers(() => settingsWindow, { x: 110, y: 110, width: 520, height: 460 }),
       windowAction: ({ action }) => {
         if (action === "minimize") settingsWindow?.minimize();
         else settingsWindow?.close();
       },
-      getWindowFrame: () => settingsWindow?.getFrame() ?? { x: 110, y: 110, width: 520, height: 460 },
-      setWindowFrame: ({ x, y, width, height }) => { settingsWindow?.setFrame(x, y, width, height); },
     },
     messages: {},
   },

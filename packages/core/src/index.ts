@@ -11,11 +11,8 @@ export {
   FishNetProtocolError,
   FishNetSessionDecoder,
 } from "./fishnet/decoder.ts";
-export {
-  BUNDLED_FISHNET_BUILD_FINGERPRINTS,
-  CURRENT_FISHNET_BUILD_FINGERPRINT,
-  loadBundledFishNetRpcMap,
-} from "./fishnet/builtin-maps.ts";
+export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
+export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
 export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
 export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-map.ts";

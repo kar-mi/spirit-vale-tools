@@ -2,6 +2,7 @@ import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { currentStreamPointerPath, defaultLogDirectory } from "./paths.ts";
+import { isMissing, isRecord } from "./predicates.ts";
 import type { CurrentLogStream, ListedLogSession, LogSessionMetadata, LogStream } from "./types.ts";
 
 export async function listLogSessions(
@@ -55,7 +56,7 @@ export async function listLogSessions(
 }
 
 function parseSessionMetadata(value: unknown): LogSessionMetadata | undefined {
-  if (!record(value) || value["schemaVersion"] !== 1 || typeof value["sessionId"] !== "string"
+  if (!isRecord(value) || value["schemaVersion"] !== 1 || typeof value["sessionId"] !== "string"
     || value["sessionId"].length === 0 || typeof value["producer"] !== "string" || value["producer"].length === 0
     || typeof value["createdAt"] !== "string" || !Number.isFinite(Date.parse(value["createdAt"]))
     || !Array.isArray(value["streams"]) || !value["streams"].every(isLogStream)) return undefined;
@@ -68,7 +69,7 @@ async function readCurrentPointer(
 ): Promise<(CurrentLogStream & { path: string }) | undefined> {
   try {
     const value: unknown = JSON.parse(await readFile(currentStreamPointerPath(stream, logDirectory), "utf8"));
-    if (!record(value) || value["schemaVersion"] !== 1 || value["stream"] !== stream
+    if (!isRecord(value) || value["schemaVersion"] !== 1 || value["stream"] !== stream
       || typeof value["sessionId"] !== "string" || typeof value["startedAt"] !== "string"
       || !Number.isFinite(Date.parse(value["startedAt"])) || typeof value["relativePath"] !== "string") return undefined;
     const resolved = path.resolve(logDirectory, value["relativePath"]);
@@ -80,12 +81,4 @@ async function readCurrentPointer(
 
 function isLogStream(value: unknown): value is LogStream {
   return value === "capture" || value === "combat" || value === "market" || value === "rewards" || value === "other";
-}
-
-function record(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isMissing(error: unknown): boolean {
-  return record(error) && error["code"] === "ENOENT";
 }

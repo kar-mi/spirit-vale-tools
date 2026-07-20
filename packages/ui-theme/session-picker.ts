@@ -3,9 +3,9 @@ import path from "node:path";
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { listLogSessions } from "@spiritvale/logging";
 import type { LogStream } from "@spiritvale/logging";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners } from "./win32.ts";
 
-import type { SessionPickerRpc, SessionPickerState } from "../session-picker-types.ts";
+import type { SessionPickerRpc, SessionPickerState } from "./session-picker-types.ts";
 
 export interface SessionPickerOptions {
   logDirectory: string;

@@ -1,7 +1,7 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { FishNetDpsMeter } from "./dps-meter.ts";
-import { parseLogRecord } from "@spiritvale/logging";
+import { isRecord, parseLogRecord } from "@spiritvale/logging";
 
 export interface DpsReplayResult {
   meter: FishNetDpsMeter;
@@ -110,10 +110,6 @@ export function parseDpsLogRecord(
   if (type === "combat.actorIdentity" && event.kind !== "actorIdentity") return undefined;
   if (type === "combat.event" && event.kind === "actorIdentity") return undefined;
   return event;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isFiniteNumber(value: unknown): value is number {

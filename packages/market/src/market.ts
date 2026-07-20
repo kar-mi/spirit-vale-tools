@@ -1,5 +1,6 @@
 import { FishNetProtocolError } from "@spiritvale/core";
 import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@spiritvale/core/wire-reader";
+import { isRecord } from "@spiritvale/logging";
 import { fishNetMarketStatName, resolveFishNetMarketStat } from "./market-stats.ts";
 import type { FishNetMarketStatName } from "./market-stats.ts";
 import { calculateFishNetMarketStatValues } from "./market-stat-values.ts";
@@ -403,10 +404,6 @@ function normalizeStatFilters(
     byType.set(resolved.type, { minValue, maxValue });
   }
   return [...byType].map(([type, bounds]) => ({ type, ...bounds }));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 class MarketReader {

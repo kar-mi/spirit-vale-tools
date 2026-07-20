@@ -1,3 +1,4 @@
+import { decimal, isRecord, nullableString } from "@spiritvale/logging";
 import type { JsonObject } from "@spiritvale/logging";
 
 import type {
@@ -166,16 +167,4 @@ function nullableValue<T>(value: unknown, parse: (item: unknown) => T | undefine
 function optionalBigInt(value: unknown): bigint | undefined | typeof INVALID {
   if (value === undefined) return undefined;
   return decimal(value) ? BigInt(value) : INVALID;
-}
-
-function decimal(value: unknown): value is string {
-  return typeof value === "string" && /^-?\d+$/.test(value);
-}
-
-function nullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
