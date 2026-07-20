@@ -4,6 +4,9 @@ Spirit Vale Tools captures TCP and UDP traffic through the user's existing Npcap
 
 The application does not bundle Npcap, install drivers, inject packets, or alter traffic.
 
+For the UDP decoding layers enabled by this workflow, see [Packet Decoding](packet-decoding.md). For the
+packages that consume decoded events, see [Packet Routing](packet-routing.md).
+
 ## Prerequisites
 
 - Windows 10 or 11 x64
@@ -63,7 +66,8 @@ The default filter is derived from `--protocols`. Custom filters use standard li
 3. Ethernet, VLAN, loopback, raw-IP, and common VPN link-layer frames are reduced to IPv4 or IPv6 packets.
 4. TCP and UDP headers and payloads are normalized into the public TypeScript packet types.
 5. Windows process and endpoint tables are refreshed while capture is active. Only packets matching endpoints owned by the target executable are emitted.
-6. UDP payloads optionally continue through LiteNetLib and FishNet decoding.
+6. UDP payloads optionally continue through LiteNetLib and FishNet decoding; the detailed wire layouts,
+   state, and emitted types are documented in [Packet Decoding](packet-decoding.md).
 
 Packets that arrive before a new socket appears in the endpoint table are retained only in memory for up to one second, with a maximum of 4,096 packets. Expired unmatched packets are discarded.
 

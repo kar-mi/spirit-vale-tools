@@ -2,7 +2,7 @@
 
 A Windows packet-capture foundation with a Bun/TypeScript API. It uses the user's existing Npcap installation directly in passive, non-promiscuous mode and never drops, modifies, or injects traffic.
 
-See [Packet Capture Workflow](docs/packet-capture-workflow.md) for the complete build, operation, integration, and troubleshooting guide.
+See the [documentation index](docs/README.md) for capture operation, packet decoding, and package-routing guides.
 
 ## Prerequisites
 
@@ -42,129 +42,11 @@ The ZIP contains a versioned folder with a top-level `Spirit Vale.exe`. All appl
 
 ## Spirit Vale capture
 
-Run:
+The capture and protocol reference lives in [`docs/`](docs/README.md):
 
-```powershell
-bun run capture:dump -- --duration 10
-```
-
-The dump command follows every `SpiritVale.exe` PID across restarts and writes only that process's TCP and UDP payloads to a new JSON Lines session. It refreshes Windows' PID-owned endpoint tables while capture is active and keeps unmatched packets for at most one second so a newly-created socket can be attributed after it appears in the table.
-
-Useful options:
-
-```powershell
-# TCP only, still restricted to SpiritVale.exe
-bun run capture:dump -- --protocols tcp
-
-# Follow another executable
-bun run capture:dump -- --process OtherGame.exe
-
-# Diagnostic capture without process attribution
-bun run capture:dump -- --all-processes --filter "tcp port 443"
-
-# Record transport packets and decoded LiteNetLib 1.x leaf packets
-bun run capture:dump -- --protocols udp --decode-litenetlib
-
-# Add stateful FishNet bundle, split-packet, and RPC Link decoding
-bun run capture:dump -- --protocols udp --decode-fishnet
-
-# Record only chronological combat and visible-player identity events
-bun run capture:dump -- --protocols udp --combat-only
-
-# Passively decode and search market data from a capture session
-bun run market -- --input <capture.jsonl> --query <item-name>
-
-# Require equipment or artifacts with both requested stats and at least +3 Strength
-bun run market -- --input <capture.jsonl> --query <item-name> --stat Str:3 --stat AtkMult
-
-# Watch market responses from the live game connection without sending packets
-bun run market -- --live --query <item-name>
-
-# Select a different bundled build map when more versions are registered
-bun run capture:dump -- --protocols udp --decode-fishnet --fishnet-build <build-fingerprint>
-```
-
-`--decode-fishnet` implies `--decode-litenetlib`. It follows RPC Link
-registrations from object spawns, reassembles split messages, and emits every
-safely delimited message in a transport bundle. Method names are emitted only
-when the registered RPC kind and compact wire hash select one verified definition.
-The decoder may also infer a missing component type when a fixed RPC
-selects exactly one behaviour; ambiguous hashes remain unnamed until stronger
-session evidence appears. Ordered structured parameters are decoded only when
-their generated writer codecs are present in the map.
-
-FishNet decoding uses the current bundled, game-build-fingerprinted TypeScript
-definitions by default. Typed map objects supplied through the core API override
-the bundled map. The fingerprint is an offline compatibility key for selecting
-matching protocol maps and game-data catalogs; FishNet does not exchange or
-require it during connection setup. Older maps remain selectable by their full
-fingerprint when a new game build is added.
-
-Static analysis identified Unity `6000.0.64f1`, IL2CPP metadata `31.1`, and the
-FishNet packet identifier table used by the decoder. Native initialization
-sequences verified 304 compact RPC registrations across game and FishNet
-behaviours; generated method-name suffixes are not treated as wire values.
-
-A sanitized replay of the latest capture mapped every observed spawn RPC-link
-registration to a unique behaviour fingerprint. It named 6,721 structurally
-resolved RPC Links and 1,434 fixed ServerRpc calls, associated 6,182 SyncType
-messages with behaviours, named all 84 broadcasts, and completed without
-replay failures.
-
-The build-scoped skill catalog contains 390 unique active, passive, and mastery
-IDs extracted from public game configuration. Shared passive/mastery records are
-represented once with both kinds. Combat labels resolve from this catalog, with
-compatible semantic maps retained as explicit overrides for legacy builds.
-
-`--filter` uses standard libpcap/BPF syntax. Use `--adapter <Npcap device name>` for a manual adapter override; omit it to follow Windows' default route automatically.
-
-## Public API
-
-```ts
-import { FishNetSessionDecoder, decodeFishNetBundle } from "@spiritvale/core";
-import { PacketCapture } from "@spiritvale/core/capture";
-import { FishNetCombatTracker } from "@spiritvale/combat";
-import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
-
-const capture = new PacketCapture();
-capture.on("packet", packet => {
-  console.log(packet.sourceIP, packet.destinationIP, packet.payload);
-});
-capture.on("udpPacket", packet => {
-  console.log("udp", packet.sourcePort, packet.destinationPort, packet.payload);
-});
-capture.on("targetStatus", status => {
-  console.log(status.state, status.processIds);
-});
-capture.on("liteNetPacket", decoded => {
-  console.log(decoded.packet.property, decoded.mergePath, decoded.packet.payload);
-});
-capture.on("fishNetPacket", decoded => {
-  console.log(decoded.tick, decoded.packetName, decoded.rpcHash, decoded.rpcName);
-});
-await capture.start({
-  targetProcessName: "SpiritVale.exe",
-  protocols: ["tcp", "udp"],
-  decodeFishNet: true,
-});
-
-declare const payload: Buffer;
-const messages = decodeFishNetBundle(payload, { reliable: true });
-const session = new FishNetSessionDecoder();
-const combat = new FishNetCombatTracker();
-console.log(resolveFishNetSkillDisplayName("Whirlwind"));
-const linked = session.decode(payload, {
-  reliable: true,
-  connectionId: "connection-1",
-  direction: "inbound",
-  channel: 0,
-});
-for (const packet of linked) {
-  for (const event of combat.consume(packet)) console.log(event);
-}
-```
-
-The existing `packet` event remains TCP-only. `udpPacket` is UDP-only, while `transportPacket` receives both as a discriminated union on `packet.protocol`. LiteNetLib decoding is opt-in and emits one `liteNetPacket` per logical leaf after recursively unpacking merged datagrams. FishNet decoding emits one `fishNetPacket` per safely delimited bundled message, with spawn identity, behaviour type, resolved RPC metadata, SyncType ownership, broadcast identity, and verified common fields when available. Unknown links and ambiguous symbol matches remain numeric. Schema-v2 maps are behaviour-scoped and build-fingerprinted; schema-v1 maps remain supported. Omit `targetProcessName` for an unrestricted diagnostic capture.
+- [Packet Capture Workflow](docs/packet-capture-workflow.md) covers CLI options, adapter selection, and troubleshooting.
+- [Packet Decoding](docs/packet-decoding.md) explains the LiteNetLib and FishNet structures, state, and public packet types.
+- [Packet Routing](docs/packet-routing.md) shows how core packet types feed the combat, character, rewards, and market packages.
 
 `FishNetCombatTracker` converts decoded packets into actor-grouped activation,
 per-hit damage, and death events. A death event carries the server's lethal
