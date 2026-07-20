@@ -10,6 +10,7 @@ export type {
   FishNetDpsEncounterSnapshot,
   FishNetDpsMeterOptions,
   FishNetDpsSkillRow,
+  FishNetDpsTimelinePoint,
   FishNetPersonalMatch,
 } from "./dps-meter.ts";
 export type {

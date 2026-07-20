@@ -22,6 +22,17 @@ export interface FishNetDpsSkillRow {
   criticalHits: number;
 }
 
+export interface FishNetDpsTimelinePoint {
+  /** Milliseconds elapsed since the encounter began. */
+  elapsedMs: number;
+  /** Damage dealt during this time bucket. */
+  damage: number;
+  /** Damage dealt from encounter start through this time bucket. */
+  cumulativeDamage: number;
+  /** Damage per second for this time bucket. */
+  dps: number;
+}
+
 export interface FishNetDpsActorRow {
   actorIds: number[];
   displayName: string;
@@ -29,8 +40,10 @@ export interface FishNetDpsActorRow {
   dps: number;
   contribution: number;
   hits: number;
+  criticalHits: number;
   kills: number;
   skills: FishNetDpsSkillRow[];
+  timeline: FishNetDpsTimelinePoint[];
 }
 
 export type FishNetPersonalMatch = "unconfigured" | "missing" | "matched" | "ambiguous";
@@ -66,8 +79,15 @@ interface ActorAggregate {
   activeIdentity: boolean;
   damage: number;
   hits: number;
+  criticalHits: number;
   kills: number;
   skills: Map<string, SkillAggregate>;
+  damagePoints: DamagePoint[];
+}
+
+interface DamagePoint {
+  observedAtMs: number;
+  damage: number;
 }
 
 interface EncounterAggregate {
@@ -82,6 +102,7 @@ interface EncounterAggregate {
 const DEFAULT_IDLE_GAP_MS = 30_000;
 const DEFAULT_MINIMUM_DURATION_MS = 1_000;
 const DEFAULT_REPLAY_TICKS_PER_SECOND = 30;
+const ANALYSIS_BUCKET_MS = 5_000;
 
 /** Aggregates structured FishNet identity and combat events into encounter DPS summaries. */
 export class FishNetDpsMeter {
@@ -184,6 +205,8 @@ export class FishNetDpsMeter {
     if (countedDamage) {
       actor.damage += event.value;
       actor.hits += 1;
+      if (event.hitResult === "critical") actor.criticalHits += 1;
+      actor.damagePoints.push({ observedAtMs, damage: event.value });
       let skill = actor.skills.get(event.sourceId);
       if (!skill) {
         skill = {
@@ -273,7 +296,7 @@ export class FishNetDpsMeter {
     const mergedActors = mergeActors(encounter.actors);
     const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
     const actors = mergedActors
-      .map((actor) => actorRow(actor, durationMs, totalDamage))
+      .map((actor) => actorRow(actor, encounter.startedAtMs, durationMs, totalDamage))
       .sort(compareRows);
     const normalizedPersonalName = normalizeName(this.personalName);
     const activeMatches = normalizedPersonalName
@@ -315,7 +338,17 @@ export class FishNetDpsMeter {
 }
 
 function createActor(actorId: number): ActorAggregate {
-  return { actorId, actorIds: [actorId], activeIdentity: false, damage: 0, hits: 0, kills: 0, skills: new Map() };
+  return {
+    actorId,
+    actorIds: [actorId],
+    activeIdentity: false,
+    damage: 0,
+    hits: 0,
+    criticalHits: 0,
+    kills: 0,
+    skills: new Map(),
+    damagePoints: [],
+  };
 }
 
 function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
@@ -345,6 +378,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
         activeIdentity: actor.activeIdentity,
         damage: 0,
         hits: 0,
+        criticalHits: 0,
         kills: 0,
         ...(actor.ownerConnectionId === undefined ? {} : { ownerConnectionId: actor.ownerConnectionId }),
       };
@@ -354,8 +388,10 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     target.activeIdentity ||= actor.activeIdentity;
     target.damage += actor.damage;
     target.hits += actor.hits;
+    target.criticalHits += actor.criticalHits;
     target.kills += actor.kills;
     target.actorIds = [...new Set([...target.actorIds, ...actor.actorIds])];
+    target.damagePoints.push(...actor.damagePoints);
     for (const skill of actor.skills.values()) {
       const current = target.skills.get(skill.sourceId);
       if (current) {
@@ -371,7 +407,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
   return [...merged.values()];
 }
 
-function actorRow(actor: ActorAggregate, durationMs: number, partyDamage: number): FishNetDpsActorRow {
+function actorRow(actor: ActorAggregate, startedAtMs: number, durationMs: number, partyDamage: number): FishNetDpsActorRow {
   const skills = [...actor.skills.values()]
     .map((skill): FishNetDpsSkillRow => ({
       ...skill,
@@ -386,9 +422,31 @@ function actorRow(actor: ActorAggregate, durationMs: number, partyDamage: number
     dps: perSecond(actor.damage, durationMs),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
     hits: actor.hits,
+    criticalHits: actor.criticalHits,
     kills: actor.kills,
     skills,
+    timeline: buildTimeline(actor.damagePoints, startedAtMs, durationMs),
   };
+}
+
+function buildTimeline(points: readonly DamagePoint[], startedAtMs: number, durationMs: number): FishNetDpsTimelinePoint[] {
+  const bucketCount = Math.max(1, Math.ceil(durationMs / ANALYSIS_BUCKET_MS));
+  const damageByBucket = new Array<number>(bucketCount).fill(0);
+  for (const point of points) {
+    const elapsedMs = point.observedAtMs - startedAtMs;
+    const index = Math.min(bucketCount - 1, Math.max(0, Math.floor(elapsedMs / ANALYSIS_BUCKET_MS)));
+    damageByBucket[index]! += point.damage;
+  }
+  const timeline: FishNetDpsTimelinePoint[] = [{ elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 }];
+  let cumulativeDamage = 0;
+  for (let index = 0; index < bucketCount; index += 1) {
+    const elapsedMs = Math.min(durationMs, (index + 1) * ANALYSIS_BUCKET_MS);
+    const bucketDurationMs = Math.max(1, elapsedMs - index * ANALYSIS_BUCKET_MS);
+    const damage = damageByBucket[index] ?? 0;
+    cumulativeDamage += damage;
+    timeline.push({ elapsedMs, damage, cumulativeDamage, dps: perSecond(damage, bucketDurationMs) });
+  }
+  return timeline;
 }
 
 function compareRows(left: { damage: number; sourceLabel?: string; displayName?: string }, right: typeof left): number {

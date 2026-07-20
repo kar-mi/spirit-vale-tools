@@ -31,8 +31,6 @@ const allPanel = element("all-panel");
 const personalPanel = element("personal-panel");
 const allTab = button("all-tab");
 const personalTab = button("personal-tab");
-const liveModeButton = button("live-mode-button");
-const replayModeButton = button("replay-mode-button");
 const openReplayButton = button("open-replay-button");
 const resetButton = button("reset-button");
 const pinButton = button("pin-button");
@@ -42,7 +40,6 @@ const partyDps = element("party-dps");
 const totalDamage = element("total-damage");
 const encounterDuration = element("encounter-duration");
 const totalKills = element("total-kills");
-const encounterSelect = select("encounter-select");
 const personalForm = form("personal-form");
 const personalName = input("personal-name");
 const personalActor = select("personal-actor");
@@ -52,13 +49,10 @@ button("minimize-button").addEventListener("click", () => void electroview.rpc?.
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
 button("settings-button").addEventListener("click", () => void electroview.rpc?.request.openSettings({}));
 pinButton.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
-liveModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "live" }));
-replayModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "replay" }));
 openReplayButton.addEventListener("click", () => void electroview.rpc?.request.openReplayPicker({}));
 resetButton.addEventListener("click", () => void electroview.rpc?.request.resetEncounter({}));
 allTab.addEventListener("click", () => setTab("all"));
 personalTab.addEventListener("click", () => setTab("personal"));
-encounterSelect.addEventListener("change", () => void electroview.rpc?.request.selectEncounter({ id: encounterSelect.value }));
 personalForm.addEventListener("submit", (event) => {
   event.preventDefault();
   void electroview.rpc?.request.setPersonalName({ name: personalName.value });
@@ -81,10 +75,7 @@ void electroview.rpc?.request.getState({}).then(render);
 
 function render(next: DpsAppState): void {
   state = next;
-  liveModeButton.classList.toggle("active", next.mode === "live");
-  replayModeButton.classList.toggle("active", next.mode === "replay");
-  openReplayButton.hidden = next.mode !== "replay";
-  resetButton.disabled = next.mode !== "live" || !next.snapshot;
+  resetButton.disabled = !next.snapshot;
   pinButton.classList.toggle("active", next.pinned);
   pinButton.textContent = next.pinned ? "◆" : "◇";
   applyOpacity(next.opacity);
@@ -97,7 +88,6 @@ function render(next: DpsAppState): void {
   totalDamage.textContent = compactFormat.format(next.snapshot?.totalDamage ?? 0);
   encounterDuration.textContent = next.snapshot ? formatDuration(next.snapshot.durationMs) : "—";
   totalKills.textContent = numberFormat.format(next.snapshot?.actors.reduce((total, actor) => total + actor.kills, 0) ?? 0);
-  renderEncounterSelect(next);
   renderTab(next.tab);
   renderAll(next);
   renderPersonal(next);
@@ -105,17 +95,6 @@ function render(next: DpsAppState): void {
 
 function applyOpacity(opacity: number): void {
   document.documentElement.style.setProperty("--dps-window-opacity", String(opacity));
-}
-
-function renderEncounterSelect(next: DpsAppState): void {
-  encounterSelect.replaceChildren(...next.encounters.map((encounter) => {
-    const option = document.createElement("option");
-    option.value = encounter.id;
-    option.textContent = encounter.label;
-    option.selected = encounter.id === next.selectedEncounterId;
-    return option;
-  }));
-  encounterSelect.hidden = next.mode !== "replay" || next.encounters.length < 2;
 }
 
 function renderTab(tab: DpsAppTab): void {
@@ -131,9 +110,7 @@ function renderTab(tab: DpsAppTab): void {
 function renderAll(next: DpsAppState): void {
   const actors = next.snapshot?.actors ?? [];
   if (actors.length === 0) {
-    allList.replaceChildren(emptyState(next.mode === "live"
-      ? "Player damage will appear when combat begins and identities are visible."
-      : "This encounter has no identified player damage."));
+    allList.replaceChildren(emptyState("Player damage will appear when combat begins and identities are visible."));
     return;
   }
   const maximum = actors[0]?.damage ?? 1;

@@ -104,6 +104,22 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()).toMatchObject({ totalDamage: 125, partyDps: 125, actors: [{ kills: 2 }] });
   });
 
+  test("reports player critical rate and five-second cumulative and DPS timeline buckets", () => {
+    const meter = new FishNetDpsMeter();
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeCombat(damage(101, 100, "SyntheticArc", "Synthetic Arc", 0, "critical"), 0);
+    meter.consumeCombat(damage(101, 50, "SyntheticArc", "Synthetic Arc"), 6_000);
+    meter.reset(7_000);
+
+    const actor = meter.getLatestSnapshot()?.actors[0];
+    expect(actor).toMatchObject({ hits: 2, criticalHits: 1, damage: 150 });
+    expect(actor?.timeline).toEqual([
+      { elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 },
+      { elapsedMs: 5_000, damage: 100, cumulativeDamage: 100, dps: 20 },
+      { elapsedMs: 6_000, damage: 50, cumulativeDamage: 150, dps: 50 },
+    ]);
+  });
+
   test("splits idle encounters, supports resets, and converts replay ticks", () => {
     const meter = new FishNetDpsMeter({ idleGapMs: 10_000 });
     meter.consumeCombat(damage(101, 100), 0);

@@ -44,16 +44,16 @@ body {
 
 .command-bar {
   display: flex;
-  gap: 8px;
-  padding: 10px 12px 0;
+  justify-content: space-between;
+  padding: 4px 10px 0;
 }
 
-.command-bar .seg { margin-right: auto; }
+.command-bar .btn { padding: 4px 8px; font-size: 11px; }
 
 .status-strip {
   display: grid;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 12px;
 }
 
 .dps-tiles { grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -64,12 +64,6 @@ body {
 .dps-tiles .t-data { overflow: hidden; font-size: 16px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
 
 #storage-warning { margin: 0 12px 10px; }
-
-#encounter-select {
-  margin-top: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
-}
 
 .tabs { margin: 0 12px 8px; }
 .tabs > button { flex: 1; padding: 5px 10px; font-size: 11px; }

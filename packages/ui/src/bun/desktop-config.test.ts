@@ -19,6 +19,19 @@ test("Electrobun builds and copies the DPS settings view", () => {
   expect(config.build.copy["src/dpssettingsview/index.css"]).toBe("views/dpssettingsview/index.css");
 });
 
+test("Electrobun builds and copies the combat analysis views", () => {
+  expect(config.build.views.analysisview).toEqual({ entrypoint: "src/analysisview/index.ts" });
+  expect(config.build.views.analysisdetailview).toEqual({ entrypoint: "src/analysisdetailview/index.ts" });
+  expect(config.build.copy["src/analysisview/index.html"]).toBe("views/analysisview/index.html");
+  expect(config.build.copy["src/analysisdetailview/index.html"]).toBe("views/analysisdetailview/index.html");
+});
+
+test("every configured static asset source exists", () => {
+  for (const source of Object.keys(config.build.copy)) {
+    expect(existsSync(path.resolve(import.meta.dir, "../..", source))).toBe(true);
+  }
+});
+
 test("Electrobun uses the bundled eggplant artwork for the Windows application icon", () => {
   const icon = config.build.win.icon;
   expect(icon).toBe("../../static/icon/eggplant_icon_320px.png");

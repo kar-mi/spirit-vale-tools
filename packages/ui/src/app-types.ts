@@ -1,8 +1,7 @@
 import type { RPCSchema } from "electrobun";
 
-import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 
-export type DpsAppMode = "live" | "replay";
 export type DpsAppTab = "all" | "personal";
 export type DpsAppStatus = "waiting" | "capturing" | "loading" | "ready" | "stopped" | "error";
 
@@ -12,7 +11,6 @@ export interface DpsEncounterOption {
 }
 
 export interface DpsAppState {
-  mode: DpsAppMode;
   tab: DpsAppTab;
   status: DpsAppStatus;
   statusDetail: string;
@@ -21,10 +19,6 @@ export interface DpsAppState {
   opacity: number;
   personalName: string;
   personalActorId?: number;
-  replayFileName?: string;
-  replayWarnings: number;
-  encounters: DpsEncounterOption[];
-  selectedEncounterId?: string;
   snapshot?: FishNetDpsEncounterSnapshot;
 }
 
@@ -36,9 +30,7 @@ export type DpsAppRpc = {
   bun: RPCSchema<{
     requests: {
       getState: { params: Record<string, never>; response: DpsAppState };
-      setMode: { params: { mode: DpsAppMode }; response: DpsAppState };
       openReplayPicker: { params: Record<string, never>; response: void };
-      selectEncounter: { params: { id: string }; response: DpsAppState };
       resetEncounter: { params: Record<string, never>; response: DpsAppState };
       setPersonalName: { params: { name: string }; response: DpsAppState };
       setPersonalActor: { params: { actorId: number | null }; response: DpsAppState };
@@ -69,4 +61,47 @@ export type DpsSettingsRpc = {
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: DpsSettingsState } }>;
+};
+
+export interface CombatAnalysisState {
+  status: "loading" | "ready" | "error";
+  statusDetail: string;
+  fileName?: string;
+  invalidLines: number;
+  encounters: DpsEncounterOption[];
+  selectedEncounterId?: string;
+  snapshot?: FishNetDpsEncounterSnapshot;
+}
+
+export interface CombatAnalysisDetailState {
+  fileName: string;
+  encounterLabel: string;
+  encounterDurationMs: number;
+  player: FishNetDpsActorRow;
+}
+
+export type CombatAnalysisRpc = {
+  bun: RPCSchema<{
+    requests: {
+      getState: { params: Record<string, never>; response: CombatAnalysisState };
+      selectEncounter: { params: { id: string }; response: CombatAnalysisState };
+      openPlayerDetails: { params: { actorId: number }; response: void };
+      windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+    };
+  }>;
+  webview: RPCSchema<{ messages: { stateChanged: CombatAnalysisState } }>;
+};
+
+export type CombatAnalysisDetailRpc = {
+  bun: RPCSchema<{
+    requests: {
+      getState: { params: Record<string, never>; response: CombatAnalysisDetailState };
+      windowAction: { params: { action: "minimize" | "close" }; response: void };
+      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
+      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
+    };
+  }>;
+  webview: RPCSchema<{ messages: { stateChanged: CombatAnalysisDetailState } }>;
 };
