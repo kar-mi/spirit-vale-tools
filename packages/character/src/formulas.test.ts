@@ -48,6 +48,14 @@ describe("calculateCharacterStats", () => {
     expect(advanced[0]).toMatchObject({ id: "gear-stat-63", tab: "advanced", base: 0, gear: 4, value: 4 });
   });
 
+  test("scales move speed from the verified 7.5 base", () => {
+    const noGear = calculateCharacterStats(88, { STR: 99, VIT: 50, AGI: 1, DEX: 1, INT: 1, LUK: 71 });
+    expect(noGear.find((stat) => stat.id === "move-speed")).toMatchObject({ base: 7.5, value: 7.5, tab: "basic" });
+    // The user's live build: +10% boots base effect and +9% rolled substat → the synced 8.925.
+    const geared = calculateCharacterStats(88, { STR: 99, VIT: 50, AGI: 1, DEX: 1, INT: 1, LUK: 71 }, [substat(65, "Move speed", 10, true), substat(65, "Move speed", 9, true)]);
+    expect(geared.find((stat) => stat.id === "move-speed")?.value).toBeCloseTo(8.925, 3);
+  });
+
   test("applies artifact per-piece, refine, and full-set effects", () => {
     const artifact = (refine: number): CharacterArtifact => ({ slot: "Rune", itemId: "Vampiric", refine, gems: [], substats: [] });
     const leech = (artifacts: CharacterArtifact[]) => materializeGearStats([], artifacts).filter((stat) => stat.type === 98).reduce((total, stat) => total + (stat.value ?? 0), 0);

@@ -85,9 +85,21 @@ export interface CharacterStatBreakdown {
   base: number;
   gear: number;
   value: number;
+  /** Server-actual value captured from the wire, when the protocol surfaces one. */
+  record?: number;
   unit?: "%";
   formula: string;
   inputs: Record<string, number>;
+}
+
+/** Server-actual values synced for the local player's unit components. */
+export interface CharacterRecordValues {
+  currentHealth?: number;
+  maxHealth?: number;
+  currentMana?: number;
+  maxMana?: number;
+  moveSpeed?: number;
+  updatedAt?: string;
 }
 
 export interface GearStatTotal {
@@ -102,6 +114,7 @@ export interface CharacterViewState {
   snapshot?: CharacterSnapshot;
   stats: CharacterStatBreakdown[];
   gearTotals: GearStatTotal[];
+  records?: CharacterRecordValues;
   status: "waiting" | "cached" | "live" | "unsupported";
   statusDetail: string;
 }

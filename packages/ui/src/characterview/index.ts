@@ -37,6 +37,9 @@ function render(state: CharacterViewState): void {
   element("experience").textContent = format(character.experience);
   element("job-experience").textContent = format(character.jobExperience);
   element("status-detail").textContent = state.statusDetail;
+  renderRecordTile("record-health-tile", "record-health", state.records?.maxHealth, format);
+  renderRecordTile("record-mana-tile", "record-mana", state.records?.maxMana, format);
+  renderRecordTile("record-speed-tile", "record-speed", state.records?.moveSpeed, (value) => value.toFixed(2));
   const attributes = element("attributes");
   attributes.replaceChildren(...ATTRIBUTE_NAMES.map((name) => node("div", "attribute", [node("span", "", name), node("strong", "", format(character.attributes[name]))])));
   const history = [
@@ -71,6 +74,11 @@ function render(state: CharacterViewState): void {
   renderGearTotals(state.gearTotals);
   renderSkills(character.skills);
   setActiveTab(activeTab);
+}
+
+function renderRecordTile(tileId: string, valueId: string, value: number | undefined, formatValue: (value: number) => string): void {
+  element(tileId).hidden = value === undefined;
+  if (value !== undefined) element(valueId).textContent = formatValue(value);
 }
 
 function renderSkills(skills: Array<{ displayName: string; level: number; effects: Array<{ label: string; value: number; percent: boolean }> }>): void {
@@ -141,14 +149,21 @@ function renderStats(id: string, stats: CharacterStatBreakdown[], tab: Character
   root.replaceChildren(...categories.map((category) => {
     const group = node("section", "stat-group");
     group.append(node("h3", "", category));
-    group.append(node("div", "stat-column-headings", [node("span", "", ""), node("span", "", "Base"), node("span", "", "Gear"), node("span", "", "Total")]));
+    group.append(node("div", "stat-column-headings", [node("span", "", ""), node("span", "", "Base"), node("span", "", "Calc"), node("span", "", "Actual")]));
     for (const stat of displayed.filter((entry) => entry.category === category)) {
       const details = document.createElement("details");
       details.className = "stat-row";
       const summary = document.createElement("summary");
-      summary.append(node("span", "stat-label", stat.label), node("span", "stat-value", valueText(stat.base, stat.unit)), node("span", `stat-value gear-value${stat.gear ? " nonzero" : ""}`, signed(stat.gear, stat.unit)), node("span", "stat-value", valueText(stat.value, stat.unit)));
-      const inputs = Object.entries(stat.inputs).map(([key, value]) => `${key} ${format(value)}`).join(" · ");
+      const drift = stat.record !== undefined && Math.abs(stat.record - stat.value) > Math.max(1, Math.abs(stat.value) * 0.01);
+      summary.append(
+        node("span", "stat-label", stat.label),
+        node("span", "stat-value base-value", valueText(stat.base, stat.unit)),
+        node("span", "stat-value", valueText(stat.value, stat.unit)),
+        node("span", `stat-value record-value ${stat.record === undefined ? "missing" : drift ? "drift" : "match"}`, stat.record === undefined ? "—" : valueText(stat.record, stat.unit)),
+      );
+      const inputs = [`Gear ${signed(stat.gear, stat.unit)}`, ...Object.entries(stat.inputs).map(([key, value]) => `${key} ${format(value)}`)].join(" · ");
       const breakdown = node("div", "breakdown", [node("div", "formula", stat.formula), node("div", "inputs", inputs)]);
+      if (drift) breakdown.prepend(node("div", "drift-note", `Server reports ${valueText(stat.record!, stat.unit)} — the calculation misses a cap or modifier.`));
       details.append(summary, breakdown);
       group.append(details);
     }

@@ -1,5 +1,6 @@
 export { CharacterReader, decodeCharacterRpcPayload } from "./decoder.ts";
 export { aggregateGearSubstats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
+export { decodeCharacterRecordSync } from "./record-decoder.ts";
 export { FishNetCharacterTracker } from "./tracker.ts";
 export { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 export { ATTRIBUTE_NAMES } from "./types.ts";
@@ -9,6 +10,7 @@ export type {
   CharacterArtifact,
   CharacterEquipment,
   GearStatTotal,
+  CharacterRecordValues,
   CharacterSubstat,
   CharacterSnapshot,
   CharacterSkill,

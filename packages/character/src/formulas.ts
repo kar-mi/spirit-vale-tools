@@ -5,7 +5,9 @@ import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 
 const rounded = Math.round;
 const integer = Math.floor;
-const BASIC_SUBSTAT_TYPES = new Set([0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14, 15, 52, 69, 70, 71, 72, 77, 78, 79, 120, 121]);
+const BASIC_SUBSTAT_TYPES = new Set([0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 13, 14, 15, 52, 65, 69, 70, 71, 72, 77, 78, 79, 120, 121]);
+/** Every unit moves at this speed before modifiers; verified against the synced MoveComponent value. */
+const BASE_MOVE_SPEED = 7.5;
 
 export function calculateCharacterStats(level: number, baseAttributes: CharacterAttributes, substats: readonly CharacterSubstat[] = [], archetypes: readonly string[] = []): CharacterStatBreakdown[] {
   const base = calculateBasicStats(level, baseAttributes, [], archetypes);
@@ -116,6 +118,7 @@ function calculateBasicStats(level: number, baseAttributes: CharacterAttributes,
   const maxMana = Math.max(1, rounded(((45 + level * 5) * (1 + INT / 100) + bonus(8)) * (1 + bonus(72) / 100)));
   const healthRegen = rounded(0.5 * (maxHealth / 200 + VIT / 5) * (2 + VIT / 100));
   const manaRegen = rounded(0.5 * (maxMana / 100 + INT / 5) * (2 + INT / 100));
+  const moveSpeed = Math.round(BASE_MOVE_SPEED * (1 + bonus(65) / 100) * 1000) / 1000;
   const statusResist = (label: string, value: number) => stat(`resist-${label.toLowerCase()}`, `${label} resistance`, "Defense", clamp(rounded(value * 2 / 3), 0, 100), "%", "clamp(round(attribute × 2 / 3), 0, 100)", { attribute: value });
   return [
     stat("melee-attack", "Melee attack scaling", "Offense", meleeAttack, undefined, "round((attribute scaling + ATK) × (1 + ATK multiplier / 100))", { STR, DEX, LUK, ATK: bonus(9), AtkMult: bonus(69) }),
@@ -132,6 +135,7 @@ function calculateBasicStats(level: number, baseAttributes: CharacterAttributes,
     stat("max-mana", "Maximum MP", "Resources", maxMana, undefined, "round((45 + level × 5) × (1 + INT / 100))", { level, INT }),
     stat("health-regen", "Base HP regeneration", "Recovery", healthRegen, undefined, "round(0.5 × (MaxHP / 200 + VIT / 5) × (2 + VIT / 100))", { MaxHP: maxHealth, VIT }),
     stat("mana-regen", "Base MP regeneration", "Recovery", manaRegen, undefined, "round(0.5 × (MaxMP / 100 + INT / 5) × (2 + INT / 100))", { MaxMP: maxMana, INT }),
+    stat("move-speed", "Move speed", "Speed", moveSpeed, undefined, "7.5 × (1 + Move speed % / 100)", { MoveSpeedPct: bonus(65) }),
   ];
 }
 

@@ -1,13 +1,22 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
 import { decodeCharacterRpcPayload } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
-import type { CharacterSnapshot, CharacterViewState } from "./types.ts";
+import { decodeCharacterRecordSync } from "./record-decoder.ts";
+import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
+/** Maps stat breakdown ids onto the server-synced record that verifies them. */
+const RECORDED_STATS: ReadonlyArray<[string, keyof CharacterRecordValues]> = [
+  ["max-health", "maxHealth"],
+  ["max-mana", "maxMana"],
+  ["move-speed", "moveSpeed"],
+];
 
 export class FishNetCharacterTracker {
   private snapshot?: CharacterSnapshot;
   private unsupportedDetail?: string;
+  private localObjectId?: number;
+  private records: CharacterRecordValues = {};
   private listeners = new Set<(state: CharacterViewState) => void>();
 
   constructor(initial?: CharacterSnapshot) {
@@ -15,6 +24,12 @@ export class FishNetCharacterTracker {
   }
 
   consume(packet: CapturedFishNetPacket): boolean {
+    // Only the local player's client emits serverRpc packets, which pins their unit object.
+    if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {
+      this.localObjectId = packet.objectId;
+      return false;
+    }
+    if (packet.packetName === "syncType") return this.consumeRecordSync(packet);
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
@@ -23,6 +38,15 @@ export class FishNetCharacterTracker {
     } catch (error) {
       this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
     }
+    this.publish();
+    return true;
+  }
+
+  private consumeRecordSync(packet: CapturedFishNetPacket): boolean {
+    if (packet.objectId === undefined || packet.objectId !== this.localObjectId) return false;
+    const update = decodeCharacterRecordSync(packet);
+    if (!update) return false;
+    Object.assign(this.records, update, { updatedAt: new Date().toISOString() });
     this.publish();
     return true;
   }
@@ -36,10 +60,12 @@ export class FishNetCharacterTracker {
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
 
   state(): CharacterViewState {
+    const records = Object.keys(this.records).length > 0 ? { records: { ...this.records } } : {};
     if (this.unsupportedDetail) return {
       ...(this.snapshot ? { snapshot: structuredClone(this.snapshot) } : {}),
-      stats: this.snapshot ? calculateStats(this.snapshot) : [],
+      stats: this.snapshot ? this.applyRecords(calculateStats(this.snapshot)) : [],
       gearTotals: this.snapshot ? calculateGearTotals(this.snapshot) : [],
+      ...records,
       status: "unsupported",
       statusDetail: this.unsupportedDetail,
     };
@@ -48,16 +74,28 @@ export class FishNetCharacterTracker {
       statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
       stats: [],
       gearTotals: [],
+      ...records,
     };
     return {
       snapshot: structuredClone(this.snapshot),
-      stats: calculateStats(this.snapshot),
+      stats: this.applyRecords(calculateStats(this.snapshot)),
       gearTotals: calculateGearTotals(this.snapshot),
+      ...records,
       status: this.snapshot.source,
       statusDetail: this.snapshot.source === "live"
         ? "Live character data"
         : `Last known character · updated ${new Date(this.snapshot.updatedAt).toLocaleString()}`,
     };
+  }
+
+  private applyRecords(stats: CharacterStatBreakdown[]): CharacterStatBreakdown[] {
+    for (const [statId, recordKey] of RECORDED_STATS) {
+      const value = this.records[recordKey];
+      if (typeof value !== "number") continue;
+      const stat = stats.find((entry) => entry.id === statId);
+      if (stat) stat.record = value;
+    }
+    return stats;
   }
 
   subscribe(listener: (state: CharacterViewState) => void): () => void {

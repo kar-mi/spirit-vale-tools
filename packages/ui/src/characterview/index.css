@@ -9,6 +9,7 @@ html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 .eyebrow { margin: 0 0 4px; color: var(--primary); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 h1 { margin: 0; font-size: 28px; } h2 { margin: 0 0 14px; font-size: 15px; } .muted { margin: 5px 0 0; }
 .progression { display: grid; grid-template-columns: repeat(4, minmax(72px, 1fr)); gap: 8px; }
+.record-tile strong { color: var(--primary); }
 .progression div, .attribute { min-width: 68px; padding: 10px; border-radius: var(--shape-sm); background: var(--surface-container); }
 .progression span, .attribute span, .stat-label { display: block; color: var(--on-surface-variant); font-size: 11px; }
 .progression strong, .attribute strong { display: block; margin-top: 4px; font-size: 16px; }
@@ -40,7 +41,11 @@ h1 { margin: 0; font-size: 28px; } h2 { margin: 0 0 14px; font-size: 15px; } .mu
 .stat-row summary { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 70px); gap: 8px; padding: 10px 12px; cursor: pointer; list-style: none; }
 .stat-row summary::-webkit-details-marker { display: none; }
 .stat-value { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
-.gear-value { color: var(--on-surface-variant); }.gear-value.nonzero { color: var(--primary); }
+.base-value { color: var(--on-surface-variant); font-weight: 400; }
+.record-value.missing { opacity: .45; font-weight: 400; }
+.record-value.match { color: var(--primary); }
+.record-value.drift { color: var(--error); }
+.drift-note { margin-bottom: 4px; color: var(--error); }
 .gear-totals { display: grid; gap: 7px; }.gear-total { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: var(--shape-sm); background: var(--surface-container); }.gear-total strong { font-variant-numeric: tabular-nums; }
 .breakdown { padding: 0 12px 12px; color: var(--on-surface-variant); font-size: 11px; line-height: 1.5; }
 .formula { color: var(--on-surface); font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
