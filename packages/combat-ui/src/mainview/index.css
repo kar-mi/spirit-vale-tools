@@ -72,7 +72,13 @@ body {
 .meter-table { min-width: 480px; }
 .meter-table :is(th, td) { padding: 4px 7px; }
 .meter-table thead th.sortable-column { padding: 0; }
+.party-meter-table { min-width: 100%; table-layout: fixed; }
+.party-meter-table :is(th, td):first-child { width: 25%; }
+.party-meter-table :is(th, td):nth-child(n + 2) { width: 15%; padding-right: 4px; padding-left: 4px; }
+.party-meter-table :is(th, td):nth-child(n + 2) .sort-button { padding-right: 4px; padding-left: 4px; }
+.party-meter-table tbody :is(th, td) { overflow: hidden; text-overflow: ellipsis; }
 .sort-button { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; padding: 4px 7px; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.sort-button > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sort-button:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
 .sort-indicator { width: 10px; opacity: 0.35; font-size: 8px; }
 .sort-indicator.active { opacity: 1; color: var(--primary); }

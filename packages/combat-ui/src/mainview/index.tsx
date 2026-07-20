@@ -129,11 +129,11 @@ function App() {
         <StatusDot tone={STATUS_TONE[next.status]} detail={next.statusDetail} />
         <div class="table-scroll summary-table-scroll">
           <table class="data-table summary-table" aria-label="Encounter totals">
-            <thead><tr><th>Party DPS</th><th>Total damage</th><th>Timer</th><th>Total kills</th></tr></thead>
+            <thead><tr><th>Timer</th><th>Party</th><th>Total damage</th><th>Total kills</th></tr></thead>
             <tbody><tr>
+              <td>{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</td>
               <td>{formatDps(next.snapshot?.partyDps ?? 0)}</td>
               <td>{compactFormat.format(next.snapshot?.totalDamage ?? 0)}</td>
-              <td>{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</td>
               <td>{numberFormat.format(next.snapshot?.actors.reduce((total, actor) => total + actor.kills, 0) ?? 0)}</td>
             </tr></tbody>
           </table>
@@ -151,13 +151,13 @@ function App() {
         {actors.length === 0
           ? <div class="empty-state">Player damage will appear when combat begins and identities are visible.</div>
           : <div class="table-scroll meter-table-scroll">
-              <table class="data-table meter-table" aria-label="Party damage">
+              <table class="data-table meter-table party-meter-table" aria-label="Party damage">
                 <thead><tr>
                   <th>IGN</th>
                   <SortableHeader label="DPS" sortKey="dps" sort={actorSort} onSort={sortActorsBy} />
-                  <SortableHeader label="Damage" sortKey="damage" sort={actorSort} onSort={sortActorsBy} />
-                  <SortableHeader label="Dmg share" sortKey="contribution" sort={actorSort} onSort={sortActorsBy} />
-                  <SortableHeader label="Crit" sortKey="critRate" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="DMG" sortKey="damage" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="DMG %" sortKey="contribution" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="CRT %" sortKey="critRate" sort={actorSort} onSort={sortActorsBy} />
                   <SortableHeader label="Kills" sortKey="kills" sort={actorSort} onSort={sortActorsBy} />
                 </tr></thead>
                 <tbody>{sortedActors.map((actor) => (

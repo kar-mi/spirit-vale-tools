@@ -28,7 +28,7 @@ function formatDuration(milliseconds: number): string {
 }
 
 function App() {
-  const [metric, setMetric] = useState<Metric>("cumulative");
+  const [metric, setMetric] = useState<Metric>("dps");
   const next = state.value;
   if (!next) return <main class="app-shell" />;
   const player = next.player;
@@ -60,8 +60,8 @@ function App() {
             <p>{next.fileName} · {next.encounterLabel}</p>
           </div>
           <div class="seg">
-            <button type="button" class={metric === "cumulative" ? "active" : undefined} onClick={() => setMetric("cumulative")}>Cumulative</button>
             <button type="button" class={metric === "dps" ? "active" : undefined} onClick={() => setMetric("dps")}>DPS / 5 sec</button>
+            <button type="button" class={metric === "cumulative" ? "active" : undefined} onClick={() => setMetric("cumulative")}>Cumulative</button>
           </div>
         </section>
         <div class="table-scroll totals">
