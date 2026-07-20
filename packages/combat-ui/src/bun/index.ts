@@ -10,9 +10,9 @@ import {
 } from "@spiritvale/combat";
 import { loadDpsAppSettings, normalizeDpsOpacity, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppRpc, DpsAppState, DpsAppStatus, DpsSettingsRpc, DpsSettingsState } from "../app-types.ts";
-import { formatCombatReplaySummary } from "./replay-summaries.ts";
-import { SafeSaveQueue } from "./safe-save.ts";
-import { createSessionPicker } from "./session-picker.ts";
+import { formatCombatReplaySummary } from "./combat-replay-summary.ts";
+import { SafeSaveQueue } from "../../../ui/src/bun/safe-save.ts";
+import { createSessionPicker } from "../../../ui/src/bun/session-picker.ts";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
 
 const MINIMUM_WIDTH = 320;

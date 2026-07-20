@@ -36,6 +36,15 @@
         "@spiritvale/skills": "workspace:*",
       },
     },
+    "packages/combat-ui": {
+      "name": "@spiritvale/combat-ui",
+      "dependencies": {
+        "@spiritvale/combat": "workspace:*",
+        "@spiritvale/logging": "workspace:*",
+        "@spiritvale/ui-theme": "workspace:*",
+        "electrobun": "1.18.1",
+      },
+    },
     "packages/core": {
       "name": "@spiritvale/core",
     },
@@ -91,13 +100,11 @@
       "name": "@spiritvale/ui",
       "dependencies": {
         "@spiritvale/character": "workspace:*",
-        "@spiritvale/combat": "workspace:*",
+        "@spiritvale/combat-ui": "workspace:*",
         "@spiritvale/core": "workspace:*",
         "@spiritvale/items": "workspace:*",
-        "@spiritvale/logging": "workspace:*",
         "@spiritvale/market": "workspace:*",
         "@spiritvale/rewards": "workspace:*",
-        "@spiritvale/skills": "workspace:*",
         "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
@@ -119,6 +126,8 @@
     "@spiritvale/cli": ["@spiritvale/cli@workspace:packages/cli"],
 
     "@spiritvale/combat": ["@spiritvale/combat@workspace:packages/combat"],
+
+    "@spiritvale/combat-ui": ["@spiritvale/combat-ui@workspace:packages/combat-ui"],
 
     "@spiritvale/core": ["@spiritvale/core@workspace:packages/core"],
 

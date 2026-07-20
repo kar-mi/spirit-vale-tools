@@ -9,7 +9,7 @@ import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings
 import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-storage.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
-import { createDpsWindow } from "./index.ts";
+import { createDpsWindow } from "@spiritvale/combat-ui";
 import { resolveLogDirectory } from "./paths.ts";
 import { SafeSaveQueue } from "./safe-save.ts";
 import { WindowSlot } from "./window-slot.ts";

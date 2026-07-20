@@ -1,5 +1,7 @@
 import type { RPCSchema } from "electrobun";
 
+/** Typed renderer contracts for the combat UI windows. */
+
 import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 
 export type DpsAppTab = "all" | "personal";

@@ -4,20 +4,9 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { readCombatReplaySummary, readRewardsReplaySummary } from "./replay-summaries.ts";
+import { readRewardsReplaySummary } from "./replay-summaries.ts";
 
 describe("replay picker summaries", () => {
-  test("aggregates combat encounters, damage, and duration", async () => {
-    await withReplay([
-      record(1, "combat.event", damage(300, 100), "2026-01-01T00:00:00.000Z"),
-      record(2, "combat.event", damage(360, 50), "2026-01-01T00:00:02.000Z"),
-      record(3, "combat.event", damage(1_500, 25), "2026-01-01T00:00:33.000Z"),
-      record(4, "combat.event", damage(1_530, 75), "2026-01-01T00:00:34.000Z"),
-    ], async (file) => {
-      expect(await readCombatReplaySummary(file)).toEqual({ encounters: 2, totalDamage: 250, durationMs: 3_000, invalidLines: 0 });
-    });
-  });
-
   test("aggregates confirmed rewards by kills, mobs, XP, and coins", async () => {
     await withReplay([
       record(1, "rewards.kill", kill("kill-a", "mob-a", 10, "2")),
@@ -30,11 +19,9 @@ describe("replay picker summaries", () => {
 
   test("empty and malformed logs return stable summaries without crashing", async () => {
     await withText("", async (file) => {
-      expect(await readCombatReplaySummary(file)).toEqual({ encounters: 0, totalDamage: 0, durationMs: 0, invalidLines: 0 });
       expect(await readRewardsReplaySummary(file)).toEqual({ kills: 0, mobs: 0, experience: 0, coins: 0n, invalidLines: 0 });
     });
     await withText("not-json\n", async (file) => {
-      expect((await readCombatReplaySummary(file)).invalidLines).toBe(1);
       expect((await readRewardsReplaySummary(file)).invalidLines).toBe(1);
     });
   });
@@ -48,10 +35,6 @@ async function withText(text: string, run: (file: string) => Promise<void>): Pro
   const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-summary-"));
   const file = path.join(directory, "synthetic.jsonl");
   try { await writeFile(file, text, "utf8"); await run(file); } finally { await rm(directory, { recursive: true, force: true }); }
-}
-
-function damage(tick: number, value: number) {
-  return { kind: "damage", rpc: "ApplyDamage_C", tick, actorId: 101, targetId: 900, sourceId: "SyntheticArc", sourceLabel: "Synthetic Arc", value, hitResult: "normal", team: 0 };
 }
 
 function kill(id: string, mobId: string, experience: number, coins: string) {

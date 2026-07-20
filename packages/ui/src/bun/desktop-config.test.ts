@@ -14,16 +14,17 @@ test("Electrobun does not copy runtime definition JSON", () => {
 });
 
 test("Electrobun builds and copies the DPS settings view", () => {
-  expect(config.build.views.dpssettingsview).toEqual({ entrypoint: "src/dpssettingsview/index.ts" });
-  expect(config.build.copy["src/dpssettingsview/index.html"]).toBe("views/dpssettingsview/index.html");
-  expect(config.build.copy["src/dpssettingsview/index.css"]).toBe("views/dpssettingsview/index.css");
+  expect(config.build.views.mainview).toEqual({ entrypoint: "../combat-ui/src/mainview/index.ts" });
+  expect(config.build.views.dpssettingsview).toEqual({ entrypoint: "../combat-ui/src/dpssettingsview/index.ts" });
+  expect(config.build.copy["../combat-ui/src/dpssettingsview/index.html"]).toBe("views/dpssettingsview/index.html");
+  expect(config.build.copy["../combat-ui/src/dpssettingsview/index.css"]).toBe("views/dpssettingsview/index.css");
 });
 
 test("Electrobun builds and copies the combat analysis views", () => {
-  expect(config.build.views.analysisview).toEqual({ entrypoint: "src/analysisview/index.ts" });
-  expect(config.build.views.analysisdetailview).toEqual({ entrypoint: "src/analysisdetailview/index.ts" });
-  expect(config.build.copy["src/analysisview/index.html"]).toBe("views/analysisview/index.html");
-  expect(config.build.copy["src/analysisdetailview/index.html"]).toBe("views/analysisdetailview/index.html");
+  expect(config.build.views.analysisview).toEqual({ entrypoint: "../combat-ui/src/analysisview/index.ts" });
+  expect(config.build.views.analysisdetailview).toEqual({ entrypoint: "../combat-ui/src/analysisdetailview/index.ts" });
+  expect(config.build.copy["../combat-ui/src/analysisview/index.html"]).toBe("views/analysisview/index.html");
+  expect(config.build.copy["../combat-ui/src/analysisdetailview/index.html"]).toBe("views/analysisdetailview/index.html");
 });
 
 test("every configured static asset source exists", () => {

@@ -1,0 +1,14 @@
+{
+  "name": "@spiritvale/combat-ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@spiritvale/combat": "workspace:*",
+    "@spiritvale/logging": "workspace:*",
+    "@spiritvale/ui-theme": "workspace:*",
+    "electrobun": "1.18.1"
+  }
+}
