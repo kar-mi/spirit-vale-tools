@@ -7,27 +7,20 @@ See [Packet Capture Workflow](docs/packet-capture-workflow.md) for the complete 
 ## Prerequisites
 
 - Windows 10 or 11 x64
-- Bun 1.3 or newer
-- A current [Npcap](https://npcap.com/#download) installation with its administrator-only restriction unchecked
+- A current [Npcap](https://npcap.com/#download) installation
+    - **Important**: During installation, select **"Install Npcap in WinPcap API-compatible Mode"** and leave **"Restrict Npcap driver's access to Administrators only"** unchecked
+    - ![option](docs/npcap_option.png)
+- Bun 1.3 or newer (only needed to build or run from source)
 
 ## Installation
 
-### Prerequisites
+### Option 1: Portable release
 
-Before installing spirit vale tools, you'll need:
+Download the latest `Spirit-Vale-portable-win-x64-v*.zip` from the GitHub Releases page, extract the complete folder, and run `Spirit Vale.exe`. Settings and capture sessions are written beneath the extracted folder's `data` directory.
 
-1. **Npcap** - Network packet capture library
-    - Download: https://npcap.com/dist/npcap-1.84.exe
-    - **Important**: During installation, select **"Install Npcap in WinPcap API-compatible Mode"**
-    - ![option](docs/npcap_option.png)
+### Option 2: Build from source
 
-### Download & Run
-
-#### Option 1: to update
- 
-#### Option 2: Build from Source
-
-See [DEVELOPER.md](DEVELOPER.md) to update
+Follow the [Setup](#setup) and [Portable Windows build](#portable-windows-build) sections below.
 
 ## Setup
 
@@ -128,7 +121,8 @@ compatible semantic maps retained as explicit overrides for legacy builds.
 ## Public API
 
 ```ts
-import { FishNetSessionDecoder, PacketCapture, decodeFishNetBundle } from "@spiritvale/core";
+import { FishNetSessionDecoder, decodeFishNetBundle } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import { FishNetCombatTracker } from "@spiritvale/combat";
 import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
 
@@ -232,14 +226,17 @@ not in that catalog, the decoder falls back to the live market name and then the
 Market snapshots and query results are always written to `market.jsonl`;
 64-bit prices, balances, and timestamps are represented as decimal strings.
 
-The standalone market browser follows the current `market --live` session and
-performs text, stat-range, sorting, and pagination queries locally. Start the
-passive market command first, then launch the separate desktop UI:
+The market browser is the Market window of the desktop app. It follows the
+current market session in the shared log directory and performs text,
+stat-range, sorting, and pagination queries locally. The desktop app captures
+market data itself; launch it and open Market from the launcher:
 
 ```powershell
-bun run market -- --live
-bun run dev:market
+bun run dev
 ```
+
+`bun run market -- --live` remains available for a headless CLI session that
+writes the same `market.jsonl` stream.
 
 The browser does not initiate game requests; opening the in-game market supplies
 the responses that populate the local session.
@@ -252,18 +249,21 @@ live records contain the actual character XP, job XP, coins, and collected items
 seen after party and player modifiers. Only a unique mob-death correlation enters
 the per-mob totals. Ambiguous or unrelated reward updates are counted separately.
 
-Start the passive rewards session first, then launch its standalone desktop UI:
+The rewards UI is the Rewards window of the desktop app; launch the app and
+open Rewards from the launcher:
 
 ```powershell
-bun run rewards
-bun run dev:rewards
+bun run dev
 ```
+
+`bun run rewards` remains available for a headless CLI session that records
+the same passive rewards stream.
 
 The UI provides the configured catalog, a confirmed recent-kill feed, per-mob
 session totals, and JSON Lines replay. It does not send or modify game traffic.
 
 ```ts
-import { PacketCapture } from "@spiritvale/core";
+import { PacketCapture } from "@spiritvale/core/capture";
 import { FishNetMarketTracker } from "@spiritvale/market";
 
 const capture = new PacketCapture();
