@@ -35,6 +35,12 @@ internal static class Program
         string root = AppDomain.CurrentDomain.BaseDirectory;
         string binDirectory = Path.Combine(root, "bin");
         string launcherPath = Path.Combine(binDirectory, "launcher.exe");
+        string dataDirectory = Path.Combine(root, "data");
+        string runtimeDirectory = Path.Combine(dataDirectory, "runtime");
+        string localAppDataDirectory = Path.Combine(runtimeDirectory, "local");
+        string roamingAppDataDirectory = Path.Combine(runtimeDirectory, "roaming");
+        string tempDirectory = Path.Combine(runtimeDirectory, "temp");
+        string webViewDataDirectory = Path.Combine(runtimeDirectory, "webview2");
 
         if (!File.Exists(launcherPath))
         {
@@ -48,6 +54,13 @@ internal static class Program
 
         try
         {
+            Directory.CreateDirectory(Path.Combine(dataDirectory, "logs"));
+            Directory.CreateDirectory(Path.Combine(dataDirectory, "settings"));
+            Directory.CreateDirectory(localAppDataDirectory);
+            Directory.CreateDirectory(roamingAppDataDirectory);
+            Directory.CreateDirectory(tempDirectory);
+            Directory.CreateDirectory(webViewDataDirectory);
+
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = launcherPath,
@@ -55,6 +68,12 @@ internal static class Program
                 UseShellExecute = false,
             };
             startInfo.EnvironmentVariables["SPIRIT_VALE_PORTABLE_ROOT"] = root;
+            startInfo.EnvironmentVariables["SPIRIT_VALE_LOG_DIRECTORY"] = Path.Combine(dataDirectory, "logs");
+            startInfo.EnvironmentVariables["LOCALAPPDATA"] = localAppDataDirectory;
+            startInfo.EnvironmentVariables["APPDATA"] = roamingAppDataDirectory;
+            startInfo.EnvironmentVariables["TEMP"] = tempDirectory;
+            startInfo.EnvironmentVariables["TMP"] = tempDirectory;
+            startInfo.EnvironmentVariables["WEBVIEW2_USER_DATA_FOLDER"] = webViewDataDirectory;
 
             Process.Start(startInfo);
             return 0;

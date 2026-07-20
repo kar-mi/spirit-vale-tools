@@ -74,7 +74,15 @@ for (const relativePath of forbiddenPaths) {
 }
 
 const readme = await readFile(path.join(extractedRoot, "README.txt"), "utf8");
-for (const expected of [`Version ${version}`, 'run "Spirit Vale.exe"', "data\\settings\\", "data\\logs\\", "Npcap"]) {
+for (const expected of [
+  `Version ${version}`,
+  'run "Spirit Vale.exe"',
+  "data\\settings\\",
+  "data\\logs\\",
+  "data\\runtime\\",
+  "out of Windows AppData",
+  "Npcap",
+]) {
   if (!readme.includes(expected)) throw new Error(`Portable README is missing expected text: ${expected}`);
 }
 

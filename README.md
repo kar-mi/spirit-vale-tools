@@ -16,7 +16,7 @@ See [Packet Capture Workflow](docs/packet-capture-workflow.md) for the complete 
 
 ### Option 1: Portable release
 
-Download the latest `Spirit-Vale-portable-win-x64-v*.zip` from the GitHub Releases page, extract the complete folder, and run `Spirit Vale.exe`. Settings and capture sessions are written beneath the extracted folder's `data` directory.
+Download the latest `Spirit-Vale-portable-win-x64-v*.zip` from the GitHub Releases page, extract the complete folder, and run `Spirit Vale.exe`. Settings, capture sessions, browser state, caches, and temporary runtime files are written beneath the extracted folder's `data` directory instead of Windows AppData. Always use the top-level executable so the portable environment is applied.
 
 ### Option 2: Build from source
 
@@ -38,7 +38,7 @@ Create the self-contained Windows x64 ZIP and its SHA-256 checksum with:
 bun run package:portable
 ```
 
-The ZIP contains a versioned folder with a top-level `Spirit Vale.exe`. Settings and capture sessions remain beneath that extracted folder's `data` directory. Npcap is still installed separately.
+The ZIP contains a versioned folder with a top-level `Spirit Vale.exe`. All application-owned writable state remains beneath that extracted folder's `data` directory. Npcap is still installed separately.
 
 ## Spirit Vale capture
 

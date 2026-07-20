@@ -114,6 +114,9 @@ async function main(): Promise<void> {
     "This build is self-contained. Settings and capture sessions are written beneath the data folder:",
     "- Settings: data\\settings\\",
     "- Capture and replay logs: data\\logs\\",
+    "- Runtime, browser, and temporary data: data\\runtime\\",
+    "",
+    "The portable launcher keeps application data out of Windows AppData. Always start the app with Spirit Vale.exe.",
     "",
   ].join("\r\n"), "utf8");
 
