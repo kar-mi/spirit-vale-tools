@@ -210,6 +210,33 @@ function readRawSubstat(reader: CharacterReader): { type: number; roll: number }
   return { type, roll };
 }
 
+/**
+ * Recomputes every derived substat field (name, scaled value, percent flag) from the raw
+ * type + roll using the current tables. Stored snapshots persist values baked by whatever
+ * build decoded them, so they must never be trusted for display or calculation.
+ */
+export function rescaleSubstats(snapshot: CharacterSnapshot, resolveItem: typeof resolveFishNetItem = resolveFishNetItem): CharacterSnapshot {
+  return {
+    ...snapshot,
+    equipment: snapshot.equipment.map((item) => {
+      const substatGroup = resolveItem(2, item.itemId)?.substatGroup;
+      const slotIndex = equipSlotIndex(item.slot);
+      return { ...item, substats: item.substats.map((stat) => convertSubstat(stat.type, stat.roll, slotIndex, false, substatGroup)) };
+    }),
+    artifacts: snapshot.artifacts.map((item) => ({
+      ...item,
+      substats: item.substats.map((stat) => convertSubstat(stat.type, stat.roll, ARTIFACT_SLOTS.indexOf(item.slot), true)),
+    })),
+  };
+}
+
+function equipSlotIndex(slot: string): number {
+  const index = EQUIP_SLOTS.indexOf(slot);
+  if (index >= 0) return index;
+  const parsed = /^Slot (-?\d+)$/.exec(slot);
+  return parsed ? Number(parsed[1]) : -1;
+}
+
 function convertSubstat(type: number, roll: number, slot: number, artifact: boolean, substatGroup?: string): CharacterSubstat {
   const name = STAT_NAMES[type] ?? `Stat ${type}`;
   const cap = substatCap(type, slot, artifact, substatGroup);

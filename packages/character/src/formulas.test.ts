@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, type ItemResolver } from "./formulas.ts";
 import type { CharacterArtifact, CharacterEquipment, CharacterSubstat } from "./types.ts";
 
 describe("calculateCharacterStats", () => {
@@ -57,8 +57,17 @@ describe("calculateCharacterStats", () => {
   });
 
   test("applies artifact per-piece, refine, and full-set effects", () => {
-    const artifact = (refine: number): CharacterArtifact => ({ slot: "Rune", itemId: "Vampiric", refine, gems: [], substats: [] });
-    const leech = (artifacts: CharacterArtifact[]) => materializeGearStats([], artifacts).filter((stat) => stat.type === 98).reduce((total, stat) => total + (stat.value ?? 0), 0);
+    const resolveItem: ItemResolver = (itemType, itemId) => itemType === 3 && itemId === "Example Set"
+      ? {
+        itemType: 3,
+        id: "Example Set",
+        displayName: "Example Set",
+        refineEffects: [{ type: 98, value: 0.125 }],
+        artifactSet: { requiredPieces: 4, perPieceBase: [{ type: 98, value: 3 }], perPiece: [], fullSet: [{ type: 98, value: 12 }] },
+      }
+      : undefined;
+    const artifact = (refine: number): CharacterArtifact => ({ slot: "Rune", itemId: "Example Set", refine, gems: [], substats: [] });
+    const leech = (artifacts: CharacterArtifact[]) => materializeGearStats([], artifacts, resolveItem).filter((stat) => stat.type === 98).reduce((total, stat) => total + (stat.value ?? 0), 0);
     expect(leech([artifact(0)])).toBe(3);
     expect(leech([artifact(4)])).toBe(3.5);
     expect(leech([artifact(0), artifact(0), artifact(0), artifact(0)])).toBe(15);

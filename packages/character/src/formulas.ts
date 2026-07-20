@@ -15,9 +15,13 @@ export function calculateCharacterStats(level: number, baseAttributes: Character
   return total.map((stat, index) => ({ ...stat, tab: "basic", base: base[index]!.value, gear: stat.value - base[index]!.value }));
 }
 
-export function aggregateGearSubstats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[]): GearStatTotal[] {
+/** Resolves catalogued item definitions; injectable so tests can supply synthetic data. */
+export type ItemResolver = typeof resolveFishNetItem;
+export type SkillResolver = typeof resolveFishNetSkill;
+
+export function aggregateGearSubstats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[], resolveItem: ItemResolver = resolveFishNetItem): GearStatTotal[] {
   const totals = new Map<number, GearStatTotal>();
-  for (const stat of materializeGearStats(equipment, artifacts)) {
+  for (const stat of materializeGearStats(equipment, artifacts, resolveItem)) {
     const entry = totals.get(stat.type) ?? { type: stat.type, name: STAT_NAMES[stat.type] ?? stat.name, total: 0, percent: stat.percent, unresolvedRolls: 0 };
     if (stat.value === undefined) entry.unresolvedRolls += 1;
     else entry.total += stat.value;
@@ -27,20 +31,20 @@ export function aggregateGearSubstats(equipment: readonly CharacterEquipment[], 
 }
 
 /** Combines rolled stats with the catalogued innate effects of items, cards, artifacts, and gems. */
-export function materializeGearStats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[]): CharacterSubstat[] {
+export function materializeGearStats(equipment: readonly CharacterEquipment[], artifacts: readonly CharacterArtifact[], resolveItem: ItemResolver = resolveFishNetItem): CharacterSubstat[] {
   const stats = [...equipment, ...artifacts].flatMap((item) => item.substats);
   for (const item of equipment) {
-    stats.push(...itemEffects(2, item.itemId, item.refine));
-    for (const card of item.cards) stats.push(...itemEffects(4, card, 0));
+    stats.push(...itemEffects(2, item.itemId, item.refine, undefined, resolveItem));
+    for (const card of item.cards) stats.push(...itemEffects(4, card, 0, undefined, resolveItem));
   }
   for (const artifact of artifacts) {
-    stats.push(...itemEffects(3, artifact.itemId, artifact.refine, artifact.slot));
-    for (const gem of artifact.gems) stats.push(...itemEffects(5, gem.id, gem.refine));
+    stats.push(...itemEffects(3, artifact.itemId, artifact.refine, artifact.slot, resolveItem));
+    for (const gem of artifact.gems) stats.push(...itemEffects(5, gem.id, gem.refine, undefined, resolveItem));
   }
   const sets = new Map<string, number>();
   for (const artifact of artifacts) sets.set(artifact.itemId, (sets.get(artifact.itemId) ?? 0) + 1);
   for (const [itemId, pieces] of sets) {
-    const set = resolveFishNetItem(3, itemId)?.artifactSet;
+    const set = resolveItem(3, itemId)?.artifactSet;
     if (!set) continue;
     stats.push(...effectsToStats(set.perPieceBase, 1), ...effectsToStats(set.perPiece, pieces));
     if (pieces >= set.requiredPieces) stats.push(...effectsToStats(set.fullSet, 1));
@@ -49,8 +53,8 @@ export function materializeGearStats(equipment: readonly CharacterEquipment[], a
 }
 
 /** Converts passive-skill effects into stat inputs at their learned level. */
-export function materializeSkillStats(skills: readonly CharacterSkill[]): CharacterSubstat[] {
-  return skills.flatMap((skill) => (resolveFishNetSkill(skill.id)?.effects ?? []).map((effect) => ({
+export function materializeSkillStats(skills: readonly CharacterSkill[], resolveSkill: SkillResolver = resolveFishNetSkill): CharacterSubstat[] {
+  return skills.flatMap((skill) => (resolveSkill(skill.id)?.effects ?? []).map((effect) => ({
     type: effect.type,
     name: effect.label ?? STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,
     roll: 0,
@@ -59,8 +63,8 @@ export function materializeSkillStats(skills: readonly CharacterSkill[]): Charac
   })));
 }
 
-function itemEffects(itemType: number, itemId: string, refine: number, artifactSlot?: string): CharacterSubstat[] {
-  const definition = resolveFishNetItem(itemType, itemId);
+function itemEffects(itemType: number, itemId: string, refine: number, artifactSlot: string | undefined, resolveItem: ItemResolver): CharacterSubstat[] {
+  const definition = resolveItem(itemType, itemId);
   const slotEffects = artifactSlot && isArtifactSlot(artifactSlot) ? definition?.artifactSlotEffects?.[artifactSlot] ?? [] : [];
   const slotRefineEffects = artifactSlot && isArtifactSlot(artifactSlot) ? definition?.artifactSlotRefineEffects?.[artifactSlot] ?? [] : [];
   return [...effectsToStats(definition?.effects ?? [], 1), ...effectsToStats(slotEffects, 1), ...effectsToStats(definition?.refineEffects ?? [], refine), ...effectsToStats(slotRefineEffects, refine)];

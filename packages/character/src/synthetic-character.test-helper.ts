@@ -34,7 +34,7 @@ export function syntheticCharacter(update: boolean): Buffer {
     string(out, "example-artifact-instance"); packed(out, 3); string(out, "Example Rune"); bool(out, false);
   });
   bool(out, false);
-  list(out, [undefined], () => { bool(out, false); string(out, "Multistrike"); packed(out, 3); });
+  list(out, [undefined], () => { bool(out, false); string(out, "Example Skill"); packed(out, 3); });
   list(out, [], () => undefined);
   bool(out, true);
   list(out, [], () => undefined);

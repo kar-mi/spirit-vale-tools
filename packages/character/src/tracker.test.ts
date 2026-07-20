@@ -43,6 +43,34 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().statusDetail).toContain("Change maps or channels");
   });
 
+  test("re-derives cached substat values from raw rolls using current tables", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.setCached({
+      schemaVersion: 1,
+      buildFingerprint: "stale-build",
+      name: "rak",
+      archetypes: ["Warrior"],
+      level: 88,
+      experience: 0,
+      jobLevel: 1,
+      jobExperience: 0,
+      attributes: { STR: 99, VIT: 50, AGI: 1, DEX: 1, INT: 1, LUK: 71 },
+      activeLoadout: "Normal",
+      // Baked under an older build: wrong scaled value (11 instead of 9) and unnamed stat.
+      // "Synthetic Visor" is not catalogued, so the accessory slot-cap table (Hit cap 10) applies.
+      equipment: [{ slot: "Left accessory", itemId: "Synthetic Visor", refine: 0, cards: [], substats: [{ type: 13, name: "Stat 13", roll: 67, value: 11, percent: false }] }],
+      artifacts: [],
+      skills: [],
+      updatedAt: "2026-07-19T00:00:00.000Z",
+      source: "cached",
+    });
+
+    const state = tracker.state();
+    expect(state.snapshot?.equipment[0]?.substats[0]).toMatchObject({ value: 9, name: "Hit", roll: 67 });
+    // round(level 88 + DEX 1 × 2 + floor(71 LUK / 3) + 25 + rescaled 9) — not 149 via the stale 11.
+    expect(state.stats.find((stat) => stat.id === "hit")?.value).toBe(147);
+  });
+
   test("records server-synced values for the local player and merges them onto stats", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(characterPacket("CharacterCallback_T"));

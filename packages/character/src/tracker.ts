@@ -1,5 +1,5 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
-import { decodeCharacterRpcPayload } from "./decoder.ts";
+import { decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
 import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
@@ -60,16 +60,19 @@ export class FishNetCharacterTracker {
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
 
   state(): CharacterViewState {
+    // Stored substat values were baked by whatever build decoded them; always re-derive
+    // from the raw rolls so cap or name-table fixes reach cached snapshots immediately.
+    const snapshot = this.snapshot ? rescaleSubstats(structuredClone(this.snapshot)) : undefined;
     const records = Object.keys(this.records).length > 0 ? { records: { ...this.records } } : {};
     if (this.unsupportedDetail) return {
-      ...(this.snapshot ? { snapshot: structuredClone(this.snapshot) } : {}),
-      stats: this.snapshot ? this.applyRecords(calculateStats(this.snapshot)) : [],
-      gearTotals: this.snapshot ? calculateGearTotals(this.snapshot) : [],
+      ...(snapshot ? { snapshot } : {}),
+      stats: snapshot ? this.applyRecords(calculateStats(snapshot)) : [],
+      gearTotals: snapshot ? calculateGearTotals(snapshot) : [],
       ...records,
       status: "unsupported",
       statusDetail: this.unsupportedDetail,
     };
-    if (!this.snapshot) return {
+    if (!snapshot) return {
       status: "waiting",
       statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
       stats: [],
@@ -77,14 +80,14 @@ export class FishNetCharacterTracker {
       ...records,
     };
     return {
-      snapshot: structuredClone(this.snapshot),
-      stats: this.applyRecords(calculateStats(this.snapshot)),
-      gearTotals: calculateGearTotals(this.snapshot),
+      snapshot,
+      stats: this.applyRecords(calculateStats(snapshot)),
+      gearTotals: calculateGearTotals(snapshot),
       ...records,
-      status: this.snapshot.source,
-      statusDetail: this.snapshot.source === "live"
+      status: snapshot.source,
+      statusDetail: snapshot.source === "live"
         ? "Live character data"
-        : `Last known character · updated ${new Date(this.snapshot.updatedAt).toLocaleString()}`,
+        : `Last known character · updated ${new Date(snapshot.updatedAt).toLocaleString()}`,
     };
   }
 
