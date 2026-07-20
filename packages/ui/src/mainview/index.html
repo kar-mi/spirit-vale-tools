@@ -13,6 +13,11 @@
     <main class="app-shell">
       <header id="titlebar" class="titlebar">
         <div class="brand"><img class="brand-icon" src="views://assets/app-icon.png" alt="" /><span>Spirit Vale</span><span class="brand-tag">DPS</span></div>
+        <div class="opacity-control">
+          <label for="opacity-slider">Opacity</label>
+          <input id="opacity-slider" type="range" min="20" max="100" step="5" value="100" />
+          <output id="opacity-value" for="opacity-slider">100%</output>
+        </div>
         <div class="window-controls">
           <button id="pin-button" class="icon-button" type="button" aria-label="Toggle always on top" title="Always on top">◇</button>
           <button id="minimize-button" class="icon-button" type="button" aria-label="Minimize" title="Minimize">−</button>

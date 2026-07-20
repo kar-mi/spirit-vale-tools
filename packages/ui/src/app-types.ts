@@ -18,6 +18,7 @@ export interface DpsAppState {
   statusDetail: string;
   storageWarning?: string;
   pinned: boolean;
+  opacity: number;
   personalName: string;
   personalActorId?: number;
   replayFileName?: string;
@@ -38,6 +39,7 @@ export type DpsAppRpc = {
       setPersonalName: { params: { name: string }; response: DpsAppState };
       setPersonalActor: { params: { actorId: number | null }; response: DpsAppState };
       setPinned: { params: { pinned: boolean }; response: DpsAppState };
+      setOpacity: { params: { opacity: number }; response: DpsAppState };
       setTab: { params: { tab: DpsAppTab }; response: DpsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
       getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };

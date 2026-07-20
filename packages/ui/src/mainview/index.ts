@@ -35,6 +35,8 @@ const liveModeButton = button("live-mode-button");
 const replayModeButton = button("replay-mode-button");
 const openReplayButton = button("open-replay-button");
 const resetButton = button("reset-button");
+const opacitySlider = input("opacity-slider");
+const opacityValue = element("opacity-value");
 const pinButton = button("pin-button");
 const statusDot = element("status-dot");
 const statusText = element("status-text");
@@ -48,6 +50,11 @@ const personalHint = element("personal-hint");
 
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
+opacitySlider.addEventListener("input", () => {
+  const opacity = Number(opacitySlider.value) / 100;
+  applyOpacity(opacity);
+  void electroview.rpc?.request.setOpacity({ opacity });
+});
 pinButton.addEventListener("click", () => state && void electroview.rpc?.request.setPinned({ pinned: !state.pinned }));
 liveModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "live" }));
 replayModeButton.addEventListener("click", () => void electroview.rpc?.request.setMode({ mode: "replay" }));
@@ -84,6 +91,7 @@ function render(next: DpsAppState): void {
   resetButton.disabled = next.mode !== "live" || !next.snapshot;
   pinButton.classList.toggle("active", next.pinned);
   pinButton.textContent = next.pinned ? "◆" : "◇";
+  applyOpacity(next.opacity);
   statusDot.className = `status-dot ${STATUS_TONE[next.status]}`;
   statusText.textContent = next.statusDetail;
   const storageWarning = element("storage-warning");
@@ -97,6 +105,13 @@ function render(next: DpsAppState): void {
   renderTab(next.tab);
   renderAll(next);
   renderPersonal(next);
+}
+
+function applyOpacity(opacity: number): void {
+  const percentage = Math.round(opacity * 100);
+  document.documentElement.style.setProperty("--dps-window-opacity", String(opacity));
+  opacitySlider.value = String(percentage);
+  opacityValue.textContent = `${percentage}%`;
 }
 
 function renderEncounterSelect(next: DpsAppState): void {

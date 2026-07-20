@@ -10,7 +10,7 @@ import {
   loadDpsReplay,
 } from "@spiritvale/combat";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
-import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
+import { loadDpsAppSettings, normalizeDpsOpacity, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppMode, DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
 import { formatCombatReplaySummary } from "./replay-summaries.ts";
 import { SafeSaveQueue } from "./safe-save.ts";
@@ -102,6 +102,12 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
         publish();
         return appState();
       },
+      setOpacity: ({ opacity }) => {
+        settings.opacity = normalizeDpsOpacity(opacity);
+        scheduleSettingsSave();
+        publish();
+        return appState();
+      },
       setTab: ({ tab }) => {
         settings.tab = tab;
         scheduleSettingsSave();
@@ -128,7 +134,7 @@ window = new BrowserWindow({
   url: "views://mainview/index.html",
   frame: settings.frame,
   titleBarStyle: "hidden",
-  transparent: false,
+  transparent: true,
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
@@ -210,6 +216,7 @@ function appState(): DpsAppState {
     statusDetail,
     ...(storageWarning ? { storageWarning } : {}),
     pinned: settings.pinned,
+    opacity: settings.opacity,
     personalName: settings.personalName,
     ...(activeMeter().getPersonalActorId() === undefined ? {} : { personalActorId: activeMeter().getPersonalActorId() }),
     ...(mode === "replay" && replayFileName ? { replayFileName } : {}),

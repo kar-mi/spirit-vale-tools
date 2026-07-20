@@ -2,14 +2,18 @@
    Frameless overlay window: keeps the custom draggable titlebar.
    Tokens only; no raw hex here. */
 
-html, body {
+:root,
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
   overflow: hidden;
+  background: transparent;
 }
 
 .app-shell {
+  position: relative;
   display: grid;
   grid-template-rows: 40px auto auto auto auto minmax(0, 1fr);
   width: 100%;
@@ -18,6 +22,40 @@ html, body {
   min-height: 360px;
   border: 1px solid var(--outline-variant);
   background: var(--surface);
+  opacity: var(--dps-window-opacity, 1);
+}
+
+.titlebar {
+  gap: 6px;
+  background: var(--surface-container-low);
+}
+
+.opacity-control {
+  display: grid;
+  grid-template-columns: auto minmax(48px, 1fr) auto;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+  font-size: 12px;
+  user-select: none;
+}
+
+.opacity-control label,
+.opacity-control output { color: var(--on-surface-variant); font-variant-numeric: tabular-nums; }
+.opacity-control input { width: 100%; min-width: 0; margin: 0; accent-color: var(--primary); }
+
+.stat-tile {
+  background: var(--surface-container);
+}
+
+.icon-button.active,
+.seg > button.active {
+  background: var(--secondary-container);
+}
+
+.banner.is-warn {
+  background: var(--warning-container);
 }
 
 .command-bar {
@@ -60,6 +98,10 @@ html, body {
   overflow: hidden;
   border-radius: var(--shape-md);
   background: var(--surface-container-low);
+}
+
+@media (max-width: 380px) {
+  .brand > span:not(.brand-tag) { display: none; }
 }
 
 .meter-bar {

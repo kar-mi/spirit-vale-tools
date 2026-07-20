@@ -165,7 +165,7 @@ export class CaptureCoordinator {
     this.rewardsLog?.log("rewards.lifecycle", { state: "started" });
     this.marketLog?.log("market.lifecycle", { state: "started" });
     this.otherLog?.log("capture.lifecycle", { state: "started" });
-    this.setStatus("capturing", "Capture active; waiting for Spirit Vale…");
+    this.setStatus("capturing", "Capture active; waiting for Spirit Vale ...");
   }
 
   private targetStatus(target: CaptureTargetStatus): void {
@@ -177,7 +177,7 @@ export class CaptureCoordinator {
     if (this.status !== "capturing") return;
     this.setStatus(
       "capturing",
-      target.state === "active" ? "Capturing Spirit Vale data" : "Capture active; waiting for Spirit Vale…",
+      target.state === "active" ? "Capturing Spirit Vale data" : "Capture active; waiting for Spirit Vale ...",
     );
   }
 
