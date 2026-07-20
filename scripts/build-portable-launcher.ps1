@@ -1,6 +1,9 @@
 param(
   [Parameter(Mandatory = $true)]
-  [string]$OutputPath
+  [string]$OutputPath,
+
+  [Parameter(Mandatory = $true)]
+  [string]$IconPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -102,6 +105,7 @@ try {
     "/nologo" `
     "/target:winexe" `
     "/out:$OutputPath" `
+    "/win32icon:$IconPath" `
     "/reference:System.Windows.Forms.dll" `
     $sourcePath
   if ($LASTEXITCODE -ne 0) {

@@ -24,3 +24,8 @@ test("portable launcher redirects writable runtime paths beneath data", () => {
   expect(launcherScript).toContain('Path.Combine(runtimeDirectory, "temp")');
   expect(launcherScript).toContain('Path.Combine(runtimeDirectory, "webview2")');
 });
+
+test("portable launcher embeds the configured Windows application icon", () => {
+  expect(launcherScript).toContain("[string]$IconPath");
+  expect(launcherScript).toContain('"/win32icon:$IconPath"');
+});

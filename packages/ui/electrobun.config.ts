@@ -31,6 +31,7 @@ export default {
       sessionpickerview: { entrypoint: "src/sessionpickerview/index.ts" },
     },
     copy: {
+      "../../static/icon/eggplant_icon_320px.png": "views/assets/app-icon.png",
       "src/launcherview/index.html": "views/launcherview/index.html",
       "src/launcherview/index.css": "views/launcherview/index.css",
       "../ui-theme/theme.css": "views/launcherview/theme.css",
@@ -66,9 +67,14 @@ export default {
     win: {
       bundleCEF: false,
       defaultRenderer: "native",
+      icon: "../../static/icon/eggplant_icon_320px.png",
     },
   },
   runtime: {
     exitOnLastWindowClosed: true,
+  },
+  scripts: {
+    postBuild: "../../scripts/embed-electrobun-windows-icon.ts",
+    postPackage: "../../scripts/embed-electrobun-windows-installer-icon.ts",
   },
 } satisfies ElectrobunConfig;

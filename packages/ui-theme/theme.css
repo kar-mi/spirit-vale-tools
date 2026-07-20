@@ -90,11 +90,18 @@ button { cursor: pointer; }
 .brand {
   display: flex;
   flex: 0 0 auto;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+}
+
+.brand-icon {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .brand-tag { color: var(--primary); }

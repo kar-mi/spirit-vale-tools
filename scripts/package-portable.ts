@@ -88,8 +88,9 @@ async function main(): Promise<void> {
 
   const nativeLauncher = path.join(portableRoot, "bin", "launcher.exe");
   const bunRuntime = path.join(portableRoot, "bin", "bun.exe");
-  if (!existsSync(nativeLauncher) || !existsSync(bunRuntime)) {
-    throw new Error("The extracted Electrobun payload is missing its Windows runtime executables.");
+  const applicationIcon = path.join(projectRoot, "packages", "ui", "dist", "electrobun", "stable-win-x64", "app-icon.ico");
+  if (!existsSync(nativeLauncher) || !existsSync(bunRuntime) || !existsSync(applicationIcon)) {
+    throw new Error("The Electrobun build is missing its Windows runtime executables or application icon.");
   }
 
   run("powershell", [
@@ -100,6 +101,8 @@ async function main(): Promise<void> {
     path.join(projectRoot, "scripts", "build-portable-launcher.ps1"),
     "-OutputPath",
     path.join(portableRoot, "Spirit Vale.exe"),
+    "-IconPath",
+    applicationIcon,
   ]);
 
   await writeFile(path.join(portableRoot, "README.txt"), [
