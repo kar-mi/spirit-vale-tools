@@ -24,7 +24,7 @@ Before installing spirit vale tools, you'll need:
 ### Download & Run
 
 #### Option 1: to update
-
+ 
 #### Option 2: Build from Source
 
 See [DEVELOPER.md](DEVELOPER.md) to update
