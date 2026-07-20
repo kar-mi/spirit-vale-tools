@@ -9,13 +9,16 @@
   },
   "dependencies": {
     "@spiritvale/character": "workspace:*",
+    "@spiritvale/combat": "workspace:*",
     "@spiritvale/combat-ui": "workspace:*",
     "@spiritvale/core": "workspace:*",
     "@spiritvale/items": "workspace:*",
+    "@spiritvale/logging": "workspace:*",
     "@spiritvale/market": "workspace:*",
     "@spiritvale/market-ui": "workspace:*",
     "@spiritvale/rewards": "workspace:*",
     "@spiritvale/rewards-ui": "workspace:*",
+    "@spiritvale/skills": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*"
   },
   "devDependencies": {
