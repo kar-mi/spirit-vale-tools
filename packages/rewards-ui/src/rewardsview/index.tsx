@@ -26,6 +26,7 @@ const STATUS_TONE: Record<RewardsAppState["status"], StatusTone> = {
 };
 
 const format = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+const timestampFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "medium" });
 
 const state = signal<RewardsAppState | undefined>(undefined);
 
@@ -60,10 +61,16 @@ function formatDrop(drop: RewardsUiDrop): string {
   return `${drop.itemName} ×${drop.count}${drop.chance === undefined ? "" : ` · ${formatChance(drop.chance)}`}`;
 }
 
+function formatTimestamp(value: string | undefined): string {
+  if (value === undefined) return "—";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : timestampFormat.format(parsed);
+}
+
 function App() {
   const next = state.value;
   const [summarySort, setSummarySort] = useState<TableSort<SummarySortKey>>({ key: "kills", direction: "descending" });
-  const [killSort, setKillSort] = useState<TableSort<KillSortKey>>({ key: "tick", direction: "descending" });
+  const [killSort, setKillSort] = useState<TableSort<KillSortKey>>({ key: "timestamp", direction: "descending" });
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   if (!next) return null;
 
@@ -179,22 +186,23 @@ function App() {
               <div class="empty-state">{next.mode === "replay" ? "No confirmed kills in this replay." : "Waiting for a confirmed mob reward."}</div>
             ) : (
               <div class="table-scroll rewards-table-scroll">
-                <table class="data-table rewards-table" aria-label="Recent kills">
+                <table class="data-table rewards-table recent-rewards-table" aria-label="Recent kills">
                   <thead><tr>
                     <RewardSortHeader label="Mob" active={killSort.key === "displayName"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "displayName"))} />
                     <RewardSortHeader label="Level" active={killSort.key === "level"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "level"))} />
-                    <RewardSortHeader label="Tick" active={killSort.key === "tick"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "tick"))} />
                     <RewardSortHeader label="Char XP" active={killSort.key === "experience"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "experience"))} />
                     <RewardSortHeader label="Job XP" active={killSort.key === "jobExperience"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "jobExperience"))} />
                     <RewardSortHeader label="Coins" active={killSort.key === "coins"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "coins"))} />
                     <th>Drops</th>
+                    <RewardSortHeader label="Timestamp" active={killSort.key === "timestamp"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "timestamp"))} />
                   </tr></thead>
                   <tbody>{kills.map((kill) => <RewardRow
                     key={kill.id}
                     rowKey={`kill-${kill.id}`}
                     name={kill.displayName}
-                    values={[format.format(kill.level), format.format(kill.tick), `+${format.format(kill.experience)}`, `+${format.format(kill.jobExperience)}`, `+${formatDecimal(kill.coins)}`]}
+                    values={[format.format(kill.level), `+${format.format(kill.experience)}`, `+${format.format(kill.jobExperience)}`, `+${formatDecimal(kill.coins)}`]}
                     drops={kill.drops}
+                    trailingValues={[formatTimestamp(kill.timestamp)]}
                     expanded={expanded}
                     onToggle={toggleExpanded}
                   />)}</tbody>
@@ -212,7 +220,7 @@ function App() {
   );
 }
 
-function RewardRow({ rowKey, name, values, drops, expanded, onToggle }: { rowKey: string; name: string; values: readonly string[]; drops: readonly RewardsUiDrop[]; expanded: ReadonlySet<string>; onToggle(key: string): void }) {
+function RewardRow({ rowKey, name, values, drops, trailingValues = [], expanded, onToggle }: { rowKey: string; name: string; values: readonly string[]; drops: readonly RewardsUiDrop[]; trailingValues?: readonly string[]; expanded: ReadonlySet<string>; onToggle(key: string): void }) {
   const isExpanded = expanded.has(rowKey);
   const detailId = `reward-drops-${safeDomId(rowKey)}`;
   return <Fragment>
@@ -220,8 +228,9 @@ function RewardRow({ rowKey, name, values, drops, expanded, onToggle }: { rowKey
       <th scope="row" title={name}>{name}</th>
       {values.map((value, index) => <td key={index}>{value}</td>)}
       <td>{drops.length === 0 ? "—" : <button class="table-detail-button" type="button" aria-expanded={isExpanded} aria-controls={detailId} onClick={() => onToggle(rowKey)}>{isExpanded ? "▾" : "▸"} {drops.length}</button>}</td>
+      {trailingValues.map((value, index) => <td key={`trailing-${index}`} title={value}>{value}</td>)}
     </tr>
-    {isExpanded && drops.length > 0 && <tr id={detailId} class="table-detail-row"><td colSpan={values.length + 2}><div class="table-detail-chips">{drops.map((drop, index) => <span class="chip" key={`${drop.itemId}-${index}`}>{formatDrop(drop)}</span>)}</div></td></tr>}
+    {isExpanded && drops.length > 0 && <tr id={detailId} class="table-detail-row"><td colSpan={values.length + trailingValues.length + 2}><div class="table-detail-chips">{drops.map((drop, index) => <span class="chip" key={`${drop.itemId}-${index}`}>{formatDrop(drop)}</span>)}</div></td></tr>}
   </Fragment>;
 }
 

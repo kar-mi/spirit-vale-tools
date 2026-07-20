@@ -18,7 +18,7 @@ export interface RewardsUiMob {
 }
 export interface RewardsUiKill {
   id: string;
-  tick: number;
+  timestamp?: string;
   mobId: string;
   displayName: string;
   level: number;

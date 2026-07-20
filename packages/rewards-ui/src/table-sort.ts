@@ -2,7 +2,7 @@ import type { RewardsUiKill, RewardsUiMob, RewardsUiSummary } from "./app-types.
 
 export type SortDirection = "ascending" | "descending";
 export type SummarySortKey = "displayName" | "level" | "kills" | "experience" | "jobExperience" | "coins";
-export type KillSortKey = "displayName" | "level" | "tick" | "experience" | "jobExperience" | "coins";
+export type KillSortKey = "displayName" | "level" | "timestamp" | "experience" | "jobExperience" | "coins";
 export type CatalogSortKey = "displayName" | "id" | "level" | "boss" | "baseExperience" | "baseCoins";
 
 export interface TableSort<K extends string> { key: K; direction: SortDirection }
@@ -12,6 +12,16 @@ export function sortRewardSummaries(rows: readonly RewardsUiSummary[], sort: Tab
 }
 
 export function sortRewardKills(rows: readonly RewardsUiKill[], sort: TableSort<KillSortKey>): RewardsUiKill[] {
+  if (sort.key === "timestamp") {
+    const factor = sort.direction === "ascending" ? 1 : -1;
+    return [...rows].sort((left, right) => {
+      if (left.timestamp === undefined && right.timestamp === undefined) return `${left.displayName}:${left.id}`.localeCompare(`${right.displayName}:${right.id}`);
+      if (left.timestamp === undefined) return 1;
+      if (right.timestamp === undefined) return -1;
+      const comparison = timestampValue(left.timestamp) - timestampValue(right.timestamp);
+      return comparison * factor || `${left.displayName}:${left.id}`.localeCompare(`${right.displayName}:${right.id}`);
+    });
+  }
   return sortRows(rows, sort.direction, (left, right) => compareReward(left, right, sort.key), (row) => `${row.displayName}:${row.id}`);
 }
 
@@ -42,4 +52,9 @@ function compareBigInt(left: string, right: string): number {
   } catch {
     return left.localeCompare(right);
   }
+}
+
+function timestampValue(value: string): number {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
 }

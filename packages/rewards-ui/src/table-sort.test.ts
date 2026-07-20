@@ -11,10 +11,11 @@ describe("rewards table sorting", () => {
     expect(sortRewardSummaries([high, low], { key: "coins", direction: "ascending" }).map((row) => row.mobId)).toEqual(["mob-a", "mob-b"]);
   });
 
-  test("sorts recent kills by tick and catalog rows by stable level/name order", () => {
-    const early = kill("kill-a", "Fictional Moth", 10);
-    const late = kill("kill-b", "Synthetic Golem", 20);
-    expect(sortRewardKills([early, late], { key: "tick", direction: "descending" }).map((row) => row.id)).toEqual(["kill-b", "kill-a"]);
+  test("sorts recent kills by timestamp and catalog rows by stable level/name order", () => {
+    const early = kill("kill-a", "Fictional Moth", "2026-01-01T00:00:10.000Z");
+    const late = kill("kill-b", "Synthetic Golem", "2026-01-01T00:00:20.000Z");
+    const missing = { ...kill("kill-c", "Placeholder Wisp", "2026-01-01T00:00:30.000Z"), timestamp: undefined };
+    expect(sortRewardKills([early, missing, late], { key: "timestamp", direction: "descending" }).map((row) => row.id)).toEqual(["kill-b", "kill-a", "kill-c"]);
 
     const catalog: RewardsUiMob[] = [mob("mob-b", "Synthetic Golem", 4), mob("mob-a", "Fictional Moth", 4), mob("mob-c", "Placeholder Wisp", 2)];
     expect(sortRewardCatalog(catalog, { key: "level", direction: "ascending" }).map((row) => row.id)).toEqual(["mob-c", "mob-a", "mob-b"]);
@@ -25,8 +26,8 @@ function summary(mobId: string, displayName: string, kills: number, coins: strin
   return { mobId, displayName, level: 1, kills, experience: 10, jobExperience: 5, coins, drops: [] };
 }
 
-function kill(id: string, displayName: string, tick: number): RewardsUiKill {
-  return { id, tick, mobId: `mob-${id}`, displayName, level: 1, experience: 10, jobExperience: 5, coins: "2", drops: [] };
+function kill(id: string, displayName: string, timestamp: string): RewardsUiKill {
+  return { id, timestamp, mobId: `mob-${id}`, displayName, level: 1, experience: 10, jobExperience: 5, coins: "2", drops: [] };
 }
 
 function mob(id: string, displayName: string, level: number): RewardsUiMob {

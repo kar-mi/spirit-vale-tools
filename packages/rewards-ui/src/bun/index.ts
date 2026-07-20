@@ -176,7 +176,7 @@ function appState(): RewardsAppState {
     replayWarnings,
     kills: snapshot.kills.slice(0, 100).map((kill) => ({
       id: kill.id,
-      tick: kill.tick,
+      ...(kill.recordedAt === undefined ? {} : { timestamp: kill.recordedAt }),
       mobId: kill.mob.mobId,
       displayName: kill.mob.displayName,
       level: kill.mob.level,

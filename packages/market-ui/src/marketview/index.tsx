@@ -1,5 +1,5 @@
 import { Fragment, render } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
@@ -62,7 +62,6 @@ function humanizeStat(value: string): string {
 function App() {
   const next = state.value;
   const queryRef = useRef<HTMLInputElement>(null);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
 
   // Only sync the field from server state when the user isn't actively typing in
   // it — otherwise the debounced setQuery round-trip would clobber keystrokes
@@ -77,13 +76,6 @@ function App() {
   const changeSort = (key: MarketUiSortKey): void => {
     const direction: MarketUiSortDirection = next.sortKey === key && next.sortDirection === "ascending" ? "descending" : "ascending";
     void electroview.rpc?.request.setSort({ key, direction }).then((updated) => { state.value = updated; });
-  };
-  const toggleExpanded = (key: string): void => {
-    setExpanded((current) => {
-      const updated = new Set(current);
-      if (updated.has(key)) updated.delete(key); else updated.add(key);
-      return updated;
-    });
   };
 
   return (
@@ -142,8 +134,6 @@ function App() {
                 <th>Stats</th>
               </tr></thead>
               <tbody>{next.listings.map((listing) => {
-                const detailId = `market-stats-${safeDomId(listing.key)}`;
-                const isExpanded = expanded.has(listing.key);
                 return <Fragment key={listing.key}>
                   <tr>
                     <th scope="row" title={listing.name}>
@@ -155,9 +145,9 @@ function App() {
                     <td title={listing.seller}>{listing.seller ?? "—"}</td>
                     <td title={listing.shopName}>{listing.shopName ?? "—"}</td>
                     <td title={listing.mapId}>{listing.mapId ?? "—"}</td>
-                    <td>{listing.stats.length === 0 ? "—" : <button class="table-detail-button" type="button" aria-expanded={isExpanded} aria-controls={detailId} onClick={() => toggleExpanded(listing.key)}>{isExpanded ? "▾" : "▸"} {listing.stats.length}</button>}</td>
+                    <td>{listing.stats.length === 0 ? "—" : listing.stats.length}</td>
                   </tr>
-                  {isExpanded && listing.stats.length > 0 && <tr id={detailId} class="table-detail-row"><td colSpan={7}><div class="table-detail-chips">{listing.stats.map((stat, index) => <span class="chip" key={`${stat.type}-${index}`}>{formatStat(stat)}</span>)}</div></td></tr>}
+                  {listing.stats.length > 0 && <tr class="table-detail-row"><td colSpan={7}><div class="table-detail-chips">{listing.stats.map((stat, index) => <span class="chip" key={`${stat.type}-${index}`}>{formatStat(stat)}</span>)}</div></td></tr>}
                 </Fragment>;
               })}</tbody>
             </table>
@@ -181,7 +171,5 @@ function SortableHeader({ label, sortKey, state: next, onSort }: { label: string
     </th>
   );
 }
-
-function safeDomId(value: string): string { return value.replace(/[^a-zA-Z0-9_-]/g, "-"); }
 
 render(<App />, document.getElementById("root")!);

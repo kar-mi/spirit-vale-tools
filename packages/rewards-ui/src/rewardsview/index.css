@@ -58,6 +58,10 @@ main {
 .rewards-table :is(th, td):nth-child(2), .rewards-table :is(th, td):nth-child(3), .rewards-table :is(th, td):nth-child(7) { width: 10%; }
 .rewards-table :is(th, td):nth-child(4), .rewards-table :is(th, td):nth-child(5), .rewards-table :is(th, td):nth-child(6) { width: 16%; }
 .rewards-table thead th.sortable-column { padding: 0; }
+.recent-rewards-table :is(th, td):first-child { width: 20%; }
+.recent-rewards-table :is(th, td):nth-child(2), .recent-rewards-table :is(th, td):nth-child(6) { width: 9%; }
+.recent-rewards-table :is(th, td):nth-child(3), .recent-rewards-table :is(th, td):nth-child(4), .recent-rewards-table :is(th, td):nth-child(5) { width: 14%; }
+.recent-rewards-table :is(th, td):nth-child(7) { width: 20%; }
 
 #identity-warning { margin-bottom: 14px; }
 
