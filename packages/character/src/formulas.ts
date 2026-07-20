@@ -146,7 +146,7 @@ function calculateBasicStats(level: number, baseAttributes: CharacterAttributes,
 function advancedCategory(type: number): CharacterStatBreakdown["category"] {
   if ([63, 64, 65, 66, 104, 159, 160, 185, 187, 188].includes(type)) return "Speed";
   if ([20, 21, 22, 23, 59, 60, 61, 62, 67, 75, 76, 97, 98, 99, 100, 113, 114, 176, 177].includes(type)) return "Sustain";
-  if ([11, 12, 16, 17, 26, 73, 74, 86].includes(type)) return "Mitigation";
+  if ([11, 12, 16, 17, 26, 58, 73, 74, 86, 103].includes(type)) return "Mitigation";
   return "Utility";
 }
 

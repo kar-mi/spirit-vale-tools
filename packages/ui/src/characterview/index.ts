@@ -6,7 +6,7 @@ import { PERCENT_STATS, STAT_NAMES, type CharacterStatBreakdown, type CharacterV
 import type { CharacterRpc } from "../character-types.ts";
 
 const ATTRIBUTE_NAMES = ["STR", "VIT", "AGI", "DEX", "INT", "LUK"] as const;
-type Tab = "basic" | "gear" | "advanced";
+type Tab = "basic" | "gear" | "advanced" | "skills";
 let activeTab: Tab = "basic";
 
 const rpc = Electroview.defineRPC<CharacterRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });
@@ -158,12 +158,12 @@ function renderStats(id: string, stats: CharacterStatBreakdown[], tab: Character
       summary.append(
         node("span", "stat-label", stat.label),
         node("span", "stat-value base-value", valueText(stat.base, stat.unit)),
-        node("span", "stat-value", valueText(stat.value, stat.unit)),
-        node("span", `stat-value record-value ${stat.record === undefined ? "missing" : drift ? "drift" : "match"}`, stat.record === undefined ? "—" : valueText(stat.record, stat.unit)),
+        node("span", "stat-value", displayedValue(stat, stat.value)),
+        node("span", `stat-value record-value ${stat.record === undefined ? "missing" : drift ? "drift" : "match"}`, stat.record === undefined ? "—" : displayedValue(stat, stat.record)),
       );
       const inputs = [`Gear ${signed(stat.gear, stat.unit)}`, ...Object.entries(stat.inputs).map(([key, value]) => `${key} ${format(value)}`)].join(" · ");
       const breakdown = node("div", "breakdown", [node("div", "formula", stat.formula), node("div", "inputs", inputs)]);
-      if (drift) breakdown.prepend(node("div", "drift-note", `Server reports ${valueText(stat.record!, stat.unit)} — the calculation misses a cap or modifier.`));
+      if (drift) breakdown.prepend(node("div", "drift-note", `Server reports ${displayedValue(stat, stat.record!)} — the calculation misses a cap or modifier.`));
       details.append(summary, breakdown);
       group.append(details);
     }
@@ -175,6 +175,10 @@ function setActiveTab(tab: Tab): void {
   activeTab = tab;
   for (const panel of document.querySelectorAll<HTMLElement>(".tab-panel")) panel.hidden = panel.id !== `${tab}-panel`;
   for (const button of document.querySelectorAll<HTMLButtonElement>(".tab-button")) { const selected = button.dataset.tab === tab; button.classList.toggle("active", selected); button.setAttribute("aria-selected", String(selected)); }
+}
+
+function displayedValue(stat: CharacterStatBreakdown, value: number): string {
+  return stat.id === "gear-stat-101" ? `+${valueText(value, stat.unit)}` : valueText(value, stat.unit);
 }
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = "", content?: string | Node[]): HTMLElementTagNameMap[K] {

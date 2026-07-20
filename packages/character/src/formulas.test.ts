@@ -48,6 +48,19 @@ describe("calculateCharacterStats", () => {
     expect(advanced[0]).toMatchObject({ id: "gear-stat-63", tab: "advanced", base: 0, gear: 4, value: 4 });
   });
 
+  test("labels weight limit and groups incoming damage modifiers under mitigation", () => {
+    const advanced = calculateAdvancedGearStats([
+      { type: 58, name: "Damage from melee", total: -5, percent: true, unresolvedRolls: 0 },
+      { type: 101, name: "Weight limit", total: 100, percent: false, unresolvedRolls: 0 },
+      { type: 103, name: "Damage from ranged", total: -5, percent: true, unresolvedRolls: 0 },
+    ]);
+    expect(advanced).toMatchObject([
+      { id: "gear-stat-58", category: "Mitigation", unit: "%" },
+      { id: "gear-stat-101", label: "Weight limit", category: "Utility" },
+      { id: "gear-stat-103", label: "Damage from ranged", category: "Mitigation", unit: "%" },
+    ]);
+  });
+
   test("scales move speed from the verified 7.5 base", () => {
     const noGear = calculateCharacterStats(88, { STR: 99, VIT: 50, AGI: 1, DEX: 1, INT: 1, LUK: 71 });
     expect(noGear.find((stat) => stat.id === "move-speed")).toMatchObject({ base: 7.5, value: 7.5, tab: "basic" });
