@@ -4,6 +4,7 @@ import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { loadDpsReplay } from "@spiritvale/combat";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
 
 import type {
   CombatAnalysisDetailRpc,
@@ -48,8 +49,8 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
         setWindowFrame: (frame) => detailWindow?.setFrame(
           frame.x,
           frame.y,
-          Math.max(MINIMUM_DETAIL_WIDTH, frame.width),
-          Math.max(MINIMUM_DETAIL_HEIGHT, frame.height),
+          Math.max(scaledSize(MINIMUM_DETAIL_WIDTH), frame.width),
+          Math.max(scaledSize(MINIMUM_DETAIL_HEIGHT), frame.height),
         ),
       },
       messages: {},
@@ -78,8 +79,8 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
         setWindowFrame: (frame) => window?.setFrame(
           frame.x,
           frame.y,
-          Math.max(MINIMUM_ANALYSIS_WIDTH, frame.width),
-          Math.max(MINIMUM_ANALYSIS_HEIGHT, frame.height),
+          Math.max(scaledSize(MINIMUM_ANALYSIS_WIDTH), frame.width),
+          Math.max(scaledSize(MINIMUM_ANALYSIS_HEIGHT), frame.height),
         ),
       },
       messages: {},
@@ -144,9 +145,10 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
     });
     window = nextWindow;
     applyRoundedCorners(nextWindow.ptr);
+    registerUiScaleWindow(nextWindow);
     Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-      const width = Math.max(MINIMUM_ANALYSIS_WIDTH, event.data.width);
-      const height = Math.max(MINIMUM_ANALYSIS_HEIGHT, event.data.height);
+      const width = Math.max(scaledSize(MINIMUM_ANALYSIS_WIDTH), event.data.width);
+      const height = Math.max(scaledSize(MINIMUM_ANALYSIS_HEIGHT), event.data.height);
       if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
     });
     nextWindow.on("close", () => {
@@ -184,9 +186,10 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
     });
     detailWindow = nextWindow;
     applyRoundedCorners(nextWindow.ptr);
+    registerUiScaleWindow(nextWindow);
     Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-      const width = Math.max(MINIMUM_DETAIL_WIDTH, event.data.width);
-      const height = Math.max(MINIMUM_DETAIL_HEIGHT, event.data.height);
+      const width = Math.max(scaledSize(MINIMUM_DETAIL_WIDTH), event.data.width);
+      const height = Math.max(scaledSize(MINIMUM_DETAIL_HEIGHT), event.data.height);
       if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
     });
     nextWindow.on("close", () => {

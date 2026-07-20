@@ -4,6 +4,7 @@ import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { listLogSessions } from "@spiritvale/logging";
 import type { LogStream } from "@spiritvale/logging";
 import { applyRoundedCorners } from "./win32.ts";
+import { registerUiScaleWindow, scaledSize } from "./ui-scale.ts";
 
 import type { SessionPickerRpc, SessionPickerState } from "./session-picker-types.ts";
 
@@ -63,9 +64,10 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
         });
         window = nextWindow;
         applyRoundedCorners(nextWindow.ptr);
+        registerUiScaleWindow(nextWindow);
         Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-          const width = Math.max(480, event.data.width);
-          const height = Math.max(400, event.data.height);
+          const width = Math.max(scaledSize(480), event.data.width);
+          const height = Math.max(scaledSize(400), event.data.height);
           if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
         });
         nextWindow.on("close", () => {

@@ -1,5 +1,6 @@
 import type { RPCSchema } from "electrobun";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
+import type { UiScale } from "@spiritvale/ui-theme/ui-scale";
 
 export type CaptureStatus = "starting" | "capturing" | "unavailable" | "stopped";
 export type ToolWindow = "combat" | "rewards" | "market" | "character";
@@ -21,11 +22,13 @@ export interface LauncherState {
   effectiveAdapter?: string;
   adapterFallback: boolean;
   adapters: CaptureAdapterOption[];
+  uiScale: UiScale;
 }
 
 type LauncherSharedRequests = {
   getState: { params: Record<string, never>; response: LauncherState };
   setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
+  setUiScale: { params: { uiScale: UiScale }; response: LauncherState };
   refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
   openNpcapDownload: { params: Record<string, never>; response: void };
   windowAction: { params: { action: "minimize" | "close" }; response: void };

@@ -5,6 +5,7 @@ import type { LauncherSettingsRpc, LauncherState } from "../launcher-types.ts";
 const rpc = Electroview.defineRPC<LauncherSettingsRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });
 const electroview = new Electroview({ rpc });
 const adapterSelect = element("adapter-select") as HTMLSelectElement;
+const uiScaleSelect = element("ui-scale-select") as HTMLSelectElement;
 const npcapStatus = element("npcap-status");
 const npcapDetail = element("npcap-detail");
 const adapterDetail = element("adapter-detail");
@@ -22,6 +23,10 @@ adapterSelect.addEventListener("change", () => {
     adapterDetail.textContent = error instanceof Error ? error.message : "Could not switch adapters";
   }).finally(() => { adapterSelect.disabled = false; });
 });
+uiScaleSelect.addEventListener("change", () => {
+  uiScaleSelect.disabled = true;
+  void electroview.rpc?.request.setUiScale({ uiScale: Number(uiScaleSelect.value) as LauncherState["uiScale"] }).then(render).finally(() => { uiScaleSelect.disabled = false; });
+});
 
 initWindowChrome({
   titlebar: element("titlebar"), minWidth: 420, minHeight: 360,
@@ -32,6 +37,7 @@ initWindowChrome({
 void electroview.rpc?.request.getState({}).then(render);
 
 function render(state: LauncherState): void {
+  uiScaleSelect.value = String(state.uiScale);
   storageWarning.hidden = state.storageWarning === undefined;
   storageWarning.textContent = state.storageWarning ?? "";
   npcapStatus.textContent = availabilityLabel(state.npcapAvailability);

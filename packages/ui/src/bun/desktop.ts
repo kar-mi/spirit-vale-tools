@@ -16,6 +16,7 @@ import { WindowSlot } from "./window-slot.ts";
 import { resolveDesktopStoragePaths } from "./portable-paths.ts";
 import type { CharacterSnapshot } from "@spiritvale/character";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
+import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 
 makeProcessDpiAware();
 
@@ -26,6 +27,7 @@ const storagePaths = resolveDesktopStoragePaths({
 });
 const logDirectory = storagePaths.logDirectory;
 const settings = await loadLauncherSettings(storagePaths.launcherSettingsPath);
+setUiScale(settings.uiScale);
 let launcherWindow: BrowserWindow;
 let settingsWindow: BrowserWindow | undefined;
 let launcherState: LauncherState = {
@@ -36,6 +38,7 @@ let launcherState: LauncherState = {
   selectedAdapter: settings.captureAdapter,
   adapterFallback: false,
   adapters: [],
+  uiScale: settings.uiScale,
 };
 let shuttingDown = false;
 let characterStorageWarning: string | undefined;
@@ -87,6 +90,7 @@ function sharedLauncherHandlers(getWindow: () => BrowserWindow | undefined, fall
   return {
     getState: () => launcherState,
     setCaptureAdapter: ({ deviceName }: { deviceName: string | null }) => setCaptureAdapter(deviceName),
+    setUiScale: ({ uiScale }: { uiScale: typeof settings.uiScale }) => setLauncherUiScale(uiScale),
     refreshCaptureDevices: async () => {
       await refreshCaptureDevices();
       if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
@@ -142,10 +146,11 @@ launcherWindow = new BrowserWindow({
   rpc,
 });
 applyRoundedCorners(launcherWindow.ptr);
+registerUiScaleWindow(launcherWindow);
 
 Electrobun.events.on(`resize-${launcherWindow.id}`, (event: { data: { width: number; height: number } }) => {
-  const width = Math.max(900, event.data.width);
-  const height = Math.max(430, event.data.height);
+  const width = Math.max(scaledSize(900), event.data.width);
+  const height = Math.max(scaledSize(430), event.data.height);
   if (width !== event.data.width || height !== event.data.height) launcherWindow.setSize(width, height);
 });
 launcherWindow.on("close", () => void shutdown());
@@ -229,9 +234,10 @@ function openSettings(): void {
   });
   settingsWindow = nextWindow;
   applyRoundedCorners(nextWindow.ptr);
+  registerUiScaleWindow(nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-    const width = Math.max(420, event.data.width);
-    const height = Math.max(360, event.data.height);
+    const width = Math.max(scaledSize(420), event.data.width);
+    const height = Math.max(scaledSize(360), event.data.height);
     if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
   });
   nextWindow.on("close", () => { if (settingsWindow === nextWindow) settingsWindow = undefined; });
@@ -244,6 +250,14 @@ async function setCaptureAdapter(deviceName: string | null): Promise<LauncherSta
   await launcherSettingsPersistence.flush(settings);
   launcherState = { ...launcherState, selectedAdapter: nextSelection };
   await refreshCaptureDevices();
+  return launcherState;
+}
+
+async function setLauncherUiScale(uiScale: typeof settings.uiScale): Promise<LauncherState> {
+  settings.uiScale = setUiScale(uiScale);
+  launcherState = { ...launcherState, uiScale: settings.uiScale };
+  launcherSettingsPersistence.schedule(settings);
+  publish();
   return launcherState;
 }
 

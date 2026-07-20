@@ -53,8 +53,8 @@ body {
 }
 
 .summary-table-scroll { width: 100%; }
-.summary-table { min-width: 390px; }
-.summary-table :is(th, td) { padding: 5px 8px; }
+.summary-table { min-width: 100%; table-layout: fixed; }
+.summary-table :is(th, td) { width: 25%; overflow: hidden; padding: 5px 8px; text-overflow: ellipsis; }
 .summary-table tbody td { font-size: 14px; }
 
 #storage-warning { margin: 0 12px 10px; }

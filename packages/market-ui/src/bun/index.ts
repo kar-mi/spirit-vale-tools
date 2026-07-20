@@ -1,5 +1,6 @@
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
 
 import {
   FISHNET_MARKET_STAT_NAMES,
@@ -111,10 +112,11 @@ window = new BrowserWindow({
   rpc,
 });
 mountRoundedWindow(window);
+registerUiScaleWindow(window);
 
 Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; height: number } }) => {
-  const width = Math.max(520, event.data.width);
-  const height = Math.max(480, event.data.height);
+  const width = Math.max(scaledSize(520), event.data.width);
+  const height = Math.max(scaledSize(480), event.data.height);
   if (width !== event.data.width || height !== event.data.height) window.setSize(width, height);
 });
 window.on("close", () => {
@@ -176,9 +178,10 @@ function openFilters(): void {
   });
   filterWindow = nextWindow;
   mountRoundedWindow(nextWindow);
+  registerUiScaleWindow(nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-    const width = Math.max(520, event.data.width);
-    const height = Math.max(480, event.data.height);
+    const width = Math.max(scaledSize(520), event.data.width);
+    const height = Math.max(scaledSize(480), event.data.height);
     if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
   });
   nextWindow.on("close", () => { if (filterWindow === nextWindow) filterWindow = undefined; });

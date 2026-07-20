@@ -15,7 +15,8 @@
     "./session-picker": "./session-picker.ts",
     "./session-picker-types": "./session-picker-types.ts",
     "./window-rpc": "./window-rpc.ts",
-    "./window-publish": "./window-publish.ts"
+    "./window-publish": "./window-publish.ts",
+    "./ui-scale": "./ui-scale.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.9.4",

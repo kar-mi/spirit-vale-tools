@@ -2,6 +2,7 @@ import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 import type { CharacterViewState } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
 
 export interface CharacterWindowOptions {
   getState: () => CharacterViewState;
@@ -36,12 +37,13 @@ export async function createCharacterWindow(options: CharacterWindowOptions) {
     rpc,
   });
   applyRoundedCorners(window.ptr);
+  registerUiScaleWindow(window);
   const unsubscribe = options.subscribe((state) => {
     try { rpc.send.stateChanged(state); } catch { /* View may still be connecting. */ }
   });
   Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; height: number } }) => {
-    const width = Math.max(680, event.data.width);
-    const height = Math.max(520, event.data.height);
+    const width = Math.max(scaledSize(680), event.data.width);
+    const height = Math.max(scaledSize(520), event.data.height);
     if (width !== event.data.width || height !== event.data.height) window.setSize(width, height);
   });
   window.on("close", () => {

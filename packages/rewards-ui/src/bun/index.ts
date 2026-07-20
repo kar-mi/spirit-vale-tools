@@ -22,6 +22,7 @@ import type {
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
+import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
 
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();
@@ -112,7 +113,7 @@ const catalogRpc = BrowserView.defineRPC<RewardsCatalogRpc>({
       windowAction: ({ action }) => {
         if (action === "minimize") catalogWindow?.minimize();
         else if (catalogWindow) {
-          settings.catalogFrame = clampCatalogFrame(catalogWindow.getFrame());
+          settings.catalogFrame = unscaleCatalogFrame(clampPhysicalCatalogFrame(catalogWindow.getFrame()));
           scheduleSave();
           catalogWindow.close();
         }
@@ -133,18 +134,19 @@ const catalogRpc = BrowserView.defineRPC<RewardsCatalogRpc>({
 window = new BrowserWindow({
   title: "Spirit Vale Mob Rewards",
   url: "views://rewardsview/index.html",
-  frame: settings.frame,
+  frame: scaleFrame(settings.frame),
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
 mountRoundedWindow(window);
+registerUiScaleWindow(window, { scaleInitialFrame: false });
 
-Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => { settings.frame = clampFrame(event.data); scheduleSave(); });
+Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => { settings.frame = unscaleFrame(clampPhysicalFrame(event.data)); scheduleSave(); });
 Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.frame }) => {
-  const frame = clampFrame(event.data);
-  settings.frame = frame;
+  const frame = clampPhysicalFrame(event.data);
+  settings.frame = unscaleFrame(frame);
   if (frame.width !== event.data.width || frame.height !== event.data.height) window.setSize(frame.width, frame.height);
   scheduleSave();
 });
@@ -222,7 +224,7 @@ function openCatalog(): void {
   const nextWindow = new BrowserWindow({
     title: "Spirit Vale Mob Catalog",
     url: "views://rewardscatalogview/index.html",
-    frame: settings.catalogFrame,
+    frame: scaleCatalogFrame(settings.catalogFrame),
     titleBarStyle: "hidden",
     transparent: false,
     rpc: catalogRpc,
@@ -230,14 +232,15 @@ function openCatalog(): void {
   catalogWindow = nextWindow;
   nextWindow.setAlwaysOnTop(settings.pinned);
   mountRoundedWindow(nextWindow);
+  registerUiScaleWindow(nextWindow, { scaleInitialFrame: false });
 
   Electrobun.events.on(`move-${nextWindow.id}`, (event: { data: typeof settings.catalogFrame }) => {
-    settings.catalogFrame = clampCatalogFrame(event.data);
+    settings.catalogFrame = unscaleCatalogFrame(clampPhysicalCatalogFrame(event.data));
     scheduleSave();
   });
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: typeof settings.catalogFrame }) => {
-    const frame = clampCatalogFrame(event.data);
-    settings.catalogFrame = frame;
+    const frame = clampPhysicalCatalogFrame(event.data);
+    settings.catalogFrame = unscaleCatalogFrame(frame);
     if (frame.width !== event.data.width || frame.height !== event.data.height) nextWindow.setSize(frame.width, frame.height);
     scheduleSave();
   });
@@ -318,6 +321,30 @@ function clampCatalogFrame(frame: typeof settings.catalogFrame): typeof settings
   return { x: frame.x, y: frame.y, width: Math.max(520, frame.width), height: Math.max(420, frame.height) };
 }
 
+function scaleFrame(frame: typeof settings.frame): typeof settings.frame {
+  return { x: frame.x, y: frame.y, width: scaledSize(frame.width), height: scaledSize(frame.height) };
+}
+
+function unscaleFrame(frame: typeof settings.frame): typeof settings.frame {
+  return clampFrame({ x: frame.x, y: frame.y, width: unscaledSize(frame.width), height: unscaledSize(frame.height) });
+}
+
+function clampPhysicalFrame(frame: typeof settings.frame): typeof settings.frame {
+  return { x: frame.x, y: frame.y, width: Math.max(scaledSize(620), frame.width), height: Math.max(scaledSize(520), frame.height) };
+}
+
+function scaleCatalogFrame(frame: typeof settings.catalogFrame): typeof settings.catalogFrame {
+  return { x: frame.x, y: frame.y, width: scaledSize(frame.width), height: scaledSize(frame.height) };
+}
+
+function unscaleCatalogFrame(frame: typeof settings.catalogFrame): typeof settings.catalogFrame {
+  return clampCatalogFrame({ x: frame.x, y: frame.y, width: unscaledSize(frame.width), height: unscaledSize(frame.height) });
+}
+
+function clampPhysicalCatalogFrame(frame: typeof settings.catalogFrame): typeof settings.catalogFrame {
+  return { x: frame.x, y: frame.y, width: Math.max(scaledSize(520), frame.width), height: Math.max(scaledSize(420), frame.height) };
+}
+
 function scheduleSave(): void {
   if (shuttingDown) return;
   settingsPersistence.schedule(settings);
@@ -329,7 +356,7 @@ async function shutdown(): Promise<void> {
   replayPicker.close();
   clearInterval(timer);
   catalogWindow?.close();
-  settings.frame = clampFrame(window.getFrame());
+  settings.frame = unscaleFrame(window.getFrame());
   await settingsPersistence.flush(settings);
 }
 }

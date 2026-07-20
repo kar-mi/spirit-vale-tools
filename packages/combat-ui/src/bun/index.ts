@@ -15,6 +15,7 @@ import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
 import { Utils } from "electrobun/bun";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
+import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
@@ -141,22 +142,23 @@ const settingsRpc = BrowserView.defineRPC<DpsSettingsRpc>({
 window = new BrowserWindow({
   title: "Spirit Vale DPS",
   url: "views://mainview/index.html",
-  frame: settings.frame,
+  frame: scaleFrame(settings.frame),
   titleBarStyle: "hidden",
   transparent: true,
   rpc,
 });
 window.setAlwaysOnTop(settings.pinned);
 applyRoundedCorners(window.ptr);
+registerUiScaleWindow(window, { scaleInitialFrame: false });
 
 Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => {
-  settings.frame = clampFrame(event.data);
+  settings.frame = unscaleFrame(clampPhysicalFrame(event.data));
   scheduleSettingsSave();
 });
 Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.frame }) => {
-  const frame = clampFrame(event.data);
-  settings.frame = frame;
-  if (event.data.width < MINIMUM_WIDTH || event.data.height < MINIMUM_HEIGHT) {
+  const frame = clampPhysicalFrame(event.data);
+  settings.frame = unscaleFrame(frame);
+  if (event.data.width < scaledSize(MINIMUM_WIDTH) || event.data.height < scaledSize(MINIMUM_HEIGHT)) {
     window.setSize(frame.width, frame.height);
   }
   scheduleSettingsSave();
@@ -213,9 +215,10 @@ function openDpsSettings(): void {
   nextWindow.show();
   nextWindow.activate();
   applyRoundedCorners(nextWindow.ptr);
+  registerUiScaleWindow(nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-    const width = Math.max(DPS_SETTINGS_WIDTH, event.data.width);
-    const height = Math.max(DPS_SETTINGS_HEIGHT, event.data.height);
+    const width = Math.max(scaledSize(DPS_SETTINGS_WIDTH), event.data.width);
+    const height = Math.max(scaledSize(DPS_SETTINGS_HEIGHT), event.data.height);
     if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
   });
   nextWindow.on("close", () => { if (settingsWindow === nextWindow) settingsWindow = undefined; });
@@ -286,6 +289,18 @@ function clampFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
   };
 }
 
+function scaleFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
+  return { x: frame.x, y: frame.y, width: scaledSize(frame.width), height: scaledSize(frame.height) };
+}
+
+function unscaleFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
+  return clampFrame({ x: frame.x, y: frame.y, width: unscaledSize(frame.width), height: unscaledSize(frame.height) });
+}
+
+function clampPhysicalFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
+  return { x: frame.x, y: frame.y, width: Math.max(scaledSize(MINIMUM_WIDTH), frame.width), height: Math.max(scaledSize(MINIMUM_HEIGHT), frame.height) };
+}
+
 type DpsAppSettingsFrame = typeof settings.frame;
 
 function scheduleSettingsSave(): void {
@@ -299,7 +314,7 @@ async function shutdown(): Promise<void> {
   analysisWindow.close();
   settingsWindow?.close();
   settingsWindow = undefined;
-  settings.frame = clampFrame(window.getFrame());
+  settings.frame = unscaleFrame(window.getFrame());
   clearInterval(liveLogTimer);
   await settingsPersistence.flush(settings);
 }
