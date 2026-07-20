@@ -1,12 +1,11 @@
-import { render } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { Fragment, render } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
 import { StatusDot } from "@spiritvale/ui-theme/status-dot";
-import { ListRow } from "@spiritvale/ui-theme/list-row";
 
-import type { MarketUiListing, MarketUiRpc, MarketUiState, MarketUiStat } from "../app-types.ts";
+import type { MarketUiRpc, MarketUiSortDirection, MarketUiSortKey, MarketUiState, MarketUiStat } from "../app-types.ts";
 
 const STATUS_TONE: Record<MarketUiState["status"], "is-ok" | "is-warn" | "is-err"> = {
   waiting: "is-warn",
@@ -63,6 +62,7 @@ function humanizeStat(value: string): string {
 function App() {
   const next = state.value;
   const queryRef = useRef<HTMLInputElement>(null);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
 
   // Only sync the field from server state when the user isn't actively typing in
   // it — otherwise the debounced setQuery round-trip would clobber keystrokes
@@ -73,6 +73,18 @@ function App() {
   }, [next?.query]);
 
   if (!next) return <main class="app-shell" />;
+
+  const changeSort = (key: MarketUiSortKey): void => {
+    const direction: MarketUiSortDirection = next.sortKey === key && next.sortDirection === "ascending" ? "descending" : "ascending";
+    void electroview.rpc?.request.setSort({ key, direction }).then((updated) => { state.value = updated; });
+  };
+  const toggleExpanded = (key: string): void => {
+    setExpanded((current) => {
+      const updated = new Set(current);
+      if (updated.has(key)) updated.delete(key); else updated.add(key);
+      return updated;
+    });
+  };
 
   return (
     <main class="app-shell">
@@ -118,7 +130,38 @@ function App() {
                 : "No captured listings match this search and filter set."}
           </div>
         ) : (
-          next.listings.map((listing) => <ListingCard key={listing.key} listing={listing} />)
+          <div class="table-scroll results-table-scroll">
+            <table class="data-table market-table">
+              <thead><tr>
+                <SortableHeader label="Item" sortKey="name" state={next} onSort={changeSort} />
+                <SortableHeader label="Price" sortKey="price" state={next} onSort={changeSort} />
+                <SortableHeader label="Qty" sortKey="available" state={next} onSort={changeSort} />
+                <SortableHeader label="Seller" sortKey="seller" state={next} onSort={changeSort} />
+                <SortableHeader label="Shop" sortKey="shopName" state={next} onSort={changeSort} />
+                <SortableHeader label="Map" sortKey="mapId" state={next} onSort={changeSort} />
+                <th>Stats</th>
+              </tr></thead>
+              <tbody>{next.listings.map((listing) => {
+                const detailId = `market-stats-${safeDomId(listing.key)}`;
+                const isExpanded = expanded.has(listing.key);
+                return <Fragment key={listing.key}>
+                  <tr>
+                    <th scope="row" title={listing.name}>
+                      <span class="primary-cell">{listing.name}</span>
+                      {listing.itemId && <span class="secondary-cell">{listing.itemId}</span>}
+                    </th>
+                    <td class="is-value" title={formatPrice(listing.price)}>{formatPrice(listing.price)}</td>
+                    <td>{numberFormat.format(listing.available)}</td>
+                    <td title={listing.seller}>{listing.seller ?? "—"}</td>
+                    <td title={listing.shopName}>{listing.shopName ?? "—"}</td>
+                    <td title={listing.mapId}>{listing.mapId ?? "—"}</td>
+                    <td>{listing.stats.length === 0 ? "—" : <button class="table-detail-button" type="button" aria-expanded={isExpanded} aria-controls={detailId} onClick={() => toggleExpanded(listing.key)}>{isExpanded ? "▾" : "▸"} {listing.stats.length}</button>}</td>
+                  </tr>
+                  {isExpanded && listing.stats.length > 0 && <tr id={detailId} class="table-detail-row"><td colSpan={7}><div class="table-detail-chips">{listing.stats.map((stat, index) => <span class="chip" key={`${stat.type}-${index}`}>{formatStat(stat)}</span>)}</div></td></tr>}
+                </Fragment>;
+              })}</tbody>
+            </table>
+          </div>
         )}
       </section>
       <div class="load-more-row">
@@ -128,16 +171,17 @@ function App() {
   );
 }
 
-function ListingCard({ listing }: { listing: MarketUiListing }) {
-  const metadata = [listing.seller, listing.shopName, listing.mapId].filter(Boolean).join(" · ");
+function SortableHeader({ label, sortKey, state: next, onSort }: { label: string; sortKey: MarketUiSortKey; state: MarketUiState; onSort(key: MarketUiSortKey): void }) {
+  const active = next.sortKey === sortKey;
   return (
-    <ListRow className="listing" chips={listing.stats.length > 0 ? listing.stats.map(formatStat) : undefined}>
-      <strong class="row-title">{listing.name}</strong>
-      <strong class="listing-price">{formatPrice(listing.price)}</strong>
-      <span class="row-meta">{metadata || listing.itemId || "Market listing"}</span>
-      <span class="row-meta listing-quantity">{numberFormat.format(listing.available)} available</span>
-    </ListRow>
+    <th class="sortable-column" aria-sort={active ? next.sortDirection : undefined}>
+      <button class="sort-button" type="button" onClick={() => onSort(sortKey)}>
+        <span>{label}</span><span class={active ? "sort-indicator active" : "sort-indicator"} aria-hidden="true">{active ? (next.sortDirection === "descending" ? "▼" : "▲") : "↕"}</span>
+      </button>
+    </th>
   );
 }
+
+function safeDomId(value: string): string { return value.replace(/[^a-zA-Z0-9_-]/g, "-"); }
 
 render(<App />, document.getElementById("root")!);

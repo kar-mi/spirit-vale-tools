@@ -14,10 +14,13 @@ import type {
   MarketUiFilter,
   MarketUiListing,
   MarketUiRpc,
+  MarketUiSortDirection,
+  MarketUiSortKey,
   MarketUiState,
   MarketUiStatus,
 } from "../app-types.ts";
 import { validateMarketUiFilters } from "../filter-model.ts";
+import { sortMarketListings } from "../market-sort.ts";
 
 const POLL_MS = 1_000;
 const PAGE_SIZE = 50;
@@ -37,6 +40,8 @@ let statusDetail = "Waiting for market data from the central capture.";
 let listings: FishNetMarketListingView[] = [];
 let query = "";
 let filters: MarketUiFilter[] = [];
+let sortKey: MarketUiSortKey = "price";
+let sortDirection: MarketUiSortDirection = "ascending";
 let visibleLimit = PAGE_SIZE;
 let polling = false;
 let shuttingDown = false;
@@ -48,6 +53,12 @@ const rpc = BrowserView.defineRPC<MarketUiRpc>({
       getState: () => appState(),
       setQuery: ({ query: nextQuery }) => {
         query = nextQuery.trim().slice(0, 200);
+        visibleLimit = PAGE_SIZE;
+        return appState();
+      },
+      setSort: ({ key, direction }) => {
+        sortKey = key;
+        sortDirection = direction;
         visibleLimit = PAGE_SIZE;
         return appState();
       },
@@ -141,17 +152,20 @@ function appState(): MarketUiState {
     statMode: "all",
     sort: "price-asc",
   });
+  const sorted = sortMarketListings(matches.map(listingView), sortKey, sortDirection);
   return {
     status,
     statusDetail,
     query,
+    sortKey,
+    sortDirection,
     filters: filters.map((filter) => ({ ...filter })),
     statOptions: FISHNET_MARKET_STAT_NAMES.map((name, type) => ({ type, name })),
     capturedCount: listings.length,
     matchCount: matches.length,
     visibleLimit,
     hasMore: matches.length > visibleLimit,
-    listings: matches.slice(0, visibleLimit).map(listingView),
+    listings: sorted.slice(0, visibleLimit),
   };
 }
 

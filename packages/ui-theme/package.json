@@ -10,7 +10,6 @@
     "./window-chrome": "./window-chrome.ts",
     "./title-bar": "./title-bar.tsx",
     "./status-dot": "./status-dot.tsx",
-    "./list-row": "./list-row.tsx",
     "./safe-save": "./safe-save.ts",
     "./session-picker": "./session-picker.ts",
     "./session-picker-types": "./session-picker-types.ts",

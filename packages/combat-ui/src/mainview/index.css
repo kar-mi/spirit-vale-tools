@@ -77,11 +77,7 @@ body {
 .party-meter-table :is(th, td):nth-child(n + 2) { width: 15%; padding-right: 4px; padding-left: 4px; }
 .party-meter-table :is(th, td):nth-child(n + 2) .sort-button { padding-right: 4px; padding-left: 4px; }
 .party-meter-table tbody :is(th, td) { overflow: hidden; text-overflow: ellipsis; }
-.sort-button { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; padding: 4px 7px; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
-.sort-button > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.sort-button:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
-.sort-indicator { width: 10px; opacity: 0.35; font-size: 8px; }
-.sort-indicator.active { opacity: 1; color: var(--primary); }
+.meter-table .sort-button { padding: 4px 7px; }
 .meter-table-row { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container-low) var(--row-fill) 100%) !important; }
 .meter-table-row:nth-child(even) { background: linear-gradient(90deg, var(--primary-container) 0 var(--row-fill), var(--surface-container) var(--row-fill) 100%) !important; }
 

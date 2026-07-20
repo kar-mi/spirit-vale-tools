@@ -55,30 +55,21 @@ html, body {
 
 .results {
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 2px 16px 10px;
 }
 
-.listing {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 3px 16px;
-  margin-bottom: 6px;
-}
-
-.listing .chips {
-  grid-column: 1 / -1;
-  margin-top: 5px;
-}
-
-.listing-price {
-  color: var(--value);
-  font-size: 14px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.listing-quantity { text-align: right; }
+.results-table-scroll { width: 100%; height: 100%; }
+.market-table { min-width: 100%; table-layout: fixed; }
+.market-table :is(th, td) { overflow: hidden; padding: 5px 6px; text-overflow: ellipsis; }
+.market-table thead th.sortable-column { padding: 0; }
+.market-table :is(th, td):nth-child(1) { width: 22%; }
+.market-table :is(th, td):nth-child(2) { width: 13%; }
+.market-table :is(th, td):nth-child(3) { width: 9%; }
+.market-table :is(th, td):nth-child(4), .market-table :is(th, td):nth-child(5) { width: 16%; }
+.market-table :is(th, td):nth-child(6) { width: 14%; }
+.market-table :is(th, td):nth-child(7) { width: 10%; }
+.primary-cell, .secondary-cell { display: block; overflow: hidden; text-overflow: ellipsis; }
+.secondary-cell { margin-top: 2px; color: var(--on-surface-variant); font-size: 10px; font-weight: 400; }
 
 .load-more-row { padding: 0 16px 14px; text-align: center; }

@@ -1,11 +1,10 @@
-import { render } from "preact";
+import { Fragment, render } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
 import { StatusDot } from "@spiritvale/ui-theme/status-dot";
 import type { StatusTone } from "@spiritvale/ui-theme/status-dot";
-import { ListRow, RowHead } from "@spiritvale/ui-theme/list-row";
 
 import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
 import {
@@ -15,6 +14,8 @@ import {
   trendExtent,
 } from "./trend-model.ts";
 import type { TrendMetric, TrendMode, TrendRange, TrendSample } from "./trend-model.ts";
+import { sortRewardKills, sortRewardSummaries } from "../table-sort.ts";
+import type { KillSortKey, SortDirection, SummarySortKey, TableSort } from "../table-sort.ts";
 
 const STATUS_TONE: Record<RewardsAppState["status"], StatusTone> = {
   waiting: "is-warn",
@@ -61,9 +62,21 @@ function formatDrop(drop: RewardsUiDrop): string {
 
 function App() {
   const next = state.value;
+  const [summarySort, setSummarySort] = useState<TableSort<SummarySortKey>>({ key: "kills", direction: "descending" });
+  const [killSort, setKillSort] = useState<TableSort<KillSortKey>>({ key: "tick", direction: "descending" });
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   if (!next) return null;
 
   const sessionKey = `${next.mode}:${next.replayFileName ?? "live"}`;
+  const summaries = sortRewardSummaries(next.summaries, summarySort);
+  const kills = sortRewardKills(next.kills, killSort);
+  const toggleExpanded = (key: string): void => {
+    setExpanded((current) => {
+      const updated = new Set(current);
+      if (updated.has(key)) updated.delete(key); else updated.add(key);
+      return updated;
+    });
+  };
 
   return (
     <>
@@ -114,11 +127,11 @@ function App() {
 
         {next.storageWarning !== undefined && <div class="banner is-warn" aria-live="polite">{next.storageWarning}</div>}
 
-        <div class="stat-tiles totals">
-          <article class="stat-tile"><span class="t-label">Character XP</span><strong class="t-data">{format.format(next.totalExperience)}</strong></article>
-          <article class="stat-tile"><span class="t-label">Job XP</span><strong class="t-data">{format.format(next.totalJobExperience)}</strong></article>
-          <article class="stat-tile"><span class="t-label">Coins</span><strong class="t-data is-value">{formatDecimal(next.totalCoins)}</strong></article>
-          <article class="stat-tile"><span class="t-label">Unmatched</span><strong class="t-data">{format.format(next.unmatched)}</strong></article>
+        <div class="table-scroll totals">
+          <table class="data-table summary-table rewards-total-table" aria-label="Reward totals">
+            <thead><tr><th>Character XP</th><th>Job XP</th><th>Coins</th><th>Unmatched</th></tr></thead>
+            <tbody><tr><td>{format.format(next.totalExperience)}</td><td>{format.format(next.totalJobExperience)}</td><td class="is-value">{formatDecimal(next.totalCoins)}</td><td>{format.format(next.unmatched)}</td></tr></tbody>
+          </table>
         </div>
 
         {next.unidentified > 0 && (
@@ -129,49 +142,65 @@ function App() {
 
         <section hidden={next.view !== "summary"}>
           <div class="section-head"><h1>Mob summary</h1><p>Confirmed rewards grouped by mob, plus unmatched pickups.</p></div>
-          <div class="list">
-            {next.summaries.length === 0 && next.unmatchedDrops.length === 0 ? (
+          {next.summaries.length === 0 && next.unmatchedDrops.length === 0 ? (
               <div class="empty-state">{next.mode === "replay" ? "No confirmed mob totals in this replay." : "Confirmed mob totals will appear here."}</div>
             ) : (
-              <>
-                {next.summaries.map((mob) => (
-                  <ListRow key={mob.mobId} chips={mob.drops.length > 0 ? mob.drops.map(formatDrop) : undefined}>
-                    <RowHead
-                      titleTag="h3"
-                      title={mob.displayName}
-                      meta={`Level ${mob.level} · ${mob.kills} ${mob.kills === 1 ? "kill" : "kills"}`}
-                      values={[`${format.format(mob.experience)} XP`, `${format.format(mob.jobExperience)} job XP`, `${formatDecimal(mob.coins)} coins`]}
-                    />
-                  </ListRow>
-                ))}
-                {next.unmatchedDrops.length > 0 && (
-                  <ListRow chips={next.unmatchedDrops.map(formatDrop)}>
-                    <RowHead titleTag="h3" title="Unmatched" meta="Items picked up without mob correlation" />
-                  </ListRow>
-                )}
-              </>
+              <div class="table-scroll rewards-table-scroll">
+                <table class="data-table rewards-table" aria-label="Mob reward summary">
+                  <thead><tr>
+                    <RewardSortHeader label="Mob" active={summarySort.key === "displayName"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "displayName"))} />
+                    <RewardSortHeader label="Level" active={summarySort.key === "level"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "level"))} />
+                    <RewardSortHeader label="Kills" active={summarySort.key === "kills"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "kills"))} />
+                    <RewardSortHeader label="Char XP" active={summarySort.key === "experience"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "experience"))} />
+                    <RewardSortHeader label="Job XP" active={summarySort.key === "jobExperience"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "jobExperience"))} />
+                    <RewardSortHeader label="Coins" active={summarySort.key === "coins"} direction={summarySort.direction} onSort={() => setSummarySort(nextSort(summarySort, "coins"))} />
+                    <th>Drops</th>
+                  </tr></thead>
+                  <tbody>
+                    {summaries.map((mob) => <RewardRow
+                      key={mob.mobId}
+                      rowKey={`summary-${mob.mobId}`}
+                      name={mob.displayName}
+                      values={[format.format(mob.level), format.format(mob.kills), format.format(mob.experience), format.format(mob.jobExperience), formatDecimal(mob.coins)]}
+                      drops={mob.drops}
+                      expanded={expanded}
+                      onToggle={toggleExpanded}
+                    />)}
+                    {next.unmatchedDrops.length > 0 && <RewardRow rowKey="summary-unmatched" name="Unmatched" values={["—", "—", "—", "—", "—"]} drops={next.unmatchedDrops} expanded={expanded} onToggle={toggleExpanded} />}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </div>
         </section>
 
         <section hidden={next.view !== "recent"}>
           <div class="section-head"><h1>Recent kills</h1><p>Newest confirmed attribution first.</p></div>
-          <div class="list">
-            {next.kills.length === 0 ? (
+          {next.kills.length === 0 ? (
               <div class="empty-state">{next.mode === "replay" ? "No confirmed kills in this replay." : "Waiting for a confirmed mob reward."}</div>
             ) : (
-              next.kills.map((kill) => (
-                <ListRow key={kill.id} chips={kill.drops.length > 0 ? kill.drops.map(formatDrop) : undefined}>
-                  <RowHead
-                    titleTag="h3"
-                    title={kill.displayName}
-                    meta={`Level ${kill.level} · tick ${kill.tick}`}
-                    values={[`+${format.format(kill.experience)} XP`, `+${format.format(kill.jobExperience)} job XP`, `+${formatDecimal(kill.coins)} coins`]}
-                  />
-                </ListRow>
-              ))
+              <div class="table-scroll rewards-table-scroll">
+                <table class="data-table rewards-table" aria-label="Recent kills">
+                  <thead><tr>
+                    <RewardSortHeader label="Mob" active={killSort.key === "displayName"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "displayName"))} />
+                    <RewardSortHeader label="Level" active={killSort.key === "level"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "level"))} />
+                    <RewardSortHeader label="Tick" active={killSort.key === "tick"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "tick"))} />
+                    <RewardSortHeader label="Char XP" active={killSort.key === "experience"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "experience"))} />
+                    <RewardSortHeader label="Job XP" active={killSort.key === "jobExperience"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "jobExperience"))} />
+                    <RewardSortHeader label="Coins" active={killSort.key === "coins"} direction={killSort.direction} onSort={() => setKillSort(nextSort(killSort, "coins"))} />
+                    <th>Drops</th>
+                  </tr></thead>
+                  <tbody>{kills.map((kill) => <RewardRow
+                    key={kill.id}
+                    rowKey={`kill-${kill.id}`}
+                    name={kill.displayName}
+                    values={[format.format(kill.level), format.format(kill.tick), `+${format.format(kill.experience)}`, `+${format.format(kill.jobExperience)}`, `+${formatDecimal(kill.coins)}`]}
+                    drops={kill.drops}
+                    expanded={expanded}
+                    onToggle={toggleExpanded}
+                  />)}</tbody>
+                </table>
+              </div>
             )}
-          </div>
         </section>
 
         <section hidden={next.view !== "trends"}>
@@ -182,6 +211,29 @@ function App() {
     </>
   );
 }
+
+function RewardRow({ rowKey, name, values, drops, expanded, onToggle }: { rowKey: string; name: string; values: readonly string[]; drops: readonly RewardsUiDrop[]; expanded: ReadonlySet<string>; onToggle(key: string): void }) {
+  const isExpanded = expanded.has(rowKey);
+  const detailId = `reward-drops-${safeDomId(rowKey)}`;
+  return <Fragment>
+    <tr>
+      <th scope="row" title={name}>{name}</th>
+      {values.map((value, index) => <td key={index}>{value}</td>)}
+      <td>{drops.length === 0 ? "—" : <button class="table-detail-button" type="button" aria-expanded={isExpanded} aria-controls={detailId} onClick={() => onToggle(rowKey)}>{isExpanded ? "▾" : "▸"} {drops.length}</button>}</td>
+    </tr>
+    {isExpanded && drops.length > 0 && <tr id={detailId} class="table-detail-row"><td colSpan={values.length + 2}><div class="table-detail-chips">{drops.map((drop, index) => <span class="chip" key={`${drop.itemId}-${index}`}>{formatDrop(drop)}</span>)}</div></td></tr>}
+  </Fragment>;
+}
+
+function RewardSortHeader({ label, active, direction, onSort }: { label: string; active: boolean; direction: SortDirection; onSort(): void }) {
+  return <th class="sortable-column" aria-sort={active ? direction : undefined}><button class="sort-button" type="button" onClick={onSort}><span>{label}</span><span class={active ? "sort-indicator active" : "sort-indicator"} aria-hidden="true">{active ? (direction === "descending" ? "▼" : "▲") : "↕"}</span></button></th>;
+}
+
+function nextSort<K extends string>(current: TableSort<K>, key: K): TableSort<K> {
+  return { key, direction: current.key === key && current.direction === "descending" ? "ascending" : "descending" };
+}
+
+function safeDomId(value: string): string { return value.replace(/[^a-zA-Z0-9_-]/g, "-"); }
 
 // ---- trend chart ----
 // Kept imperative (direct SVG/DOM manipulation behind refs) rather than

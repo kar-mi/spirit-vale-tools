@@ -3,6 +3,8 @@ import type { MarketLogStatus } from "@spiritvale/market";
 import type { MaximizableWindowChromeRequests, WindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
 
 export type MarketUiStatus = MarketLogStatus;
+export type MarketUiSortKey = "name" | "price" | "available" | "seller" | "shopName" | "mapId";
+export type MarketUiSortDirection = "ascending" | "descending";
 
 export interface MarketUiFilter {
   stat: number;
@@ -34,6 +36,8 @@ export interface MarketUiState {
   status: MarketUiStatus;
   statusDetail: string;
   query: string;
+  sortKey: MarketUiSortKey;
+  sortDirection: MarketUiSortDirection;
   filters: MarketUiFilter[];
   statOptions: Array<{ type: number; name: string }>;
   capturedCount: number;
@@ -53,6 +57,7 @@ export type MarketUiRpc = {
     requests: MaximizableWindowChromeRequests & {
       getState: { params: Record<string, never>; response: MarketUiState };
       setQuery: { params: { query: string }; response: MarketUiState };
+      setSort: { params: { key: MarketUiSortKey; direction: MarketUiSortDirection }; response: MarketUiState };
       setFilters: { params: { filters: MarketUiFilter[] }; response: MarketUiState };
       openFilters: { params: Record<string, never>; response: void };
       loadMore: { params: Record<string, never>; response: MarketUiState };
