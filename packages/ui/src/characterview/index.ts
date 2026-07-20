@@ -1,9 +1,9 @@
 import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
 import { resolveFishNetItem, type FishNetArtifactSlot } from "@spiritvale/items";
-import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
-import { PERCENT_STATS, STAT_NAMES, type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
+import { type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
+import { formatItemEffects } from "./item-effects.ts";
 
 const ATTRIBUTE_NAMES = ["STR", "VIT", "AGI", "DEX", "INT", "LUK"] as const;
 type Tab = "basic" | "gear" | "advanced" | "skills";
@@ -105,21 +105,17 @@ function substatText(stats: Array<{ name: string; value?: number; roll: number; 
 function itemEffectSections(itemType: number, itemId: string, refine: number, pieces?: number, artifactSlot?: string): BuildSection[] {
   const definition = resolveFishNetItem(itemType, itemId);
   if (!definition) return [];
-  const show = (effects: readonly { type: number; value: number; skillId?: string }[]) => effects.map((effect) => `${effect.skillId ? `${resolveFishNetSkillDisplayName(effect.skillId) ?? effect.skillId} damage` : statName(effect.type)} ${signed(effect.value, isPercent(effect.type) ? "%" : undefined)}`).join(", ");
+  const show = formatItemEffects;
   const sections: BuildSection[] = [];
   const slot = isArtifactSlot(artifactSlot) ? artifactSlot : undefined;
   const baseEffects = [...(definition.effects ?? []), ...(slot ? definition.artifactSlotEffects?.[slot] ?? [] : [])];
-  const base = show(baseEffects.filter((effect) => effect.skillId === undefined));
+  const base = show(baseEffects);
   if (base) sections.push({ label: "Base", value: base });
-  const baseSkills = show(baseEffects.filter((effect) => effect.skillId !== undefined));
-  if (baseSkills) sections.push({ label: "Affects skills", value: baseSkills, tone: "active" });
   const refineEffects = [...(definition.refineEffects ?? []), ...(slot ? definition.artifactSlotRefineEffects?.[slot] ?? [] : [])];
   if (refine && refineEffects.length) {
     const refined = refineEffects.map((effect) => ({ ...effect, value: effect.value * refine }));
-    const stats = show(refined.filter((effect) => effect.skillId === undefined));
-    const skills = show(refined.filter((effect) => effect.skillId !== undefined));
-    if (stats) sections.push({ label: `Refine +${refine}`, value: stats, tone: "active" });
-    if (skills) sections.push({ label: `Skill refine +${refine}`, value: skills, tone: "active" });
+    const text = show(refined);
+    if (text) sections.push({ label: `Refine +${refine}`, value: text, tone: "active" });
   }
   if (definition.artifactSet && pieces !== undefined) {
     const set = definition.artifactSet;
@@ -132,8 +128,6 @@ function itemEffectSections(itemType: number, itemId: string, refine: number, pi
 }
 function itemEffectSummary(itemType: number, itemId: string, refine = 0): string { const values = itemEffectSections(itemType, itemId, refine).map((section) => section.value).join(", "); return values ? ` (${values})` : ""; }
 function isArtifactSlot(value: string | undefined): value is FishNetArtifactSlot { return value === "Rune" || value === "Jewel" || value === "Scroll" || value === "Relic"; }
-function statName(type: number): string { return STAT_NAMES[type] ?? `Stat ${type}`; }
-function isPercent(type: number): boolean { return PERCENT_STATS.has(type); }
 
 function renderGearTotals(totals: GearStatTotal[]): void {
   const root = element("gear-totals");

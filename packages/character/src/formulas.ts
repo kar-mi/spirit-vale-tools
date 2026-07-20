@@ -74,7 +74,7 @@ function isArtifactSlot(value: string): value is "Rune" | "Jewel" | "Scroll" | "
 
 function effectsToStats(effects: readonly FishNetItemEffect[], multiplier: number): CharacterSubstat[] {
   return effects
-    .filter((effect) => effect.skillId === undefined)
+    .filter((effect) => effect.target === undefined)
     .map((effect) => ({
       type: effect.type,
       name: STAT_NAMES[effect.type] ?? `Stat ${effect.type}`,

@@ -50,7 +50,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Bleeding"
+          "target": {
+            "kind": "status",
+            "id": "Bleeding"
+          }
         }
       ]
     },
@@ -62,7 +65,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "TrueSight"
+          "target": {
+            "kind": "skill",
+            "id": "TrueSight"
+          }
         }
       ]
     },
@@ -95,12 +101,18 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Slow"
+          "target": {
+            "kind": "status",
+            "id": "Slow"
+          }
         },
         {
           "type": 26,
           "value": 50,
-          "skillId": "Bleeding"
+          "target": {
+            "kind": "status",
+            "id": "Bleeding"
+          }
         }
       ]
     },
@@ -133,7 +145,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -161,7 +176,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Stun"
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
         },
         {
           "type": 72,
@@ -188,7 +206,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -211,7 +232,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -334,7 +358,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 20,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         }
       ]
     },
@@ -376,7 +403,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         }
       ]
     },
@@ -388,7 +418,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Stomp"
+          "target": {
+            "kind": "skill",
+            "id": "Stomp"
+          }
         }
       ]
     },
@@ -426,7 +459,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -460,7 +496,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Endure"
+          "target": {
+            "kind": "skill",
+            "id": "Endure"
+          }
         },
         {
           "type": 71,
@@ -487,7 +526,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -499,7 +541,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         }
       ]
     },
@@ -634,7 +679,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Ghost"
+          "target": {
+            "kind": "element",
+            "id": "Ghost"
+          }
         }
       ]
     },
@@ -646,7 +694,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Cloaking"
+          "target": {
+            "kind": "skill",
+            "id": "Cloaking"
+          }
         }
       ]
     },
@@ -695,7 +746,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         }
       ]
     },
@@ -707,12 +761,18 @@ export class CardItemDefinitions {
         {
           "type": 109,
           "value": 1,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "Firewall"
+          "target": {
+            "kind": "skill",
+            "id": "Firewall"
+          }
         }
       ]
     },
@@ -724,7 +784,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ]
     },
@@ -736,7 +799,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         }
       ]
     },
@@ -772,7 +838,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Curse"
+          "target": {
+            "kind": "status",
+            "id": "Curse"
+          }
         }
       ]
     },
@@ -784,7 +853,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -796,7 +868,10 @@ export class CardItemDefinitions {
         {
           "type": 123,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ]
     },
@@ -871,7 +946,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -951,7 +1029,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -963,7 +1044,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -975,7 +1059,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -987,7 +1074,10 @@ export class CardItemDefinitions {
         {
           "type": 109,
           "value": 1,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ]
     },
@@ -999,7 +1089,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -1011,7 +1104,10 @@ export class CardItemDefinitions {
         {
           "type": 39,
           "value": 1,
-          "skillId": "LifeDrainEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "LifeDrainEnemy"
+          }
         }
       ]
     },
@@ -1076,7 +1172,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -1099,12 +1198,18 @@ export class CardItemDefinitions {
         {
           "type": 200,
           "value": 3,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         }
       ]
     },
@@ -1190,7 +1295,10 @@ export class CardItemDefinitions {
         {
           "type": 124,
           "value": 2,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         }
       ]
     },
@@ -1244,7 +1352,10 @@ export class CardItemDefinitions {
         {
           "type": 211,
           "value": 15,
-          "skillId": "Burning"
+          "target": {
+            "kind": "status",
+            "id": "Burning"
+          }
         }
       ]
     },
@@ -1267,7 +1378,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ]
     },
@@ -1279,7 +1393,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "EarthSpikes"
+          "target": {
+            "kind": "skill",
+            "id": "EarthSpikes"
+          }
         }
       ]
     },
@@ -1291,7 +1408,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ]
     },
@@ -1338,7 +1458,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 70,
@@ -1354,7 +1477,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 70,
@@ -1370,7 +1496,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 70,
@@ -1397,7 +1526,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -1420,7 +1552,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         },
         {
           "type": 70,
@@ -1436,7 +1571,10 @@ export class CardItemDefinitions {
         {
           "type": 106,
           "value": 3,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         }
       ]
     },
@@ -1448,7 +1586,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -1460,7 +1601,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         }
       ]
     },
@@ -1472,7 +1616,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "FreeCast"
+          "target": {
+            "kind": "skill",
+            "id": "FreeCast"
+          }
         }
       ]
     },
@@ -1506,22 +1653,34 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -1533,7 +1692,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -1605,7 +1767,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 10,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         },
         {
           "type": 71,
@@ -1643,7 +1808,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "HydroVortex"
+          "target": {
+            "kind": "skill",
+            "id": "HydroVortex"
+          }
         }
       ]
     },
@@ -1665,7 +1833,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -1765,7 +1936,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         }
       ]
     },
@@ -1803,7 +1977,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -1815,7 +1992,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Slow"
+          "target": {
+            "kind": "status",
+            "id": "Slow"
+          }
         }
       ]
     },
@@ -1838,7 +2018,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         }
       ]
     },
@@ -1892,12 +2075,18 @@ export class CardItemDefinitions {
         {
           "type": 39,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "FreezingEdge"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingEdge"
+          }
         }
       ]
     },
@@ -1980,7 +2169,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         }
       ]
     },
@@ -1992,7 +2184,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -2025,7 +2220,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -2074,7 +2272,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -2086,7 +2287,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ]
     },
@@ -2147,7 +2351,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Ghost"
+          "target": {
+            "kind": "element",
+            "id": "Ghost"
+          }
         }
       ]
     },
@@ -2322,7 +2529,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Ghost"
+          "target": {
+            "kind": "element",
+            "id": "Ghost"
+          }
         }
       ]
     },
@@ -2400,7 +2610,10 @@ export class CardItemDefinitions {
         {
           "type": 39,
           "value": 1,
-          "skillId": "FirePillar"
+          "target": {
+            "kind": "skill",
+            "id": "FirePillar"
+          }
         }
       ]
     },
@@ -2508,7 +2721,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -2520,7 +2736,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Ghost"
+          "target": {
+            "kind": "element",
+            "id": "Ghost"
+          }
         }
       ]
     },
@@ -2532,7 +2751,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         }
       ]
     },
@@ -2555,7 +2777,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -2578,7 +2803,10 @@ export class CardItemDefinitions {
         {
           "type": 211,
           "value": 15,
-          "skillId": "Poison"
+          "target": {
+            "kind": "status",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -2601,7 +2829,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         }
       ]
     },
@@ -2613,12 +2844,18 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "VenomCoating"
+          "target": {
+            "kind": "skill",
+            "id": "VenomCoating"
+          }
         },
         {
           "type": 40,
           "value": 1,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ]
     },
@@ -2656,7 +2893,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Poison"
+          "target": {
+            "kind": "status",
+            "id": "Poison"
+          }
         },
         {
           "type": 1,
@@ -2702,7 +2942,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -2725,7 +2968,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -2823,7 +3069,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 10,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         }
       ]
     },
@@ -2846,7 +3095,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -2880,7 +3132,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -2892,7 +3147,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -2904,7 +3162,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Poison"
+          "target": {
+            "kind": "status",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -2916,7 +3177,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ]
     },
@@ -2950,7 +3214,10 @@ export class CardItemDefinitions {
         {
           "type": 212,
           "value": 1,
-          "skillId": "FirePillar"
+          "target": {
+            "kind": "skill",
+            "id": "FirePillar"
+          }
         }
       ]
     },
@@ -2962,7 +3229,10 @@ export class CardItemDefinitions {
         {
           "type": 211,
           "value": 15,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         }
       ]
     },
@@ -2979,7 +3249,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Ghost"
+          "target": {
+            "kind": "element",
+            "id": "Ghost"
+          }
         }
       ]
     },
@@ -3002,7 +3275,10 @@ export class CardItemDefinitions {
         {
           "type": 199,
           "value": 3,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         }
       ]
     },
@@ -3025,22 +3301,34 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         },
         {
           "type": 46,
           "value": 6,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -3052,12 +3340,18 @@ export class CardItemDefinitions {
         {
           "type": 109,
           "value": 1,
-          "skillId": "JumpShot"
+          "target": {
+            "kind": "skill",
+            "id": "JumpShot"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "ShrapnelShot"
+          "target": {
+            "kind": "skill",
+            "id": "ShrapnelShot"
+          }
         }
       ]
     },
@@ -3069,7 +3363,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -3081,7 +3378,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -3141,7 +3441,10 @@ export class CardItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ]
     },
@@ -3205,7 +3508,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Silence"
+          "target": {
+            "kind": "status",
+            "id": "Silence"
+          }
         }
       ]
     },
@@ -3253,7 +3559,10 @@ export class CardItemDefinitions {
         {
           "type": 109,
           "value": 1,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         }
       ]
     },
@@ -3276,7 +3585,10 @@ export class CardItemDefinitions {
         {
           "type": 124,
           "value": 2,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         }
       ]
     },
@@ -3288,7 +3600,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -3379,7 +3694,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Stun"
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
         }
       ]
     },
@@ -3391,12 +3709,18 @@ export class CardItemDefinitions {
         {
           "type": 49,
           "value": 17,
-          "skillId": "TetraVortex"
+          "target": {
+            "kind": "skill",
+            "id": "TetraVortex"
+          }
         },
         {
           "type": 108,
           "value": 100,
-          "skillId": "TetraVortex"
+          "target": {
+            "kind": "skill",
+            "id": "TetraVortex"
+          }
         }
       ]
     },
@@ -3408,7 +3732,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Blind"
+          "target": {
+            "kind": "status",
+            "id": "Blind"
+          }
         }
       ]
     },
@@ -3420,7 +3747,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Decay"
+          "target": {
+            "kind": "status",
+            "id": "Decay"
+          }
         }
       ]
     },
@@ -3432,7 +3762,10 @@ export class CardItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Burning"
+          "target": {
+            "kind": "status",
+            "id": "Burning"
+          }
         }
       ]
     },
@@ -3466,7 +3799,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -3498,7 +3834,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -3510,7 +3849,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -3522,7 +3864,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -3534,7 +3879,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -3546,7 +3894,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 25,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -3558,7 +3909,10 @@ export class CardItemDefinitions {
         {
           "type": 46,
           "value": 6,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -3570,7 +3924,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -3593,7 +3950,10 @@ export class CardItemDefinitions {
         {
           "type": 53,
           "value": 15,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -3651,7 +4011,10 @@ export class CardItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },

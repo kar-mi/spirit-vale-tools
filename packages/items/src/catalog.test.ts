@@ -46,15 +46,24 @@ test("includes standard artifact effects and refine scaling", () => {
 test("keeps class-rune skill effects bound to their artifact slots", () => {
   expect(resolveFishNetItem(3, "Warrior")).toMatchObject({
     artifactSlotEffects: {
-      Rune: [{ type: 49, value: 5, skillId: "Bash" }],
-      Jewel: [{ type: 49, value: 5, skillId: "AxeArc" }],
+      Rune: [{ type: 49, value: 5, target: { kind: "skill", id: "Bash" } }],
+      Jewel: [{ type: 49, value: 5, target: { kind: "skill", id: "AxeArc" } }],
     },
   });
 });
 
 test("includes gem base and per-refine skill damage", () => {
   expect(resolveFishNetItem(5, "Bash Gem")).toMatchObject({
-    refineEffects: [{ type: 49, value: 2, skillId: "Bash" }],
+    refineEffects: [{ type: 49, value: 2, target: { kind: "skill", id: "Bash" } }],
+  });
+});
+
+test("preserves status and elemental targets separately from skills", () => {
+  expect(resolveFishNetItem(4, "Alien Biteroot")).toMatchObject({
+    effects: [{ type: 26, value: 50, target: { kind: "status", id: "Bleeding" } }],
+  });
+  expect(resolveFishNetItem(2, "Spooky Spell Hat")).toMatchObject({
+    effects: expect.arrayContaining([{ type: 44, value: 10, target: { kind: "element", id: "Shadow" } }]),
   });
 });
 

@@ -13,14 +13,20 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "HolyLight"
+            "target": {
+              "kind": "skill",
+              "id": "HolyLight"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Heal"
+            "target": {
+              "kind": "skill",
+              "id": "Heal"
+            }
           }
         ],
         "Scroll": [],
@@ -31,14 +37,20 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "HolyLight"
+            "target": {
+              "kind": "skill",
+              "id": "HolyLight"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Heal"
+            "target": {
+              "kind": "skill",
+              "id": "Heal"
+            }
           }
         ],
         "Scroll": [
@@ -207,28 +219,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Execute"
+            "target": {
+              "kind": "skill",
+              "id": "Execute"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Cyclone"
+            "target": {
+              "kind": "skill",
+              "id": "Cyclone"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "AxeThrow"
+            "target": {
+              "kind": "skill",
+              "id": "AxeThrow"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "DarkClaw"
+            "target": {
+              "kind": "skill",
+              "id": "DarkClaw"
+            }
           }
         ]
       },
@@ -237,28 +261,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Execute"
+            "target": {
+              "kind": "skill",
+              "id": "Execute"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Cyclone"
+            "target": {
+              "kind": "skill",
+              "id": "Cyclone"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "AxeThrow"
+            "target": {
+              "kind": "skill",
+              "id": "AxeThrow"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "DarkClaw"
+            "target": {
+              "kind": "skill",
+              "id": "DarkClaw"
+            }
           }
         ]
       },
@@ -309,22 +345,34 @@ export class ArtifactItemDefinitions {
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ],
       "artifactSet": {
@@ -334,22 +382,34 @@ export class ArtifactItemDefinitions {
           {
             "type": 46,
             "value": 3,
-            "skillId": "Poison"
+            "target": {
+              "kind": "element",
+              "id": "Poison"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Undead"
+            "target": {
+              "kind": "element",
+              "id": "Undead"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Shadow"
+            "target": {
+              "kind": "element",
+              "id": "Shadow"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Holy"
+            "target": {
+              "kind": "element",
+              "id": "Holy"
+            }
           }
         ],
         "fullSet": [
@@ -360,22 +420,34 @@ export class ArtifactItemDefinitions {
           {
             "type": 46,
             "value": 3,
-            "skillId": "Poison"
+            "target": {
+              "kind": "element",
+              "id": "Poison"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Undead"
+            "target": {
+              "kind": "element",
+              "id": "Undead"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Shadow"
+            "target": {
+              "kind": "element",
+              "id": "Shadow"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Holy"
+            "target": {
+              "kind": "element",
+              "id": "Holy"
+            }
           }
         ]
       }
@@ -493,12 +565,18 @@ export class ArtifactItemDefinitions {
           {
             "type": 42,
             "value": 5,
-            "skillId": "Heal"
+            "target": {
+              "kind": "skill",
+              "id": "Heal"
+            }
           },
           {
             "type": 42,
             "value": 5,
-            "skillId": "Haste"
+            "target": {
+              "kind": "skill",
+              "id": "Haste"
+            }
           },
           {
             "type": 71,
@@ -559,28 +637,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "PanicBurst"
+            "target": {
+              "kind": "skill",
+              "id": "PanicBurst"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "PointBlankShot"
+            "target": {
+              "kind": "skill",
+              "id": "PointBlankShot"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "SniperShot"
+            "target": {
+              "kind": "skill",
+              "id": "SniperShot"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ExplosiveGrenade"
+            "target": {
+              "kind": "skill",
+              "id": "ExplosiveGrenade"
+            }
           }
         ]
       },
@@ -589,28 +679,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "PanicBurst"
+            "target": {
+              "kind": "skill",
+              "id": "PanicBurst"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "PointBlankShot"
+            "target": {
+              "kind": "skill",
+              "id": "PointBlankShot"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "SniperShot"
+            "target": {
+              "kind": "skill",
+              "id": "SniperShot"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ExplosiveGrenade"
+            "target": {
+              "kind": "skill",
+              "id": "ExplosiveGrenade"
+            }
           }
         ]
       },
@@ -750,7 +852,10 @@ export class ArtifactItemDefinitions {
         {
           "type": 26,
           "value": 2.5,
-          "skillId": "Stun"
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
         }
       ],
       "artifactSlotEffects": {
@@ -758,28 +863,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 26,
             "value": 50,
-            "skillId": "Blind"
+            "target": {
+              "kind": "status",
+              "id": "Blind"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 26,
             "value": 50,
-            "skillId": "Silence"
+            "target": {
+              "kind": "status",
+              "id": "Silence"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 26,
             "value": 50,
-            "skillId": "Poison"
+            "target": {
+              "kind": "status",
+              "id": "Poison"
+            }
           }
         ],
         "Relic": [
           {
             "type": 26,
             "value": 50,
-            "skillId": "Bleeding"
+            "target": {
+              "kind": "status",
+              "id": "Bleeding"
+            }
           }
         ]
       },
@@ -795,7 +912,10 @@ export class ArtifactItemDefinitions {
           {
             "type": 26,
             "value": 50,
-            "skillId": "Slow"
+            "target": {
+              "kind": "status",
+              "id": "Slow"
+            }
           }
         ]
       }
@@ -809,28 +929,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "SpearThrust"
+            "target": {
+              "kind": "skill",
+              "id": "SpearThrust"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "SpearStab"
+            "target": {
+              "kind": "skill",
+              "id": "SpearStab"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "SpearSlice"
+            "target": {
+              "kind": "skill",
+              "id": "SpearSlice"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "WeaponThrow"
+            "target": {
+              "kind": "skill",
+              "id": "WeaponThrow"
+            }
           }
         ]
       },
@@ -839,28 +971,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "SpearThrust"
+            "target": {
+              "kind": "skill",
+              "id": "SpearThrust"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "SpearStab"
+            "target": {
+              "kind": "skill",
+              "id": "SpearStab"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "SpearSlice"
+            "target": {
+              "kind": "skill",
+              "id": "SpearSlice"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "WeaponThrow"
+            "target": {
+              "kind": "skill",
+              "id": "WeaponThrow"
+            }
           }
         ]
       },
@@ -920,28 +1064,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Fireball"
+            "target": {
+              "kind": "skill",
+              "id": "Fireball"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "IceShard"
+            "target": {
+              "kind": "skill",
+              "id": "IceShard"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "EarthSpikes"
+            "target": {
+              "kind": "skill",
+              "id": "EarthSpikes"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ThunderStorm"
+            "target": {
+              "kind": "skill",
+              "id": "ThunderStorm"
+            }
           }
         ]
       },
@@ -950,28 +1106,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Fireball"
+            "target": {
+              "kind": "skill",
+              "id": "Fireball"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "IceShard"
+            "target": {
+              "kind": "skill",
+              "id": "IceShard"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "EarthSpikes"
+            "target": {
+              "kind": "skill",
+              "id": "EarthSpikes"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ThunderStorm"
+            "target": {
+              "kind": "skill",
+              "id": "ThunderStorm"
+            }
           }
         ]
       },
@@ -1065,7 +1233,10 @@ export class ArtifactItemDefinitions {
           {
             "type": 43,
             "value": 2,
-            "skillId": "EnergyShield"
+            "target": {
+              "kind": "skill",
+              "id": "EnergyShield"
+            }
           }
         ]
       }
@@ -1203,28 +1374,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "BoneSpikes"
+            "target": {
+              "kind": "skill",
+              "id": "BoneSpikes"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "DeathSpiral"
+            "target": {
+              "kind": "skill",
+              "id": "DeathSpiral"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "DeathNova"
+            "target": {
+              "kind": "skill",
+              "id": "DeathNova"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "CorpseExplosionEnemy"
+            "target": {
+              "kind": "skill",
+              "id": "CorpseExplosionEnemy"
+            }
           }
         ]
       },
@@ -1233,28 +1416,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "BoneSpikes"
+            "target": {
+              "kind": "skill",
+              "id": "BoneSpikes"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "DeathSpiral"
+            "target": {
+              "kind": "skill",
+              "id": "DeathSpiral"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "DeathNova"
+            "target": {
+              "kind": "skill",
+              "id": "DeathNova"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "CorpseExplosionEnemy"
+            "target": {
+              "kind": "skill",
+              "id": "CorpseExplosionEnemy"
+            }
           }
         ]
       },
@@ -1347,28 +1542,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "GrandCross"
+            "target": {
+              "kind": "skill",
+              "id": "GrandCross"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "JudgementBlade"
+            "target": {
+              "kind": "skill",
+              "id": "JudgementBlade"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ShieldThrow"
+            "target": {
+              "kind": "skill",
+              "id": "ShieldThrow"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Consecration"
+            "target": {
+              "kind": "skill",
+              "id": "Consecration"
+            }
           }
         ]
       },
@@ -1377,28 +1584,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "GrandCross"
+            "target": {
+              "kind": "skill",
+              "id": "GrandCross"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "JudgementBlade"
+            "target": {
+              "kind": "skill",
+              "id": "JudgementBlade"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ShieldThrow"
+            "target": {
+              "kind": "skill",
+              "id": "ShieldThrow"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Consecration"
+            "target": {
+              "kind": "skill",
+              "id": "Consecration"
+            }
           }
         ]
       },
@@ -1423,28 +1642,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Exorcism"
+            "target": {
+              "kind": "skill",
+              "id": "Exorcism"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "HolyWrath"
+            "target": {
+              "kind": "skill",
+              "id": "HolyWrath"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "TurnUndead"
+            "target": {
+              "kind": "skill",
+              "id": "TurnUndead"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Smite"
+            "target": {
+              "kind": "skill",
+              "id": "Smite"
+            }
           }
         ]
       },
@@ -1453,28 +1684,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Exorcism"
+            "target": {
+              "kind": "skill",
+              "id": "Exorcism"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "HolyWrath"
+            "target": {
+              "kind": "skill",
+              "id": "HolyWrath"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "TurnUndead"
+            "target": {
+              "kind": "skill",
+              "id": "TurnUndead"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Smite"
+            "target": {
+              "kind": "skill",
+              "id": "Smite"
+            }
           }
         ]
       },
@@ -1498,22 +1741,34 @@ export class ArtifactItemDefinitions {
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 46,
           "value": 0.125,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "artifactSet": {
@@ -1523,22 +1778,34 @@ export class ArtifactItemDefinitions {
           {
             "type": 46,
             "value": 3,
-            "skillId": "Fire"
+            "target": {
+              "kind": "element",
+              "id": "Fire"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Water"
+            "target": {
+              "kind": "element",
+              "id": "Water"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Wind"
+            "target": {
+              "kind": "element",
+              "id": "Wind"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Earth"
+            "target": {
+              "kind": "element",
+              "id": "Earth"
+            }
           }
         ],
         "fullSet": [
@@ -1549,22 +1816,34 @@ export class ArtifactItemDefinitions {
           {
             "type": 46,
             "value": 3,
-            "skillId": "Fire"
+            "target": {
+              "kind": "element",
+              "id": "Fire"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Water"
+            "target": {
+              "kind": "element",
+              "id": "Water"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Wind"
+            "target": {
+              "kind": "element",
+              "id": "Wind"
+            }
           },
           {
             "type": 46,
             "value": 3,
-            "skillId": "Earth"
+            "target": {
+              "kind": "element",
+              "id": "Earth"
+            }
           }
         ]
       }
@@ -1609,21 +1888,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "VenomStrike"
+            "target": {
+              "kind": "skill",
+              "id": "VenomStrike"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ShadowStep"
+            "target": {
+              "kind": "skill",
+              "id": "ShadowStep"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "BladeDance"
+            "target": {
+              "kind": "skill",
+              "id": "BladeDance"
+            }
           }
         ],
         "Relic": []
@@ -1633,21 +1921,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "VenomStrike"
+            "target": {
+              "kind": "skill",
+              "id": "VenomStrike"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ShadowStep"
+            "target": {
+              "kind": "skill",
+              "id": "ShadowStep"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "BladeDance"
+            "target": {
+              "kind": "skill",
+              "id": "BladeDance"
+            }
           }
         ],
         "Relic": [
@@ -1678,28 +1975,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "StrafingVolley"
+            "target": {
+              "kind": "skill",
+              "id": "StrafingVolley"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ForceShot"
+            "target": {
+              "kind": "skill",
+              "id": "ForceShot"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "VolatileBolt"
+            "target": {
+              "kind": "skill",
+              "id": "VolatileBolt"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ArrowShower"
+            "target": {
+              "kind": "skill",
+              "id": "ArrowShower"
+            }
           }
         ]
       },
@@ -1708,28 +2017,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "StrafingVolley"
+            "target": {
+              "kind": "skill",
+              "id": "StrafingVolley"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ForceShot"
+            "target": {
+              "kind": "skill",
+              "id": "ForceShot"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "VolatileBolt"
+            "target": {
+              "kind": "skill",
+              "id": "VolatileBolt"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ArrowShower"
+            "target": {
+              "kind": "skill",
+              "id": "ArrowShower"
+            }
           }
         ]
       },
@@ -1754,28 +2075,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "FlameOrb"
+            "target": {
+              "kind": "skill",
+              "id": "FlameOrb"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FrostBlade"
+            "target": {
+              "kind": "skill",
+              "id": "FrostBlade"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "LightningStrike"
+            "target": {
+              "kind": "skill",
+              "id": "LightningStrike"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ShadowRelease"
+            "target": {
+              "kind": "skill",
+              "id": "ShadowRelease"
+            }
           }
         ]
       },
@@ -1784,28 +2117,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "FlameOrb"
+            "target": {
+              "kind": "skill",
+              "id": "FlameOrb"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FrostBlade"
+            "target": {
+              "kind": "skill",
+              "id": "FrostBlade"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "LightningStrike"
+            "target": {
+              "kind": "skill",
+              "id": "LightningStrike"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ShadowRelease"
+            "target": {
+              "kind": "skill",
+              "id": "ShadowRelease"
+            }
           }
         ]
       },
@@ -1830,28 +2175,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "SoulStrike"
+            "target": {
+              "kind": "skill",
+              "id": "SoulStrike"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FieldCurse"
+            "target": {
+              "kind": "skill",
+              "id": "FieldCurse"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FieldHealing"
+            "target": {
+              "kind": "skill",
+              "id": "FieldHealing"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FieldDamage"
+            "target": {
+              "kind": "skill",
+              "id": "FieldDamage"
+            }
           }
         ]
       },
@@ -1860,28 +2217,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "SoulStrike"
+            "target": {
+              "kind": "skill",
+              "id": "SoulStrike"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FieldCurse"
+            "target": {
+              "kind": "skill",
+              "id": "FieldCurse"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FieldHealing"
+            "target": {
+              "kind": "skill",
+              "id": "FieldHealing"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FieldDamage"
+            "target": {
+              "kind": "skill",
+              "id": "FieldDamage"
+            }
           }
         ]
       },
@@ -1937,28 +2306,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Bash"
+            "target": {
+              "kind": "skill",
+              "id": "Bash"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "AxeArc"
+            "target": {
+              "kind": "skill",
+              "id": "AxeArc"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "AxeVortex"
+            "target": {
+              "kind": "skill",
+              "id": "AxeVortex"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Stomp"
+            "target": {
+              "kind": "skill",
+              "id": "Stomp"
+            }
           }
         ]
       },
@@ -1967,28 +2348,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Bash"
+            "target": {
+              "kind": "skill",
+              "id": "Bash"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "AxeArc"
+            "target": {
+              "kind": "skill",
+              "id": "AxeArc"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "AxeVortex"
+            "target": {
+              "kind": "skill",
+              "id": "AxeVortex"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Stomp"
+            "target": {
+              "kind": "skill",
+              "id": "Stomp"
+            }
           }
         ]
       },
@@ -2013,28 +2406,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Firebolt"
+            "target": {
+              "kind": "skill",
+              "id": "Firebolt"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Icebolt"
+            "target": {
+              "kind": "skill",
+              "id": "Icebolt"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Thunderbolt"
+            "target": {
+              "kind": "skill",
+              "id": "Thunderbolt"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Earthbolt"
+            "target": {
+              "kind": "skill",
+              "id": "Earthbolt"
+            }
           }
         ]
       },
@@ -2043,28 +2448,40 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Firebolt"
+            "target": {
+              "kind": "skill",
+              "id": "Firebolt"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Icebolt"
+            "target": {
+              "kind": "skill",
+              "id": "Icebolt"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Thunderbolt"
+            "target": {
+              "kind": "skill",
+              "id": "Thunderbolt"
+            }
           }
         ],
         "Relic": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Earthbolt"
+            "target": {
+              "kind": "skill",
+              "id": "Earthbolt"
+            }
           }
         ]
       },
@@ -2089,21 +2506,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Tempest"
+            "target": {
+              "kind": "skill",
+              "id": "Tempest"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ChainLightning"
+            "target": {
+              "kind": "skill",
+              "id": "ChainLightning"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "ThunderStorm"
+            "target": {
+              "kind": "skill",
+              "id": "ThunderStorm"
+            }
           }
         ],
         "Relic": []
@@ -2113,21 +2539,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Tempest"
+            "target": {
+              "kind": "skill",
+              "id": "Tempest"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ChainLightning"
+            "target": {
+              "kind": "skill",
+              "id": "ChainLightning"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "ThunderStorm"
+            "target": {
+              "kind": "skill",
+              "id": "ThunderStorm"
+            }
           }
         ],
         "Relic": [
@@ -2158,21 +2593,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "FreezingField"
+            "target": {
+              "kind": "skill",
+              "id": "FreezingField"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "IceShard"
+            "target": {
+              "kind": "skill",
+              "id": "IceShard"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FrozenGround"
+            "target": {
+              "kind": "skill",
+              "id": "FrozenGround"
+            }
           }
         ],
         "Relic": []
@@ -2182,21 +2626,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "FreezingField"
+            "target": {
+              "kind": "skill",
+              "id": "FreezingField"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "IceShard"
+            "target": {
+              "kind": "skill",
+              "id": "IceShard"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FrozenGround"
+            "target": {
+              "kind": "skill",
+              "id": "FrozenGround"
+            }
           }
         ],
         "Relic": [
@@ -2227,21 +2680,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 5,
-            "skillId": "Meteor"
+            "target": {
+              "kind": "skill",
+              "id": "Meteor"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "FirePillar"
+            "target": {
+              "kind": "skill",
+              "id": "FirePillar"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 5,
-            "skillId": "Combustion"
+            "target": {
+              "kind": "skill",
+              "id": "Combustion"
+            }
           }
         ],
         "Relic": []
@@ -2251,21 +2713,30 @@ export class ArtifactItemDefinitions {
           {
             "type": 49,
             "value": 2,
-            "skillId": "Meteor"
+            "target": {
+              "kind": "skill",
+              "id": "Meteor"
+            }
           }
         ],
         "Jewel": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "FirePillar"
+            "target": {
+              "kind": "skill",
+              "id": "FirePillar"
+            }
           }
         ],
         "Scroll": [
           {
             "type": 49,
             "value": 2,
-            "skillId": "Combustion"
+            "target": {
+              "kind": "skill",
+              "id": "Combustion"
+            }
           }
         ],
         "Relic": [
@@ -2308,7 +2779,10 @@ export class ArtifactItemDefinitions {
           {
             "type": 42,
             "value": 0.5,
-            "skillId": "FreeCast"
+            "target": {
+              "kind": "skill",
+              "id": "FreeCast"
+            }
           }
         ],
         "Scroll": [

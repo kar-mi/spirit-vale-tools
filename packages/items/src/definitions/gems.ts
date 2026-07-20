@@ -12,7 +12,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "AerialShot"
+          "target": {
+            "kind": "skill",
+            "id": "AerialShot"
+          }
         }
       ]
     },
@@ -24,7 +27,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ArrowShower"
+          "target": {
+            "kind": "skill",
+            "id": "ArrowShower"
+          }
         }
       ]
     },
@@ -53,7 +59,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "AxeArc"
+          "target": {
+            "kind": "skill",
+            "id": "AxeArc"
+          }
         }
       ]
     },
@@ -65,7 +74,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "AxeThrow"
+          "target": {
+            "kind": "skill",
+            "id": "AxeThrow"
+          }
         }
       ]
     },
@@ -77,7 +89,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "AxeVortex"
+          "target": {
+            "kind": "skill",
+            "id": "AxeVortex"
+          }
         }
       ]
     },
@@ -89,7 +104,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         }
       ]
     },
@@ -101,7 +119,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "BladeDance"
+          "target": {
+            "kind": "skill",
+            "id": "BladeDance"
+          }
         }
       ]
     },
@@ -113,7 +134,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "BoneSpear"
+          "target": {
+            "kind": "skill",
+            "id": "BoneSpear"
+          }
         }
       ]
     },
@@ -125,7 +149,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "BoneSpikes"
+          "target": {
+            "kind": "skill",
+            "id": "BoneSpikes"
+          }
         }
       ]
     },
@@ -148,7 +175,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         }
       ]
     },
@@ -160,12 +190,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Consecration"
+          "target": {
+            "kind": "skill",
+            "id": "Consecration"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "ConsecratedGround"
+          "target": {
+            "kind": "skill",
+            "id": "ConsecratedGround"
+          }
         }
       ]
     },
@@ -177,7 +213,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "CorpseExplosionEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseExplosionEnemy"
+          }
         }
       ]
     },
@@ -189,7 +228,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "CounterSlash"
+          "target": {
+            "kind": "skill",
+            "id": "CounterSlash"
+          }
         }
       ]
     },
@@ -229,7 +271,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Cyclone"
+          "target": {
+            "kind": "skill",
+            "id": "Cyclone"
+          }
         }
       ]
     },
@@ -241,7 +286,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Damnation"
+          "target": {
+            "kind": "skill",
+            "id": "Damnation"
+          }
         }
       ]
     },
@@ -253,7 +301,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DarkClaw"
+          "target": {
+            "kind": "skill",
+            "id": "DarkClaw"
+          }
         }
       ]
     },
@@ -265,12 +316,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathCoilSummon"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilSummon"
+          }
         }
       ]
     },
@@ -282,12 +339,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathNova"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNova"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathNovaField"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNovaField"
+          }
         }
       ]
     },
@@ -299,7 +362,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathSpiral"
+          "target": {
+            "kind": "skill",
+            "id": "DeathSpiral"
+          }
         }
       ]
     },
@@ -322,7 +388,10 @@ export class GemItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "TrueSight"
+          "target": {
+            "kind": "skill",
+            "id": "TrueSight"
+          }
         }
       ],
       "refineEffects": [
@@ -340,7 +409,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DivinePunishment"
+          "target": {
+            "kind": "skill",
+            "id": "DivinePunishment"
+          }
         }
       ]
     },
@@ -363,7 +435,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -375,7 +450,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ]
     },
@@ -387,7 +465,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Earthquake"
+          "target": {
+            "kind": "skill",
+            "id": "Earthquake"
+          }
         }
       ]
     },
@@ -399,7 +480,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "EarthSpikes"
+          "target": {
+            "kind": "skill",
+            "id": "EarthSpikes"
+          }
         }
       ]
     },
@@ -411,7 +495,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Execute"
+          "target": {
+            "kind": "skill",
+            "id": "Execute"
+          }
         }
       ]
     },
@@ -423,12 +510,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Exorcism"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "Dark Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Dark Exorcism"
+          }
         }
       ]
     },
@@ -440,7 +533,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ExplosiveGrenade"
+          "target": {
+            "kind": "skill",
+            "id": "ExplosiveGrenade"
+          }
         }
       ]
     },
@@ -452,7 +548,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FanFire"
+          "target": {
+            "kind": "skill",
+            "id": "FanFire"
+          }
         }
       ]
     },
@@ -464,7 +563,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FanOfKnives"
+          "target": {
+            "kind": "skill",
+            "id": "FanOfKnives"
+          }
         }
       ]
     },
@@ -476,7 +578,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FieldCurse"
+          "target": {
+            "kind": "skill",
+            "id": "FieldCurse"
+          }
         }
       ]
     },
@@ -488,7 +593,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FieldDamage"
+          "target": {
+            "kind": "skill",
+            "id": "FieldDamage"
+          }
         }
       ]
     },
@@ -500,7 +608,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FieldHealing"
+          "target": {
+            "kind": "skill",
+            "id": "FieldHealing"
+          }
         }
       ]
     },
@@ -512,7 +623,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FieldSilence"
+          "target": {
+            "kind": "skill",
+            "id": "FieldSilence"
+          }
         }
       ]
     },
@@ -524,7 +638,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -536,12 +653,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "Firewall"
+          "target": {
+            "kind": "skill",
+            "id": "Firewall"
+          }
         }
       ]
     },
@@ -553,7 +676,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ]
     },
@@ -565,7 +691,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FirePillar"
+          "target": {
+            "kind": "skill",
+            "id": "FirePillar"
+          }
         }
       ]
     },
@@ -577,7 +706,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FireRelease"
+          "target": {
+            "kind": "skill",
+            "id": "FireRelease"
+          }
         }
       ]
     },
@@ -589,7 +721,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FlameOrb"
+          "target": {
+            "kind": "skill",
+            "id": "FlameOrb"
+          }
         }
       ]
     },
@@ -601,7 +736,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FlashGrenade"
+          "target": {
+            "kind": "skill",
+            "id": "FlashGrenade"
+          }
         }
       ]
     },
@@ -628,7 +766,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ForceShot"
+          "target": {
+            "kind": "skill",
+            "id": "ForceShot"
+          }
         }
       ]
     },
@@ -640,7 +781,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FreezeGrenade"
+          "target": {
+            "kind": "skill",
+            "id": "FreezeGrenade"
+          }
         }
       ]
     },
@@ -652,7 +796,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         }
       ]
     },
@@ -664,7 +811,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FrostBlade"
+          "target": {
+            "kind": "skill",
+            "id": "FrostBlade"
+          }
         }
       ]
     },
@@ -676,7 +826,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "GrandCross"
+          "target": {
+            "kind": "skill",
+            "id": "GrandCross"
+          }
         }
       ]
     },
@@ -688,7 +841,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "GroundSlam"
+          "target": {
+            "kind": "skill",
+            "id": "GroundSlam"
+          }
         }
       ]
     },
@@ -700,7 +856,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "NPC_Poison"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Poison"
+          }
         }
       ]
     },
@@ -712,7 +871,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Harvest"
+          "target": {
+            "kind": "skill",
+            "id": "Harvest"
+          }
         }
       ]
     },
@@ -724,7 +886,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ]
     },
@@ -747,7 +912,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "HighHeal"
+          "target": {
+            "kind": "skill",
+            "id": "HighHeal"
+          }
         }
       ]
     },
@@ -774,7 +942,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -786,7 +957,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ]
     },
@@ -798,12 +972,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "HolyWrath"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrath"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "HolyWrathField"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrathField"
+          }
         }
       ]
     },
@@ -826,7 +1006,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "HydroVortex"
+          "target": {
+            "kind": "skill",
+            "id": "HydroVortex"
+          }
         }
       ]
     },
@@ -838,7 +1021,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         }
       ]
     },
@@ -850,7 +1036,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "IceRelease"
+          "target": {
+            "kind": "skill",
+            "id": "IceRelease"
+          }
         }
       ]
     },
@@ -862,7 +1051,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ]
     },
@@ -874,7 +1066,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "JudgementBlade"
+          "target": {
+            "kind": "skill",
+            "id": "JudgementBlade"
+          }
         }
       ]
     },
@@ -886,7 +1081,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "JumpShot"
+          "target": {
+            "kind": "skill",
+            "id": "JumpShot"
+          }
         }
       ]
     },
@@ -920,7 +1118,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "LifeDrainEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "LifeDrainEnemy"
+          }
         }
       ]
     },
@@ -932,7 +1133,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "LightningRelease"
+          "target": {
+            "kind": "skill",
+            "id": "LightningRelease"
+          }
         }
       ]
     },
@@ -944,7 +1148,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "LightningStrike"
+          "target": {
+            "kind": "skill",
+            "id": "LightningStrike"
+          }
         }
       ]
     },
@@ -982,7 +1189,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         }
       ]
     },
@@ -1090,7 +1300,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "PanicBurst"
+          "target": {
+            "kind": "skill",
+            "id": "PanicBurst"
+          }
         }
       ]
     },
@@ -1123,7 +1336,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "PiercingShot"
+          "target": {
+            "kind": "skill",
+            "id": "PiercingShot"
+          }
         }
       ]
     },
@@ -1135,7 +1351,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "PointBlankShot"
+          "target": {
+            "kind": "skill",
+            "id": "PointBlankShot"
+          }
         }
       ]
     },
@@ -1147,7 +1366,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ]
     },
@@ -1159,7 +1381,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "PoisonGrenade"
+          "target": {
+            "kind": "skill",
+            "id": "PoisonGrenade"
+          }
         }
       ]
     },
@@ -1171,7 +1396,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Reap"
+          "target": {
+            "kind": "skill",
+            "id": "Reap"
+          }
         }
       ]
     },
@@ -1220,7 +1448,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Sanctuary"
+          "target": {
+            "kind": "skill",
+            "id": "Sanctuary"
+          }
         }
       ]
     },
@@ -1232,7 +1463,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -1244,7 +1478,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShadowRelease"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowRelease"
+          }
         }
       ]
     },
@@ -1256,7 +1493,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         }
       ]
     },
@@ -1268,7 +1508,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShieldBash"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldBash"
+          }
         }
       ]
     },
@@ -1280,7 +1523,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         }
       ]
     },
@@ -1292,7 +1538,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShoutStun"
+          "target": {
+            "kind": "skill",
+            "id": "ShoutStun"
+          }
         }
       ]
     },
@@ -1304,7 +1553,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShrapnelShot"
+          "target": {
+            "kind": "skill",
+            "id": "ShrapnelShot"
+          }
         }
       ]
     },
@@ -1316,7 +1568,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShurikenFan"
+          "target": {
+            "kind": "skill",
+            "id": "ShurikenFan"
+          }
         }
       ]
     },
@@ -1328,7 +1583,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Smite"
+          "target": {
+            "kind": "skill",
+            "id": "Smite"
+          }
         }
       ]
     },
@@ -1340,7 +1598,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SniperShot"
+          "target": {
+            "kind": "skill",
+            "id": "SniperShot"
+          }
         }
       ]
     },
@@ -1352,7 +1613,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SoulStrike"
+          "target": {
+            "kind": "skill",
+            "id": "SoulStrike"
+          }
         }
       ]
     },
@@ -1364,7 +1628,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SpearSlice"
+          "target": {
+            "kind": "skill",
+            "id": "SpearSlice"
+          }
         }
       ]
     },
@@ -1376,7 +1643,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SpearStab"
+          "target": {
+            "kind": "skill",
+            "id": "SpearStab"
+          }
         }
       ]
     },
@@ -1388,7 +1658,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SpearThrust"
+          "target": {
+            "kind": "skill",
+            "id": "SpearThrust"
+          }
         }
       ]
     },
@@ -1400,12 +1673,18 @@ export class GemItemDefinitions {
         {
           "type": 26,
           "value": 1,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         },
         {
           "type": 26,
           "value": 1,
-          "skillId": "Stun"
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
         }
       ]
     },
@@ -1417,7 +1696,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Stomp"
+          "target": {
+            "kind": "skill",
+            "id": "Stomp"
+          }
         }
       ]
     },
@@ -1429,7 +1711,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "StrafingVolley"
+          "target": {
+            "kind": "skill",
+            "id": "StrafingVolley"
+          }
         }
       ]
     },
@@ -1441,7 +1726,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "SuppressiveShot"
+          "target": {
+            "kind": "skill",
+            "id": "SuppressiveShot"
+          }
         }
       ]
     },
@@ -1453,7 +1741,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Tempest"
+          "target": {
+            "kind": "skill",
+            "id": "Tempest"
+          }
         }
       ]
     },
@@ -1465,7 +1756,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "TetraVortex"
+          "target": {
+            "kind": "skill",
+            "id": "TetraVortex"
+          }
         }
       ]
     },
@@ -1488,7 +1782,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         }
       ]
     },
@@ -1500,12 +1797,18 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ThunderStorm"
+          "target": {
+            "kind": "skill",
+            "id": "ThunderStorm"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "ThunderField"
+          "target": {
+            "kind": "skill",
+            "id": "ThunderField"
+          }
         }
       ]
     },
@@ -1517,7 +1820,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "TurnUndead"
+          "target": {
+            "kind": "skill",
+            "id": "TurnUndead"
+          }
         }
       ]
     },
@@ -1529,7 +1835,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "TwistOfFate"
+          "target": {
+            "kind": "skill",
+            "id": "TwistOfFate"
+          }
         }
       ]
     },
@@ -1541,7 +1850,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ]
     },
@@ -1553,7 +1865,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ]
     },
@@ -1565,7 +1880,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "VolatileBolt"
+          "target": {
+            "kind": "skill",
+            "id": "VolatileBolt"
+          }
         }
       ]
     },
@@ -1577,7 +1895,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -1589,7 +1910,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "WeaponThrow"
+          "target": {
+            "kind": "skill",
+            "id": "WeaponThrow"
+          }
         }
       ]
     },
@@ -1612,7 +1936,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Whirlwind"
+          "target": {
+            "kind": "skill",
+            "id": "Whirlwind"
+          }
         }
       ]
     },
@@ -1624,7 +1951,10 @@ export class GemItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "WildCharge"
+          "target": {
+            "kind": "skill",
+            "id": "WildCharge"
+          }
         }
       ]
     },
@@ -1636,7 +1966,10 @@ export class GemItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     }

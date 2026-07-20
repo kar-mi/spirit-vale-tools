@@ -14,12 +14,17 @@ export type FishNetItemSubstatGroup =
   | "Ranged"
   | "Artifact";
 
+export interface FishNetItemEffectTarget {
+  readonly kind: "element" | "skill" | "status";
+  readonly id: string;
+}
+
 /** A stat contribution supplied by an item's innate effect. */
 export interface FishNetItemEffect {
   readonly type: number;
   readonly value: number;
-  /** Present for effects that apply to one named skill rather than the character sheet. */
-  readonly skillId?: string;
+  /** Optional entity named by this stat; its meaning is determined by `kind`. */
+  readonly target?: FishNetItemEffectTarget;
 }
 
 export interface FishNetArtifactSetEffects {

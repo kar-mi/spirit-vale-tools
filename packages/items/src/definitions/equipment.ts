@@ -49,12 +49,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         }
       ],
       "refineEffects": [
@@ -69,7 +75,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShadowStep"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStep"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -165,7 +174,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "refineEffects": [
@@ -243,7 +255,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "FreeCast"
+          "target": {
+            "kind": "skill",
+            "id": "FreeCast"
+          }
         }
       ],
       "refineEffects": [
@@ -269,12 +284,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 42,
           "value": 5,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ],
       "refineEffects": [
@@ -834,12 +855,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -1019,12 +1046,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "refineEffects": [
@@ -1079,7 +1112,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "refineEffects": [
@@ -1094,7 +1130,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -1295,32 +1334,50 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "DeathNova"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNova"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "DeathNovaField"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNovaField"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "DeathNova"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNova"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "DeathNova"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNova"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "DeathCoilSummon"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilSummon"
+          }
         }
       ],
       "refineEffects": [
@@ -1335,22 +1392,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathNova"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNova"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathNovaField"
+          "target": {
+            "kind": "skill",
+            "id": "DeathNovaField"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "DeathCoilSummon"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilSummon"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -1371,7 +1440,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ],
       "refineEffects": [
@@ -1386,7 +1458,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ]
     },
@@ -1406,7 +1481,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Berserk"
+          "target": {
+            "kind": "skill",
+            "id": "Berserk"
+          }
         }
       ],
       "refineEffects": [
@@ -1632,7 +1710,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 63,
@@ -1653,7 +1734,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Cure"
+          "target": {
+            "kind": "skill",
+            "id": "Cure"
+          }
         }
       ],
       "refineEffects": [
@@ -1675,7 +1759,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Revive"
+          "target": {
+            "kind": "skill",
+            "id": "Revive"
+          }
         },
         {
           "type": 90,
@@ -1734,12 +1821,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "PointBlankShot"
+          "target": {
+            "kind": "skill",
+            "id": "PointBlankShot"
+          }
         },
         {
           "type": 162,
           "value": 1,
-          "skillId": "PointBlankShot"
+          "target": {
+            "kind": "skill",
+            "id": "PointBlankShot"
+          }
         },
         {
           "type": 78,
@@ -1799,7 +1892,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -1816,7 +1912,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 10,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         }
       ],
       "refineEffects": [
@@ -1876,12 +1975,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 107,
           "value": 1,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         },
         {
           "type": 124,
           "value": 1,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ],
       "refineEffects": [
@@ -1912,7 +2017,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Bonk"
+          "target": {
+            "kind": "skill",
+            "id": "Bonk"
+          }
         },
         {
           "type": 195,
@@ -1939,7 +2047,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "BotHunter"
+          "target": {
+            "kind": "skill",
+            "id": "BotHunter"
+          }
         }
       ],
       "refineEffects": [
@@ -2492,12 +2603,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": -50,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 106,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "refineEffects": [
@@ -2512,7 +2629,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -2537,12 +2657,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 124,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ],
       "refineEffects": [
@@ -2557,12 +2683,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 124,
           "value": 0.5,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -2630,12 +2762,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -2656,22 +2794,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "DarkClaw"
+          "target": {
+            "kind": "skill",
+            "id": "DarkClaw"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "Cyclone"
+          "target": {
+            "kind": "skill",
+            "id": "Cyclone"
+          }
         },
         {
           "type": 105,
           "value": -1,
-          "skillId": "Cyclone"
+          "target": {
+            "kind": "skill",
+            "id": "Cyclone"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "Cyclone"
+          "target": {
+            "kind": "skill",
+            "id": "Cyclone"
+          }
         }
       ],
       "refineEffects": [
@@ -2682,7 +2832,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Cyclone"
+          "target": {
+            "kind": "skill",
+            "id": "Cyclone"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -2973,12 +3126,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ],
       "refineEffects": [
@@ -3085,7 +3244,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 64,
@@ -3118,12 +3280,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "ShadowStrike"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStrike"
+          }
         },
         {
           "type": 42,
           "value": 3,
-          "skillId": "Conviction"
+          "target": {
+            "kind": "skill",
+            "id": "Conviction"
+          }
         }
       ],
       "refineEffects": [
@@ -3142,12 +3310,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 39,
           "value": 1,
-          "skillId": "NPC_WideCurse"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_WideCurse"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -3176,12 +3350,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 42,
           "value": 3,
-          "skillId": "Vitality"
+          "target": {
+            "kind": "skill",
+            "id": "Vitality"
+          }
         }
       ],
       "refineEffects": [
@@ -3200,12 +3380,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 39,
           "value": 1,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -3364,17 +3550,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "DivinePunishment"
+          "target": {
+            "kind": "skill",
+            "id": "DivinePunishment"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "DivinePunishment"
+          "target": {
+            "kind": "skill",
+            "id": "DivinePunishment"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "DivinePunishment"
+          "target": {
+            "kind": "skill",
+            "id": "DivinePunishment"
+          }
         }
       ],
       "refineEffects": [
@@ -3389,7 +3584,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "DivinePunishment"
+          "target": {
+            "kind": "skill",
+            "id": "DivinePunishment"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -3414,17 +3612,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "JudgementBlade"
+          "target": {
+            "kind": "skill",
+            "id": "JudgementBlade"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "GrandCross"
+          "target": {
+            "kind": "skill",
+            "id": "GrandCross"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "GrandCross"
+          "target": {
+            "kind": "skill",
+            "id": "GrandCross"
+          }
         }
       ],
       "refineEffects": [
@@ -3439,12 +3646,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "JudgementBlade"
+          "target": {
+            "kind": "skill",
+            "id": "JudgementBlade"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "GrandCross"
+          "target": {
+            "kind": "skill",
+            "id": "GrandCross"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -3486,12 +3699,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "FieldDamage"
+          "target": {
+            "kind": "skill",
+            "id": "FieldDamage"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "FieldDamage"
+          "target": {
+            "kind": "skill",
+            "id": "FieldDamage"
+          }
         }
       ],
       "refineEffects": [
@@ -3539,7 +3758,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Curse"
+          "target": {
+            "kind": "status",
+            "id": "Curse"
+          }
         }
       ],
       "refineEffects": [
@@ -3614,7 +3836,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "BloodCrash"
+          "target": {
+            "kind": "skill",
+            "id": "BloodCrash"
+          }
         }
       ],
       "refineEffects": [
@@ -3675,7 +3900,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -3751,7 +3979,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "ShadowStrike"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStrike"
+          }
         }
       ],
       "refineEffects": [
@@ -3766,7 +3997,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "ShadowStrike"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowStrike"
+          }
         }
       ]
     },
@@ -4127,7 +4361,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ],
       "refineEffects": [
@@ -4142,7 +4379,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "HolyLight"
+          "target": {
+            "kind": "skill",
+            "id": "HolyLight"
+          }
         }
       ]
     },
@@ -4191,7 +4431,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4206,7 +4449,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ]
     },
@@ -4226,7 +4472,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4241,7 +4490,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         }
       ]
     },
@@ -4261,7 +4513,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4276,7 +4531,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ]
     },
@@ -4296,7 +4554,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4311,7 +4572,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         }
       ]
     },
@@ -4331,7 +4595,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4346,7 +4613,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         }
       ]
     },
@@ -4366,7 +4636,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         }
       ],
       "refineEffects": [
@@ -4381,7 +4654,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         }
       ]
     },
@@ -4401,7 +4677,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "SoulStrike"
+          "target": {
+            "kind": "skill",
+            "id": "SoulStrike"
+          }
         }
       ],
       "refineEffects": [
@@ -4416,7 +4695,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "SoulStrike"
+          "target": {
+            "kind": "skill",
+            "id": "SoulStrike"
+          }
         }
       ]
     },
@@ -4467,12 +4749,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -4493,22 +4781,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 56,
           "value": 10,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "refineEffects": [
@@ -4538,32 +4838,50 @@ export class EquipmentItemDefinitions {
         {
           "type": 106,
           "value": 2,
-          "skillId": "WildCharge"
+          "target": {
+            "kind": "skill",
+            "id": "WildCharge"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "WildCharge"
+          "target": {
+            "kind": "skill",
+            "id": "WildCharge"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "WildCharge"
+          "target": {
+            "kind": "skill",
+            "id": "WildCharge"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "GroundSlam"
+          "target": {
+            "kind": "skill",
+            "id": "GroundSlam"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "GroundSlam"
+          "target": {
+            "kind": "skill",
+            "id": "GroundSlam"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "GroundSlam"
+          "target": {
+            "kind": "skill",
+            "id": "GroundSlam"
+          }
         }
       ],
       "refineEffects": [
@@ -4574,12 +4892,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "WildCharge"
+          "target": {
+            "kind": "skill",
+            "id": "WildCharge"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "GroundSlam"
+          "target": {
+            "kind": "skill",
+            "id": "GroundSlam"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -4614,7 +4938,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ]
     },
@@ -4646,17 +4973,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ShadowRelease"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowRelease"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "TwistOfFate"
+          "target": {
+            "kind": "skill",
+            "id": "TwistOfFate"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "TwistOfFate"
+          "target": {
+            "kind": "skill",
+            "id": "TwistOfFate"
+          }
         }
       ],
       "refineEffects": [
@@ -4671,12 +5007,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShadowRelease"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowRelease"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "TwistOfFate"
+          "target": {
+            "kind": "skill",
+            "id": "TwistOfFate"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -4780,7 +5122,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ],
       "refineEffects": [
@@ -4795,7 +5140,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -4829,7 +5177,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -4879,22 +5230,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         },
         {
           "type": 40,
           "value": 5,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         },
         {
           "type": 40,
           "value": 5,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         },
         {
           "type": 40,
           "value": 5,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ],
       "refineEffects": [
@@ -4929,22 +5292,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantPoison"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantPoison"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantHoly"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantHoly"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantShadow"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantShadow"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantUndead"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantUndead"
+          }
         }
       ],
       "refineEffects": [
@@ -4979,22 +5354,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantFire"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantFire"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantWater"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantWater"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantWind"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantWind"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "EnchantEarth"
+          "target": {
+            "kind": "skill",
+            "id": "EnchantEarth"
+          }
         }
       ],
       "refineEffects": [
@@ -5029,22 +5416,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "HydroVortex"
+          "target": {
+            "kind": "skill",
+            "id": "HydroVortex"
+          }
         }
       ],
       "refineEffects": [
@@ -5059,17 +5458,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FreezingField"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "HydroVortex"
+          "target": {
+            "kind": "skill",
+            "id": "HydroVortex"
+          }
         },
         {
           "type": 39,
           "value": 1,
-          "skillId": "NPC_Freeze"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Freeze"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -5090,12 +5498,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Execute"
+          "target": {
+            "kind": "skill",
+            "id": "Execute"
+          }
         },
         {
           "type": 162,
           "value": 1,
-          "skillId": "Execute"
+          "target": {
+            "kind": "skill",
+            "id": "Execute"
+          }
         }
       ],
       "refineEffects": [
@@ -5106,7 +5520,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 1,
-          "skillId": "Execute"
+          "target": {
+            "kind": "skill",
+            "id": "Execute"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -5135,17 +5552,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "Faith"
+          "target": {
+            "kind": "skill",
+            "id": "Faith"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "TurnUndead"
+          "target": {
+            "kind": "skill",
+            "id": "TurnUndead"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "Damnation"
+          "target": {
+            "kind": "skill",
+            "id": "Damnation"
+          }
         }
       ],
       "refineEffects": [
@@ -5160,7 +5586,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "TurnUndead"
+          "target": {
+            "kind": "skill",
+            "id": "TurnUndead"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -5185,12 +5614,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 105,
           "value": -10,
-          "skillId": "Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Exorcism"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "TurnUndead"
+          "target": {
+            "kind": "skill",
+            "id": "TurnUndead"
+          }
         }
       ],
       "refineEffects": [
@@ -5205,12 +5640,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 120,
-          "skillId": "Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Exorcism"
+          }
         },
         {
           "type": 39,
           "value": 1,
-          "skillId": "TurnUndead"
+          "target": {
+            "kind": "skill",
+            "id": "TurnUndead"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -5256,12 +5697,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "SoulStrike"
+          "target": {
+            "kind": "skill",
+            "id": "SoulStrike"
+          }
         },
         {
           "type": 42,
           "value": 1,
-          "skillId": "TrueSight"
+          "target": {
+            "kind": "skill",
+            "id": "TrueSight"
+          }
         }
       ],
       "refineEffects": [
@@ -5756,12 +6203,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ],
       "refineEffects": [
@@ -5812,12 +6265,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Barrier"
+          "target": {
+            "kind": "skill",
+            "id": "Barrier"
+          }
         },
         {
           "type": 39,
           "value": 5,
-          "skillId": "Barrier"
+          "target": {
+            "kind": "skill",
+            "id": "Barrier"
+          }
         }
       ],
       "refineEffects": [
@@ -5861,7 +6320,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ]
     },
@@ -5936,7 +6398,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 1,
-          "skillId": "FireRelease"
+          "target": {
+            "kind": "skill",
+            "id": "FireRelease"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -5969,17 +6434,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "FireRelease"
+          "target": {
+            "kind": "skill",
+            "id": "FireRelease"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "FlameOrb"
+          "target": {
+            "kind": "skill",
+            "id": "FlameOrb"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "FlameOrb"
+          "target": {
+            "kind": "skill",
+            "id": "FlameOrb"
+          }
         }
       ],
       "refineEffects": [
@@ -5994,12 +6468,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FireRelease"
+          "target": {
+            "kind": "skill",
+            "id": "FireRelease"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "FlameOrb"
+          "target": {
+            "kind": "skill",
+            "id": "FlameOrb"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -6065,7 +6545,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "FanFire"
+          "target": {
+            "kind": "skill",
+            "id": "FanFire"
+          }
         }
       ],
       "refineEffects": [
@@ -6084,7 +6567,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "FanFire"
+          "target": {
+            "kind": "skill",
+            "id": "FanFire"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -6109,7 +6595,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "TrueSight"
+          "target": {
+            "kind": "skill",
+            "id": "TrueSight"
+          }
         }
       ],
       "refineEffects": [
@@ -6135,22 +6624,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "refineEffects": [
@@ -6299,17 +6800,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ShieldBash"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldBash"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "ShieldBash"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldBash"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "ShieldBash"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldBash"
+          }
         }
       ],
       "refineEffects": [
@@ -6343,7 +6853,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "FreezingEdge"
+          "target": {
+            "kind": "skill",
+            "id": "FreezingEdge"
+          }
         }
       ],
       "refineEffects": [
@@ -6382,17 +6895,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 124,
           "value": 3,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         },
         {
           "type": 110,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ],
       "refineEffects": [
@@ -6407,7 +6929,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 1,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -6428,7 +6953,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ],
       "refineEffects": [
@@ -6443,7 +6971,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -6477,7 +7008,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -6510,17 +7044,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "IceRelease"
+          "target": {
+            "kind": "skill",
+            "id": "IceRelease"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "FrostBlade"
+          "target": {
+            "kind": "skill",
+            "id": "FrostBlade"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "FrostBlade"
+          "target": {
+            "kind": "skill",
+            "id": "FrostBlade"
+          }
         }
       ],
       "refineEffects": [
@@ -6535,12 +7078,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "IceRelease"
+          "target": {
+            "kind": "skill",
+            "id": "IceRelease"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "FrostBlade"
+          "target": {
+            "kind": "skill",
+            "id": "FrostBlade"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -6620,7 +7169,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "GameMaster"
+          "target": {
+            "kind": "skill",
+            "id": "GameMaster"
+          }
         }
       ],
       "refineEffects": [
@@ -6969,7 +7521,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 2,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -7062,7 +7617,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "SoulStrike"
+          "target": {
+            "kind": "skill",
+            "id": "SoulStrike"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -7100,7 +7658,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "TrueSight"
+          "target": {
+            "kind": "skill",
+            "id": "TrueSight"
+          }
         }
       ],
       "refineEffects": [
@@ -7171,7 +7732,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Bleeding"
+          "target": {
+            "kind": "status",
+            "id": "Bleeding"
+          }
         }
       ],
       "refineEffects": [
@@ -7209,7 +7773,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Poison"
+          "target": {
+            "kind": "status",
+            "id": "Poison"
+          }
         }
       ],
       "refineEffects": [
@@ -7247,7 +7814,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Curse"
+          "target": {
+            "kind": "status",
+            "id": "Curse"
+          }
         }
       ],
       "refineEffects": [
@@ -7281,12 +7851,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ],
       "refineEffects": [
@@ -7301,12 +7877,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -7356,17 +7938,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "LifeDrainEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "LifeDrainEnemy"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "LifeDrain"
+          "target": {
+            "kind": "skill",
+            "id": "LifeDrain"
+          }
         },
         {
           "type": 43,
           "value": 5,
-          "skillId": "SoulDrain"
+          "target": {
+            "kind": "skill",
+            "id": "SoulDrain"
+          }
         }
       ],
       "refineEffects": [
@@ -7381,7 +7972,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "LifeDrainEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "LifeDrainEnemy"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -7540,7 +8134,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 15,
@@ -7565,12 +8162,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 150,
-          "skillId": "ForceShot"
+          "target": {
+            "kind": "skill",
+            "id": "ForceShot"
+          }
         },
         {
           "type": 106,
           "value": -3,
-          "skillId": "ForceShot"
+          "target": {
+            "kind": "skill",
+            "id": "ForceShot"
+          }
         }
       ],
       "refineEffects": [
@@ -7672,17 +8275,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         },
         {
           "type": 108,
           "value": -20,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         },
         {
           "type": 124,
           "value": 3,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         }
       ],
       "refineEffects": [
@@ -7693,7 +8305,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShieldThrow"
+          "target": {
+            "kind": "skill",
+            "id": "ShieldThrow"
+          }
         }
       ]
     },
@@ -7717,27 +8332,42 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "Firewall"
+          "target": {
+            "kind": "skill",
+            "id": "Firewall"
+          }
         },
         {
           "type": 123,
           "value": 1,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "Firewall"
+          "target": {
+            "kind": "skill",
+            "id": "Firewall"
+          }
         }
       ],
       "refineEffects": [
@@ -7752,12 +8382,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Fireball"
+          "target": {
+            "kind": "skill",
+            "id": "Fireball"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "Firewall"
+          "target": {
+            "kind": "skill",
+            "id": "Firewall"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -7832,7 +8468,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ],
       "refineEffects": [
@@ -7847,7 +8486,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -7881,7 +8523,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -7905,12 +8550,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Exorcism"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "Exorcism"
+          "target": {
+            "kind": "skill",
+            "id": "Exorcism"
+          }
         }
       ],
       "refineEffects": [
@@ -7955,12 +8606,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 39,
           "value": 1,
-          "skillId": "NPC_WideCurse"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_WideCurse"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -8121,7 +8778,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 107,
           "value": 1,
-          "skillId": "SpearSlice"
+          "target": {
+            "kind": "skill",
+            "id": "SpearSlice"
+          }
         }
       ],
       "refineEffects": [
@@ -8273,12 +8933,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ],
       "refineEffects": [
@@ -8342,12 +9008,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "AxeArc"
+          "target": {
+            "kind": "skill",
+            "id": "AxeArc"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "AxeArc"
+          "target": {
+            "kind": "skill",
+            "id": "AxeArc"
+          }
         }
       ],
       "refineEffects": [
@@ -8415,7 +9087,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Bleeding"
+          "target": {
+            "kind": "status",
+            "id": "Bleeding"
+          }
         }
       ],
       "refineEffects": [
@@ -8768,7 +9443,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 10,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         },
         {
           "type": 11,
@@ -8806,7 +9484,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 5,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         },
         {
           "type": 11,
@@ -8844,7 +9525,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 5,
-          "skillId": "Neutral"
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
         },
         {
           "type": 11,
@@ -8967,12 +9651,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 108,
           "value": 20,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "refineEffects": [
@@ -9253,17 +9943,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Sanctuary"
+          "target": {
+            "kind": "skill",
+            "id": "Sanctuary"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "HighHeal"
+          "target": {
+            "kind": "skill",
+            "id": "HighHeal"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "HighHeal"
+          "target": {
+            "kind": "skill",
+            "id": "HighHeal"
+          }
         }
       ],
       "refineEffects": [
@@ -9424,22 +10123,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 50,
-          "skillId": "Smite"
+          "target": {
+            "kind": "skill",
+            "id": "Smite"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "Smite"
+          "target": {
+            "kind": "skill",
+            "id": "Smite"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "Smite"
+          "target": {
+            "kind": "skill",
+            "id": "Smite"
+          }
         },
         {
           "type": 145,
           "value": 1,
-          "skillId": "Smite"
+          "target": {
+            "kind": "skill",
+            "id": "Smite"
+          }
         }
       ],
       "refineEffects": [
@@ -9474,22 +10185,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "HolyWrath"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrath"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "HolyWrath"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrath"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "HolyWrathField"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrathField"
+          }
         },
         {
           "type": 145,
           "value": 2,
-          "skillId": "HolyWrath"
+          "target": {
+            "kind": "skill",
+            "id": "HolyWrath"
+          }
         }
       ],
       "refineEffects": [
@@ -10354,17 +11077,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "FirePillar"
+          "target": {
+            "kind": "skill",
+            "id": "FirePillar"
+          }
         }
       ],
       "refineEffects": [
@@ -10379,12 +11111,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "FirePillar"
+          "target": {
+            "kind": "skill",
+            "id": "FirePillar"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -10491,12 +11229,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "SpellShield"
+          "target": {
+            "kind": "skill",
+            "id": "SpellShield"
+          }
         },
         {
           "type": 39,
           "value": 5,
-          "skillId": "SpellShield"
+          "target": {
+            "kind": "skill",
+            "id": "SpellShield"
+          }
         }
       ],
       "refineEffects": [
@@ -10588,12 +11332,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -10647,12 +11397,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "HighHeal"
+          "target": {
+            "kind": "skill",
+            "id": "HighHeal"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "HighHeal"
+          "target": {
+            "kind": "skill",
+            "id": "HighHeal"
+          }
         }
       ],
       "refineEffects": [
@@ -10703,22 +11459,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 56,
           "value": 10,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 56,
           "value": 10,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ],
       "refineEffects": [
@@ -10756,12 +11524,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "SummonSkeleton"
+          "target": {
+            "kind": "skill",
+            "id": "SummonSkeleton"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "SummonSkeletonMage"
+          "target": {
+            "kind": "skill",
+            "id": "SummonSkeletonMage"
+          }
         }
       ],
       "refineEffects": [
@@ -10780,7 +11554,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -11253,7 +12030,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "StrafingVolley"
+          "target": {
+            "kind": "skill",
+            "id": "StrafingVolley"
+          }
         }
       ],
       "refineEffects": [
@@ -11348,12 +12128,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -11441,12 +12227,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ],
       "refineEffects": [
@@ -11579,7 +12371,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 162,
           "value": 1,
-          "skillId": "ShadowSeal"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowSeal"
+          }
         },
         {
           "type": 177,
@@ -11614,7 +12409,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ],
       "refineEffects": [
@@ -11959,7 +12757,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "HydroVortex"
+          "target": {
+            "kind": "skill",
+            "id": "HydroVortex"
+          }
         }
       ],
       "refineEffects": [
@@ -12010,7 +12811,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "ShadowRelease"
+          "target": {
+            "kind": "skill",
+            "id": "ShadowRelease"
+          }
         }
       ],
       "refineEffects": [
@@ -12061,7 +12865,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "Meteor"
+          "target": {
+            "kind": "skill",
+            "id": "Meteor"
+          }
         }
       ],
       "refineEffects": [
@@ -12319,7 +13126,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         }
       ],
       "refineEffects": [
@@ -12334,7 +13144,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "DeathCoilEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "DeathCoilEnemy"
+          }
         }
       ]
     },
@@ -12497,22 +13310,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Fire"
+          "target": {
+            "kind": "element",
+            "id": "Fire"
+          }
         },
         {
           "type": 46,
           "value": 10,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 46,
           "value": 10,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 46,
           "value": 10,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "refineEffects": [
@@ -12553,7 +13378,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 183,
           "value": 5,
-          "skillId": "Rage"
+          "target": {
+            "kind": "status",
+            "id": "Rage"
+          }
         },
         {
           "type": 75,
@@ -12653,7 +13481,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "LimitBreak"
+          "target": {
+            "kind": "skill",
+            "id": "LimitBreak"
+          }
         }
       ],
       "refineEffects": [
@@ -12700,22 +13531,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ShurikenFan"
+          "target": {
+            "kind": "skill",
+            "id": "ShurikenFan"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "ShurikenFan"
+          "target": {
+            "kind": "skill",
+            "id": "ShurikenFan"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "FanOfKnives"
+          "target": {
+            "kind": "skill",
+            "id": "FanOfKnives"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "FanOfKnives"
+          "target": {
+            "kind": "skill",
+            "id": "FanOfKnives"
+          }
         }
       ],
       "refineEffects": [
@@ -12730,12 +13573,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ShurikenFan"
+          "target": {
+            "kind": "skill",
+            "id": "ShurikenFan"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "FanOfKnives"
+          "target": {
+            "kind": "skill",
+            "id": "FanOfKnives"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -12760,22 +13609,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "DeathSpiral"
+          "target": {
+            "kind": "skill",
+            "id": "DeathSpiral"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "DeathSpiral"
+          "target": {
+            "kind": "skill",
+            "id": "DeathSpiral"
+          }
         },
         {
           "type": 49,
           "value": 25,
-          "skillId": "Harvest"
+          "target": {
+            "kind": "skill",
+            "id": "Harvest"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "Harvest"
+          "target": {
+            "kind": "skill",
+            "id": "Harvest"
+          }
         }
       ],
       "refineEffects": [
@@ -12840,7 +13701,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "BleedCoating"
+          "target": {
+            "kind": "skill",
+            "id": "BleedCoating"
+          }
         }
       ],
       "refineEffects": [
@@ -12925,12 +13789,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 3,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 39,
           "value": 5,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ],
       "refineEffects": [
@@ -12997,7 +13867,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Cure"
+          "target": {
+            "kind": "skill",
+            "id": "Cure"
+          }
         }
       ],
       "refineEffects": [
@@ -13031,7 +13904,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ],
       "refineEffects": [
@@ -13057,7 +13933,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Damnation"
+          "target": {
+            "kind": "skill",
+            "id": "Damnation"
+          }
         }
       ],
       "refineEffects": [
@@ -13091,7 +13970,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Endure"
+          "target": {
+            "kind": "skill",
+            "id": "Endure"
+          }
         }
       ],
       "refineEffects": [
@@ -13125,12 +14007,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 50,
-          "skillId": "SpearThrust"
+          "target": {
+            "kind": "skill",
+            "id": "SpearThrust"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "SpearThrust"
+          "target": {
+            "kind": "skill",
+            "id": "SpearThrust"
+          }
         }
       ],
       "refineEffects": [
@@ -13451,7 +14339,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "SpearStab"
+          "target": {
+            "kind": "skill",
+            "id": "SpearStab"
+          }
         }
       ],
       "refineEffects": [
@@ -13462,7 +14353,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "SpearStab"
+          "target": {
+            "kind": "skill",
+            "id": "SpearStab"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -13587,22 +14481,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "FieldCurse"
+          "target": {
+            "kind": "skill",
+            "id": "FieldCurse"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "FieldSilence"
+          "target": {
+            "kind": "skill",
+            "id": "FieldSilence"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "FieldCurse"
+          "target": {
+            "kind": "skill",
+            "id": "FieldCurse"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "FieldSilence"
+          "target": {
+            "kind": "skill",
+            "id": "FieldSilence"
+          }
         }
       ],
       "refineEffects": [
@@ -13692,7 +14598,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Silence"
+          "target": {
+            "kind": "status",
+            "id": "Silence"
+          }
         }
       ],
       "refineEffects": [
@@ -14002,12 +14911,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Sanctuary"
+          "target": {
+            "kind": "skill",
+            "id": "Sanctuary"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "Sanctuary"
+          "target": {
+            "kind": "skill",
+            "id": "Sanctuary"
+          }
         }
       ],
       "refineEffects": [
@@ -14041,7 +14956,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "Consecration"
+          "target": {
+            "kind": "skill",
+            "id": "Consecration"
+          }
         }
       ],
       "refineEffects": [
@@ -14083,7 +15001,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Cure"
+          "target": {
+            "kind": "skill",
+            "id": "Cure"
+          }
         }
       ],
       "refineEffects": [
@@ -14117,7 +15038,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ],
       "refineEffects": [
@@ -14143,7 +15067,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Damnation"
+          "target": {
+            "kind": "skill",
+            "id": "Damnation"
+          }
         }
       ],
       "refineEffects": [
@@ -14169,12 +15096,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "StatusRecovery"
+          "target": {
+            "kind": "skill",
+            "id": "StatusRecovery"
+          }
         },
         {
           "type": 39,
           "value": 5,
-          "skillId": "StatusRecovery"
+          "target": {
+            "kind": "skill",
+            "id": "StatusRecovery"
+          }
         }
       ],
       "refineEffects": [
@@ -14212,7 +15145,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 5,
-          "skillId": "Endure"
+          "target": {
+            "kind": "skill",
+            "id": "Endure"
+          }
         }
       ],
       "refineEffects": [
@@ -14319,7 +15255,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 5,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ],
       "refineEffects": [
@@ -14334,7 +15273,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 1,
-          "skillId": "VenomStrike"
+          "target": {
+            "kind": "skill",
+            "id": "VenomStrike"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -14542,7 +15484,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         },
         {
           "type": 90,
@@ -14630,12 +15575,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "BladeDance"
+          "target": {
+            "kind": "skill",
+            "id": "BladeDance"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "BladeDance"
+          "target": {
+            "kind": "skill",
+            "id": "BladeDance"
+          }
         }
       ],
       "refineEffects": [
@@ -14687,7 +15638,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ]
     },
@@ -14969,17 +15923,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Whirlwind"
+          "target": {
+            "kind": "skill",
+            "id": "Whirlwind"
+          }
         },
         {
           "type": 105,
           "value": -1,
-          "skillId": "Whirlwind"
+          "target": {
+            "kind": "skill",
+            "id": "Whirlwind"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "Whirlwind"
+          "target": {
+            "kind": "skill",
+            "id": "Whirlwind"
+          }
         }
       ],
       "refineEffects": [
@@ -14990,7 +15953,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Whirlwind"
+          "target": {
+            "kind": "skill",
+            "id": "Whirlwind"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -15040,12 +16006,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "ThunderStorm"
+          "target": {
+            "kind": "skill",
+            "id": "ThunderStorm"
+          }
         },
         {
           "type": 145,
           "value": -1,
-          "skillId": "ThunderStorm"
+          "target": {
+            "kind": "skill",
+            "id": "ThunderStorm"
+          }
         }
       ],
       "refineEffects": [
@@ -15060,7 +16032,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "ThunderStorm"
+          "target": {
+            "kind": "skill",
+            "id": "ThunderStorm"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -15151,22 +16126,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": -50,
-          "skillId": "SniperShot"
+          "target": {
+            "kind": "skill",
+            "id": "SniperShot"
+          }
         },
         {
           "type": 145,
           "value": 2,
-          "skillId": "SniperShot"
+          "target": {
+            "kind": "skill",
+            "id": "SniperShot"
+          }
         },
         {
           "type": 162,
           "value": -2,
-          "skillId": "SniperShot"
+          "target": {
+            "kind": "skill",
+            "id": "SniperShot"
+          }
         },
         {
           "type": 104,
           "value": -6,
-          "skillId": "SniperShot"
+          "target": {
+            "kind": "skill",
+            "id": "SniperShot"
+          }
         }
       ],
       "refineEffects": [
@@ -15218,12 +16205,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Frozen"
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
         },
         {
           "type": 39,
           "value": 5,
-          "skillId": "IceShard"
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
         }
       ],
       "refineEffects": [
@@ -15391,12 +16384,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "CorpseExplosionEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseExplosionEnemy"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "CorpseExplosion"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseExplosion"
+          }
         }
       ],
       "refineEffects": [
@@ -15411,12 +16410,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "CorpseExplosionEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseExplosionEnemy"
+          }
         },
         {
           "type": 107,
           "value": 1,
-          "skillId": "CorpseExplosionEnemy"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseExplosionEnemy"
+          }
         },
         {
           "type": 142,
@@ -15570,7 +16575,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "NPC_Stun"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Stun"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -15705,7 +16713,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "CorpseBarrier"
+          "target": {
+            "kind": "skill",
+            "id": "CorpseBarrier"
+          }
         },
         {
           "type": 76,
@@ -15780,22 +16791,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 10,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Undead"
+          "target": {
+            "kind": "element",
+            "id": "Undead"
+          }
         },
         {
           "type": 44,
           "value": 10,
-          "skillId": "Poison"
+          "target": {
+            "kind": "element",
+            "id": "Poison"
+          }
         }
       ],
       "refineEffects": [
@@ -15896,12 +16919,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ],
       "refineEffects": [
@@ -15981,7 +17010,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "BladeDance"
+          "target": {
+            "kind": "skill",
+            "id": "BladeDance"
+          }
         }
       ],
       "refineEffects": [
@@ -16098,7 +17130,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
-          "skillId": "Counter"
+          "target": {
+            "kind": "skill",
+            "id": "Counter"
+          }
         }
       ],
       "refineEffects": [
@@ -16137,12 +17172,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "ArrowShower"
+          "target": {
+            "kind": "skill",
+            "id": "ArrowShower"
+          }
         },
         {
           "type": 104,
           "value": -2,
-          "skillId": "ArrowShower"
+          "target": {
+            "kind": "skill",
+            "id": "ArrowShower"
+          }
         }
       ],
       "refineEffects": [
@@ -16191,7 +17232,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 1,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -16245,17 +17289,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "LightningRelease"
+          "target": {
+            "kind": "skill",
+            "id": "LightningRelease"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "LightningStrike"
+          "target": {
+            "kind": "skill",
+            "id": "LightningStrike"
+          }
         },
         {
           "type": 104,
           "value": -1,
-          "skillId": "LightningStrike"
+          "target": {
+            "kind": "skill",
+            "id": "LightningStrike"
+          }
         }
       ],
       "refineEffects": [
@@ -16270,12 +17323,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "LightningRelease"
+          "target": {
+            "kind": "skill",
+            "id": "LightningRelease"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "LightningStrike"
+          "target": {
+            "kind": "skill",
+            "id": "LightningStrike"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -16304,22 +17363,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "WeaponThrow"
+          "target": {
+            "kind": "skill",
+            "id": "WeaponThrow"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "WeaponThrow"
+          "target": {
+            "kind": "skill",
+            "id": "WeaponThrow"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "WeaponThrow"
+          "target": {
+            "kind": "skill",
+            "id": "WeaponThrow"
+          }
         },
         {
           "type": 110,
           "value": 1,
-          "skillId": "WeaponThrow"
+          "target": {
+            "kind": "skill",
+            "id": "WeaponThrow"
+          }
         }
       ],
       "refineEffects": [
@@ -16582,7 +17653,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 39,
           "value": 3,
-          "skillId": "Heal"
+          "target": {
+            "kind": "skill",
+            "id": "Heal"
+          }
         }
       ]
     },
@@ -16660,12 +17734,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "Barrier"
+          "target": {
+            "kind": "skill",
+            "id": "Barrier"
+          }
         },
         {
           "type": 106,
           "value": 3,
-          "skillId": "Barrier"
+          "target": {
+            "kind": "skill",
+            "id": "Barrier"
+          }
         }
       ],
       "refineEffects": [
@@ -16751,12 +17831,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 44,
           "value": 1,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         },
         {
           "type": 56,
           "value": 1,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -16852,7 +17938,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 2,
-          "skillId": "NPC_Poison"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Poison"
+          }
         }
       ],
       "refineEffects": [
@@ -16867,7 +17956,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 3,
-          "skillId": "NPC_Poison"
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Poison"
+          }
         }
       ]
     },
@@ -16891,7 +17983,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "VenomCoating"
+          "target": {
+            "kind": "skill",
+            "id": "VenomCoating"
+          }
         }
       ],
       "refineEffects": [
@@ -16971,22 +18066,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 10,
-          "skillId": "Firebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Firebolt"
+          }
         },
         {
           "type": 49,
           "value": 10,
-          "skillId": "Icebolt"
+          "target": {
+            "kind": "skill",
+            "id": "Icebolt"
+          }
         },
         {
           "type": 49,
           "value": 10,
-          "skillId": "Thunderbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Thunderbolt"
+          }
         },
         {
           "type": 49,
           "value": 10,
-          "skillId": "Earthbolt"
+          "target": {
+            "kind": "skill",
+            "id": "Earthbolt"
+          }
         }
       ],
       "refineEffects": [
@@ -17020,22 +18127,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "Tempest"
+          "target": {
+            "kind": "skill",
+            "id": "Tempest"
+          }
         },
         {
           "type": 104,
           "value": -3,
-          "skillId": "Tempest"
+          "target": {
+            "kind": "skill",
+            "id": "Tempest"
+          }
         },
         {
           "type": 49,
           "value": 15,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         },
         {
           "type": 109,
           "value": 1,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         }
       ],
       "refineEffects": [
@@ -17050,12 +18169,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "Tempest"
+          "target": {
+            "kind": "skill",
+            "id": "Tempest"
+          }
         },
         {
           "type": 49,
           "value": 2,
-          "skillId": "ChainLightning"
+          "target": {
+            "kind": "skill",
+            "id": "ChainLightning"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -17250,7 +18375,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 2,
-          "skillId": "SuppressiveShot"
+          "target": {
+            "kind": "skill",
+            "id": "SuppressiveShot"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -17325,12 +18453,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Blind"
+          "target": {
+            "kind": "status",
+            "id": "Blind"
+          }
         },
         {
           "type": 26,
           "value": 50,
-          "skillId": "Burning"
+          "target": {
+            "kind": "status",
+            "id": "Burning"
+          }
         }
       ],
       "refineEffects": [
@@ -17379,12 +18513,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 2,
-          "skillId": "AxeThrow"
+          "target": {
+            "kind": "skill",
+            "id": "AxeThrow"
+          }
         },
         {
           "type": 40,
           "value": 5,
-          "skillId": "AxeThrow"
+          "target": {
+            "kind": "skill",
+            "id": "AxeThrow"
+          }
         }
       ],
       "refineEffects": [
@@ -17395,7 +18535,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 40,
           "value": 1,
-          "skillId": "AxeThrow"
+          "target": {
+            "kind": "skill",
+            "id": "AxeThrow"
+          }
         }
       ],
       "substatGroup": "Melee"
@@ -17452,22 +18595,34 @@ export class EquipmentItemDefinitions {
         {
           "type": 43,
           "value": 2,
-          "skillId": "ShoutMight"
+          "target": {
+            "kind": "skill",
+            "id": "ShoutMight"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "ShoutFury"
+          "target": {
+            "kind": "skill",
+            "id": "ShoutFury"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "ShoutBlood"
+          "target": {
+            "kind": "skill",
+            "id": "ShoutBlood"
+          }
         },
         {
           "type": 43,
           "value": 2,
-          "skillId": "ShoutStun"
+          "target": {
+            "kind": "skill",
+            "id": "ShoutStun"
+          }
         }
       ],
       "refineEffects": [
@@ -17698,17 +18853,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 15,
-          "skillId": "PanicBurst"
+          "target": {
+            "kind": "skill",
+            "id": "PanicBurst"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "PanicBurst"
+          "target": {
+            "kind": "skill",
+            "id": "PanicBurst"
+          }
         },
         {
           "type": 108,
           "value": 20,
-          "skillId": "PanicBurst"
+          "target": {
+            "kind": "skill",
+            "id": "PanicBurst"
+          }
         }
       ],
       "refineEffects": [
@@ -17719,7 +18883,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 2,
-          "skillId": "PanicBurst"
+          "target": {
+            "kind": "skill",
+            "id": "PanicBurst"
+          }
         }
       ],
       "substatGroup": "Ranged"
@@ -17787,7 +18954,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ],
       "refineEffects": [
@@ -17802,7 +18972,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -17847,12 +19020,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 26,
           "value": 50,
-          "skillId": "Poison"
+          "target": {
+            "kind": "status",
+            "id": "Poison"
+          }
         },
         {
           "type": 26,
           "value": 50,
-          "skillId": "Silence"
+          "target": {
+            "kind": "status",
+            "id": "Silence"
+          }
         }
       ],
       "refineEffects": [
@@ -17925,7 +19104,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Earth"
+          "target": {
+            "kind": "element",
+            "id": "Earth"
+          }
         },
         {
           "type": 67,
@@ -17962,7 +19144,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "Haste"
+          "target": {
+            "kind": "skill",
+            "id": "Haste"
+          }
         }
       ],
       "refineEffects": [
@@ -18094,17 +19279,26 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 25,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         },
         {
           "type": 106,
           "value": 2,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         },
         {
           "type": 108,
           "value": -20,
-          "skillId": "Bash"
+          "target": {
+            "kind": "skill",
+            "id": "Bash"
+          }
         }
       ],
       "refineEffects": [
@@ -18219,12 +19413,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 49,
           "value": 100,
-          "skillId": "AxeVortex"
+          "target": {
+            "kind": "skill",
+            "id": "AxeVortex"
+          }
         },
         {
           "type": 104,
           "value": 2,
-          "skillId": "AxeVortex"
+          "target": {
+            "kind": "skill",
+            "id": "AxeVortex"
+          }
         }
       ],
       "refineEffects": [
@@ -18265,7 +19465,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ]
     },
@@ -18418,12 +19621,18 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 5,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         },
         {
           "type": 53,
           "value": 5,
-          "skillId": "Water"
+          "target": {
+            "kind": "element",
+            "id": "Water"
+          }
         }
       ],
       "refineEffects": [
@@ -18457,7 +19666,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 1,
-          "skillId": "VenomCoating"
+          "target": {
+            "kind": "skill",
+            "id": "VenomCoating"
+          }
         }
       ],
       "refineEffects": [
@@ -18500,7 +19712,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 10,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ],
       "refineEffects": [
@@ -18515,7 +19730,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 1,
-          "skillId": "Holy"
+          "target": {
+            "kind": "element",
+            "id": "Holy"
+          }
         }
       ]
     },
@@ -18641,7 +19859,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 53,
           "value": 3,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ]
     },
@@ -19184,7 +20405,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Shadow"
+          "target": {
+            "kind": "element",
+            "id": "Shadow"
+          }
         }
       ],
       "substatGroup": "Magic"
@@ -19219,7 +20443,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 46,
           "value": 2,
-          "skillId": "Wind"
+          "target": {
+            "kind": "element",
+            "id": "Wind"
+          }
         }
       ],
       "substatGroup": "Magic"
