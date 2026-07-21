@@ -170,6 +170,11 @@ export class FishNetActorDirectory {
     return identity ? { ...identity } : undefined;
   }
 
+  /** Snapshots every currently known identity, for seeding a freshly rotated log with resolved names. */
+  snapshot(): FishNetActorIdentity[] {
+    return [...this.identities.values()].map((identity) => ({ ...identity }));
+  }
+
   reset(): void {
     this.uidIdentities.clear();
     this.clear();

@@ -26,6 +26,7 @@ export interface DpsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
   onClosed?: () => void;
+  onReset?: () => Promise<void>;
 }
 
 export async function createDpsWindow(options: DpsWindowOptions) {
@@ -43,6 +44,7 @@ let liveLogPolling = false;
 let publishing = false;
 let shuttingDown = false;
 let storageWarning: string | undefined;
+let resetting = false;
 
 const settingsPersistence = new SafeSaveQueue<typeof settings>({
   label: "DPS settings",
@@ -67,8 +69,22 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
     requests: {
       getState: () => appState(),
       openReplayPicker: () => { replayPicker.open(); },
-      resetEncounter: () => {
-        liveMeter.clearEncounters();
+      resetSession: async () => {
+        if (!resetting && options.onReset) {
+          resetting = true;
+          publish();
+          try {
+            await options.onReset();
+            liveMeter = new FishNetDpsMeter({
+              personalName: settings.personalName,
+              ...(manualPersonalActorId === undefined ? {} : { personalActorId: manualPersonalActorId }),
+            });
+          } catch {
+            // Keep the existing meter/UI data unchanged when rotation fails.
+          } finally {
+            resetting = false;
+          }
+        }
         publish();
         return appState();
       },
@@ -188,6 +204,7 @@ function appState(): DpsAppState {
     personalName: settings.personalName,
     ...(liveMeter.getPersonalActorId() === undefined ? {} : { personalActorId: liveMeter.getPersonalActorId() }),
     ...(snapshot ? { snapshot } : {}),
+    resetting,
   };
 }
 

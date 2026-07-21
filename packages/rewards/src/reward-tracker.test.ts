@@ -105,6 +105,35 @@ describe("mob reward tracker", () => {
       coins: 3n,
     }));
   });
+
+  test("flushSessionBoundary finalizes pending kills but keeps the XP baseline and mob identities", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1, 50));
+    tracker.consume(experience(2, 0, 1, 0, 1, 0n));
+    tracker.consume(death(3, 50));
+    tracker.consume(experience(4, 20, 1, 10, 1, 6n));
+
+    const boundary = tracker.flushSessionBoundary();
+    expect(boundary).toContainEqual(expect.objectContaining({
+      kind: "kill",
+      mob: expect.objectContaining({ mobId: "training-mob" }),
+      experience: 20,
+      coins: 6n,
+    }));
+
+    // The XP baseline survived the boundary, so the next update computes a gain relative to it
+    // instead of silently reseeding with no event.
+    tracker.consume(monsterSync(5, 51));
+    tracker.consume(death(6, 51));
+    tracker.consume(experience(7, 30, 1, 12, 1, 8n));
+    expect(tracker.flush()).toContainEqual(expect.objectContaining({
+      kind: "kill",
+      mob: expect.objectContaining({ objectId: 51 }),
+      experience: 10,
+      jobExperience: 2,
+      coins: 2n,
+    }));
+  });
 });
 
 function monsterSync(tick: number, objectId: number): DecodedFishNetPacket {

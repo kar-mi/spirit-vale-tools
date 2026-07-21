@@ -302,6 +302,21 @@ describe("FishNetActorDirectory", () => {
     expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([]);
   });
 
+  test("snapshots every currently known identity without mutating the directory", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(packet(1, "syncType", 40, visual("Aster Vale")));
+    directory.consume(packet(2, "syncType", 41, visual("Briar Stone", 4)));
+
+    const snapshot = directory.snapshot();
+    expect(snapshot.sort((left, right) => left.actorId - right.actorId)).toEqual([
+      { actorId: 40, displayName: "Aster Vale", archetype: 2 },
+      { actorId: 41, displayName: "Briar Stone", archetype: 4 },
+    ]);
+
+    directory.consume(packet(3, "syncType", 40, visual("Renamed")));
+    expect(snapshot[0]).toEqual({ actorId: 40, displayName: "Aster Vale", archetype: 2 });
+  });
+
   test("removes and reapplies aliases across ownership and source lifecycle changes", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 40, 7, "PlayerController"));

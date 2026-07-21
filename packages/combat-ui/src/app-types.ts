@@ -22,6 +22,7 @@ export interface DpsAppState {
   personalName: string;
   personalActorId?: number;
   snapshot?: FishNetDpsEncounterSnapshot;
+  resetting: boolean;
 }
 
 export interface DpsSettingsState {
@@ -33,7 +34,7 @@ export type DpsAppRpc = {
     requests: {
       getState: { params: Record<string, never>; response: DpsAppState };
       openReplayPicker: { params: Record<string, never>; response: void };
-      resetEncounter: { params: Record<string, never>; response: DpsAppState };
+      resetSession: { params: Record<string, never>; response: DpsAppState };
       setPersonalName: { params: { name: string }; response: DpsAppState };
       setPersonalActor: { params: { actorId: number | null }; response: DpsAppState };
       setPinned: { params: { pinned: boolean }; response: DpsAppState };

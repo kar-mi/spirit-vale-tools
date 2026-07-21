@@ -1,8 +1,10 @@
 export {
   JsonLinesLogger,
+  activateLogSession,
   createLogSession,
   parseLogRecord,
   readCurrentLogStream,
+  writeCurrentLogStreamPointer,
 } from "./logger.ts";
 export type { CreateLogSessionOptions, LogWriteFailure } from "./logger.ts";
 export { sanitizeCombatData } from "./combat-sanitizer.ts";

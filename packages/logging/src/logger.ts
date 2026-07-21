@@ -19,6 +19,13 @@ export interface CreateLogSessionOptions {
   logDirectory?: string;
   outputPaths?: Partial<Record<LogStream, string>>;
   onWriteError?: (failure: LogWriteFailure) => void;
+  /**
+   * When false, the session's stream files are created but the shared "current stream" pointers
+   * are left untouched, so followers keep reading whatever session was previously active. Use
+   * {@link activateLogSession} to switch the pointers once the caller is ready to cut over.
+   * Defaults to true.
+   */
+  activate?: boolean;
 }
 
 export interface LogWriteFailure {
@@ -91,6 +98,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
   const metadata: LogSessionMetadata = { schemaVersion: 1, sessionId: id, producer: options.producer, createdAt, streams };
   await writeFile(path.join(directory, "session.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
 
+  const activate = options.activate ?? true;
   const loggers = new Map<LogStream, JsonLinesLogger>();
   for (const stream of streams) {
     const override = options.outputPaths?.[stream];
@@ -101,7 +109,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
       stream,
       onWriteError: options.onWriteError,
     }));
-    if (!override) {
+    if (!override && activate) {
       const pointer: CurrentLogStream = {
         schemaVersion: 1,
         stream,
@@ -125,6 +133,41 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
       await Promise.all([...loggers.values()].map((logger) => logger.close()));
     },
   };
+}
+
+/** Writes a single stream's "current" pointer verbatim, e.g. to roll a stream back to a known-good pointer. */
+export async function writeCurrentLogStreamPointer(
+  pointer: CurrentLogStream,
+  logDirectory = defaultLogDirectory(),
+): Promise<void> {
+  await writeAtomicJson(currentStreamPointerPath(pointer.stream, logDirectory), pointer);
+}
+
+/**
+ * Switches the shared "current stream" pointers for the given streams onto an already-created,
+ * not-yet-activated session (see {@link CreateLogSessionOptions.activate}). Callers that need
+ * several streams to change over as one logical moment should await this once. Streams are
+ * switched one at a time (there is no cross-file transaction), so a caller that must not leave
+ * streams split across sessions should capture each stream's prior pointer first and roll back
+ * to it if this throws partway through.
+ */
+export async function activateLogSession(
+  session: Pick<LogSession, "id">,
+  streams: readonly LogStream[],
+  logDirectory = defaultLogDirectory(),
+): Promise<void> {
+  const startedAt = new Date().toISOString();
+  for (const stream of streams) {
+    const streamPath = sessionStreamPath(session.id, stream, logDirectory);
+    const pointer: CurrentLogStream = {
+      schemaVersion: 1,
+      stream,
+      sessionId: session.id,
+      startedAt,
+      relativePath: path.relative(logDirectory, streamPath),
+    };
+    await writeCurrentLogStreamPointer(pointer, logDirectory);
+  }
 }
 
 export function parseLogRecord(value: unknown): LogRecord | undefined {

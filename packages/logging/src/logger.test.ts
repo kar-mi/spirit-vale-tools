@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { JsonLinesLogger, createLogSession, defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "./index.ts";
+import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, parseLogRecord, readCurrentLogStream } from "./index.ts";
 
 describe("shared JSON logger", () => {
   test("defaults to a logs folder under the working directory", () => {
@@ -27,6 +27,32 @@ describe("shared JSON logger", () => {
       const nextSession = await createLogSession({ producer: "synthetic-test", streams: ["combat"], logDirectory: root });
       await nextSession.close();
       expect((await readCurrentLogStream("combat", root))?.sessionId).toBe(nextSession.id);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("can create a session without activating it, then activate several streams together later", async () => {
+    const root = `${import.meta.dir}/../../../.local/logger-test-${crypto.randomUUID()}`;
+    await mkdir(root, { recursive: true });
+    try {
+      const firstSession = await createLogSession({ producer: "synthetic-test", streams: ["combat", "rewards"], logDirectory: root });
+
+      const secondSession = await createLogSession({
+        producer: "synthetic-test",
+        streams: ["combat", "rewards"],
+        logDirectory: root,
+        activate: false,
+      });
+      expect((await readCurrentLogStream("combat", root))?.sessionId).toBe(firstSession.id);
+      expect((await readCurrentLogStream("rewards", root))?.sessionId).toBe(firstSession.id);
+
+      await activateLogSession(secondSession, ["combat", "rewards"], root);
+      expect((await readCurrentLogStream("combat", root))?.sessionId).toBe(secondSession.id);
+      expect((await readCurrentLogStream("rewards", root))?.sessionId).toBe(secondSession.id);
+
+      await firstSession.close();
+      await secondSession.close();
     } finally {
       await rm(root, { recursive: true, force: true });
     }

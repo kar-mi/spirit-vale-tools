@@ -3,8 +3,8 @@ import { FishNetCharacterTracker } from "@spiritvale/character";
 import type { CharacterSnapshot, CharacterViewState } from "@spiritvale/character";
 import { PacketCapture } from "@spiritvale/core/capture";
 import type { CapturedFishNetPacket, CaptureTargetStatus } from "@spiritvale/core";
-import { createLogSession } from "@spiritvale/logging";
-import type { JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream, LogWriteFailure } from "@spiritvale/logging";
+import { activateLogSession, createLogSession, readCurrentLogStream, writeCurrentLogStreamPointer } from "@spiritvale/logging";
+import type { CurrentLogStream, JsonData, JsonLinesLogger, JsonObject, LogSession, LogStream, LogWriteFailure } from "@spiritvale/logging";
 import { FishNetMarketTracker, marketEventLogData } from "@spiritvale/market";
 import { FishNetMobRewardTracker } from "@spiritvale/rewards";
 
@@ -50,6 +50,11 @@ export class CaptureCoordinator {
   private receivedDataForCurrentGame = false;
   private activeConnectionId?: string;
   private lastAuthenticated?: { connectionId: string; tick: number };
+  private resettingSession?: Promise<void>;
+  private handoff = false;
+  private packetBuffer: CapturedFishNetPacket[] = [];
+  /** Serializes stop() and resetSession() so their bodies never interleave. */
+  private lifecycleChain: Promise<void> = Promise.resolve();
 
   constructor(private readonly options: CaptureCoordinatorOptions) {
     this.diagnosticLogging = options.diagnosticLogging ?? envFlag(Bun.env["SPIRIT_VALE_DIAGNOSTIC_LOGS"]);
@@ -133,36 +138,146 @@ export class CaptureCoordinator {
   async stop(): Promise<void> {
     if (this.stopping) return;
     this.stopping = true;
+    const run = this.lifecycleChain.catch(() => {}).then(() => this.performStop());
+    this.lifecycleChain = run.catch(() => {});
     try {
-      try {
-        await this.capture.stop();
-      } catch (error) {
-        this.logCaptureError(errorMessage(error));
-      }
-      this.writeStoppedLifecycle();
-      this.actors.reset();
-      this.combat.reset();
-      this.rewards.reset();
-      this.market.reset();
-      this.targetState = "waiting";
-      this.receivedDataForCurrentGame = false;
-      this.activeConnectionId = undefined;
-      this.lastAuthenticated = undefined;
-      const session = this.session;
-      this.session = undefined;
-      this.combatLog = undefined;
-      this.rewardsLog = undefined;
-      this.marketLog = undefined;
-      this.otherLog = undefined;
-      try {
-        await session?.close();
-      } catch (error) {
-        console.error("[spiritvale-logging]", errorMessage(error));
-      }
-      this.setStatus("stopped", "Capture stopped");
+      await run;
     } finally {
       this.stopping = false;
     }
+  }
+
+  private async performStop(): Promise<void> {
+    try {
+      await this.capture.stop();
+    } catch (error) {
+      this.logCaptureError(errorMessage(error));
+    }
+    this.writeStoppedLifecycle();
+    this.actors.reset();
+    this.combat.reset();
+    this.rewards.reset();
+    this.market.reset();
+    this.targetState = "waiting";
+    this.receivedDataForCurrentGame = false;
+    this.activeConnectionId = undefined;
+    this.lastAuthenticated = undefined;
+    const session = this.session;
+    this.session = undefined;
+    this.combatLog = undefined;
+    this.rewardsLog = undefined;
+    this.marketLog = undefined;
+    this.otherLog = undefined;
+    try {
+      await session?.close();
+    } catch (error) {
+      console.error("[spiritvale-logging]", errorMessage(error));
+    }
+    this.setStatus("stopped", "Capture stopped");
+  }
+
+  /**
+   * Rotates the shared capture session: combat, rewards, and market all start writing to a fresh
+   * log session together, while actor/mob identities, reward baselines, and connection state carry
+   * over so attribution keeps working immediately after the boundary. Concurrent calls coalesce
+   * into the single in-flight rotation; a failed rotation leaves the previous session untouched.
+   */
+  async resetSession(): Promise<void> {
+    if (this.resettingSession) return this.resettingSession;
+    if (this.stopping) throw new Error("cannot reset the capture session while it is stopping");
+    const run = this.lifecycleChain.catch(() => {}).then(() => this.performResetSession());
+    this.lifecycleChain = run.catch(() => {});
+    const tracked = run.finally(() => {
+      this.resettingSession = undefined;
+    });
+    this.resettingSession = tracked;
+    return tracked;
+  }
+
+  private async performResetSession(): Promise<void> {
+    const streams: LogStream[] = ["combat", "rewards", "market"];
+    if (this.diagnosticLogging) streams.push("other");
+
+    const nextSession = await createLogSession({
+      producer: "desktop-capture",
+      streams,
+      logDirectory: this.options.logDirectory,
+      activate: false,
+      onWriteError: (failure) => this.logWriteFailure(failure),
+    });
+
+    this.handoff = true;
+    try {
+      // Switch every stream's pointer onto the replacement session first, while the previous
+      // session is still fully intact, so a failure here can be rolled back cleanly without
+      // having touched anything the old session depends on.
+      const previousPointers = new Map<LogStream, CurrentLogStream | undefined>();
+      for (const stream of streams) {
+        previousPointers.set(stream, await readCurrentLogStream(stream, this.options.logDirectory));
+      }
+      try {
+        await activateLogSession(nextSession, streams, this.options.logDirectory);
+      } catch (error) {
+        await Promise.allSettled(streams.map((stream) => {
+          const previous = previousPointers.get(stream);
+          return previous ? writeCurrentLogStreamPointer(previous, this.options.logDirectory) : Promise.resolve();
+        }));
+        try {
+          await nextSession.close();
+        } catch {
+          // The replacement session was never used; a close failure here is not actionable.
+        }
+        throw error;
+      }
+
+      // Pointers are now fully switched; finalize the old session and swap the coordinator's own
+      // references. None of this can meaningfully fail (JsonLinesLogger.log is fire-and-forget).
+      const previousSession = this.session;
+      const rewardEvents = this.rewards.flushSessionBoundary();
+      for (const event of rewardEvents) {
+        this.rewardsLog?.log(event.kind === "kill" ? "rewards.kill" : "rewards.unmatched", jsonObject(event));
+      }
+      this.combatLog?.log("combat.lifecycle", { state: "stopped" });
+      this.rewardsLog?.log("rewards.lifecycle", { state: "stopped" });
+      this.marketLog?.log("market.lifecycle", { state: "stopped" });
+      this.otherLog?.log("capture.lifecycle", { state: "stopped" });
+
+      // Combat activations and market aggregation do not carry meaning across a session boundary;
+      // actor/mob identities and the reward baseline are preserved above.
+      this.combat.reset();
+      this.market.reset();
+
+      this.session = nextSession;
+      this.combatLog = nextSession.logger("combat");
+      this.rewardsLog = nextSession.logger("rewards");
+      this.marketLog = nextSession.logger("market");
+      this.otherLog = this.diagnosticLogging ? nextSession.logger("other") : undefined;
+
+      for (const identity of this.actors.snapshot()) {
+        this.combatLog.log("combat.actorIdentity", jsonObject({ kind: "actorIdentity", operation: "upsert", tick: 0, ...identity }));
+      }
+
+      this.combatLog.log("combat.lifecycle", { state: "started" });
+      this.rewardsLog.log("rewards.lifecycle", { state: "started" });
+      this.marketLog.log("market.lifecycle", { state: "started" });
+      this.otherLog?.log("capture.lifecycle", { state: "started" });
+
+      try {
+        await previousSession?.close();
+      } catch (error) {
+        console.error("[spiritvale-logging]", errorMessage(error));
+      }
+    } finally {
+      this.handoff = false;
+      this.drainBufferedPackets();
+    }
+  }
+
+  private drainBufferedPackets(): void {
+    if (this.packetBuffer.length === 0) return;
+    const buffered = this.packetBuffer;
+    this.packetBuffer = [];
+    for (const packet of buffered) this.routePacket(packet);
   }
 
   private captureStarted(): void {
@@ -213,6 +328,10 @@ export class CaptureCoordinator {
   }
 
   private routePacket(packet: CapturedFishNetPacket): void {
+    if (this.handoff) {
+      this.packetBuffer.push(packet);
+      return;
+    }
     if (!this.receivedDataForCurrentGame) {
       this.receivedDataForCurrentGame = true;
       this.refreshCaptureDetail();

@@ -52,6 +52,7 @@ export interface RewardsAppState {
   statusDetail: string;
   storageWarning?: string;
   pinned: boolean;
+  resetting: boolean;
   replayFileName?: string;
   replayWarnings: number;
   kills: RewardsUiKill[];
@@ -74,6 +75,7 @@ export type RewardsAppRpc = {
       openCatalog: { params: Record<string, never>; response: void };
       openReplayPicker: { params: Record<string, never>; response: void };
       setPinned: { params: { pinned: boolean }; response: RewardsAppState };
+      resetSession: { params: Record<string, never>; response: RewardsAppState };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: RewardsAppState } }>;

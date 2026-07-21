@@ -122,7 +122,7 @@ function App() {
 
       <section class="command-bar">
         <button class="btn" type="button" onClick={() => void electroview.rpc?.request.openReplayPicker({})}>Open log</button>
-        <button class="btn" type="button" disabled={!next.snapshot} onClick={() => void electroview.rpc?.request.resetEncounter({})}>Reset</button>
+        <button class="btn" type="button" disabled={next.resetting} onClick={() => void electroview.rpc?.request.resetSession({})}>Reset</button>
       </section>
 
       <section class="status-strip" aria-live="polite">

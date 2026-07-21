@@ -31,6 +31,7 @@ export interface RewardsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
   onClosed?: () => void;
+  onReset?: () => Promise<void>;
 }
 
 export async function createRewardsWindow(options: RewardsWindowOptions) {
@@ -50,6 +51,7 @@ let replayWarnings = 0;
 let polling = false;
 let shuttingDown = false;
 let storageWarning: string | undefined;
+let resetting = false;
 
 const settingsPersistence = new SafeSaveQueue<typeof settings>({
   label: "rewards settings",
@@ -74,6 +76,22 @@ const rpc = BrowserView.defineRPC<RewardsAppRpc>({
       setView: ({ view }) => { settings.view = view; scheduleSave(); publish(); return appState(); },
       openCatalog: () => { openCatalog(); },
       openReplayPicker: () => { replayPicker.open(); },
+      resetSession: async () => {
+        if (!resetting && mode === "live" && options.onReset) {
+          resetting = true;
+          publish();
+          try {
+            await options.onReset();
+            liveSnapshot = emptySnapshot();
+          } catch {
+            // Keep the existing snapshot unchanged when rotation fails.
+          } finally {
+            resetting = false;
+          }
+        }
+        publish();
+        return appState();
+      },
       setPinned: ({ pinned }) => {
         settings.pinned = pinned;
         window.setAlwaysOnTop(pinned);
@@ -172,6 +190,7 @@ function appState(): RewardsAppState {
     statusDetail: mode === "replay" ? (replayFileName ? `Replay: ${replayFileName}` : "Choose a rewards log") : statusDetail,
     ...(storageWarning ? { storageWarning } : {}),
     pinned: settings.pinned,
+    resetting,
     ...(replayFileName ? { replayFileName } : {}),
     replayWarnings,
     kills: snapshot.kills.slice(0, 100).map((kill) => ({

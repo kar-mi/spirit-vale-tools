@@ -154,6 +154,17 @@ export class FishNetMobRewardTracker {
     return this.finalizeBefore(Number.POSITIVE_INFINITY);
   }
 
+  /**
+   * Finalizes pending kills across a session-rotation boundary without discarding the
+   * experience/coins baseline or known mob identities, so rewards immediately after the
+   * boundary are still correctly attributed.
+   */
+  flushSessionBoundary(): FishNetMobRewardEvent[] {
+    const events = [...this.flush(), ...this.queuedEvents.splice(0)];
+    this.combat.reset();
+    return events.sort((left, right) => left.tick - right.tick);
+  }
+
   reset(): void {
     this.pending.length = 0;
     this.queuedEvents.length = 0;

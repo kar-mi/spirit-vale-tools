@@ -119,6 +119,7 @@ function App() {
           <div class="toolbar-actions">
             <button class="btn" type="button" onClick={() => void electroview.rpc?.request.openCatalog({})}>Catalog</button>
             <button class={next.mode === "replay" ? "btn active" : "btn"} type="button" onClick={() => void electroview.rpc?.request.openReplayPicker({})}>Replay</button>
+            <button class="btn" type="button" disabled={next.mode === "replay" || next.resetting} onClick={() => void electroview.rpc?.request.resetSession({})}>Reset</button>
           </div>
         </nav>
 

@@ -59,11 +59,13 @@ const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
   logDirectory,
   settingsPath: storagePaths.dpsSettingsPath,
   onClosed,
+  onReset: () => capture.resetSession(),
 }));
 const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({
   logDirectory,
   settingsPath: storagePaths.rewardsSettingsPath,
   onClosed,
+  onReset: () => capture.resetSession(),
 }));
 const marketWindow = new WindowSlot((onClosed) => createMarketWindow({ logDirectory, onClosed }));
 

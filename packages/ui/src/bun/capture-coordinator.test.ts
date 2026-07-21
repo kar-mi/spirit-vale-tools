@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { EventEmitter } from "node:events";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -280,6 +280,194 @@ describe("central capture coordinator", () => {
       ]);
       expect(coordinator.state().captureStatus).toBe("capturing");
       await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("resetSession rotates combat/rewards/market into one new session, seeding identities and preserving the reward baseline", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      capture.packet(identityPacket(2, 10, "Alpha", "test-connection"));
+      capture.packet(experiencePacket(3, 0, 0n));
+
+      const firstCombat = await readCurrentLogStream("combat", directory);
+      const firstRewards = await readCurrentLogStream("rewards", directory);
+      const firstMarket = await readCurrentLogStream("market", directory);
+      expect(firstCombat?.sessionId).toBeDefined();
+
+      await coordinator.resetSession();
+
+      const secondCombat = await readCurrentLogStream("combat", directory);
+      const secondRewards = await readCurrentLogStream("rewards", directory);
+      const secondMarket = await readCurrentLogStream("market", directory);
+      expect(secondCombat?.sessionId).toBeDefined();
+      expect(secondCombat?.sessionId).not.toBe(firstCombat?.sessionId);
+      expect(new Set([secondCombat?.sessionId, secondRewards?.sessionId, secondMarket?.sessionId]).size).toBe(1);
+
+      const oldCombatRecords = records(await readFile(firstCombat!.path, "utf8"));
+      expect(oldCombatRecords.at(-1)).toMatchObject({ type: "combat.lifecycle", data: { state: "stopped" } });
+      const oldRewardsRecords = records(await readFile(firstRewards!.path, "utf8"));
+      expect(oldRewardsRecords.at(-1)).toMatchObject({ type: "rewards.lifecycle", data: { state: "stopped" } });
+      const oldMarketRecords = records(await readFile(firstMarket!.path, "utf8"));
+      expect(oldMarketRecords.at(-1)).toMatchObject({ type: "market.lifecycle", data: { state: "stopped" } });
+
+      const newCombatRecords = records(await readFile(secondCombat!.path, "utf8"));
+      expect(newCombatRecords[0]).toMatchObject({
+        type: "combat.actorIdentity",
+        data: { operation: "upsert", actorId: 10, displayName: "Alpha" },
+      });
+      expect(newCombatRecords.at(-1)).toMatchObject({ type: "combat.lifecycle", data: { state: "started" } });
+      const newRewardsRecords = records(await readFile(secondRewards!.path, "utf8"));
+      expect(newRewardsRecords[0]).toMatchObject({ type: "rewards.lifecycle", data: { state: "started" } });
+      const newMarketRecords = records(await readFile(secondMarket!.path, "utf8"));
+      expect(newMarketRecords[0]).toMatchObject({ type: "market.lifecycle", data: { state: "started" } });
+
+      // The reward baseline carried across the boundary: the next XP update computes a gain
+      // relative to it instead of silently reseeding with no event.
+      capture.packet(experiencePacket(4, 10, 2n));
+      await coordinator.stop();
+      const rewardsAfter = records(await readFile(secondRewards!.path, "utf8")) as Array<{ type: string; data: { reward?: string } }>;
+      const gainRecord = rewardsAfter.find((record) => record.type === "rewards.unmatched");
+      expect(gainRecord?.data.reward).toBe("experience");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("coalesces concurrent resetSession calls into a single rotation", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-concurrent-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+      const firstSessionId = (await readCurrentLogStream("combat", directory))?.sessionId;
+
+      await Promise.all([coordinator.resetSession(), coordinator.resetSession(), coordinator.resetSession()]);
+
+      const sessionDirectories = await readdir(path.join(directory, "sessions"));
+      expect(sessionDirectories).toHaveLength(2);
+      const secondSessionId = (await readCurrentLogStream("combat", directory))?.sessionId;
+      expect(secondSessionId).not.toBe(firstSessionId);
+
+      await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("leaves the existing session active when replacement session creation fails", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-failure-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+      const firstSessionId = (await readCurrentLogStream("combat", directory))?.sessionId;
+
+      const internal = coordinator as unknown as { options: { logDirectory: string } };
+      const validDirectory = internal.options.logDirectory;
+      internal.options.logDirectory = `${validDirectory}${path.sep}in\0valid`;
+      await expect(coordinator.resetSession()).rejects.toThrow();
+      internal.options.logDirectory = validDirectory;
+
+      expect((await readCurrentLogStream("combat", directory))?.sessionId).toBe(firstSessionId);
+      capture.packet(authenticatedPacket(5, "test-connection"));
+      expect((await readCurrentLogStream("combat", directory))?.sessionId).toBe(firstSessionId);
+
+      await coordinator.stop();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("rolls back already-switched pointers when activation fails partway through", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-partial-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+      const firstSessionId = (await readCurrentLogStream("combat", directory))?.sessionId;
+      expect(firstSessionId).toBeDefined();
+
+      // Streams activate in "combat", "rewards", "market" order; forcing the rewards pointer
+      // write to fail (by occupying its target path with a directory) exercises the case where
+      // "combat" has already switched over before the rotation as a whole fails.
+      const rewardsPointerPath = path.join(directory, "current", "rewards.json");
+      await rm(rewardsPointerPath, { force: true });
+      await mkdir(rewardsPointerPath);
+
+      await expect(coordinator.resetSession()).rejects.toThrow();
+
+      const combatAfter = await readCurrentLogStream("combat", directory);
+      const marketAfter = await readCurrentLogStream("market", directory);
+      expect(combatAfter?.sessionId).toBe(firstSessionId);
+      expect(marketAfter?.sessionId).toBe(firstSessionId);
+
+      // The old session is still the live one: further packets keep landing in its combat log.
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      capture.packet(identityPacket(2, 10, "Alpha", "test-connection"));
+      await coordinator.stop();
+      const combatRecords = records(await readFile(combatAfter!.path, "utf8"));
+      expect(combatRecords.some((record) => record.type === "combat.actorIdentity")).toBe(true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("stop() waits for an in-flight resetSession before tearing the coordinator down", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-stop-race-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      const resetPromise = coordinator.resetSession();
+      await coordinator.stop();
+      await resetPromise;
+
+      expect(coordinator.state()).toMatchObject({ captureStatus: "stopped" });
+      // The rotated session was itself fully closed by stop(), not left dangling as "active".
+      expect(await readCurrentLogStream("combat", directory)).toBeDefined();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("resetSession rejects while the coordinator is stopping instead of reviving a session", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reset-during-stop-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      const stopPromise = coordinator.stop();
+      await expect(coordinator.resetSession()).rejects.toThrow();
+      await stopPromise;
+
+      expect(coordinator.state()).toMatchObject({ captureStatus: "stopped" });
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
