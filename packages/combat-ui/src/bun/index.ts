@@ -16,6 +16,7 @@ import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
 import { Utils } from "electrobun/bun";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
 import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
+import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
@@ -23,6 +24,7 @@ const LIVE_LOG_POLL_MS = 2_500;
 export interface DpsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
+  placements?: WindowPlacementStore;
   onClosed?: () => void;
   onOpenOverlay?: () => Promise<void>;
   onReset?: () => Promise<void>;
@@ -50,7 +52,7 @@ const settingsPersistence = new SafeSaveQueue<typeof settings>({
   onWarning: (warning) => { storageWarning = warning; publish(); },
 });
 
-const analysisWindow = createCombatAnalysisWindow();
+const analysisWindow = createCombatAnalysisWindow({ placements: options.placements });
 
 const replayPicker = createSessionPicker({
   logDirectory: options.logDirectory,
@@ -58,6 +60,8 @@ const replayPicker = createSessionPicker({
   title: "Combat log analysis",
   summarize: formatCombatReplaySummary,
   loadReplay: (selectedPath) => analysisWindow.open(selectedPath),
+  placements: options.placements,
+  placementKey: "combat-session-picker",
   openLogFolder: () => { void Utils.openPath(options.logDirectory); },
 });
 
@@ -124,7 +128,7 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
 window = new BrowserWindow({
   title: "Spirit Vale DPS",
   url: "views://mainview/index.html",
-  frame: scaleFrame(settings.frame),
+  frame: visibleScaledWindowFrame(settings.frame, { width: MINIMUM_WIDTH, height: MINIMUM_HEIGHT }),
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
@@ -133,10 +137,12 @@ applyRoundedCorners(window.ptr);
 registerUiScaleWindow(window, { scaleInitialFrame: false });
 
 Electrobun.events.on(`move-${window.id}`, (event: { data: typeof settings.frame }) => {
+  if (window.isMaximized()) return;
   settings.frame = unscaleFrame(clampPhysicalFrame(event.data));
   scheduleSettingsSave();
 });
 Electrobun.events.on(`resize-${window.id}`, (event: { data: typeof settings.frame }) => {
+  if (window.isMaximized()) return;
   const frame = clampPhysicalFrame(event.data);
   settings.frame = unscaleFrame(frame);
   if (event.data.width < scaledSize(MINIMUM_WIDTH) || event.data.height < scaledSize(MINIMUM_HEIGHT)) {
@@ -225,10 +231,6 @@ function clampFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
   };
 }
 
-function scaleFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
-  return { x: frame.x, y: frame.y, width: scaledSize(frame.width), height: scaledSize(frame.height) };
-}
-
 function unscaleFrame(frame: DpsAppSettingsFrame): DpsAppSettingsFrame {
   return clampFrame({ x: frame.x, y: frame.y, width: unscaledSize(frame.width), height: unscaledSize(frame.height) });
 }
@@ -248,7 +250,7 @@ async function shutdown(): Promise<void> {
   shuttingDown = true;
   replayPicker.close();
   analysisWindow.close();
-  settings.frame = unscaleFrame(window.getFrame());
+  if (!window.isMaximized()) settings.frame = unscaleFrame(window.getFrame());
   clearInterval(liveLogTimer);
   await settingsPersistence.flush(settings);
 }

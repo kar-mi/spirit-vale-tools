@@ -26,6 +26,14 @@ export class WindowSlot<T extends ManagedWindow> {
   }
 
   async close(): Promise<void> {
+    const pending = this.opening;
+    if (!this.window && pending) {
+      try {
+        this.window = await pending;
+      } finally {
+        if (this.opening === pending) this.opening = undefined;
+      }
+    }
     await this.window?.close();
     this.window = undefined;
   }

@@ -36,6 +36,18 @@ describe("window slot", () => {
     await Promise.all([first, second]);
     expect(creations).toBe(1);
   });
+
+  test("closes a window that is still being created", async () => {
+    let release!: (window: FakeWindow) => void;
+    const pending = new Promise<FakeWindow>((resolve) => { release = resolve; });
+    const slot = new WindowSlot(() => pending);
+    const opening = slot.open();
+    const closing = slot.close();
+    const window = new FakeWindow();
+    release(window);
+    await Promise.all([opening, closing]);
+    expect(window.closed).toBe(1);
+  });
 });
 
 class FakeWindow {

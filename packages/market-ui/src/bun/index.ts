@@ -1,6 +1,7 @@
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 import {
   FISHNET_MARKET_STAT_NAMES,
@@ -27,6 +28,7 @@ const PAGE_SIZE = 50;
 
 export interface MarketWindowOptions {
   logDirectory: string;
+  placements?: WindowPlacementStore;
   onClosed?: () => void;
 }
 
@@ -107,7 +109,13 @@ const filterRpc = BrowserView.defineRPC<MarketFiltersRpc>({
         if (action === "minimize") filterWindow?.minimize();
         else filterWindow?.close();
       },
-      getWindowFrame: () => filterWindow?.getFrame() ?? { x: 140, y: 110, width: 640, height: 680 },
+      getWindowFrame: () => filterWindow?.getFrame()
+        ?? options.placements?.frame(
+          "market-filters",
+          { x: 140, y: 110, width: 640, height: 680 },
+          { width: 520, height: 480 },
+        )
+        ?? { x: 140, y: 110, width: 640, height: 680 },
       setWindowFrame: ({ x, y, width, height }) => { filterWindow?.setFrame(x, y, width, height); },
     },
     messages: {},
@@ -117,13 +125,18 @@ const filterRpc = BrowserView.defineRPC<MarketFiltersRpc>({
 window = new BrowserWindow({
   title: "Spirit Vale Market",
   url: "views://marketview/index.html",
-  frame: { x: 100, y: 80, width: 760, height: 720 },
+  frame: options.placements?.frame(
+    "market",
+    { x: 100, y: 80, width: 945, height: 800 },
+    { width: 520, height: 480 },
+  ) ?? { x: 100, y: 80, width: 945, height: 800 },
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
 });
 mountRoundedWindow(window);
-registerUiScaleWindow(window);
+registerUiScaleWindow(window, { scaleInitialFrame: !options.placements });
+options.placements?.track("market", window);
 
 Electrobun.events.on(`resize-${window.id}`, (event: { data: { width: number; height: number } }) => {
   const width = Math.max(scaledSize(520), event.data.width);
@@ -185,14 +198,19 @@ function openFilters(): void {
   const nextWindow = new BrowserWindow({
     title: "Spirit Vale Market Filters",
     url: "views://marketfiltersview/index.html",
-    frame: { x: 140, y: 110, width: 640, height: 680 },
+    frame: options.placements?.frame(
+      "market-filters",
+      { x: 140, y: 110, width: 640, height: 680 },
+      { width: 520, height: 480 },
+    ) ?? { x: 140, y: 110, width: 640, height: 680 },
     titleBarStyle: "hidden",
     transparent: false,
     rpc: filterRpc,
   });
   filterWindow = nextWindow;
   mountRoundedWindow(nextWindow);
-  registerUiScaleWindow(nextWindow);
+  registerUiScaleWindow(nextWindow, { scaleInitialFrame: !options.placements });
+  options.placements?.track("market-filters", nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
     const width = Math.max(scaledSize(520), event.data.width);
     const height = Math.max(scaledSize(480), event.data.height);

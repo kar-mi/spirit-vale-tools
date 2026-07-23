@@ -5,8 +5,10 @@ import { listLogSessions } from "@spiritvale/logging";
 import type { LogStream } from "@spiritvale/logging";
 import { applyRoundedCorners } from "./win32.ts";
 import { registerUiScaleWindow, scaledSize } from "./ui-scale.ts";
+import type { WindowPlacementStore } from "./window-placement.ts";
 
 import type { SessionPickerRpc, SessionPickerState } from "./session-picker-types.ts";
+import type { WindowFrame } from "./window-chrome.ts";
 
 export interface SessionPickerOptions {
   logDirectory: string;
@@ -14,6 +16,9 @@ export interface SessionPickerOptions {
   title: string;
   summarize: (path: string) => Promise<string>;
   loadReplay: (path: string) => Promise<void>;
+  placements?: WindowPlacementStore;
+  placementKey?: string;
+  defaultFrame?: WindowFrame;
   openLogFolder?: () => void;
 }
 
@@ -32,7 +37,10 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
     handlers: {
       requests: {
         getState: () => state,
-        getWindowFrame: () => window?.getFrame() ?? { x: 120, y: 120, width: 640, height: 560 },
+        getWindowFrame: () => window?.getFrame()
+          ?? pickerFrame()
+          ?? options.defaultFrame
+          ?? { x: 120, y: 120, width: 640, height: 560 },
         setWindowFrame: ({ x, y, width, height }) => { window?.setFrame(x, y, Math.max(480, width), Math.max(400, height)); },
       },
       messages: {
@@ -57,14 +65,15 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
         const nextWindow = new BrowserWindow({
           title: options.title,
           url: "views://sessionpickerview/index.html",
-          frame: { x: 120, y: 120, width: 640, height: 560 },
+          frame: pickerFrame() ?? options.defaultFrame ?? { x: 120, y: 120, width: 640, height: 560 },
           titleBarStyle: "hidden",
           transparent: false,
           rpc,
         });
         window = nextWindow;
         applyRoundedCorners(nextWindow.ptr);
-        registerUiScaleWindow(nextWindow);
+        registerUiScaleWindow(nextWindow, { scaleInitialFrame: !options.placements });
+        if (options.placementKey) options.placements?.track(options.placementKey, nextWindow);
         Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
           const width = Math.max(scaledSize(480), event.data.width);
           const height = Math.max(scaledSize(400), event.data.height);
@@ -80,6 +89,15 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
     },
     close() { window?.close(); },
   };
+
+  function pickerFrame() {
+    if (!options.placementKey) return undefined;
+    return options.placements?.frame(
+      options.placementKey,
+      options.defaultFrame ?? { x: 120, y: 120, width: 640, height: 560 },
+      { width: 480, height: 400 },
+    );
+  }
 
   async function refresh(): Promise<void> {
     const sequence = ++refreshSequence;
