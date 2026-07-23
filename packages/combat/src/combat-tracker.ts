@@ -11,6 +11,13 @@ export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "can
 export type FishNetDamageAttribution = "exact" | "ambiguous" | "inferred";
 export type FishNetHitResult = "normal" | "critical" | "miss" | "blocked" | "dodged" | number;
 
+export interface FishNetCombatActorIdentity {
+  readonly displayName: string;
+  readonly archetype?: number;
+  readonly ownerConnectionId?: number;
+  readonly uid?: string;
+}
+
 export interface FishNetCombatTrackerOptions {
   /** Ticks to retain a completed activation for trailing hits. Defaults to 30. */
   hitGraceTicks?: number;
@@ -21,6 +28,8 @@ export interface FishNetCombatTrackerOptions {
   /** Extracted public skill metadata. Defaults to the current bundled build when available. */
   skillCatalog?: FishNetSkillCatalog;
   buildFingerprint?: string;
+  /** Resolves an attacker to a known player identity, including owner/UID continuity. */
+  actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
 }
 
 export interface FishNetCombatActivationEvent {
@@ -39,6 +48,7 @@ export interface FishNetCombatActivationEvent {
   level?: number;
   attackIndex?: number;
   inferred?: boolean;
+  actorIdentity?: FishNetCombatActorIdentity;
 }
 
 export interface FishNetCombatDamageEvent {
@@ -66,6 +76,7 @@ export interface FishNetCombatDamageEvent {
   attribution: FishNetDamageAttribution;
   activationId?: string;
   candidateActivationIds?: string[];
+  actorIdentity?: FishNetCombatActorIdentity;
 }
 
 export interface FishNetCombatDeathEvent {
@@ -93,6 +104,7 @@ export interface FishNetCombatDeathEvent {
   candidateActivationIds?: string[];
   /** True when an identical ApplyDamage_C was already emitted at this tick. */
   duplicatesDamageEvent: boolean;
+  actorIdentity?: FishNetCombatActorIdentity;
 }
 
 export type FishNetCombatEvent =
@@ -126,6 +138,7 @@ export class FishNetCombatTracker {
   private readonly hitGraceTicks: number;
   private readonly activationMaxAgeTicks: number;
   private readonly skillLabels: Map<string, string>;
+  private readonly actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   private readonly activations = new Map<string, ActivationState>();
   private readonly recentDamageSignatures = new Set<string>();
   private recentDamageTick: number | undefined;
@@ -150,6 +163,7 @@ export class FishNetCombatTracker {
       : loadBundledFishNetSemanticMap(buildFingerprint));
     this.skillLabels = new Map(skillCatalog?.skills.map(({ id, displayName }) => [id, displayName]) ?? []);
     for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
+    this.actorIdentityResolver = options.actorIdentityResolver;
   }
 
   consume(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
@@ -345,6 +359,7 @@ export class FishNetCombatTracker {
       attribution,
       activationId,
       candidateActivationIds,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
     };
     const signature = damageSignature(packet.tick, targetId, actorId, sourceId, value, hitCode);
     if (death) {

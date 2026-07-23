@@ -82,6 +82,19 @@ describe("FishNetDpsMeter", () => {
     ]);
   });
 
+  test("counts distinct enemy targets as mobs hit without counting the player target", () => {
+    const meter = new FishNetDpsMeter();
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeCombat({ ...damage(101, 100), targetId: 900 }, 0);
+    meter.consumeCombat({ ...damage(101, 100), targetId: 901 }, 1_000);
+    meter.consumeCombat({ ...damage(101, 100), targetId: 900 }, 2_000);
+    meter.consumeCombat({ ...damage(101, 100), targetId: 101 }, 3_000);
+
+    expect(meter.getLatestSnapshot()?.actors).toMatchObject([
+      { displayName: "Aster Vale", damage: 300, mobsHit: 2 },
+    ]);
+  });
+
   test("retains damage received before identity and merges a reused actor identity", () => {
     const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
     meter.consumeCombat(damage(101, 100), 0);
@@ -308,14 +321,17 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()?.actors).toHaveLength(2);
   });
 
-  test("shows team-zero damage before a display-name sync is observed", () => {
+  test("retains team-zero damage while waiting for a display-name sync", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeCombat(damage(303, 240), 0);
     expect(meter.getLatestSnapshot()).toMatchObject({
       totalDamage: 240,
       partyDps: 240,
-      actors: [{ displayName: "Player 303", damage: 240 }],
+      actors: [],
     });
+    expect(meter.getLatestSnapshot(10_000)?.actors).toMatchObject([
+      { displayName: "Unidentified", damage: 240, isUnidentified: true },
+    ]);
   });
 
   test("supports an explicit personal actor when no display name is available", () => {
@@ -387,7 +403,7 @@ describe("FishNetDpsMeter", () => {
       meter.consumeCombat(damage(202, 300), 10_000);
 
       const snapshot = meter.getLatestSnapshot(10_000);
-      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([30, 10]);
+      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([10]);
       expect(snapshot?.partyCurrentDps).toBe(40);
     });
   });

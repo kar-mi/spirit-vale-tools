@@ -32,7 +32,9 @@ export class CaptureCoordinator {
   private readonly capture: PacketCapture;
   private readonly diagnosticLogging: boolean;
   private readonly actors = new FishNetActorDirectory();
-  private readonly combat = new FishNetCombatTracker();
+  private readonly combat = new FishNetCombatTracker({
+    actorIdentityResolver: (actorId) => this.actors.getAttribution(actorId),
+  });
   private readonly rewards = new FishNetMobRewardTracker();
   private readonly market = new FishNetMarketTracker();
   private readonly character = new FishNetCharacterTracker();

@@ -8,6 +8,8 @@ export interface FishNetDpsMeterOptions {
   minimumDurationMs?: number;
   /** Milliseconds of recent damage included in current DPS. Defaults to 15 seconds. */
   currentWindowMs?: number;
+  /** Milliseconds to wait for a late identity before showing unidentified damage. Defaults to ten seconds. */
+  anonymousIdentityGraceMs?: number;
   /** FishNet ticks per second used for replay records without wall-clock timestamps. Defaults to 30. */
   replayTicksPerSecond?: number;
   personalName?: string;
@@ -46,8 +48,12 @@ export interface FishNetDpsActorRow {
   hits: number;
   criticalHits: number;
   kills: number;
+  /** Number of distinct enemy object IDs damaged by this actor during the encounter. */
+  mobsHit: number;
   skills: FishNetDpsSkillRow[];
   timeline: FishNetDpsTimelinePoint[];
+  /** True when the row contains damage that has not been verified to a player identity. */
+  isUnidentified?: boolean;
 }
 
 export type FishNetPersonalMatch = "unconfigured" | "missing" | "matched" | "ambiguous";
@@ -84,9 +90,11 @@ interface ActorAggregate {
   uid?: string;
   activeIdentity: boolean;
   damage: number;
+  firstDamageAtMs?: number;
   hits: number;
   criticalHits: number;
   kills: number;
+  targetIds: Set<number>;
   skills: Map<string, SkillAggregate>;
   damagePoints: DamagePoint[];
 }
@@ -108,6 +116,7 @@ interface EncounterAggregate {
 const DEFAULT_IDLE_GAP_MS = 30_000;
 const DEFAULT_MINIMUM_DURATION_MS = 1_000;
 const DEFAULT_CURRENT_WINDOW_MS = 15_000;
+const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 const DEFAULT_REPLAY_TICKS_PER_SECOND = 30;
 const ANALYSIS_BUCKET_MS = 5_000;
 
@@ -116,6 +125,7 @@ export class FishNetDpsMeter {
   private readonly idleGapMs: number;
   private readonly minimumDurationMs: number;
   private readonly currentWindowMs: number;
+  private readonly anonymousIdentityGraceMs: number;
   private readonly replayTicksPerSecond: number;
   private readonly finished: EncounterAggregate[] = [];
   private readonly identities = new Map<number, {
@@ -138,6 +148,10 @@ export class FishNetDpsMeter {
     this.currentWindowMs = positiveFinite(
       options.currentWindowMs ?? DEFAULT_CURRENT_WINDOW_MS,
       "currentWindowMs",
+    );
+    this.anonymousIdentityGraceMs = nonNegativeFinite(
+      options.anonymousIdentityGraceMs ?? DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS,
+      "anonymousIdentityGraceMs",
     );
     this.replayTicksPerSecond = positiveFinite(
       options.replayTicksPerSecond ?? DEFAULT_REPLAY_TICKS_PER_SECOND,
@@ -170,8 +184,10 @@ export class FishNetDpsMeter {
     this.identities.set(event.actorId, {
       displayName: event.displayName,
       ...(archetype === undefined ? {} : { archetype }),
-      ...(event.ownerConnectionId === undefined ? {} : { ownerConnectionId: event.ownerConnectionId }),
-      ...(event.uid === undefined ? {} : { uid: event.uid }),
+      ...(event.ownerConnectionId ?? previousIdentity?.ownerConnectionId) === undefined
+        ? {} : { ownerConnectionId: event.ownerConnectionId ?? previousIdentity?.ownerConnectionId },
+      ...(event.uid ?? previousIdentity?.uid) === undefined
+        ? {} : { uid: event.uid ?? previousIdentity?.uid },
     });
     if (!this.current) return;
 
@@ -183,13 +199,25 @@ export class FishNetDpsMeter {
     }
     actor.displayName = event.displayName;
     if (event.archetype !== undefined) actor.archetype = event.archetype;
-    actor.ownerConnectionId = event.ownerConnectionId;
-    actor.uid = event.uid;
+    if (event.ownerConnectionId !== undefined) actor.ownerConnectionId = event.ownerConnectionId;
+    if (event.uid !== undefined) actor.uid = event.uid;
     actor.activeIdentity = true;
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
     requireTimestamp(observedAtMs);
+    if (event.actorIdentity) {
+      const previousIdentity = this.identities.get(event.actorId);
+      this.identities.set(event.actorId, {
+        displayName: event.actorIdentity.displayName,
+        ...(event.actorIdentity.archetype ?? previousIdentity?.archetype) === undefined
+          ? {} : { archetype: event.actorIdentity.archetype ?? previousIdentity?.archetype },
+        ...(event.actorIdentity.ownerConnectionId ?? previousIdentity?.ownerConnectionId) === undefined
+          ? {} : { ownerConnectionId: event.actorIdentity.ownerConnectionId ?? previousIdentity?.ownerConnectionId },
+        ...(event.actorIdentity.uid ?? previousIdentity?.uid) === undefined
+          ? {} : { uid: event.actorIdentity.uid ?? previousIdentity?.uid },
+      });
+    }
     const countedDamage = isCountedDamage(event);
     const countedKill = isCountedKill(event);
     if (!countedDamage && !countedKill) return;
@@ -219,11 +247,21 @@ export class FishNetDpsMeter {
       this.current.actors.push(actor);
       this.current.activeActors.set(event.actorId, actor);
     }
+    const eventIdentity = event.actorIdentity ?? this.identities.get(event.actorId);
+    if (eventIdentity) {
+      actor.displayName = eventIdentity.displayName;
+      if (eventIdentity.archetype !== undefined) actor.archetype = eventIdentity.archetype;
+      if (eventIdentity.ownerConnectionId !== undefined) actor.ownerConnectionId = eventIdentity.ownerConnectionId;
+      if (eventIdentity.uid !== undefined) actor.uid = eventIdentity.uid;
+      actor.activeIdentity = true;
+    }
     if (countedDamage) {
       actor.damage += event.value;
+      actor.firstDamageAtMs ??= observedAtMs;
       actor.hits += 1;
       if (event.hitResult === "critical") actor.criticalHits += 1;
       actor.damagePoints.push({ observedAtMs, damage: event.value });
+      if (isMobTarget(this.identities, event.actorId, event.targetId)) actor.targetIds.add(event.targetId);
       let skill = actor.skills.get(event.sourceId);
       if (!skill) {
         skill = {
@@ -313,7 +351,16 @@ export class FishNetDpsMeter {
     );
     const mergedActors = mergeActors(encounter.actors);
     const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
-    const actors = mergedActors
+    const namedActors = mergedActors.filter((actor) => actor.displayName !== undefined);
+    const anonymousActors = mergedActors.filter((actor) => actor.displayName === undefined);
+    const visibleAnonymousActors = anonymousActors.filter((actor) => encounter.endedAtMs !== undefined
+      || (this.personalActorId !== undefined && actor.actorIds.includes(this.personalActorId))
+      || actor.firstDamageAtMs === undefined
+      || snapshotNowMs - actor.firstDamageAtMs >= this.anonymousIdentityGraceMs);
+    const displayActors = visibleAnonymousActors.length === 0
+      ? namedActors
+      : [...namedActors, combineActors(visibleAnonymousActors)];
+    const actors = displayActors
       .map((actor) => actorRow(
         actor,
         encounter.startedAtMs,
@@ -322,9 +369,19 @@ export class FishNetDpsMeter {
         snapshotNowMs,
         this.currentWindowMs,
         this.minimumDurationMs,
+        actor.displayName === undefined,
       ))
       .sort(compareRows);
-    const partyCurrentDps = actors.reduce((sum, actor) => sum + actor.currentDps, 0);
+    const partyCurrentDps = mergedActors.reduce((sum, actor) => sum + actorRow(
+      actor,
+      encounter.startedAtMs,
+      durationMs,
+      totalDamage,
+      snapshotNowMs,
+      this.currentWindowMs,
+      this.minimumDurationMs,
+      actor.displayName === undefined,
+    ).currentDps, 0);
     const normalizedPersonalName = normalizeName(this.personalName);
     const activeMatches = normalizedPersonalName
       ? new Set(encounter.actors
@@ -371,6 +428,7 @@ function createActor(actorId: number): ActorAggregate {
     actorIds: [actorId],
     activeIdentity: false,
     damage: 0,
+    targetIds: new Set(),
     hits: 0,
     criticalHits: 0,
     kills: 0,
@@ -401,19 +459,19 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
   const merged = new Map<string, ActorAggregate>();
   for (const actor of actors) {
     if (actor.damage <= 0) continue;
-    const displayName = actor.displayName?.trim() || `Player ${actor.actorId}`;
+    const displayName = actor.displayName?.trim() || undefined;
     const key = actor.uid !== undefined
       ? `uid:${actor.uid}`
       : actor.ownerConnectionId !== undefined
       ? `owner:${actor.ownerConnectionId}`
-      : actor.displayName
+      : displayName !== undefined
         ? `name:${normalizeName(displayName)}`
         : `actor:${actor.actorId}`;
     let target = merged.get(key);
     if (!target) {
       target = {
         ...createActor(actor.actorId),
-        displayName,
+        ...(displayName === undefined ? {} : { displayName }),
         activeIdentity: actor.activeIdentity,
         damage: 0,
         hits: 0,
@@ -433,10 +491,16 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     }
     target.activeIdentity ||= actor.activeIdentity;
     target.damage += actor.damage;
+    target.firstDamageAtMs = target.firstDamageAtMs === undefined
+      ? actor.firstDamageAtMs
+      : actor.firstDamageAtMs === undefined
+        ? target.firstDamageAtMs
+        : Math.min(target.firstDamageAtMs, actor.firstDamageAtMs);
     target.hits += actor.hits;
     target.criticalHits += actor.criticalHits;
     target.kills += actor.kills;
     target.actorIds = [...new Set([...target.actorIds, ...actor.actorIds])];
+    for (const targetId of actor.targetIds) target.targetIds.add(targetId);
     target.damagePoints.push(...actor.damagePoints);
     for (const skill of actor.skills.values()) {
       const current = target.skills.get(skill.sourceId);
@@ -461,6 +525,7 @@ function actorRow(
   nowMs: number,
   currentWindowMs: number,
   minimumDurationMs: number,
+  isUnidentified: boolean,
 ): FishNetDpsActorRow {
   const currentCutoffMs = nowMs - currentWindowMs;
   const windowDamage = actor.damagePoints.reduce(
@@ -480,7 +545,7 @@ function actorRow(
     .sort(compareRows);
   return {
     actorIds: [...actor.actorIds],
-    displayName: actor.displayName ?? "Unknown",
+    displayName: actor.displayName ?? (isUnidentified ? "Unidentified" : "Unknown"),
     ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
@@ -489,9 +554,47 @@ function actorRow(
     hits: actor.hits,
     criticalHits: actor.criticalHits,
     kills: actor.kills,
+    mobsHit: actor.targetIds.size,
     skills,
     timeline: buildTimeline(actor.damagePoints, startedAtMs, durationMs),
+    ...(isUnidentified ? { isUnidentified: true } : {}),
   };
+}
+
+function combineActors(actors: readonly ActorAggregate[]): ActorAggregate {
+  const combined = createActor(actors[0]?.actorId ?? -1);
+  combined.actorIds = [];
+  for (const actor of actors) {
+    combined.actorIds.push(...actor.actorIds);
+    combined.damage += actor.damage;
+    combined.firstDamageAtMs = combined.firstDamageAtMs === undefined
+      ? actor.firstDamageAtMs
+      : actor.firstDamageAtMs === undefined
+        ? combined.firstDamageAtMs
+        : Math.min(combined.firstDamageAtMs, actor.firstDamageAtMs);
+    combined.hits += actor.hits;
+    combined.criticalHits += actor.criticalHits;
+    combined.kills += actor.kills;
+    for (const targetId of actor.targetIds) combined.targetIds.add(targetId);
+    combined.damagePoints.push(...actor.damagePoints);
+    for (const skill of actor.skills.values()) {
+      const current = combined.skills.get(skill.sourceId);
+      if (current) {
+        current.sourceLabel = skill.sourceLabel;
+        current.damage += skill.damage;
+        current.hits += skill.hits;
+        current.criticalHits += skill.criticalHits;
+      } else {
+        combined.skills.set(skill.sourceId, { ...skill });
+      }
+    }
+  }
+  combined.actorIds = [...new Set(combined.actorIds)];
+  return combined;
+}
+
+function isMobTarget(identities: ReadonlyMap<number, unknown>, actorId: number, targetId: number): boolean {
+  return targetId >= 0 && targetId !== actorId && !identities.has(targetId);
 }
 
 function buildTimeline(points: readonly DamagePoint[], startedAtMs: number, durationMs: number): FishNetDpsTimelinePoint[] {
@@ -538,4 +641,9 @@ function positiveFinite(value: number, label: string): number {
 
 function requireTimestamp(value: number): void {
   if (!Number.isFinite(value)) throw new Error("observedAtMs must be a finite number");
+}
+
+function nonNegativeFinite(value: number, label: string): number {
+  if (!Number.isFinite(value) || value < 0) throw new Error(`${label} must be a non-negative finite number`);
+  return value;
 }

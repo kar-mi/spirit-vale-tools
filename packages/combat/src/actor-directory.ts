@@ -193,6 +193,29 @@ export class FishNetActorDirectory {
     return identity ? { ...identity } : undefined;
   }
 
+  /** Resolves a combat attacker even when the hit came from a newly allocated player object. */
+  getAttribution(actorId: number): FishNetActorIdentity | undefined {
+    const direct = this.identities.get(actorId);
+    if (direct) return { ...direct };
+    const ownerConnectionId = this.objects.get(actorId)?.ownerConnectionId;
+    if (ownerConnectionId === undefined) return undefined;
+    const objectIds = this.ownerObjects.get(ownerConnectionId);
+    if (!objectIds) return undefined;
+    let best: FishNetActorIdentity | undefined;
+    let bestRevision = -1;
+    for (const objectId of objectIds) {
+      const identity = this.identities.get(objectId) ?? this.identitySources.get(objectId);
+      const revision = this.sourceRevisions.get(objectId) ?? -1;
+      if (identity && revision >= bestRevision) {
+        best = identity;
+        bestRevision = revision;
+      }
+    }
+    return best
+      ? { ...best, ownerConnectionId }
+      : undefined;
+  }
+
   /** Snapshots every currently known identity, for seeding a freshly rotated log with resolved names. */
   snapshot(): FishNetActorIdentity[] {
     return [...this.identities.values()].map((identity) => ({ ...identity }));
