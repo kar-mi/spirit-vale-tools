@@ -20,8 +20,8 @@ describe("overlay settings", () => {
     expect(settings.schemaVersion).toBe(2);
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
     expect(Object.values(settings.elements).every((element) => element.opacity === 1)).toBe(true);
-    expect(settings.elements.health).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
-    expect(settings.elements.mana).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
+    expect(settings.elements.health).toEqual({ enabled: true, opacity: 1, x: 950, y: 680, width: 330, height: 40 });
+    expect(settings.elements.mana).toEqual({ enabled: true, opacity: 1, x: 942, y: 680, width: 338, height: 40 });
     expect(settings.elements.weight).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
   });
 

@@ -27,8 +27,8 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   dpsChart: { enabled: true, opacity: 1, x: 318, y: 775, width: 462, height: 226 },
   personalDps: { enabled: true, opacity: 1, x: 794, y: 873, width: 160, height: 127 },
   partyRanking: { enabled: true, opacity: 1, x: 315, y: 434, width: 360, height: 300 },
-  health: { enabled: true, opacity: 1, x: 794, y: 695, width: 160, height: 40 },
-  mana: { enabled: true, opacity: 1, x: 794, y: 741, width: 160, height: 40 },
+  health: { enabled: true, opacity: 1, x: 1037, y: 921, width: 330, height: 40 },
+  mana: { enabled: true, opacity: 1, x: 1377, y: 921, width: 338, height: 40 },
   weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
 };
 
