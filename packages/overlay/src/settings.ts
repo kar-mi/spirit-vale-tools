@@ -1,0 +1,90 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import {
+  OVERLAY_ELEMENT_IDS,
+  type OverlayElementId,
+  type OverlayElementSettings,
+} from "./app-types.ts";
+
+export { OVERLAY_ELEMENT_IDS };
+export type { OverlayElementId, OverlayElementSettings };
+
+export interface OverlaySettings {
+  locked: boolean;
+  personalName: string;
+  elements: Record<OverlayElementId, OverlayElementSettings>;
+}
+
+export interface DisplayBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
+  dpsChart: { enabled: true, x: 40, y: 40, width: 480, height: 240 },
+  personalDps: { enabled: true, x: 40, y: 300, width: 280, height: 150 },
+  partyRanking: { enabled: true, x: 540, y: 40, width: 360, height: 300 },
+};
+
+export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
+  return normalizeOverlaySettings({}, bounds);
+}
+
+export async function loadOverlaySettings(
+  settingsPath: string | undefined,
+  bounds: DisplayBounds,
+): Promise<OverlaySettings> {
+  try {
+    const candidate = JSON.parse(await readFile(await resolveSettingsPath(settingsPath), "utf8")) as unknown;
+    return normalizeOverlaySettings(candidate, bounds);
+  } catch {
+    return defaultOverlaySettings(bounds);
+  }
+}
+
+export async function saveOverlaySettings(settings: OverlaySettings, settingsPath?: string): Promise<void> {
+  const target = await resolveSettingsPath(settingsPath);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+}
+
+export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBounds): OverlaySettings {
+  const source = candidate && typeof candidate === "object" ? candidate as Record<string, unknown> : {};
+  const sourceElements = source.elements && typeof source.elements === "object"
+    ? source.elements as Record<string, unknown>
+    : {};
+  const elements = Object.fromEntries(OVERLAY_ELEMENT_IDS.map((id) => {
+    const defaults = DEFAULT_ELEMENTS[id];
+    const value = sourceElements[id] && typeof sourceElements[id] === "object"
+      ? sourceElements[id] as Record<string, unknown>
+      : {};
+    const width = clampNumber(value.width, defaults.width, 160, Math.max(160, bounds.width));
+    const height = clampNumber(value.height, defaults.height, 100, Math.max(100, bounds.height));
+    return [id, {
+      enabled: typeof value.enabled === "boolean" ? value.enabled : defaults.enabled,
+      x: clampNumber(value.x, defaults.x, 0, Math.max(0, bounds.width - width)),
+      y: clampNumber(value.y, defaults.y, 0, Math.max(0, bounds.height - height)),
+      width,
+      height,
+    }];
+  })) as unknown as Record<OverlayElementId, OverlayElementSettings>;
+  return {
+    locked: typeof source.locked === "boolean" ? source.locked : false,
+    personalName: typeof source.personalName === "string" ? source.personalName.trim().slice(0, 64) : "",
+    elements,
+  };
+}
+
+function clampNumber(value: unknown, fallback: number, minimum: number, maximum: number): number {
+  const number = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.round(Math.max(minimum, Math.min(maximum, number)));
+}
+
+async function resolveSettingsPath(settingsPath: string | undefined): Promise<string> {
+  if (settingsPath) return settingsPath;
+  const { Utils } = await import("electrobun/bun");
+  return path.join(Utils.paths.userData, "spirit-vale-overlay", "settings.json");
+}

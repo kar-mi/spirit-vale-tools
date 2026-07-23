@@ -52,3 +52,60 @@ export function applyRoundedCorners(windowPtr: unknown): void {
     console.warn("[ui-theme] could not request rounded corners:", error);
   }
 }
+
+/**
+ * Toggle native hit testing for a transparent overlay window. Layered style is
+ * retained when unlocking so WebView2 does not briefly recreate its surface.
+ */
+export function setWindowClickThrough(windowPtr: unknown, enabled: boolean): boolean {
+  if (process.platform !== "win32") return false;
+  const handle = windowPtr as Pointer | null | undefined;
+  if (!handle) return false;
+  try {
+    const user32 = dlopen("user32", {
+      GetWindowLongPtrW: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.i64 },
+      SetWindowLongPtrW: { args: [FFIType.ptr, FFIType.i32, FFIType.i64], returns: FFIType.i64 },
+      SetLayeredWindowAttributes: {
+        args: [FFIType.ptr, FFIType.u32, FFIType.u8, FFIType.u32],
+        returns: FFIType.bool,
+      },
+      SetWindowPos: {
+        args: [FFIType.ptr, FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32],
+        returns: FFIType.bool,
+      },
+    });
+    const GWL_EXSTYLE = -20;
+    const WS_EX_TRANSPARENT = 0x00000020;
+    const WS_EX_LAYERED = 0x00080000;
+    const WS_EX_NOACTIVATE = 0x08000000;
+    const current = Number(user32.symbols.GetWindowLongPtrW(handle, GWL_EXSTYLE));
+    const wasLayered = (current & WS_EX_LAYERED) !== 0;
+    const clickThroughStyles = WS_EX_TRANSPARENT | WS_EX_NOACTIVATE;
+    const next = enabled
+      ? current | clickThroughStyles | WS_EX_LAYERED
+      : current & ~clickThroughStyles;
+    user32.symbols.SetWindowLongPtrW(handle, GWL_EXSTYLE, BigInt(next));
+    if (!wasLayered && (next & WS_EX_LAYERED) !== 0) {
+      const LWA_ALPHA = 0x2;
+      user32.symbols.SetLayeredWindowAttributes(handle, 0, 255, LWA_ALPHA);
+    }
+    const SWP_NOSIZE = 0x1;
+    const SWP_NOMOVE = 0x2;
+    const SWP_NOZORDER = 0x4;
+    const SWP_NOACTIVATE = 0x10;
+    const SWP_FRAMECHANGED = 0x20;
+    user32.symbols.SetWindowPos(
+      handle,
+      null,
+      0,
+      0,
+      0,
+      0,
+      SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+    );
+    return true;
+  } catch (error) {
+    console.warn("[ui-theme] could not change overlay hit testing:", error);
+    return false;
+  }
+}

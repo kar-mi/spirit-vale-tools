@@ -38,7 +38,7 @@ html, body {
 .capture-status strong { font-size: 13px; }
 .capture-status p { margin: 3px 0 0; color: var(--on-surface-variant); font-size: 12px; }
 
-.tool-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.tool-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 
 .tool-button {
   display: grid;

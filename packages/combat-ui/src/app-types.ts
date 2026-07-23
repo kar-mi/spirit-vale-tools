@@ -17,16 +17,10 @@ export interface DpsAppState {
   status: DpsAppStatus;
   statusDetail: string;
   storageWarning?: string;
-  pinned: boolean;
-  opacity: number;
   personalName: string;
   personalActorId?: number;
   snapshot?: FishNetDpsEncounterSnapshot;
   resetting: boolean;
-}
-
-export interface DpsSettingsState {
-  opacity: number;
 }
 
 export type DpsAppRpc = {
@@ -37,9 +31,6 @@ export type DpsAppRpc = {
       resetSession: { params: Record<string, never>; response: DpsAppState };
       setPersonalName: { params: { name: string }; response: DpsAppState };
       setPersonalActor: { params: { actorId: number | null }; response: DpsAppState };
-      setPinned: { params: { pinned: boolean }; response: DpsAppState };
-      openSettings: { params: Record<string, never>; response: void };
-      setOpacity: { params: { opacity: number }; response: DpsAppState };
       setTab: { params: { tab: DpsAppTab }; response: DpsAppState };
       windowAction: { params: { action: "minimize" | "close" }; response: void };
       getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
@@ -51,19 +42,6 @@ export type DpsAppRpc = {
       stateChanged: DpsAppState;
     };
   }>;
-};
-
-export type DpsSettingsRpc = {
-  bun: RPCSchema<{
-    requests: {
-      getState: { params: Record<string, never>; response: DpsSettingsState };
-      setOpacity: { params: { opacity: number }; response: DpsSettingsState };
-      windowAction: { params: { action: "minimize" | "close" }; response: void };
-      getWindowFrame: { params: Record<string, never>; response: { x: number; y: number; width: number; height: number } };
-      setWindowFrame: { params: { x: number; y: number; width: number; height: number }; response: void };
-    };
-  }>;
-  webview: RPCSchema<{ messages: { stateChanged: DpsSettingsState } }>;
 };
 
 export interface CombatAnalysisState {

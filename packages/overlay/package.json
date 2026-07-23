@@ -1,0 +1,16 @@
+{
+  "name": "@spiritvale/overlay",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.9.4",
+    "@spiritvale/combat": "workspace:*",
+    "@spiritvale/logging": "workspace:*",
+    "@spiritvale/ui-theme": "workspace:*",
+    "electrobun": "1.18.1",
+    "preact": "^10.29.7"
+  }
+}

@@ -3,7 +3,7 @@ import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import type { UiScale } from "@spiritvale/ui-theme/ui-scale";
 
 export type CaptureStatus = "starting" | "capturing" | "unavailable" | "stopped";
-export type ToolWindow = "combat" | "rewards" | "market" | "character";
+export type ToolWindow = "combat" | "overlay" | "rewards" | "market" | "character";
 export type NpcapAvailability = "checking" | "ready" | "missing" | "admin-only" | "error";
 
 export interface CaptureAdapterOption {

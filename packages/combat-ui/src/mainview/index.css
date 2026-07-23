@@ -22,7 +22,6 @@ body {
   min-height: 360px;
   border: 1px solid var(--outline-variant);
   background: var(--surface);
-  opacity: var(--dps-window-opacity, 1);
 }
 
 .titlebar {
