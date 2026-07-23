@@ -12,7 +12,7 @@ injects game traffic.
   - Select **Install Npcap in WinPcap API-compatible Mode**.
   - Leave **Restrict Npcap driver's access to Administrators only** unchecked.
 
-![Required Npcap installation options](docs/npcap_option.png)
+![Required Npcap installation options](docs/img/npcap_option.png)
 
 ## Installation
 
@@ -44,16 +44,37 @@ bun run build
 
 ## Features
 
-- **Combat** — Live DPS tracking, encounter summaries, player analysis, and
-  combat-log replay.
-- **Overlay** — Customizable in-game DPS and character-stat displays with a
-  click-through locked mode.
-- **Rewards** — Confirmed kill history, session totals, trends, and a searchable
-  mob reward catalog.
-- **Market** — Locally browse, search, filter, and sort captured market listings.
-- **Character** — View your build, equipment, skills, and calculated stats.
-- **Passive capture** — Reads existing game traffic through Npcap without
-  sending or altering traffic.
+### Combat
+
+Live DPS tracking, encounter summaries, player analysis, and combat-log replay.
+
+![Combat encounter analysis](docs/img/combat_analysis.png)
+
+### Overlay
+
+Customizable in-game DPS and character-stat displays with a click-through
+locked mode.
+
+![Editing the in-game overlay layout](docs/img/sv_overlay_edit.png)
+
+### Rewards
+
+Confirmed kill history, session totals, trends, and a searchable mob reward
+catalog.
+
+![Mob reward session summary](docs/img/combat_rewards.png)
+
+### Market
+
+Locally browse, search, filter, and sort captured market listings.
+
+### Character
+
+View your build, equipment, skills, and calculated stats.
+
+### Passive capture
+
+Reads existing game traffic through Npcap without sending or altering traffic.
 
 Detailed feature behavior, command-line tools, logging, and protocol references
 are available in the [documentation](docs/README.md).
