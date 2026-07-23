@@ -3,10 +3,12 @@ import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 import type { CharacterViewState } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 export interface CharacterWindowOptions {
   getState: () => CharacterViewState;
   subscribe: (listener: (state: CharacterViewState) => void) => () => void;
+  placements?: WindowPlacementStore;
   onClosed?: () => void;
 }
 
@@ -31,13 +33,18 @@ export async function createCharacterWindow(options: CharacterWindowOptions) {
   window = new BrowserWindow({
     title: "Spirit Vale Character",
     url: "views://characterview/index.html",
-    frame: { x: 140, y: 100, width: 920, height: 720 },
+    frame: options.placements?.frame(
+      "character",
+      { x: 140, y: 100, width: 920, height: 720 },
+      { width: 680, height: 520 },
+    ) ?? { x: 140, y: 100, width: 920, height: 720 },
     titleBarStyle: "hidden",
     transparent: false,
     rpc,
   });
   applyRoundedCorners(window.ptr);
-  registerUiScaleWindow(window);
+  registerUiScaleWindow(window, { scaleInitialFrame: !options.placements });
+  options.placements?.track("character", window);
   const unsubscribe = options.subscribe((state) => {
     try { rpc.send.stateChanged(state); } catch { /* View may still be connecting. */ }
   });

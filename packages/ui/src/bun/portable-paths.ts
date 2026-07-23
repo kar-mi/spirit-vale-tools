@@ -8,6 +8,7 @@ export interface DesktopStoragePaths {
   readonly dpsSettingsPath: string;
   readonly overlaySettingsPath: string;
   readonly rewardsSettingsPath: string;
+  readonly windowPlacementsPath: string;
   readonly characterStatePath: string;
 }
 
@@ -31,6 +32,7 @@ export function resolveDesktopStoragePaths(options: DesktopStoragePathOptions): 
       dpsSettingsPath: path.join(settingsDirectory, "dps.json"),
       overlaySettingsPath: path.join(settingsDirectory, "overlay.json"),
       rewardsSettingsPath: path.join(settingsDirectory, "rewards.json"),
+      windowPlacementsPath: path.join(settingsDirectory, "windows.json"),
       characterStatePath: path.join(dataDirectory, "character.json"),
     };
   }
@@ -42,6 +44,7 @@ export function resolveDesktopStoragePaths(options: DesktopStoragePathOptions): 
     dpsSettingsPath: path.join(options.fallbackUserData, "spirit-vale-dps", "settings.json"),
     overlaySettingsPath: path.join(options.fallbackUserData, "spirit-vale-overlay", "settings.json"),
     rewardsSettingsPath: path.join(options.fallbackUserData, "rewards-settings.json"),
+    windowPlacementsPath: path.join(options.fallbackUserData, "spirit-vale-tools", "windows.json"),
     characterStatePath: path.join(options.fallbackUserData, "spirit-vale-tools", "character.json"),
   };
 }

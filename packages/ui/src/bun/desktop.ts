@@ -18,6 +18,7 @@ import { resolveDesktopStoragePaths } from "./portable-paths.ts";
 import type { CharacterSnapshot } from "@spiritvale/character";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
+import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 makeProcessDpiAware();
 
@@ -29,6 +30,10 @@ const storagePaths = resolveDesktopStoragePaths({
 const logDirectory = storagePaths.logDirectory;
 const settings = await loadLauncherSettings(storagePaths.launcherSettingsPath);
 setUiScale(settings.uiScale);
+let placementStorageWarning: string | undefined;
+const placements = await WindowPlacementStore.load(storagePaths.windowPlacementsPath, {
+  onWarning: (warning) => { placementStorageWarning = warning; updateStorageWarning(); },
+});
 let launcherWindow: BrowserWindow;
 let settingsWindow: BrowserWindow | undefined;
 let launcherState: LauncherState = {
@@ -59,6 +64,7 @@ const characterPersistence = new SafeSaveQueue<CharacterSnapshot>({
 const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
   logDirectory,
   settingsPath: storagePaths.dpsSettingsPath,
+  placements,
   onClosed,
   onOpenOverlay: () => overlayWindow.open(),
   onReset: () => capture.resetSession(),
@@ -66,15 +72,19 @@ const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
 const overlayWindow = new WindowSlot((onClosed) => createOverlayWindow({
   logDirectory,
   settingsPath: storagePaths.overlaySettingsPath,
+  placements,
+  showSettingsOnCreate: false,
+  lockOnCreate: true,
   onClosed,
 }));
 const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({
   logDirectory,
   settingsPath: storagePaths.rewardsSettingsPath,
+  placements,
   onClosed,
   onReset: () => capture.resetSession(),
 }));
-const marketWindow = new WindowSlot((onClosed) => createMarketWindow({ logDirectory, onClosed }));
+const marketWindow = new WindowSlot((onClosed) => createMarketWindow({ logDirectory, placements, onClosed }));
 
 const capture = new CaptureCoordinator({
   logDirectory,
@@ -92,6 +102,7 @@ const unsubscribeCharacterPersistence = capture.subscribeCharacter((state) => {
 const characterWindow = new WindowSlot((onClosed) => createCharacterWindow({
   getState: () => capture.characterState(),
   subscribe: (listener) => capture.subscribeCharacter(listener),
+  placements,
   onClosed,
 }));
 
@@ -149,13 +160,14 @@ const settingsRpc = BrowserView.defineRPC<LauncherSettingsRpc>({
 launcherWindow = new BrowserWindow({
   title: "Spirit Vale",
   url: "views://launcherview/index.html",
-  frame: { x: 80, y: 80, width: 960, height: 430 },
+  frame: placements.frame("launcher", { x: 80, y: 80, width: 960, height: 430 }, { width: 900, height: 430 }),
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
 });
 applyRoundedCorners(launcherWindow.ptr);
-registerUiScaleWindow(launcherWindow);
+registerUiScaleWindow(launcherWindow, { scaleInitialFrame: false });
+placements.track("launcher", launcherWindow);
 
 Electrobun.events.on(`resize-${launcherWindow.id}`, (event: { data: { width: number; height: number } }) => {
   const width = Math.max(scaledSize(900), event.data.width);
@@ -167,6 +179,9 @@ launcherWindow.on("close", () => void shutdown());
 process.on("SIGINT", () => void shutdown());
 process.on("SIGTERM", () => void shutdown());
 void initializeCapture();
+void overlayWindow.open().catch((error) => {
+  console.error(`[overlay] startup failed: ${error instanceof Error ? error.message : String(error)}`);
+});
 
 async function initializeCapture(): Promise<void> {
   await refreshCaptureDevices();
@@ -237,14 +252,19 @@ function openSettings(): void {
   const nextWindow = new BrowserWindow({
     title: "Spirit Vale Packet Capture Settings",
     url: "views://settingsview/index.html",
-    frame: { x: 110, y: 110, width: 520, height: 460 },
+    frame: placements.frame(
+      "launcher-settings",
+      { x: 110, y: 110, width: 520, height: 460 },
+      { width: 420, height: 360 },
+    ),
     titleBarStyle: "hidden",
     transparent: false,
     rpc: settingsRpc,
   });
   settingsWindow = nextWindow;
   applyRoundedCorners(nextWindow.ptr);
-  registerUiScaleWindow(nextWindow);
+  registerUiScaleWindow(nextWindow, { scaleInitialFrame: false });
+  placements.track("launcher-settings", nextWindow);
   Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
     const width = Math.max(scaledSize(420), event.data.width);
     const height = Math.max(scaledSize(360), event.data.height);
@@ -280,7 +300,7 @@ function publish(): void {
 function updateStorageWarning(): void {
   launcherState = {
     ...launcherState,
-    storageWarning: characterStorageWarning ?? launcherSettingsStorageWarning,
+    storageWarning: characterStorageWarning ?? launcherSettingsStorageWarning ?? placementStorageWarning,
   };
   publish();
 }
@@ -297,6 +317,7 @@ async function shutdown(): Promise<void> {
     if (character) await characterPersistence.flush(character);
     else await characterPersistence.flush();
     await launcherSettingsPersistence.flush();
+    await placements.flush();
   } finally {
     try { await capture.stop(); } finally { Utils.quit(); }
   }

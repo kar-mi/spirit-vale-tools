@@ -5,6 +5,7 @@ import { loadDpsReplay } from "@spiritvale/combat";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 import type {
   CombatAnalysisDetailRpc,
@@ -26,8 +27,12 @@ export interface CombatAnalysisWindow {
   close(): void;
 }
 
+export interface CombatAnalysisWindowOptions {
+  placements?: WindowPlacementStore;
+}
+
 /** Owns the reusable combat log analysis window and its selected-player detail child. */
-export function createCombatAnalysisWindow(): CombatAnalysisWindow {
+export function createCombatAnalysisWindow(options: CombatAnalysisWindowOptions = {}): CombatAnalysisWindow {
   let window: BrowserWindow | undefined;
   let detailWindow: BrowserWindow | undefined;
   let state: CombatAnalysisState = loadingState();
@@ -45,7 +50,13 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
           if (action === "minimize") detailWindow?.minimize();
           else detailWindow?.close();
         },
-        getWindowFrame: () => detailWindow?.getFrame() ?? DETAIL_FRAME,
+        getWindowFrame: () => detailWindow?.getFrame()
+          ?? options.placements?.frame(
+            "combat-analysis-detail",
+            DETAIL_FRAME,
+            { width: MINIMUM_DETAIL_WIDTH, height: MINIMUM_DETAIL_HEIGHT },
+          )
+          ?? DETAIL_FRAME,
         setWindowFrame: (frame) => detailWindow?.setFrame(
           frame.x,
           frame.y,
@@ -75,7 +86,13 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
           if (action === "minimize") window?.minimize();
           else window?.close();
         },
-        getWindowFrame: () => window?.getFrame() ?? ANALYSIS_FRAME,
+        getWindowFrame: () => window?.getFrame()
+          ?? options.placements?.frame(
+            "combat-analysis",
+            ANALYSIS_FRAME,
+            { width: MINIMUM_ANALYSIS_WIDTH, height: MINIMUM_ANALYSIS_HEIGHT },
+          )
+          ?? ANALYSIS_FRAME,
         setWindowFrame: (frame) => window?.setFrame(
           frame.x,
           frame.y,
@@ -138,14 +155,19 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
     const nextWindow = new BrowserWindow({
       title: "Spirit Vale Combat Analysis",
       url: "views://analysisview/index.html",
-      frame: ANALYSIS_FRAME,
+      frame: options.placements?.frame(
+        "combat-analysis",
+        ANALYSIS_FRAME,
+        { width: MINIMUM_ANALYSIS_WIDTH, height: MINIMUM_ANALYSIS_HEIGHT },
+      ) ?? ANALYSIS_FRAME,
       titleBarStyle: "hidden",
       transparent: false,
       rpc,
     });
     window = nextWindow;
     applyRoundedCorners(nextWindow.ptr);
-    registerUiScaleWindow(nextWindow);
+    registerUiScaleWindow(nextWindow, { scaleInitialFrame: !options.placements });
+    options.placements?.track("combat-analysis", nextWindow);
     Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
       const width = Math.max(scaledSize(MINIMUM_ANALYSIS_WIDTH), event.data.width);
       const height = Math.max(scaledSize(MINIMUM_ANALYSIS_HEIGHT), event.data.height);
@@ -179,14 +201,19 @@ export function createCombatAnalysisWindow(): CombatAnalysisWindow {
     const nextWindow = new BrowserWindow({
       title: `${player.displayName} · Combat Analysis`,
       url: "views://analysisdetailview/index.html",
-      frame: DETAIL_FRAME,
+      frame: options.placements?.frame(
+        "combat-analysis-detail",
+        DETAIL_FRAME,
+        { width: MINIMUM_DETAIL_WIDTH, height: MINIMUM_DETAIL_HEIGHT },
+      ) ?? DETAIL_FRAME,
       titleBarStyle: "hidden",
       transparent: false,
       rpc: detailRpc,
     });
     detailWindow = nextWindow;
     applyRoundedCorners(nextWindow.ptr);
-    registerUiScaleWindow(nextWindow);
+    registerUiScaleWindow(nextWindow, { scaleInitialFrame: !options.placements });
+    options.placements?.track("combat-analysis-detail", nextWindow);
     Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
       const width = Math.max(scaledSize(MINIMUM_DETAIL_WIDTH), event.data.width);
       const height = Math.max(scaledSize(MINIMUM_DETAIL_HEIGHT), event.data.height);

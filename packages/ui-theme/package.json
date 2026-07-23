@@ -15,6 +15,7 @@
     "./session-picker-types": "./session-picker-types.ts",
     "./window-rpc": "./window-rpc.ts",
     "./window-publish": "./window-publish.ts",
+    "./window-placement": "./window-placement.ts",
     "./ui-scale": "./ui-scale.ts"
   },
   "dependencies": {

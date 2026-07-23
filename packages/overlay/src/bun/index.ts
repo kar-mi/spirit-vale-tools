@@ -4,6 +4,7 @@ import { FishNetDpsMeter, DpsLogFollower, DpsSessionLogFollower } from "@spiritv
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { applyRoundedCorners, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 import { BrowserView, BrowserWindow, GlobalShortcut, Screen } from "electrobun/bun";
 
 import type { OverlayRpc, OverlaySettingsRpc, OverlayState, OverlayStatus } from "../app-types.ts";
@@ -23,12 +24,16 @@ const LOCK_SHORTCUT = "F11";
 export interface OverlayWindowOptions {
   logDirectory: string;
   settingsPath?: string;
+  placements?: WindowPlacementStore;
+  showSettingsOnCreate?: boolean;
+  lockOnCreate?: boolean;
   onClosed?: () => void;
 }
 
 export async function createOverlayWindow(options: OverlayWindowOptions) {
   const bounds = Screen.getPrimaryDisplay().bounds;
   let settings = await loadOverlaySettings(options.settingsPath, bounds);
+  if (options.lockOnCreate) settings.locked = true;
   let meter = new FishNetDpsMeter({ personalName: settings.personalName });
   const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
   const liveLog = liveLogOverride
@@ -123,6 +128,11 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           else settingsWindow?.close();
         },
         getWindowFrame: () => settingsWindow?.getFrame()
+          ?? options.placements?.frame(
+            "overlay-settings",
+            { x: bounds.x + 80, y: bounds.y + 80, width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
+            { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
+          )
           ?? { x: bounds.x + 80, y: bounds.y + 80, width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
         setWindowFrame: ({ x, y, width, height }) => {
           settingsWindow?.setFrame(
@@ -167,7 +177,8 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     settingsWindow?.setAlwaysOnTop(true);
   }, TOPMOST_REASSERT_MS);
 
-  openSettings();
+  if (options.lockOnCreate) persistence.schedule(settings);
+  if (options.showSettingsOnCreate !== false) openSettings();
   void pollLiveLog();
 
   return {
@@ -258,7 +269,12 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     const nextWindow = new BrowserWindow({
       title: "Spirit Vale Overlay Settings",
       url: "views://overlaysettingsview/index.html",
-      frame: {
+      frame: options.placements?.frame("overlay-settings", {
+        x: bounds.x + 80,
+        y: bounds.y + 80,
+        width: SETTINGS_WIDTH,
+        height: SETTINGS_HEIGHT,
+      }, { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT }) ?? {
         x: bounds.x + 80,
         y: bounds.y + 80,
         width: SETTINGS_WIDTH,
@@ -271,7 +287,8 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     settingsWindow = nextWindow;
     nextWindow.setAlwaysOnTop(true);
     applyRoundedCorners(nextWindow.ptr);
-    registerUiScaleWindow(nextWindow);
+    registerUiScaleWindow(nextWindow, { scaleInitialFrame: !options.placements });
+    options.placements?.track("overlay-settings", nextWindow);
     nextWindow.show();
     nextWindow.activate();
     nextWindow.on("close", () => {
