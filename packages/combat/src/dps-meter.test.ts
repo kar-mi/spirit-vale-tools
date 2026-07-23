@@ -93,6 +93,18 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()?.personal).toMatchObject({ damage: 150, hits: 2 });
   });
 
+  test("retains a known class through empty updates and accepts a changed class", () => {
+    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    meter.consumeIdentity({ ...identity(101, "Aster Vale"), archetype: 12 }, 0);
+    meter.consumeCombat(damage(101, 100), 0);
+
+    meter.consumeIdentity(identity(101, "Aster Vale", 2), 100);
+    expect(meter.getLatestSnapshot()?.personal?.archetype).toBe(12);
+
+    meter.consumeIdentity({ ...identity(101, "Aster Vale", 3), archetype: 4 }, 200);
+    expect(meter.getLatestSnapshot()?.personal?.archetype).toBe(4);
+  });
+
   test("filters enemies and non-positive damage while counting each credited lethal record once", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);

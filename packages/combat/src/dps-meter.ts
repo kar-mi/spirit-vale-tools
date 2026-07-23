@@ -155,9 +155,11 @@ export class FishNetDpsMeter {
       return;
     }
 
+    const previousIdentity = this.identities.get(event.actorId);
+    const archetype = event.archetype ?? previousIdentity?.archetype;
     this.identities.set(event.actorId, {
       displayName: event.displayName,
-      ...(event.archetype === undefined ? {} : { archetype: event.archetype }),
+      ...(archetype === undefined ? {} : { archetype }),
       ...(event.ownerConnectionId === undefined ? {} : { ownerConnectionId: event.ownerConnectionId }),
       ...(event.uid === undefined ? {} : { uid: event.uid }),
     });
@@ -170,7 +172,7 @@ export class FishNetDpsMeter {
       this.current.activeActors.set(event.actorId, actor);
     }
     actor.displayName = event.displayName;
-    actor.archetype = event.archetype;
+    if (event.archetype !== undefined) actor.archetype = event.archetype;
     actor.ownerConnectionId = event.ownerConnectionId;
     actor.uid = event.uid;
     actor.activeIdentity = true;
@@ -395,7 +397,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     }
     if (actor.activeIdentity) {
       target.displayName = displayName;
-      target.archetype = actor.archetype;
+      if (actor.archetype !== undefined) target.archetype = actor.archetype;
     } else if (target.archetype === undefined) {
       target.archetype = actor.archetype;
     }

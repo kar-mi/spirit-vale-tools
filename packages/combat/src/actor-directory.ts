@@ -157,12 +157,18 @@ export class FishNetActorDirectory {
     next: FishNetActorIdentity,
     tick: number,
   ): FishNetActorIdentityEvent[] {
-    this.identitySources.set(actorId, next);
+    const current = this.identitySources.get(actorId);
+    const identity = next.archetype === undefined
+      && current?.displayName === next.displayName
+      && current.archetype !== undefined
+      ? { ...next, archetype: current.archetype }
+      : next;
+    this.identitySources.set(actorId, identity);
     this.sourceRevisions.set(actorId, this.nextSourceRevision++);
     const object = this.objects.get(actorId);
     if (object) object.identityEligible = true;
     if (object?.ownerConnectionId !== undefined) return this.refreshOwner(object.ownerConnectionId, tick);
-    return this.reconcile(actorId, next, tick);
+    return this.reconcile(actorId, identity, tick);
   }
 
   get(actorId: number): FishNetActorIdentity | undefined {
@@ -258,6 +264,30 @@ export class FishNetActorDirectory {
       if (candidate && candidateRevision > revision) {
         source = candidate;
         revision = candidateRevision;
+      }
+    }
+    if (source && source.archetype === undefined) {
+      const sourceDisplayName = source.displayName;
+      let classSource: FishNetActorIdentity | undefined;
+      let classRevision = -1;
+      for (const objectId of objectIds) {
+        const candidate = this.identitySources.get(objectId);
+        const candidateRevision = this.sourceRevisions.get(objectId) ?? -1;
+        if (candidate?.displayName === sourceDisplayName
+          && candidate.archetype !== undefined
+          && candidateRevision > classRevision) {
+          classSource = candidate;
+          classRevision = candidateRevision;
+        }
+      }
+      if (classSource?.archetype !== undefined) source = { ...source, archetype: classSource.archetype };
+    }
+    if (source?.archetype !== undefined) {
+      for (const objectId of objectIds) {
+        const candidate = this.identitySources.get(objectId);
+        if (candidate?.displayName === source.displayName && candidate.archetype !== source.archetype) {
+          this.identitySources.set(objectId, { ...candidate, archetype: source.archetype });
+        }
       }
     }
     const events: FishNetActorIdentityEvent[] = [];

@@ -134,15 +134,26 @@
 
 .personal-value { font-size: clamp(12px, 2vw, 24px); font-weight: 800; line-height: 1; }
 .personal-unit { margin-left: 6px; color: rgba(255,255,255,.65); font-size: 13px; }
+.personal-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.personal-heading .element-title { margin: 0; }
+.personal-class-icon,
+.ranking-class-icon {
+  padding: 2px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .42);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .9));
+  object-fit: contain;
+}
+.personal-class-icon { width: 25px; height: 25px; flex: 0 0 auto; }
 .personal-details { display: flex; gap: 18px; margin-top: 15px; color: rgba(255,255,255,.78); font-size: 12px; }
 .personal-details strong { display: block; margin-top: 3px; color: white; font-size: 15px; }
 
 .ranking { display: grid; gap: 7px; }
 .ranking-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 6px 8px; overflow: hidden; border-radius: 6px; }
-.ranking-row::before { position: absolute; inset: 0 auto 0 0; width: var(--row-fill); background: rgba(127, 92, 210, .48); content: ""; }
+.ranking-row::before { position: absolute; inset: 0 auto 0 0; width: var(--row-fill); background: var(--row-color); content: ""; }
 .ranking-row > * { position: relative; z-index: 1; }
 .ranking-player { display: flex; min-width: 0; align-items: center; gap: 7px; }
-.ranking-class-icon { width: 22px; height: 22px; flex: 0 0 auto; object-fit: contain; }
+.ranking-class-icon { width: 24px; height: 24px; flex: 0 0 auto; }
 .ranking-rank { width: 2ch; flex: 0 0 auto; color: rgba(255,255,255,.68); text-align: right; font-variant-numeric: tabular-nums; }
 .ranking-name { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .ranking-dps { font-variant-numeric: tabular-nums; }

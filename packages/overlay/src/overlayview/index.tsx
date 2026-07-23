@@ -33,6 +33,16 @@ const CLASS_ICON_BY_ARCHETYPE: Readonly<Record<number, string>> = {
   26: "necromancer",
   31: "weaver",
 };
+const PARTY_ROW_COLORS = [
+  "rgba(111, 91, 211, 0.52)",
+  "rgba(40, 132, 210, 0.52)",
+  "rgba(27, 151, 135, 0.52)",
+  "rgba(213, 130, 42, 0.52)",
+  "rgba(193, 71, 139, 0.52)",
+  "rgba(99, 153, 52, 0.52)",
+  "rgba(190, 74, 69, 0.52)",
+  "rgba(181, 151, 45, 0.52)",
+] as const;
 type ResizeEdge = (typeof RESIZE_EDGES)[number];
 interface ElementRect { x: number; y: number; width: number; height: number }
 type PointerGesture =
@@ -217,7 +227,10 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
   const personal = next.snapshot?.personal;
   return (
     <div class="element-content">
-      <h2 class="element-title">Personal damage</h2>
+      <div class="personal-heading">
+        <img class="personal-class-icon" src={classIcon(personal?.archetype)} alt="" aria-hidden="true" />
+        <h2 class="element-title">Personal damage</h2>
+      </div>
       {personal ? (
         <>
           <span class="personal-value">{formatDps(personal.dps)}</span><span class="personal-unit">DPS</span>
@@ -238,7 +251,11 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
     <div class="element-content">
       <h2 class="element-title">Party DPS</h2>
       {actors.length ? <div class="ranking">{actors.map((actor, index) => (
-        <div class="ranking-row" key={actor.actorIds[0]} style={`--row-fill:${actor.dps / maxDps * 100}%`}>
+        <div
+          class="ranking-row"
+          key={actor.actorIds[0]}
+          style={`--row-fill:${actor.dps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
+        >
           <span class="ranking-player">
             <img class="ranking-class-icon" src={classIcon(actor.archetype)} alt="" aria-hidden="true" />
             <span class="ranking-rank">{index + 1}.</span>
