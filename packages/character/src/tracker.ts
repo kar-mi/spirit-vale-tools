@@ -27,6 +27,10 @@ export class FishNetCharacterTracker {
   consume(packet: CapturedFishNetPacket): boolean {
     // Only the local player's client emits serverRpc packets, which pins their unit object.
     if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {
+      if (this.localObjectId !== undefined && this.localObjectId !== packet.objectId) {
+        this.records = {};
+        this.publish();
+      }
       this.localObjectId = packet.objectId;
       return false;
     }
@@ -34,7 +38,10 @@ export class FishNetCharacterTracker {
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
-      if (this.snapshot && this.snapshot.name !== decoded.snapshot.name) this.currentWeight = undefined;
+      if (this.snapshot && this.snapshot.name !== decoded.snapshot.name) {
+        this.currentWeight = undefined;
+        this.records = {};
+      }
       this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
       if (decoded.currentWeight !== undefined) this.currentWeight = decoded.currentWeight;
       this.unsupportedDetail = undefined;
@@ -57,6 +64,7 @@ export class FishNetCharacterTracker {
   setCached(snapshot: CharacterSnapshot | undefined): void {
     this.snapshot = snapshot ? { ...snapshot, source: "cached" } : undefined;
     this.currentWeight = undefined;
+    this.records = {};
     this.unsupportedDetail = undefined;
     this.publish();
   }

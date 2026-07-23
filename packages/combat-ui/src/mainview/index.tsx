@@ -7,7 +7,12 @@ import { StatusDot } from "@spiritvale/ui-theme/status-dot";
 import type { StatusTone } from "@spiritvale/ui-theme/status-dot";
 
 import type { DpsAppRpc, DpsAppState, DpsAppTab } from "../app-types.ts";
-import { DPS_WINDOW_HEIGHT, DPS_WINDOW_WIDTH } from "../window-size.ts";
+import {
+  DPS_WINDOW_DEFAULT_HEIGHT,
+  DPS_WINDOW_DEFAULT_WIDTH,
+  DPS_WINDOW_MINIMUM_HEIGHT,
+  DPS_WINDOW_MINIMUM_WIDTH,
+} from "../window-size.ts";
 
 const STATUS_TONE: Record<DpsAppState["status"], StatusTone> = {
   waiting: "is-warn",
@@ -95,13 +100,13 @@ function App() {
     <main class="app-shell">
       <TitleBar
         appTag="DPS"
-        minWidth={DPS_WINDOW_WIDTH}
-        minHeight={DPS_WINDOW_HEIGHT}
+        minWidth={DPS_WINDOW_MINIMUM_WIDTH}
+        minHeight={DPS_WINDOW_MINIMUM_HEIGHT}
         getFrame={async () => (await electroview.rpc?.request.getWindowFrame({})) ?? {
           x: 0,
           y: 0,
-          width: DPS_WINDOW_WIDTH,
-          height: DPS_WINDOW_HEIGHT,
+          width: DPS_WINDOW_DEFAULT_WIDTH,
+          height: DPS_WINDOW_DEFAULT_HEIGHT,
         }}
         setFrame={(frame) => void electroview.rpc?.request.setWindowFrame(frame)}
         onMinimize={() => void electroview.rpc?.request.windowAction({ action: "minimize" })}

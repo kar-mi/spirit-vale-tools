@@ -14,6 +14,8 @@ const LABELS: Record<OverlayElementId, string> = {
   dpsChart: "DPS chart",
   personalDps: "Personal DPS numbers",
   partyRanking: "Party DPS ranking",
+  health: "HP bar",
+  mana: "MP bar",
   weight: "Weight",
 };
 const state = signal<OverlayState | undefined>(undefined);

@@ -17,9 +17,10 @@ available.
 
 ## Overlay
 
-The overlay displays live DPS and character stats over the game. Its layout can
-be customized from Overlay Settings. Locked mode passes mouse clicks through to
-the game; press `F11` to toggle the lock.
+The overlay displays live DPS, HP, MP, weight, and character stats over the
+game. Each element can be shown and arranged independently from Overlay
+Settings. Locked mode passes mouse clicks through to the game; press `F11` to
+toggle the lock.
 
 ## Character
 

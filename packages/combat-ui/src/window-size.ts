@@ -1,2 +1,4 @@
-export const DPS_WINDOW_WIDTH = 728;
-export const DPS_WINDOW_HEIGHT = 776;
+export const DPS_WINDOW_DEFAULT_WIDTH = 945;
+export const DPS_WINDOW_DEFAULT_HEIGHT = 800;
+export const DPS_WINDOW_MINIMUM_WIDTH = 620;
+export const DPS_WINDOW_MINIMUM_HEIGHT = 520;
