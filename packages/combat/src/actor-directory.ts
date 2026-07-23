@@ -37,6 +37,7 @@ export type FishNetActorIdentityEvent =
 export interface FishNetLocalIdentity {
   displayName: string;
   uid?: string;
+  archetype?: number;
   /** @deprecated retained for backwards-compatible callers; never used for matching. */
   accountId?: string;
 }
@@ -58,6 +59,8 @@ export class FishNetActorDirectory {
   private readonly ownerObjects = new Map<number, Set<number>>();
   private readonly identitySources = new Map<number, FishNetActorIdentity>();
   private readonly sourceRevisions = new Map<number, number>();
+  /** Combat attacker IDs that should inherit the identity of another object with the same owner. */
+  private readonly observedPlayerActors = new Set<number>();
   /** UID-keyed names survive map-change resets when delta respawns repeat the UID. */
   private readonly uidIdentities = new Map<string, { displayName: string; archetype?: number }>();
   private nextSourceRevision = 1;
@@ -75,11 +78,13 @@ export class FishNetActorDirectory {
     }
 
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
+      const observedPlayerActor = this.observedPlayerActors.has(packet.objectId);
       const events = this.removeObject(packet.objectId, packet.tick);
+      if (observedPlayerActor) this.observedPlayerActors.add(packet.objectId);
       const ownerConnectionId = validOwner(packet.ownerConnectionId);
       const identityEligible = packet.rpcLinkRegistrations?.some(({ networkBehaviourType }) => {
         return networkBehaviourType !== undefined && IDENTITY_BEHAVIOURS.has(networkBehaviourType);
-      }) ?? false;
+      }) || observedPlayerActor;
       this.objects.set(packet.objectId, {
         ...(ownerConnectionId === undefined ? {} : { ownerConnectionId }),
         identityEligible,
@@ -115,7 +120,12 @@ export class FishNetActorDirectory {
       && this.localIdentity !== undefined && !this.identitySources.has(packet.objectId)) {
       return this.applyIdentitySource(
         packet.objectId,
-        { actorId: packet.objectId, displayName: this.localIdentity.displayName },
+        {
+          actorId: packet.objectId,
+          displayName: this.localIdentity.displayName,
+          ...(this.localIdentity.uid === undefined ? {} : { uid: this.localIdentity.uid }),
+          ...(this.localIdentity.archetype === undefined ? {} : { archetype: this.localIdentity.archetype }),
+        },
         packet.tick,
       );
     }
@@ -123,11 +133,18 @@ export class FishNetActorDirectory {
     if (packet.objectId !== undefined && packet.rpcName !== undefined && CHARACTER_RPC_NAMES.has(packet.rpcName)) {
       const character = decodeCharacterDataName(packet.payload);
       if (character === undefined) return [];
-      this.learnUidIdentity(character.uid, { displayName: character.displayName });
-      this.updateLocalIdentity(character);
+      const archetype = this.localIdentity?.displayName === character.displayName
+        ? this.localIdentity.archetype
+        : undefined;
+      const identity = {
+        ...character,
+        ...(archetype === undefined ? {} : { archetype }),
+      };
+      this.learnUidIdentity(character.uid, identity);
+      this.updateLocalIdentity(identity);
       return this.applyIdentitySource(
         packet.objectId,
-        { actorId: packet.objectId, displayName: character.displayName, uid: character.uid },
+        { actorId: packet.objectId, ...identity },
         packet.tick,
       );
     }
@@ -181,22 +198,49 @@ export class FishNetActorDirectory {
     return [...this.identities.values()].map((identity) => ({ ...identity }));
   }
 
+  /**
+   * Marks an attacker ID from a player-team combat event as eligible for owner-based identity
+   * propagation. Spawn RPC metadata is sometimes incomplete, while the combat event itself is
+   * definitive evidence that this object participates in player damage.
+   */
+  observePlayerActor(actorId: number, tick: number): FishNetActorIdentityEvent[] {
+    if (!Number.isInteger(actorId) || actorId < 0) return [];
+    this.observedPlayerActors.add(actorId);
+    const object = this.objects.get(actorId);
+    if (!object) return [];
+    object.identityEligible = true;
+    if (object.ownerConnectionId !== undefined) return this.refreshOwner(object.ownerConnectionId, tick);
+    return this.reconcile(actorId, this.identitySources.get(actorId), tick);
+  }
+
   reset(): void {
     this.uidIdentities.clear();
     this.clear();
     this.seedLocalIdentity();
   }
 
+  setLocalIdentity(identity: FishNetLocalIdentity): void {
+    this.localIdentity = mergeLocalIdentity(this.localIdentity, identity);
+    this.seedLocalIdentity();
+  }
+
   private seedLocalIdentity(): void {
     if (!this.localIdentity) return;
-    if (this.localIdentity.uid) this.learnUidIdentity(this.localIdentity.uid, { displayName: this.localIdentity.displayName });
+    if (this.localIdentity.uid) {
+      this.learnUidIdentity(this.localIdentity.uid, {
+        displayName: this.localIdentity.displayName,
+        ...(this.localIdentity.archetype === undefined ? {} : { archetype: this.localIdentity.archetype }),
+      });
+    }
   }
 
   private updateLocalIdentity(identity: FishNetLocalIdentity): void {
-    if (this.localIdentity?.displayName === identity.displayName
-      && this.localIdentity.uid === identity.uid) return;
-    this.localIdentity = identity;
-    this.options.onLocalIdentity?.(identity);
+    const next = mergeLocalIdentity(this.localIdentity, identity);
+    if (this.localIdentity?.displayName === next.displayName
+      && this.localIdentity.uid === next.uid
+      && this.localIdentity.archetype === next.archetype) return;
+    this.localIdentity = next;
+    this.options.onLocalIdentity?.(next);
   }
 
   /** Names a spawn from embedded VisualData, falling back to the UID cache for delta spawns. */
@@ -245,6 +289,7 @@ export class FishNetActorDirectory {
     const ownerConnectionId = object?.ownerConnectionId;
     if (ownerConnectionId !== undefined) this.removeOwnerObject(ownerConnectionId, actorId);
     this.objects.delete(actorId);
+    this.observedPlayerActors.delete(actorId);
     this.identitySources.delete(actorId);
     this.sourceRevisions.delete(actorId);
     const events = this.reconcile(actorId, undefined, tick);
@@ -342,6 +387,7 @@ export class FishNetActorDirectory {
     this.ownerObjects.clear();
     this.identitySources.clear();
     this.sourceRevisions.clear();
+    this.observedPlayerActors.clear();
     this.nextSourceRevision = 1;
   }
 }
@@ -352,6 +398,20 @@ function validOwner(ownerConnectionId: number | undefined): number | undefined {
   return ownerConnectionId !== undefined && Number.isInteger(ownerConnectionId) && ownerConnectionId >= 0
     ? ownerConnectionId
     : undefined;
+}
+
+function mergeLocalIdentity(
+  current: FishNetLocalIdentity | undefined,
+  next: FishNetLocalIdentity,
+): FishNetLocalIdentity {
+  const sameCharacter = current?.displayName === next.displayName;
+  const uid = next.uid ?? (sameCharacter ? current?.uid : undefined);
+  const archetype = next.archetype ?? (sameCharacter ? current?.archetype : undefined);
+  return {
+    displayName: next.displayName,
+    ...(uid === undefined ? {} : { uid }),
+    ...(archetype === undefined ? {} : { archetype }),
+  };
 }
 
 function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {

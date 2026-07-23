@@ -142,6 +142,77 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
+  test("propagates identity to an observed combat actor with incomplete spawn behaviour metadata", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    directory.consume(spawn(2, 140, 7, "UnrecognizedComponent"));
+    directory.consume(packet(3, "syncType", 40, visual("Aster Vale")));
+
+    expect(directory.get(140)).toBeUndefined();
+    expect(directory.observePlayerActor(140, 4)).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 4,
+      actorId: 140,
+      displayName: "Aster Vale",
+      archetype: 2,
+      ownerConnectionId: 7,
+    }]);
+  });
+
+  test("remembers an observed combat actor until its spawn and identity arrive", () => {
+    const directory = new FishNetActorDirectory();
+    expect(directory.observePlayerActor(140, 1)).toEqual([]);
+    expect(directory.consume(spawn(2, 140, 7, "UnrecognizedComponent"))).toEqual([]);
+    directory.consume(spawn(3, 40, 7, "PlayerController"));
+
+    expect(directory.consume(packet(4, "syncType", 40, visual("Briar Stone", 4))))
+      .toContainEqual({
+        kind: "actorIdentity",
+        operation: "upsert",
+        tick: 4,
+        actorId: 140,
+        displayName: "Briar Stone",
+        archetype: 4,
+        ownerConnectionId: 7,
+      });
+  });
+
+  test("clears observed combat actors at connection boundaries", () => {
+    const directory = new FishNetActorDirectory();
+    directory.observePlayerActor(140, 1);
+    directory.consume(packet(2, "authenticated"));
+    directory.consume(spawn(3, 140, 7, "UnrecognizedComponent"));
+    directory.consume(spawn(4, 40, 7, "PlayerController"));
+    directory.consume(packet(5, "syncType", 40, visual("Cedar North")));
+
+    expect(directory.get(140)).toBeUndefined();
+  });
+
+  test("does not leak an old identity when an observed combat actor ID is reused", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    directory.consume(spawn(2, 140, 7, "UnrecognizedComponent"));
+    directory.consume(packet(3, "syncType", 40, visual("Aster Vale")));
+    directory.observePlayerActor(140, 4);
+
+    expect(directory.consume(spawn(5, 140, 8, "UnrecognizedComponent"))).toEqual([{
+      kind: "actorIdentity",
+      operation: "remove",
+      tick: 5,
+      actorId: 140,
+    }]);
+    expect(directory.get(140)).toBeUndefined();
+
+    directory.consume(spawn(6, 50, 8, "PlayerController"));
+    directory.consume(packet(7, "syncType", 50, visual("Briar Stone", 4)));
+    expect(directory.get(140)).toMatchObject({
+      actorId: 140,
+      displayName: "Briar Stone",
+      ownerConnectionId: 8,
+    });
+  });
+
   test("uses the newest known class when a class-less owner update arrives", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 40, 7, "PlayerController"));
@@ -284,6 +355,7 @@ describe("FishNetActorDirectory", () => {
 
   test("names a delta spawn from a UID learned via CharacterCallback_T", () => {
     const directory = new FishNetActorDirectory();
+    directory.setLocalIdentity({ displayName: "Fictional Hero", archetype: 12 });
     directory.consume(spawn(1, 62698, 21, "PlayerController"));
     directory.consume({
       ...packet(2, "rpcLink", 62698),
@@ -300,7 +372,25 @@ describe("FishNetActorDirectory", () => {
       actorId: 71,
       displayName: "Fictional Hero",
       uid: syntheticUid,
+      archetype: 12,
       ownerConnectionId: 30,
+    }]);
+  });
+
+  test("uses the cached local archetype for an actor discovered through serverRpc", () => {
+    const directory = new FishNetActorDirectory({
+      localIdentity: { displayName: "Fictional Hero", archetype: 12 },
+    });
+    directory.consume(spawn(1, 80, 31, "PlayerController"));
+
+    expect(directory.consume(packet(2, "serverRpc", 80))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 2,
+      actorId: 80,
+      displayName: "Fictional Hero",
+      archetype: 12,
+      ownerConnectionId: 31,
     }]);
   });
 

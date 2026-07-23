@@ -73,7 +73,10 @@ export class CaptureCoordinator {
 
   characterState(): CharacterViewState { return this.character.state(); }
 
-  setCachedCharacter(snapshot: CharacterSnapshot | undefined): void { this.character.setCached(snapshot); }
+  setCachedCharacter(snapshot: CharacterSnapshot | undefined): void {
+    this.character.setCached(snapshot);
+    this.syncLocalActorIdentity();
+  }
 
   subscribeCharacter(listener: (state: CharacterViewState) => void): () => void {
     return this.character.subscribe(listener);
@@ -342,6 +345,7 @@ export class CaptureCoordinator {
       // connections overlap during login or a map change. Decode them before selecting the
       // active combat connection so a valid local snapshot is never discarded as stale.
       characterHandled = this.character.consume(packet);
+      if (characterHandled) this.syncLocalActorIdentity();
     } catch (error) {
       characterHandled = true;
       this.otherLog?.log("capture.warning", {
@@ -363,6 +367,11 @@ export class CaptureCoordinator {
     try {
       const identities = this.actors.consume(packet);
       const events = this.combat.consume(packet);
+      for (const event of events) {
+        if ((event.kind === "damage" || event.kind === "death") && event.team === 0) {
+          identities.push(...this.actors.observePlayerActor(event.actorId, event.tick));
+        }
+      }
       handled ||= identities.length > 0 || events.length > 0;
       for (const event of identities) this.combatLog?.log("combat.actorIdentity", jsonObject(event));
       for (const event of events) this.combatLog?.log("combat.event", jsonObject(event));
@@ -414,6 +423,16 @@ export class CaptureCoordinator {
     }
     if (packet.packetName === "disconnect") this.activeConnectionId = undefined;
     return true;
+  }
+
+  private syncLocalActorIdentity(): void {
+    const snapshot = this.character.current();
+    if (!snapshot) return;
+    const archetype = this.character.currentArchetypeId();
+    this.actors.setLocalIdentity({
+      displayName: snapshot.name,
+      ...(archetype === undefined ? {} : { archetype }),
+    });
   }
 
   private logDomainWarning(domain: "combat" | "rewards" | "market", error: unknown): void {

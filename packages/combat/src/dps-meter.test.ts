@@ -117,6 +117,73 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()).toMatchObject({ totalDamage: 125, partyDps: 125, actors: [{ kills: 2 }] });
   });
 
+  test("excludes self-target damage and deaths from outgoing combat statistics", () => {
+    const meter = new FishNetDpsMeter();
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeCombat({ ...damage(101, 40, "SyntheticBleed", "Synthetic Bleed"), targetId: 101 }, 0);
+    meter.consumeCombat({ ...death(101, 40, false), targetId: 101 }, 1);
+
+    expect(meter.getLatestSnapshot()).toBeUndefined();
+
+    meter.consumeCombat(damage(101, 100), 2);
+    meter.consumeCombat({ ...damage(101, 25, "SyntheticBleed", "Synthetic Bleed"), targetId: 101 }, 20_000);
+    meter.consumeCombat({ ...death(101, 25, false), targetId: 101 }, 20_001);
+
+    expect(meter.getLatestSnapshot(20_001)).toMatchObject({
+      totalDamage: 100,
+      durationMs: 1_000,
+      partyDps: 100,
+      partyCurrentDps: 0,
+      actors: [{
+        damage: 100,
+        hits: 1,
+        kills: 0,
+        skills: [{ sourceId: "SyntheticArc", damage: 100 }],
+        timeline: [
+          { elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 },
+          { elapsedMs: 1_000, damage: 100, cumulativeDamage: 100, dps: 100 },
+        ],
+      }],
+    });
+  });
+
+  test("credits summon damage to the server-provided summoner actor", () => {
+    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeCombat({
+      ...damage(101, 300, "SyntheticSummonStrike", "Synthetic Summon Strike"),
+      isSummon: true,
+    }, 0);
+    meter.consumeCombat({
+      ...damage(101, 200, "SyntheticSummonStrike", "Synthetic Summon Strike"),
+      isSummon: true,
+    }, 5_000);
+
+    expect(meter.getLatestSnapshot(5_000)).toMatchObject({
+      totalDamage: 500,
+      partyDps: 100,
+      personalMatch: "matched",
+      actors: [{
+        actorIds: [101],
+        damage: 500,
+        dps: 100,
+        contribution: 1,
+        skills: [{
+          sourceId: "SyntheticSummonStrike",
+          damage: 500,
+          dps: 100,
+          contribution: 1,
+          hits: 2,
+        }],
+        timeline: [
+          { elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 },
+          { elapsedMs: 5_000, damage: 500, cumulativeDamage: 500, dps: 100 },
+        ],
+      }],
+      personal: { actorIds: [101], damage: 500, dps: 100 },
+    });
+  });
+
   test("reports player critical rate and five-second cumulative and DPS timeline buckets", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
@@ -258,6 +325,70 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getLatestSnapshot()).toMatchObject({
       personalMatch: "matched",
       personal: { actorIds: [303], damage: 240 },
+    });
+  });
+
+  describe("current DPS", () => {
+    test("ramps the divisor up to the rolling window duration", () => {
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      meter.consumeCombat(damage(101, 300), 0);
+      meter.consumeCombat(damage(101, 300), 10_000);
+
+      expect(meter.getLatestSnapshot(10_000)).toMatchObject({
+        partyCurrentDps: 60,
+        actors: [{ currentDps: 60 }],
+        personal: { currentDps: 60 },
+      });
+    });
+
+    test("includes only damage inside the rolling window", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 150), 29_000);
+
+      expect(meter.getLatestSnapshot(31_000)?.actors[0]?.currentDps).toBe(10);
+    });
+
+    test("drops hits at the window boundary and reaches zero after the last hit expires", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 150), 0);
+      meter.consumeCombat(damage(101, 150), 7_500);
+
+      expect(meter.getLatestSnapshot(15_000)?.actors[0]?.currentDps).toBe(10);
+      expect(meter.getLatestSnapshot(22_500)?.actors[0]?.currentDps).toBe(0);
+    });
+
+    test("defaults the window end to the last damage timestamp", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 200), 14_000);
+
+      expect(meter.getLatestSnapshot()?.actors[0]?.currentDps)
+        .toBe(meter.getLatestSnapshot(14_000)?.actors[0]?.currentDps);
+    });
+
+    test("supports a custom window and validates its duration", () => {
+      const meter = new FishNetDpsMeter({ currentWindowMs: 10_000 });
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 100), 9_000);
+
+      expect(meter.getLatestSnapshot(10_000)?.actors[0]?.currentDps).toBe(10);
+      expect(() => new FishNetDpsMeter({ currentWindowMs: 0 })).toThrow(
+        "currentWindowMs must be a positive finite number",
+      );
+      expect(() => new FishNetDpsMeter({ currentWindowMs: Number.NaN })).toThrow(
+        "currentWindowMs must be a positive finite number",
+      );
+    });
+
+    test("sums actor current DPS into the party value", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(202, 300), 10_000);
+
+      const snapshot = meter.getLatestSnapshot(10_000);
+      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([30, 10]);
+      expect(snapshot?.partyCurrentDps).toBe(40);
     });
   });
 });

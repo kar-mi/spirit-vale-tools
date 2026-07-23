@@ -1,4 +1,4 @@
-export { CharacterReader, decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
+export { CharacterReader, decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 export { aggregateGearSubstats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 export { decodeCharacterRecordSync } from "./record-decoder.ts";
 export { FishNetCharacterTracker } from "./tracker.ts";

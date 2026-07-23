@@ -6,7 +6,13 @@ import { createMarketWindow } from "@spiritvale/market-ui";
 import { createRewardsWindow } from "@spiritvale/rewards-ui";
 import type { LauncherRpc, LauncherSettingsRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 import { loadLauncherSettings, saveLauncherSettings } from "../launcher-settings.ts";
-import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-storage.ts";
+import {
+  activeCharacterSnapshot,
+  loadCharacterCache,
+  saveCharacterCache,
+  updateCharacterCache,
+  type CharacterSnapshotCache,
+} from "../character-storage.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
@@ -15,7 +21,6 @@ import { resolveLogDirectory } from "./paths.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { WindowSlot } from "./window-slot.ts";
 import { resolveDesktopStoragePaths } from "./portable-paths.ts";
-import type { CharacterSnapshot } from "@spiritvale/character";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
@@ -55,9 +60,10 @@ const launcherSettingsPersistence = new SafeSaveQueue<typeof settings>({
   save: (value) => saveLauncherSettings(value, storagePaths.launcherSettingsPath),
   onWarning: (warning) => { launcherSettingsStorageWarning = warning; updateStorageWarning(); },
 });
-const characterPersistence = new SafeSaveQueue<CharacterSnapshot>({
+let characterCache: CharacterSnapshotCache = { characters: [] };
+const characterPersistence = new SafeSaveQueue<CharacterSnapshotCache>({
   label: "character snapshot",
-  save: (value) => saveCharacterSnapshot(value, storagePaths.characterStatePath),
+  save: (value) => saveCharacterCache(value, storagePaths.characterStatePath),
   onWarning: (warning) => { characterStorageWarning = warning; updateStorageWarning(); },
 });
 
@@ -96,10 +102,12 @@ const capture = new CaptureCoordinator({
     publish();
   },
 });
-capture.setCachedCharacter(await loadCharacterSnapshot(storagePaths.characterStatePath));
+characterCache = await loadCharacterCache(storagePaths.characterStatePath);
+capture.setCachedCharacter(activeCharacterSnapshot(characterCache));
 const unsubscribeCharacterPersistence = capture.subscribeCharacter((state) => {
   if (!state.snapshot || state.snapshot.source !== "live") return;
-  characterPersistence.schedule(state.snapshot);
+  characterCache = updateCharacterCache(characterCache, state.snapshot);
+  characterPersistence.schedule(characterCache);
 });
 const characterWindow = new WindowSlot((onClosed) => createCharacterWindow({
   getState: () => capture.characterState(),
@@ -317,8 +325,8 @@ async function shutdown(): Promise<void> {
     await Promise.all([combatWindow.close(), overlayWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
     unsubscribeCharacterPersistence();
     const character = capture.characterState().snapshot;
-    if (character) await characterPersistence.flush(character);
-    else await characterPersistence.flush();
+    if (character?.source === "live") characterCache = updateCharacterCache(characterCache, character);
+    await characterPersistence.flush(characterCache);
     await launcherSettingsPersistence.flush();
     await placements.flush();
   } finally {

@@ -1,5 +1,5 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
-import { decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
+import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
 import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
@@ -61,6 +61,11 @@ export class FishNetCharacterTracker {
   }
 
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
+
+  currentArchetypeId(): number | undefined {
+    const archetype = this.snapshot?.archetypes.at(-1);
+    return archetype === undefined ? undefined : resolveCharacterArchetypeId(archetype);
+  }
 
   state(): CharacterViewState {
     // Stored substat values were baked by whatever build decoded them; always re-derive
@@ -140,7 +145,7 @@ function errorMessage(error: unknown): string {
 }
 
 function mergeSnapshot(previous: CharacterSnapshot | undefined, next: CharacterSnapshot, updateType: number): CharacterSnapshot {
-  if (!previous || updateType === 327417855) return next;
+  if (!previous || previous.name !== next.name || updateType === 327417855) return next;
   const merged = { ...previous, updatedAt: next.updatedAt, source: "live" as const };
   if (updateType & (1 | 2)) Object.assign(merged, { level: next.level, experience: next.experience, jobLevel: next.jobLevel, jobExperience: next.jobExperience });
   if (updateType & 4) merged.attributes = next.attributes;

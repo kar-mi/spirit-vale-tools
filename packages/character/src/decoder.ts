@@ -10,6 +10,7 @@ const ARCHETYPES: Record<number, string> = {
   17: "Chronomancer", 18: "Druid", 19: "Warlock", 20: "Assassin", 21: "Shinobi", 22: "Gunslinger", 23: "Ranger",
   24: "Jester", 25: "Nightshade", 26: "Necromancer", 27: "Spellblade", 28: "Blade Master", 29: "Mechanist", 30: "Alchemist", 31: "Weaver",
 };
+const ARCHETYPE_IDS = new Map(Object.entries(ARCHETYPES).map(([id, name]) => [name, Number(id)]));
 const EQUIP_SLOTS = ["Main hand", "Off hand", "Head", "Legs", "Feet", "Chest", "Left accessory", "Right accessory", "Eyewear", "Back"];
 const ARTIFACT_SLOTS = ["Rune", "Jewel", "Scroll", "Relic"];
 const LOADOUTS = ["Normal", "Secondary", "Heavy"] as const;
@@ -18,6 +19,10 @@ export interface DecodedCharacterUpdate {
   updateType: number;
   snapshot: CharacterSnapshot;
   currentWeight: number;
+}
+
+export function resolveCharacterArchetypeId(name: string): number | undefined {
+  return ARCHETYPE_IDS.get(name);
 }
 
 export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: boolean, now = new Date()): DecodedCharacterUpdate {

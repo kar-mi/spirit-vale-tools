@@ -25,6 +25,7 @@ describe("FishNetCharacterTracker", () => {
       weight: { current: 71, maximum: 3_260 },
     });
     expect(tracker.state().stats).not.toHaveLength(0);
+    expect(tracker.currentArchetypeId()).toBe(12);
   });
 
   test("rejects packets without a character RPC name", () => {
@@ -33,6 +34,7 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.consume(characterPacket())).toBe(false);
     expect(tracker.consume(characterPacket("UnrelatedRpc"))).toBe(false);
     expect(tracker.state()).toMatchObject({ status: "waiting", stats: [] });
+    expect(tracker.currentArchetypeId()).toBeUndefined();
   });
 
   test("reports unsupported status when a named character payload cannot be decoded", () => {
@@ -44,6 +46,61 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state()).toMatchObject({ status: "unsupported", stats: [] });
     expect(tracker.state().statusDetail).toStartWith("Character data isn't recognized:");
     expect(tracker.state().statusDetail).toContain("Change maps or channels");
+  });
+
+  test("replaces cached state when a callback belongs to a different character", () => {
+    const tracker = new FishNetCharacterTracker({
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Fictional Veteran",
+      archetypes: ["Mage", "Wizard"],
+      level: 70,
+      experience: 0,
+      jobLevel: 30,
+      jobExperience: 0,
+      attributes: { STR: 5, VIT: 20, AGI: 10, DEX: 15, INT: 70, LUK: 10 },
+      activeLoadout: "Normal",
+      equipment: [],
+      artifacts: [],
+      skills: [],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "cached",
+    });
+
+    expect(tracker.consume(characterPacket("CharacterCallback_T"))).toBe(true);
+    expect(tracker.current()).toMatchObject({
+      name: "Example Hero",
+      archetypes: ["Warrior", "Berserker"],
+      level: 42,
+      source: "live",
+    });
+    expect(tracker.currentArchetypeId()).toBe(12);
+  });
+
+  test("updates the active class for the same character", () => {
+    const tracker = new FishNetCharacterTracker({
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Example Hero",
+      archetypes: ["Mage", "Wizard"],
+      level: 42,
+      experience: 0,
+      jobLevel: 18,
+      jobExperience: 0,
+      attributes: { STR: 5, VIT: 20, AGI: 10, DEX: 15, INT: 70, LUK: 10 },
+      activeLoadout: "Normal",
+      equipment: [],
+      artifacts: [],
+      skills: [],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "cached",
+    });
+    const packet = characterPacket("CharacterCallback_T");
+    packet.payload = Buffer.concat([packed(131072), packet.payload.subarray(1)]);
+
+    expect(tracker.consume(packet)).toBe(true);
+    expect(tracker.current()?.archetypes).toEqual(["Warrior", "Berserker"]);
+    expect(tracker.currentArchetypeId()).toBe(12);
   });
 
   test("re-derives cached substat values from raw rolls using current tables", () => {
@@ -107,4 +164,15 @@ function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: 
     payload: Buffer.from(payloadHex, "hex"),
     connectionId: "test-connection",
   } as CapturedFishNetPacket;
+}
+
+function packed(value: number): Buffer {
+  let encoded = BigInt(value) << 1n;
+  const bytes: number[] = [];
+  while (encoded >= 0x80n) {
+    bytes.push(Number(encoded & 0x7fn) | 0x80);
+    encoded >>= 7n;
+  }
+  bytes.push(Number(encoded));
+  return Buffer.from(bytes);
 }
