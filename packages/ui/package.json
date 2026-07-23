@@ -16,6 +16,7 @@
     "@spiritvale/logging": "workspace:*",
     "@spiritvale/market": "workspace:*",
     "@spiritvale/market-ui": "workspace:*",
+    "@spiritvale/overlay": "workspace:*",
     "@spiritvale/rewards": "workspace:*",
     "@spiritvale/rewards-ui": "workspace:*",
     "@spiritvale/skills": "workspace:*",

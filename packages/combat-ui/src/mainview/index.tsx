@@ -72,10 +72,6 @@ function App() {
     if (input && next && document.activeElement !== input) input.value = next.personalName;
   }, [next?.personalName]);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty("--dps-window-opacity", String(next?.opacity ?? 1));
-  }, [next?.opacity]);
-
   if (!next) return <main class="app-shell" />;
 
   const actors = next.snapshot?.actors ?? [];
@@ -104,24 +100,11 @@ function App() {
         setFrame={(frame) => void electroview.rpc?.request.setWindowFrame(frame)}
         onMinimize={() => void electroview.rpc?.request.windowAction({ action: "minimize" })}
         onClose={() => void electroview.rpc?.request.windowAction({ action: "close" })}
-        extraControls={
-          <>
-            <button class="icon-button" type="button" aria-label="Open DPS settings" title="DPS settings" onClick={() => void electroview.rpc?.request.openSettings({})}>⚙</button>
-            <button
-              class={next.pinned ? "icon-button active" : "icon-button"}
-              type="button"
-              aria-label="Toggle always on top"
-              title="Always on top"
-              onClick={() => void electroview.rpc?.request.setPinned({ pinned: !next.pinned })}
-            >
-              {next.pinned ? "◆" : "◇"}
-            </button>
-          </>
-        }
       />
 
       <section class="command-bar">
         <button class="btn" type="button" onClick={() => void electroview.rpc?.request.openReplayPicker({})}>Open log</button>
+        <button class="btn" type="button" onClick={() => void electroview.rpc?.request.openOverlay({})}>Overlay</button>
         <button class="btn" type="button" disabled={next.resetting} onClick={() => void electroview.rpc?.request.resetSession({})}>Reset</button>
       </section>
 

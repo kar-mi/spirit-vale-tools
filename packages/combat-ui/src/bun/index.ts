@@ -9,8 +9,8 @@ import {
   DpsSessionLogFollower,
   formatCombatReplaySummary,
 } from "@spiritvale/combat";
-import { loadDpsAppSettings, normalizeDpsOpacity, saveDpsAppSettings } from "../settings.ts";
-import type { DpsAppRpc, DpsAppState, DpsAppStatus, DpsSettingsRpc, DpsSettingsState } from "../app-types.ts";
+import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
+import type { DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
 import { Utils } from "electrobun/bun";
@@ -19,13 +19,12 @@ import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
-const DPS_SETTINGS_WIDTH = 560;
-const DPS_SETTINGS_HEIGHT = 360;
 const LIVE_LOG_POLL_MS = 2_500;
 export interface DpsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
   onClosed?: () => void;
+  onOpenOverlay?: () => Promise<void>;
   onReset?: () => Promise<void>;
 }
 
@@ -34,7 +33,6 @@ const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
 const settings = await loadDpsAppSettings(options.settingsPath);
 
 let window: BrowserWindow;
-let settingsWindow: BrowserWindow | undefined;
 let status: DpsAppStatus = "waiting";
 let statusDetail = liveLogOverride ? `Looking for ${path.basename(liveLogOverride)}…` : "Looking for a combat session…";
 let liveMeter = new FishNetDpsMeter({ personalName: settings.personalName });
@@ -69,6 +67,7 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
     requests: {
       getState: () => appState(),
       openReplayPicker: () => { replayPicker.open(); },
+      openOverlay: async () => { await options.onOpenOverlay?.(); },
       resetSession: async () => {
         if (!resetting && options.onReset) {
           resetting = true;
@@ -101,18 +100,6 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
         publish();
         return appState();
       },
-      setPinned: ({ pinned }) => {
-        settings.pinned = pinned;
-        window.setAlwaysOnTop(pinned);
-        scheduleSettingsSave();
-        publish();
-        return appState();
-      },
-      openSettings: () => { openDpsSettings(); },
-      setOpacity: ({ opacity }) => {
-        updateOpacity(opacity);
-        return appState();
-      },
       setTab: ({ tab }) => {
         settings.tab = tab;
         scheduleSettingsSave();
@@ -134,36 +121,14 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
   },
 });
 
-const settingsRpc = BrowserView.defineRPC<DpsSettingsRpc>({
-  handlers: {
-    requests: {
-      getState: () => settingsState(),
-      setOpacity: ({ opacity }) => {
-        updateOpacity(opacity);
-        return settingsState();
-      },
-      windowAction: ({ action }) => {
-        const target = settingsWindow;
-        if (!target) return;
-        if (action === "minimize") target.minimize();
-        else target.close();
-      },
-      getWindowFrame: () => settingsWindow?.getFrame() ?? { x: 0, y: 0, width: DPS_SETTINGS_WIDTH, height: DPS_SETTINGS_HEIGHT },
-      setWindowFrame: ({ x, y, width, height }) => settingsWindow?.setFrame(x, y, width, height),
-    },
-    messages: {},
-  },
-});
-
 window = new BrowserWindow({
   title: "Spirit Vale DPS",
   url: "views://mainview/index.html",
   frame: scaleFrame(settings.frame),
   titleBarStyle: "hidden",
-  transparent: true,
+  transparent: false,
   rpc,
 });
-window.setAlwaysOnTop(settings.pinned);
 applyRoundedCorners(window.ptr);
 registerUiScaleWindow(window, { scaleInitialFrame: false });
 
@@ -199,52 +164,11 @@ function appState(): DpsAppState {
     status,
     statusDetail,
     ...(storageWarning ? { storageWarning } : {}),
-    pinned: settings.pinned,
-    opacity: settings.opacity,
     personalName: settings.personalName,
     ...(liveMeter.getPersonalActorId() === undefined ? {} : { personalActorId: liveMeter.getPersonalActorId() }),
     ...(snapshot ? { snapshot } : {}),
     resetting,
   };
-}
-
-function settingsState(): DpsSettingsState {
-  return { opacity: settings.opacity };
-}
-
-function openDpsSettings(): void {
-  if (settingsWindow) {
-    settingsWindow.show();
-    settingsWindow.activate();
-    return;
-  }
-  const frame = window.getFrame();
-  const nextWindow = new BrowserWindow({
-    title: "Spirit Vale DPS Settings",
-    url: "views://dpssettingsview/index.html",
-    frame: { x: frame.x + 24, y: frame.y + 24, width: DPS_SETTINGS_WIDTH, height: DPS_SETTINGS_HEIGHT },
-    titleBarStyle: "hidden",
-    transparent: false,
-    rpc: settingsRpc,
-  });
-  settingsWindow = nextWindow;
-  nextWindow.setAlwaysOnTop(true);
-  nextWindow.show();
-  nextWindow.activate();
-  applyRoundedCorners(nextWindow.ptr);
-  registerUiScaleWindow(nextWindow);
-  Electrobun.events.on(`resize-${nextWindow.id}`, (event: { data: { width: number; height: number } }) => {
-    const width = Math.max(scaledSize(DPS_SETTINGS_WIDTH), event.data.width);
-    const height = Math.max(scaledSize(DPS_SETTINGS_HEIGHT), event.data.height);
-    if (width !== event.data.width || height !== event.data.height) nextWindow.setSize(width, height);
-  });
-  nextWindow.on("close", () => { if (settingsWindow === nextWindow) settingsWindow = undefined; });
-}
-
-function updateOpacity(opacity: number): void {
-  settings.opacity = normalizeDpsOpacity(opacity);
-  scheduleSettingsSave();
-  publish();
 }
 
 function publish(): void {
@@ -256,11 +180,6 @@ function publish(): void {
     // The webview may not have completed its RPC handshake yet.
   } finally {
     publishing = false;
-  }
-  try {
-    settingsRpc.send.stateChanged(settingsState());
-  } catch {
-    // The settings webview may not have completed its RPC handshake yet.
   }
 }
 
@@ -329,8 +248,6 @@ async function shutdown(): Promise<void> {
   shuttingDown = true;
   replayPicker.close();
   analysisWindow.close();
-  settingsWindow?.close();
-  settingsWindow = undefined;
   settings.frame = unscaleFrame(window.getFrame());
   clearInterval(liveLogTimer);
   await settingsPersistence.flush(settings);

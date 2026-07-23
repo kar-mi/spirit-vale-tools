@@ -142,6 +142,25 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
+  test("uses the newest known class when a class-less owner update arrives", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    directory.consume(spawn(2, 140, 7, "SkillsComponent"));
+    directory.consume(packet(3, "syncType", 40, visual("Fictional Hero", 12)));
+    directory.consume(packet(4, "syncType", 140, visual("Fictional Hero", 4)));
+
+    const events = directory.consume({
+      ...packet(5, "rpcLink", 40),
+      rpcName: "CharacterCallback_T",
+      payload: characterCallbackPayload,
+    });
+
+    expect(events).toHaveLength(2);
+    expect(events.every((event) => event.operation === "upsert" && event.archetype === 4)).toBe(true);
+    expect(directory.get(40)?.archetype).toBe(4);
+    expect(directory.get(140)?.archetype).toBe(4);
+  });
+
   test("reads a player identity from map-load SyncTypes embedded in the spawn", () => {
     const directory = new FishNetActorDirectory();
     const embeddedVisual = Buffer.concat([
@@ -214,19 +233,21 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
-  test("names the local player from a CharacterCallback_T payload", () => {
+  test("names the local player without discarding a known visual archetype", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 62698, 21, "PlayerController"));
+    directory.consume(packet(2, "syncType", 62698, visual("Fictional Hero", 12)));
     expect(directory.consume({
-      ...packet(2, "rpcLink", 62698),
+      ...packet(3, "rpcLink", 62698),
       rpcName: "CharacterCallback_T",
       payload: characterCallbackPayload,
     })).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
-      tick: 2,
+      tick: 3,
       actorId: 62698,
-      displayName: "rak",
+      displayName: "Fictional Hero",
+      archetype: 12,
       uid: syntheticUid,
       ownerConnectionId: 21,
     }]);
@@ -277,7 +298,7 @@ describe("FishNetActorDirectory", () => {
       operation: "upsert",
       tick: 4,
       actorId: 71,
-      displayName: "rak",
+      displayName: "Fictional Hero",
       uid: syntheticUid,
       ownerConnectionId: 30,
     }]);
@@ -347,7 +368,7 @@ describe("FishNetActorDirectory", () => {
 const syntheticUid = "00000000-0000-4000-8000-000000000001";
 const characterCallbackPayload = Buffer.concat([
   packed(2), packedString(""), packedString(syntheticUid), packedString("account-example"), packed(0),
-  packedString(""), packedString("member"), packedString("rak"),
+  packedString(""), packedString("member"), packedString("Fictional Hero"),
 ]);
 
 function section(componentIndex: number, data: Buffer): Buffer {

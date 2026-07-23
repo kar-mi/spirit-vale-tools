@@ -17,6 +17,7 @@ test("portable storage remains beneath the extracted application root", () => {
     logDirectory: path.join(root, "data", "logs"),
     launcherSettingsPath: path.join(root, "data", "settings", "launcher.json"),
     dpsSettingsPath: path.join(root, "data", "settings", "dps.json"),
+    overlaySettingsPath: path.join(root, "data", "settings", "overlay.json"),
     rewardsSettingsPath: path.join(root, "data", "settings", "rewards.json"),
     characterStatePath: path.join(root, "data", "character.json"),
   });
@@ -35,6 +36,7 @@ test("development storage retains the existing user-data and workspace locations
   expect(paths.logDirectory).toBe(logs);
   expect(paths.launcherSettingsPath).toBe(path.join(userData, "spirit-vale-tools", "settings.json"));
   expect(paths.dpsSettingsPath).toBe(path.join(userData, "spirit-vale-dps", "settings.json"));
+  expect(paths.overlaySettingsPath).toBe(path.join(userData, "spirit-vale-overlay", "settings.json"));
   expect(paths.rewardsSettingsPath).toBe(path.join(userData, "rewards-settings.json"));
   expect(paths.characterStatePath).toBe(path.join(userData, "spirit-vale-tools", "character.json"));
 });

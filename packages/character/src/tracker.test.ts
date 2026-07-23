@@ -48,7 +48,7 @@ describe("FishNetCharacterTracker", () => {
     tracker.setCached({
       schemaVersion: 1,
       buildFingerprint: "stale-build",
-      name: "rak",
+      name: "kar",
       archetypes: ["Warrior"],
       level: 88,
       experience: 0,

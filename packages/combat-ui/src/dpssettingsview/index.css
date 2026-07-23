@@ -1,8 +1,0 @@
-html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-.app-shell { display: grid; grid-template-rows: 40px 1fr; width: 100%; height: 100%; background: var(--surface); }
-.settings-content { display: grid; align-content: start; gap: 20px; padding: 20px; }
-.settings-content h1 { margin: 0; font-size: 18px; font-weight: 500; }
-.settings-content p { margin: 4px 0 0; color: var(--on-surface-variant); font-size: 12px; }
-.opacity-field { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; color: var(--on-surface-variant); font-size: 12px; }
-.opacity-field output { font-variant-numeric: tabular-nums; }
-.opacity-field input { grid-column: 1 / -1; width: 100%; min-width: 0; margin: 0; accent-color: var(--primary); }

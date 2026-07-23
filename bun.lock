@@ -77,6 +77,17 @@
         "preact": "^10.29.7",
       },
     },
+    "packages/overlay": {
+      "name": "@spiritvale/overlay",
+      "dependencies": {
+        "@preact/signals": "^2.9.4",
+        "@spiritvale/combat": "workspace:*",
+        "@spiritvale/logging": "workspace:*",
+        "@spiritvale/ui-theme": "workspace:*",
+        "electrobun": "1.18.1",
+        "preact": "^10.29.7",
+      },
+    },
     "packages/rewards": {
       "name": "@spiritvale/rewards",
       "dependencies": {
@@ -106,13 +117,17 @@
       "name": "@spiritvale/ui",
       "dependencies": {
         "@spiritvale/character": "workspace:*",
+        "@spiritvale/combat": "workspace:*",
         "@spiritvale/combat-ui": "workspace:*",
         "@spiritvale/core": "workspace:*",
         "@spiritvale/items": "workspace:*",
+        "@spiritvale/logging": "workspace:*",
         "@spiritvale/market": "workspace:*",
         "@spiritvale/market-ui": "workspace:*",
+        "@spiritvale/overlay": "workspace:*",
         "@spiritvale/rewards": "workspace:*",
         "@spiritvale/rewards-ui": "workspace:*",
+        "@spiritvale/skills": "workspace:*",
         "@spiritvale/ui-theme": "workspace:*",
       },
       "devDependencies": {
@@ -156,6 +171,8 @@
     "@spiritvale/market": ["@spiritvale/market@workspace:packages/market"],
 
     "@spiritvale/market-ui": ["@spiritvale/market-ui@workspace:packages/market-ui"],
+
+    "@spiritvale/overlay": ["@spiritvale/overlay@workspace:packages/overlay"],
 
     "@spiritvale/rewards": ["@spiritvale/rewards@workspace:packages/rewards"],
 

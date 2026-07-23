@@ -10,6 +10,7 @@ import { loadCharacterSnapshot, saveCharacterSnapshot } from "../character-stora
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
+import { createOverlayWindow } from "@spiritvale/overlay";
 import { resolveLogDirectory } from "./paths.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { WindowSlot } from "./window-slot.ts";
@@ -59,7 +60,13 @@ const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
   logDirectory,
   settingsPath: storagePaths.dpsSettingsPath,
   onClosed,
+  onOpenOverlay: () => overlayWindow.open(),
   onReset: () => capture.resetSession(),
+}));
+const overlayWindow = new WindowSlot((onClosed) => createOverlayWindow({
+  logDirectory,
+  settingsPath: storagePaths.overlaySettingsPath,
+  onClosed,
 }));
 const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({
   logDirectory,
@@ -214,7 +221,8 @@ async function refreshCaptureDevices(): Promise<void> {
 }
 
 async function openTool(tool: ToolWindow): Promise<void> {
-  if (tool === "combat") await combatWindow.open();
+  if (tool === "combat") await Promise.all([combatWindow.open(), overlayWindow.open()]);
+  else if (tool === "overlay") await overlayWindow.open();
   else if (tool === "rewards") await rewardsWindow.open();
   else if (tool === "market") await marketWindow.open();
   else await characterWindow.open();
@@ -283,7 +291,7 @@ async function shutdown(): Promise<void> {
   launcherWindow.hide();
   settingsWindow?.close();
   try {
-    await Promise.all([combatWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
+    await Promise.all([combatWindow.close(), overlayWindow.close(), rewardsWindow.close(), marketWindow.close(), characterWindow.close()]);
     unsubscribeCharacterPersistence();
     const character = capture.characterState().snapshot;
     if (character) await characterPersistence.flush(character);
