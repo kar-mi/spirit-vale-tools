@@ -35,6 +35,7 @@ function actor(actorId: number, currentDps: number): FishNetDpsActorRow {
     hits: 0,
     criticalHits: 0,
     kills: 0,
+    mobsHit: 0,
     skills: [],
     timeline: [],
   };

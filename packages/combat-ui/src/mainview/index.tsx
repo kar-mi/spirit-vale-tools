@@ -21,7 +21,7 @@ const STATUS_TONE: Record<DpsAppState["status"], StatusTone> = {
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 
-type ActorSortKey = "dps" | "damage" | "contribution" | "critRate" | "kills";
+type ActorSortKey = "dps" | "damage" | "contribution" | "critRate" | "kills" | "mobsHit";
 type SortDirection = "ascending" | "descending";
 interface ActorSort { key: ActorSortKey; direction: SortDirection }
 
@@ -118,10 +118,10 @@ function App() {
         <StatusDot tone={STATUS_TONE[next.status]} detail={next.statusDetail} />
         <div class="table-scroll summary-table-scroll">
           <table class="data-table summary-table" aria-label="Encounter totals">
-            <thead><tr><th>Timer</th><th>Party</th><th>Total damage</th><th>Total kills</th></tr></thead>
+            <thead><tr><th>Timer</th><th>Encounter DPS</th><th>Total damage</th><th>Total kills</th></tr></thead>
             <tbody><tr>
               <td>{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</td>
-              <td>{formatDps(next.snapshot?.partyCurrentDps ?? 0)}</td>
+              <td>{formatDps(next.snapshot?.partyDps ?? 0)}</td>
               <td>{compactFormat.format(next.snapshot?.totalDamage ?? 0)}</td>
               <td>{numberFormat.format(next.snapshot?.actors.reduce((total, actor) => total + actor.kills, 0) ?? 0)}</td>
             </tr></tbody>
@@ -148,6 +148,7 @@ function App() {
                   <SortableHeader label="DMG %" sortKey="contribution" sort={actorSort} onSort={sortActorsBy} />
                   <SortableHeader label="CRT %" sortKey="critRate" sort={actorSort} onSort={sortActorsBy} />
                   <SortableHeader label="Kills" sortKey="kills" sort={actorSort} onSort={sortActorsBy} />
+                  <SortableHeader label="Mobs hit" sortKey="mobsHit" sort={actorSort} onSort={sortActorsBy} />
                 </tr></thead>
                 <tbody>{sortedActors.map((actor) => (
                   <tr key={actor.actorIds[0]} class="meter-table-row" style={`--row-fill:${Math.max(0, Math.min(100, actor.contribution * 100))}%`}>
@@ -157,6 +158,7 @@ function App() {
                     <td>{formatPercent(actor.contribution)}</td>
                     <td>{formatCritRate(actor.hits, actor.criticalHits)}</td>
                     <td>{numberFormat.format(actor.kills)}</td>
+                    <td>{numberFormat.format(actor.mobsHit)}</td>
                   </tr>
                 ))}</tbody>
               </table>
