@@ -264,7 +264,7 @@ export class FishNetMarketTracker {
 
   private upsert(listing: FishNetMarketListing | null, searchText: string | null): void {
     if (!listing) return;
-    const key = listing.id ?? `${listing.sellerId ?? ""}\u0000${listing.itemId ?? ""}\u0000${listing.price}`;
+    const key = listing.id ?? `${listing.sellerId ?? ""}|${listing.itemId ?? ""}|${listing.price}`;
     const previous = this.listings.get(key);
     this.listings.set(key, {
       listing,

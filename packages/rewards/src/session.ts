@@ -108,7 +108,7 @@ function cloneKill(kill: RecordedMobRewardKill): RecordedMobRewardKill {
 function mergeItems(left: readonly RewardItem[], right: readonly RewardItem[]): RewardItem[] {
   const values = new Map<string, RewardItem>();
   for (const item of [...left, ...right]) {
-    const key = `${item.category}\u0000${item.itemId}`;
+    const key = `${item.category}|${item.itemId}`;
     const previous = values.get(key);
     if (previous) previous.count += item.count;
     else values.set(key, { ...item });

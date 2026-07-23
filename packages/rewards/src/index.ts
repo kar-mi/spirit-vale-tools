@@ -25,5 +25,5 @@ export type {
 } from "./session.ts";
 export { emptySnapshot, loadRewardReplay, RewardLogFollower, RewardSessionLogFollower } from "./live-log.ts";
 export type { RewardLogBatch, RewardLogStatus } from "./live-log.ts";
-export { formatRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
-export type { RewardsReplaySummary } from "./replay-summary.ts";
+export { formatRewardsReplaySummary, inspectRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
+export type { RewardsReplayInspection, RewardsReplaySummary } from "./replay-summary.ts";

@@ -147,7 +147,7 @@ function parseEndpoint(value: string): { address: string; port: number } | undef
 }
 
 function endpointKey(protocol: CaptureProtocol, address: string, port: number): string {
-  return `${protocol}\u0000${address}\u0000${port}`;
+  return `${protocol}|${address}|${port}`;
 }
 
 function errorMessage(error: unknown): string {

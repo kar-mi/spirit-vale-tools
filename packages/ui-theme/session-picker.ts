@@ -10,11 +10,13 @@ import type { WindowPlacementStore } from "./window-placement.ts";
 import type { SessionPickerRpc, SessionPickerState } from "./session-picker-types.ts";
 import type { WindowFrame } from "./window-chrome.ts";
 
+const MAX_RECENT_SESSIONS = 100;
+
 export interface SessionPickerOptions {
   logDirectory: string;
   stream: Extract<LogStream, "combat" | "rewards">;
   title: string;
-  summarize: (path: string) => Promise<string>;
+  summarize: (path: string) => Promise<{ recordCount: number; summary: string }>;
   loadReplay: (path: string) => Promise<void>;
   placements?: WindowPlacementStore;
   placementKey?: string;
@@ -83,7 +85,6 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
           if (window === nextWindow) window = undefined;
           paths.clear();
         });
-        nextWindow.on("focus", () => { void refresh(); });
       }
       void refresh();
     },
@@ -104,23 +105,30 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
     state = loadingState(options.title);
     publish();
     try {
-      const sessions = await listLogSessions(options.stream, options.logDirectory, 25);
+      const sessions = await listLogSessions(options.stream, options.logDirectory, Number.MAX_SAFE_INTEGER);
       const nextPaths = new Map<string, string>();
-      const items = await Promise.all(sessions.map(async (session) => {
-        try {
-          const summary = await options.summarize(session.path);
-          nextPaths.set(session.id, session.path);
-          return { id: session.id, createdAt: session.createdAt, summary, active: session.active, disabled: false };
-        } catch {
-          return {
-            id: session.id,
-            createdAt: session.createdAt,
-            summary: "Summary unavailable",
-            active: session.active,
-            disabled: true,
-          };
+      const items: SessionPickerState["sessions"] = [];
+      for (let offset = 0; offset < sessions.length && items.length < MAX_RECENT_SESSIONS; offset += 10) {
+        const inspected = await Promise.all(sessions.slice(offset, offset + 10).map(async (session) => {
+          try {
+            const result = await options.summarize(session.path);
+            if (result.recordCount === 0) return undefined;
+            nextPaths.set(session.id, session.path);
+            return { id: session.id, createdAt: session.createdAt, summary: result.summary, active: session.active, disabled: false };
+          } catch {
+            return {
+              id: session.id,
+              createdAt: session.createdAt,
+              summary: "Summary unavailable",
+              active: session.active,
+              disabled: true,
+            };
+          }
+        }));
+        for (const item of inspected) {
+          if (item && items.length < MAX_RECENT_SESSIONS) items.push(item);
         }
-      }));
+      }
       if (sequence !== refreshSequence) return;
       paths = nextPaths;
       state = {

@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { readCombatReplaySummary } from "./replay-summary.ts";
+import { inspectCombatReplaySummary, readCombatReplaySummary } from "./replay-summary.ts";
 
 test("combat replay summaries remain owned by combat UI", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-combat-summary-"));
@@ -17,6 +17,9 @@ test("combat replay summaries remain owned by combat UI", async () => {
   try {
     await writeFile(file, records.map((record) => JSON.stringify(record)).join("\n"), "utf8");
     expect(await readCombatReplaySummary(file)).toEqual({ encounters: 2, totalDamage: 250, durationMs: 3_000, invalidLines: 0 });
+    expect(await inspectCombatReplaySummary(file)).toMatchObject({ recordCount: 2 });
+    await writeFile(file, "", "utf8");
+    expect(await inspectCombatReplaySummary(file)).toMatchObject({ recordCount: 0 });
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

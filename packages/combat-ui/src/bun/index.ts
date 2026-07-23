@@ -7,7 +7,7 @@ import {
   FishNetDpsMeter,
   DpsLogFollower,
   DpsSessionLogFollower,
-  formatCombatReplaySummary,
+  inspectCombatReplaySummary,
 } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
@@ -60,7 +60,7 @@ const replayPicker = createSessionPicker({
   logDirectory: options.logDirectory,
   stream: "combat",
   title: "Combat log analysis",
-  summarize: formatCombatReplaySummary,
+  summarize: inspectCombatReplaySummary,
   loadReplay: (selectedPath) => analysisWindow.open(selectedPath),
   placements: options.placements,
   placementKey: "combat-session-picker",

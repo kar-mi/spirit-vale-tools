@@ -9,6 +9,11 @@ export interface RewardsReplaySummary {
   invalidLines: number;
 }
 
+export interface RewardsReplayInspection {
+  recordCount: number;
+  summary: string;
+}
+
 export async function readRewardsReplaySummary(path: string): Promise<RewardsReplaySummary> {
   const replay = await loadRewardReplay(path);
   return {
@@ -21,6 +26,14 @@ export async function readRewardsReplaySummary(path: string): Promise<RewardsRep
 }
 
 export async function formatRewardsReplaySummary(path: string): Promise<string> {
+  return formatSummary(await readRewardsReplaySummary(path));
+}
+
+export async function inspectRewardsReplaySummary(path: string): Promise<RewardsReplayInspection> {
   const summary = await readRewardsReplaySummary(path);
+  return { recordCount: summary.kills, summary: formatSummary(summary) };
+}
+
+function formatSummary(summary: RewardsReplaySummary): string {
   return `${count(summary.kills, "kill")} · ${count(summary.mobs, "mob")} · ${compact(summary.experience)} XP · ${compact(summary.coins)} coins${warnings(summary.invalidLines)}`;
 }

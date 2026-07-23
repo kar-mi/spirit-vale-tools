@@ -257,7 +257,7 @@ function progressGain(
 function mergeItems(left: readonly RewardItem[], right: readonly RewardItem[]): RewardItem[] {
   const merged = new Map<string, RewardItem>();
   for (const item of [...left, ...right]) {
-    const key = `${item.category}\u0000${item.itemId}`;
+    const key = `${item.category}|${item.itemId}`;
     const existing = merged.get(key);
     if (existing) existing.count += item.count;
     else merged.set(key, { ...item });
@@ -319,7 +319,7 @@ function decodeMonsterSpawn(
       const rank = readSignedPackedWhole(payload, level.nextOffset);
       const team = readSignedPackedWhole(payload, rank.nextOffset);
       if (level.value < 1 || level.value > 1_000 || rank.value < 0 || rank.value > 100 || team.value < 0 || team.value > 100) continue;
-      matches.set(`${mobId}\u0000${level.value}\u0000${rank.value}`, {
+      matches.set(`${mobId}|${level.value}|${rank.value}`, {
         mobId,
         level: level.value,
         rank: rank.value,
