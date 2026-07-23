@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@preact/signals": "^2.9.4",
+    "@spiritvale/character": "workspace:*",
     "@spiritvale/combat": "workspace:*",
     "@spiritvale/logging": "workspace:*",
     "@spiritvale/ui-theme": "workspace:*",

@@ -15,6 +15,7 @@ const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 const MIN_ELEMENT_WIDTH = 160;
 const MIN_ELEMENT_HEIGHT = 100;
+const MIN_WEIGHT_HEIGHT = 50;
 const RESIZE_EDGES = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
 const CLASS_ICON_BY_ARCHETYPE: Readonly<Record<number, string>> = {
   0: "warrior",
@@ -74,6 +75,9 @@ function App() {
       <OverlayElement id="personalDps" settings={next.elements.personalDps} locked={next.locked}>
         <PersonalDpsElement state={next} />
       </OverlayElement>
+      <OverlayElement id="weight" settings={next.elements.weight} locked={next.locked}>
+        <WeightElement state={next} />
+      </OverlayElement>
       <OverlayElement id="partyRanking" settings={next.elements.partyRanking} locked={next.locked}>
         <PartyRankingElement state={next} />
       </OverlayElement>
@@ -99,7 +103,7 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
     const dy = event.clientY - gesture.originY;
     setPreview(gesture.kind === "drag"
       ? dragRect(gesture.start, dx, dy)
-      : resizeRect(gesture.start, gesture.edge, dx, dy));
+      : resizeRect(gesture.start, gesture.edge, dx, dy, id));
   };
   const finish = (event: PointerEvent): void => {
     if (!gesture || event.pointerId !== gesture.pointerId) return;
@@ -115,6 +119,7 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
   return (
     <section
       class={gesture ? `overlay-element ${gesture.kind === "resize" ? "resizing" : "dragging"}` : "overlay-element"}
+      data-element-id={id}
       style={{
         left: `${rect.x}px`,
         top: `${rect.y}px`,
@@ -135,7 +140,32 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
         setPreview(undefined);
       }}
     >
-      {children}
+      <div class="overlay-surface" style={`--element-background-alpha:${settings.opacity * 0.76}`}>
+        {children}
+      </div>
+      {!locked && (
+        <label
+          class="element-opacity-control"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <span>Tile opacity</span>
+          <output>{Math.round(settings.opacity * 100)}%</output>
+          <input
+            type="range"
+            min="0.2"
+            max="1"
+            step="0.05"
+            value={settings.opacity}
+            onInput={(event) => {
+              const request = electroview.rpc?.request.setElementOpacity({
+                id,
+                opacity: event.currentTarget.valueAsNumber,
+              });
+              void request?.then((next) => { state.value = next; });
+            }}
+          />
+        </label>
+      )}
       {!locked && RESIZE_EDGES.map((edge) => (
         <span
           key={edge}
@@ -170,15 +200,16 @@ function dragRect(start: ElementRect, dx: number, dy: number): ElementRect {
   };
 }
 
-function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number): ElementRect {
+function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number, id: OverlayElementId): ElementRect {
   let left = start.x;
   let top = start.y;
   let right = start.x + start.width;
   let bottom = start.y + start.height;
+  const minimumHeight = id === "weight" ? MIN_WEIGHT_HEIGHT : MIN_ELEMENT_HEIGHT;
   if (edge.includes("w")) left = clamp(start.x + dx, 0, right - MIN_ELEMENT_WIDTH);
   if (edge.includes("e")) right = clamp(start.x + start.width + dx, left + MIN_ELEMENT_WIDTH, window.innerWidth);
-  if (edge.includes("n")) top = clamp(start.y + dy, 0, bottom - MIN_ELEMENT_HEIGHT);
-  if (edge.includes("s")) bottom = clamp(start.y + start.height + dy, top + MIN_ELEMENT_HEIGHT, window.innerHeight);
+  if (edge.includes("n")) top = clamp(start.y + dy, 0, bottom - minimumHeight);
+  if (edge.includes("s")) bottom = clamp(start.y + start.height + dy, top + minimumHeight, window.innerHeight);
   return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
@@ -240,6 +271,22 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
           </div>
         </>
       ) : <WaitingForDps />}
+    </div>
+  );
+}
+
+function WeightElement({ state: next }: { state: OverlayState }) {
+  const weight = next.weight;
+  return (
+    <div class="element-content">
+      <h2 class="element-title">Weight</h2>
+      {weight ? (
+        <div class="weight-value" aria-label={`Weight ${weight.current} of ${weight.maximum}`}>
+          <strong>{numberFormat.format(weight.current)}</strong>
+          <span>/</span>
+          <strong>{numberFormat.format(weight.maximum)}</strong>
+        </div>
+      ) : <div class="empty weight-empty"><span>Waiting for weight</span></div>}
     </div>
   );
 }

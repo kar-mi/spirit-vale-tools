@@ -15,6 +15,7 @@ const LABELS: Record<OverlayElementId, string> = {
   dpsChart: "DPS chart",
   personalDps: "Personal DPS numbers",
   partyRanking: "Party DPS ranking",
+  weight: "Weight",
 };
 const state = signal<OverlayState | undefined>(undefined);
 const rpc = Electroview.defineRPC<OverlaySettingsRpc>({

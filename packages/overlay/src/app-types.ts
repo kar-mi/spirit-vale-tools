@@ -1,12 +1,14 @@
 import type { RPCSchema } from "electrobun";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
+import type { CharacterWeight } from "@spiritvale/character";
 import type { WindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
 
-export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking"] as const;
+export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "weight"] as const;
 export type OverlayElementId = (typeof OVERLAY_ELEMENT_IDS)[number];
 
 export interface OverlayElementSettings {
   enabled: boolean;
+  opacity: number;
   x: number;
   y: number;
   width: number;
@@ -22,6 +24,7 @@ export interface OverlayState {
   statusDetail: string;
   elements: Record<OverlayElementId, OverlayElementSettings>;
   snapshot?: FishNetDpsEncounterSnapshot;
+  weight?: CharacterWeight;
 }
 
 type OverlaySharedRequests = {
@@ -38,6 +41,10 @@ export type OverlayRpc = {
       };
       setElementBounds: {
         params: { id: OverlayElementId; x: number; y: number; width: number; height: number };
+        response: OverlayState;
+      };
+      setElementOpacity: {
+        params: { id: OverlayElementId; opacity: number };
         response: OverlayState;
       };
     };

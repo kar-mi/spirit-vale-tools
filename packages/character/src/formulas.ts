@@ -1,6 +1,6 @@
 import { resolveFishNetItem, type FishNetItemEffect } from "@spiritvale/items";
 import { resolveFishNetSkill } from "@spiritvale/skills";
-import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
+import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 
 const rounded = Math.round;
@@ -61,6 +61,19 @@ export function materializeSkillStats(skills: readonly CharacterSkill[], resolve
     value: effect.value + (effect.valuePerLevel ?? 0) * skill.level,
     percent: PERCENT_STATS.has(effect.type),
   })));
+}
+
+/** Mirrors Formula.GetWeightLimit: base capacity, level growth, then flat stat 101 bonuses. */
+export function calculateWeightLimit(
+  snapshot: CharacterSnapshot,
+  resolveItem: ItemResolver = resolveFishNetItem,
+  resolveSkill: SkillResolver = resolveFishNetSkill,
+): number {
+  const bonuses = [
+    ...materializeGearStats(snapshot.equipment, snapshot.artifacts, resolveItem),
+    ...materializeSkillStats(snapshot.skills, resolveSkill),
+  ].reduce((total, stat) => total + (stat.type === 101 ? stat.value ?? 0 : 0), 0);
+  return Math.round(2_000 + snapshot.level * 30 + bonuses);
 }
 
 function itemEffects(itemType: number, itemId: string, refine: number, artifactSlot: string | undefined, resolveItem: ItemResolver): CharacterSubstat[] {

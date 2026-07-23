@@ -37,14 +37,43 @@ export function syntheticCharacter(update: boolean): Buffer {
   list(out, [undefined], () => { bool(out, false); string(out, "Example Skill"); packed(out, 3); });
   list(out, [], () => undefined);
   bool(out, true);
-  list(out, [], () => undefined);
-  list(out, [], () => undefined);
-  bool(out, false);
-  for (let index = 0; index < 7; index += 1) list(out, [], () => undefined);
+  list(out, [], () => undefined); // Assigned skills.
+  list(out, [], () => undefined); // Grimoires.
+  bool(out, false); // InventoryData.
+  dictionary(out, "fictional-bag-equipment", () => equipment(out, "Fictional Bag Sword"));
+  dictionary(out, "fictional-bag-artifact", () => artifact(out, "Fictional Bag Rune"));
+  dictionary(out, "fictional-card-stack", () => stackable(out, "Fictional Card", 7));
+  dictionary(out, "fictional-gem", () => refinable(out, "Fictional Gem", 2));
+  dictionary(out, "fictional-junk-stack", () => stackable(out, "Fictional Material", 11));
+  dictionary(out, "fictional-consumable-stack", () => stackable(out, "Fictional Potion", 13));
+  dictionary(out, "fictional-cosmetic", () => {
+    bool(out, false); packed(out, 0); bool(out, false); string(out, "fictional-cosmetic-instance");
+    packed(out, 0); string(out, "Fictional Hat"); bool(out, false);
+  });
   packed(out, 0); packed(out, 3600); packed(out, 25); packed(out, 3); packed(out, 2);
   return Buffer.from(out);
 }
 
+function dictionary(out: number[], key: string, writeValue: () => void): void {
+  list(out, [key], (value) => { string(out, value); writeValue(); });
+}
+function equipment(out: number[], id: string): void {
+  bool(out, false);
+  list(out, [], () => undefined); list(out, [], () => undefined);
+  packed(out, 0); packed(out, 0); packed(out, 0); string(out, "fictional-equipment-instance");
+  packed(out, 0); string(out, id); bool(out, false);
+}
+function artifact(out: number[], id: string): void {
+  bool(out, false);
+  list(out, [], () => undefined); packed(out, 0); list(out, [], () => undefined);
+  string(out, "fictional-artifact-instance"); packed(out, 0); string(out, id); bool(out, false);
+}
+function refinable(out: number[], id: string, refine: number): void {
+  bool(out, false); string(out, "fictional-refinable-instance"); packed(out, refine); string(out, id); bool(out, false);
+}
+function stackable(out: number[], id: string, count: number): void {
+  bool(out, false); packed(out, count); string(out, id); bool(out, false);
+}
 function bool(out: number[], value: boolean): void { out.push(value ? 1 : 0); }
 function string(out: number[], value: string): void { const bytes = Buffer.from(value); packed(out, bytes.length); out.push(...bytes); }
 function float(out: number[], value: number): void { const bytes = Buffer.alloc(4); bytes.writeFloatLE(value); out.push(...bytes); }

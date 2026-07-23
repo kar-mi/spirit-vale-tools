@@ -102,6 +102,12 @@ export interface CharacterRecordValues {
   updatedAt?: string;
 }
 
+/** Live inventory weight reconstructed from the same character payload used by the game UI. */
+export interface CharacterWeight {
+  current: number;
+  maximum: number;
+}
+
 export interface GearStatTotal {
   type: number;
   name: string;
@@ -115,6 +121,7 @@ export interface CharacterViewState {
   stats: CharacterStatBreakdown[];
   gearTotals: GearStatTotal[];
   records?: CharacterRecordValues;
+  weight?: CharacterWeight;
   status: "waiting" | "cached" | "live" | "unsupported";
   statusDetail: string;
 }

@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { FishNetDpsMeter, DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
+import type { CharacterViewState } from "@spiritvale/character";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { applyRoundedCorners, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
@@ -25,6 +26,8 @@ const LOCK_SHORTCUT = "F11";
 
 export interface OverlayWindowOptions {
   logDirectory: string;
+  getCharacterState: () => CharacterViewState;
+  subscribeCharacter: (listener: (state: CharacterViewState) => void) => () => void;
   settingsPath?: string;
   placements?: WindowPlacementStore;
   showSettingsOnCreate?: boolean;
@@ -37,6 +40,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   let settings = await loadOverlaySettings(options.settingsPath, bounds);
   if (options.lockOnCreate) settings.locked = true;
   let meter = new FishNetDpsMeter({ personalName: settings.personalName });
+  let characterState = options.getCharacterState();
   const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
   const liveLog = liveLogOverride
     ? new DpsLogFollower(liveLogOverride)
@@ -51,6 +55,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   let publishing = false;
   let shuttingDown = false;
   let closedCallbackSent = false;
+  let unsubscribeCharacter = () => {};
 
   const persistence = new SafeSaveQueue<typeof settings>({
     label: "overlay settings",
@@ -89,6 +94,16 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           settings = normalizeOverlaySettings({
             ...settings,
             elements: { ...settings.elements, [id]: { ...element, x, y, width, height } },
+          }, bounds);
+          persist();
+          publish();
+          return appState();
+        },
+        setElementOpacity: ({ id, opacity }) => {
+          const element = settings.elements[id];
+          settings = normalizeOverlaySettings({
+            ...settings,
+            elements: { ...settings.elements, [id]: { ...element, opacity } },
           }, bounds);
           persist();
           publish();
@@ -178,6 +193,10 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     overlayWindow.setAlwaysOnTop(true);
     settingsWindow?.setAlwaysOnTop(true);
   }, TOPMOST_REASSERT_MS);
+  unsubscribeCharacter = options.subscribeCharacter((next) => {
+    characterState = next;
+    publish();
+  });
 
   if (options.lockOnCreate) persistence.schedule(settings);
   if (options.showSettingsOnCreate !== false) openSettings();
@@ -205,6 +224,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
       statusDetail,
       elements: settings.elements,
       ...(snapshot ? { snapshot } : {}),
+      ...(characterState.weight ? { weight: characterState.weight } : {}),
     };
   }
 
@@ -305,6 +325,8 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     shuttingDown = true;
     clearInterval(pollTimer);
     clearInterval(topmostTimer);
+    unsubscribeCharacter();
+    unsubscribeCharacter = () => {};
     if (shortcutRegistered) GlobalShortcut.unregister(LOCK_SHORTCUT);
     settingsWindow?.close();
     settingsWindow = undefined;

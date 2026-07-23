@@ -1,6 +1,6 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
 import { decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
 import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
 
@@ -15,6 +15,7 @@ const RECORDED_STATS: ReadonlyArray<[string, keyof CharacterRecordValues]> = [
 export class FishNetCharacterTracker {
   private snapshot?: CharacterSnapshot;
   private unsupportedDetail?: string;
+  private currentWeight?: number;
   private localObjectId?: number;
   private records: CharacterRecordValues = {};
   private listeners = new Set<(state: CharacterViewState) => void>();
@@ -34,6 +35,7 @@ export class FishNetCharacterTracker {
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
       this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
+      this.currentWeight = decoded.currentWeight;
       this.unsupportedDetail = undefined;
     } catch (error) {
       this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
@@ -53,6 +55,7 @@ export class FishNetCharacterTracker {
 
   setCached(snapshot: CharacterSnapshot | undefined): void {
     this.snapshot = snapshot ? { ...snapshot, source: "cached" } : undefined;
+    this.currentWeight = undefined;
     this.unsupportedDetail = undefined;
     this.publish();
   }
@@ -64,11 +67,15 @@ export class FishNetCharacterTracker {
     // from the raw rolls so cap or name-table fixes reach cached snapshots immediately.
     const snapshot = this.snapshot ? rescaleSubstats(structuredClone(this.snapshot)) : undefined;
     const records = Object.keys(this.records).length > 0 ? { records: { ...this.records } } : {};
+    const weight = snapshot && this.currentWeight !== undefined
+      ? { weight: { current: this.currentWeight, maximum: calculateWeightLimit(snapshot) } }
+      : {};
     if (this.unsupportedDetail) return {
       ...(snapshot ? { snapshot } : {}),
       stats: snapshot ? this.applyRecords(calculateStats(snapshot)) : [],
       gearTotals: snapshot ? calculateGearTotals(snapshot) : [],
       ...records,
+      ...weight,
       status: "unsupported",
       statusDetail: this.unsupportedDetail,
     };
@@ -78,12 +85,14 @@ export class FishNetCharacterTracker {
       stats: [],
       gearTotals: [],
       ...records,
+      ...weight,
     };
     return {
       snapshot,
       stats: this.applyRecords(calculateStats(snapshot)),
       gearTotals: calculateGearTotals(snapshot),
       ...records,
+      ...weight,
       status: snapshot.source,
       statusDetail: snapshot.source === "live"
         ? "Live character data"

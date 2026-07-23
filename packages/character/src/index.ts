@@ -1,5 +1,5 @@
 export { CharacterReader, decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
-export { aggregateGearSubstats, calculateCharacterStats, materializeGearStats, materializeSkillStats } from "./formulas.ts";
+export { aggregateGearSubstats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 export { decodeCharacterRecordSync } from "./record-decoder.ts";
 export { FishNetCharacterTracker } from "./tracker.ts";
 export { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
@@ -18,4 +18,5 @@ export type {
   CharacterRefinableItem,
   CharacterStatBreakdown,
   CharacterViewState,
+  CharacterWeight,
 } from "./types.ts";

@@ -20,7 +20,10 @@ describe("FishNetCharacterTracker", () => {
     const tracker = new FishNetCharacterTracker();
 
     expect(tracker.consume(characterPacket("CharacterCallback_T"))).toBe(true);
-    expect(tracker.state()).toMatchObject({ status: "live" });
+    expect(tracker.state()).toMatchObject({
+      status: "live",
+      weight: { current: 71, maximum: 3_260 },
+    });
     expect(tracker.state().stats).not.toHaveLength(0);
   });
 
@@ -66,6 +69,7 @@ describe("FishNetCharacterTracker", () => {
     });
 
     const state = tracker.state();
+    expect(state.weight).toBeUndefined();
     expect(state.snapshot?.equipment[0]?.substats[0]).toMatchObject({ value: 9, name: "Hit", roll: 67 });
     // round(level 88 + DEX 1 × 2 + floor(71 LUK / 3) + 25 + rescaled 9) — not 149 via the stale 11.
     expect(state.stats.find((stat) => stat.id === "hit")?.value).toBe(147);
