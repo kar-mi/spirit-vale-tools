@@ -27,7 +27,12 @@ function App() {
   return (
     <main class={next.locked ? "overlay-root" : "overlay-root editing"}>
       {!next.locked && <div class="edit-scrim" />}
-      {!next.locked && <p class="edit-hint">Drag elements to arrange the overlay. Use settings to show or hide elements.</p>}
+      {!next.locked && (
+        <div class="edit-controls">
+          <p class="edit-hint">Drag elements to arrange the overlay. Press F11 to lock or unlock.</p>
+          <button class="lock-pill" type="button" onClick={() => void setLocked(true)}>Lock overlay</button>
+        </div>
+      )}
       <OverlayElement id="dpsChart" settings={next.elements.dpsChart} locked={next.locked}>
         <DpsChartElement state={next} />
       </OverlayElement>
@@ -37,9 +42,6 @@ function App() {
       <OverlayElement id="partyRanking" settings={next.elements.partyRanking} locked={next.locked}>
         <PartyRankingElement state={next} />
       </OverlayElement>
-      {!next.locked && (
-        <button class="lock-pill" type="button" onClick={() => void setLocked(true)}>Lock overlay</button>
-      )}
     </main>
   );
 }

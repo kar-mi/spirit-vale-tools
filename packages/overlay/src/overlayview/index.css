@@ -23,11 +23,18 @@
   background: rgba(5, 7, 12, 0.24);
 }
 
-.edit-hint {
+.edit-controls {
   position: absolute;
   top: 20px;
   left: 50%;
   z-index: 20;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.edit-hint {
   margin: 0;
   padding: 8px 14px;
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -36,14 +43,9 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35);
   color: rgba(255, 255, 255, 0.82);
   font-size: 12px;
-  transform: translateX(-50%);
 }
 
 .lock-pill {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  z-index: 20;
   padding: 10px 18px;
   border: 1px solid rgba(190, 170, 255, 0.7);
   border-radius: 999px;
