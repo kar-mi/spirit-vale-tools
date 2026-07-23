@@ -18,7 +18,7 @@ describe("overlay settings", () => {
     const settings = defaultOverlaySettings(bounds);
     expect(settings.locked).toBe(false);
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
-    expect(settings.elements.weight).toEqual({ enabled: true, x: 794, y: 620, width: 160, height: 100 });
+    expect(settings.elements.weight).toEqual({ enabled: true, x: 794, y: 648, width: 160, height: 72 });
   });
 
   test("normalizes values and clamps elements to the display", async () => {
@@ -39,6 +39,7 @@ describe("overlay settings", () => {
     expect(settings.elements.personalDps.width).toBe(160);
     expect(settings.elements.personalDps.height).toBe(100);
     expect(settings.elements.weight.enabled).toBe(true);
+    expect(settings.elements.weight.height).toBe(72);
   });
 
   test("round-trips normalized settings", async () => {

@@ -66,6 +66,7 @@
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.38);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
 }
+.overlay-element[data-element-id="weight"] { min-height: 72px; }
 
 .overlay-root.editing .overlay-element {
   border: 1px dashed rgba(204, 187, 255, 0.95);
@@ -165,7 +166,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  font-size: clamp(16px, 2vw, 25px);
+  font-size: clamp(14px, 1vw, 18px);
   font-variant-numeric: tabular-nums;
 }
 .weight-value span { color: rgba(255,255,255,.48); font-weight: 500; }

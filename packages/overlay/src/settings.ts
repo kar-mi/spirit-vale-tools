@@ -27,7 +27,7 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   dpsChart: { enabled: true, x: 318, y: 775, width: 462, height: 226 },
   personalDps: { enabled: true, x: 794, y: 873, width: 160, height: 127 },
   partyRanking: { enabled: true, x: 315, y: 434, width: 360, height: 300 },
-  weight: { enabled: true, x: 794, y: 759, width: 160, height: 100 },
+  weight: { enabled: true, x: 794, y: 787, width: 160, height: 72 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -63,7 +63,8 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
       ? sourceElements[id] as Record<string, unknown>
       : {};
     const width = clampNumber(value.width, defaults.width, 160, Math.max(160, bounds.width));
-    const height = clampNumber(value.height, defaults.height, 100, Math.max(100, bounds.height));
+    const minimumHeight = id === "weight" ? 72 : 100;
+    const height = clampNumber(value.height, defaults.height, minimumHeight, Math.max(minimumHeight, bounds.height));
     return [id, {
       enabled: typeof value.enabled === "boolean" ? value.enabled : defaults.enabled,
       x: clampNumber(value.x, defaults.x, 0, Math.max(0, bounds.width - width)),
