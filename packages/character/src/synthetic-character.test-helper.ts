@@ -1,11 +1,11 @@
-export function syntheticCharacter(update: boolean): Buffer {
+export function syntheticCharacter(update: boolean, includeHistory = true, characterName = "Example Hero"): Buffer {
   const out: number[] = [];
   if (update) packed(out, 4);
   bool(out, false);
   string(out, "example-character-id");
   string(out, "example-account");
   packed(out, 7);
-  string(out, ""); string(out, ""); string(out, "Example Hero");
+  string(out, ""); string(out, ""); string(out, characterName);
   bool(out, false);
   for (let index = 0; index < 10; index += 1) packed(out, index);
   bool(out, false); list(out, [], () => undefined);
@@ -33,6 +33,7 @@ export function syntheticCharacter(update: boolean): Buffer {
     list(out, [0], () => { bool(out, false); string(out, "example-gem-instance"); packed(out, 1); string(out, "Example Gem"); bool(out, false); });
     string(out, "example-artifact-instance"); packed(out, 3); string(out, "Example Rune"); bool(out, false);
   });
+  if (!includeHistory) return Buffer.from(out);
   bool(out, false);
   list(out, [undefined], () => { bool(out, false); string(out, "Example Skill"); packed(out, 3); });
   list(out, [], () => undefined);

@@ -33,4 +33,12 @@ describe("decodeCharacterRpcPayload", () => {
   test("rejects truncated data", () => {
     expect(() => decodeCharacterRpcPayload(syntheticCharacter(false).subarray(0, 12), false)).toThrow();
   });
+
+  test("does not substitute equipped weight when a callback omits inventory history", () => {
+    const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, false), true);
+
+    expect(decoded.currentWeight).toBeUndefined();
+    expect(decoded.snapshot.equipment).toHaveLength(1);
+    expect(decoded.snapshot.artifacts).toHaveLength(1);
+  });
 });

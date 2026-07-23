@@ -34,8 +34,9 @@ export class FishNetCharacterTracker {
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
+      if (this.snapshot && this.snapshot.name !== decoded.snapshot.name) this.currentWeight = undefined;
       this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
-      this.currentWeight = decoded.currentWeight;
+      if (decoded.currentWeight !== undefined) this.currentWeight = decoded.currentWeight;
       this.unsupportedDetail = undefined;
     } catch (error) {
       this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
