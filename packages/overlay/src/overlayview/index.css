@@ -159,6 +159,18 @@
 .personal-details { display: flex; gap: 18px; margin-top: 15px; color: rgba(255,255,255,.78); font-size: 12px; }
 .personal-details strong { display: block; margin-top: 3px; color: white; font-size: 15px; }
 
+.weight-value {
+  display: flex;
+  height: calc(100% - 24px);
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: clamp(16px, 2vw, 25px);
+  font-variant-numeric: tabular-nums;
+}
+.weight-value span { color: rgba(255,255,255,.48); font-weight: 500; }
+.weight-empty { height: calc(100% - 24px); }
+
 .ranking { display: grid; gap: 7px; }
 .ranking-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 6px 8px; overflow: hidden; border-radius: 6px; }
 .ranking-row::before { position: absolute; inset: 0 auto 0 0; width: var(--row-fill); background: var(--row-color); content: ""; }

@@ -71,6 +71,8 @@ const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
 }));
 const overlayWindow = new WindowSlot((onClosed) => createOverlayWindow({
   logDirectory,
+  getCharacterState: () => capture.characterState(),
+  subscribeCharacter: (listener) => capture.subscribeCharacter(listener),
   settingsPath: storagePaths.overlaySettingsPath,
   placements,
   showSettingsOnCreate: false,

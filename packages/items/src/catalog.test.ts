@@ -30,6 +30,10 @@ test("resolves duplicate ids independently by item type", () => {
   expect(directory.require(4, "item-example").displayName).toBe("Example Card");
   expect(directory.resolve(2, "item-example")).toBeUndefined();
   expect(resolveFishNetItem(2, "Axe")?.substatGroup).toBe("Melee");
+  expect(resolveFishNetItem(2, "Axe")?.weight).toBe(50);
+  expect(resolveFishNetItem(2, "Sword")?.weight).toBe(30);
+  expect(resolveFishNetItem(2, "ArcaneFeet")?.weight).toBe(20);
+  expect(resolveFishNetItem(2, "3D Glasses")?.weight).toBe(10);
 });
 
 test("includes standard artifact effects and refine scaling", () => {

@@ -17,6 +17,7 @@ const LOADOUTS = ["Normal", "Secondary", "Heavy"] as const;
 export interface DecodedCharacterUpdate {
   updateType: number;
   snapshot: CharacterSnapshot;
+  currentWeight: number;
 }
 
 export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: boolean, now = new Date()): DecodedCharacterUpdate {
@@ -60,9 +61,10 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
   ];
   const artifacts = reader.list(() => readArtifact(reader)).filter((value): value is CharacterArtifact => value !== undefined);
   const equipment = loadouts[activeIndex]?.length ? loadouts[activeIndex]! : equipped;
-  const { skills, ...history } = readCharacterHistory(reader);
+  const { skills, currentWeight, ...history } = readCharacterHistory(reader, equipped, artifacts);
   return {
     updateType,
+    currentWeight,
     snapshot: {
       schemaVersion: 1,
       buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
@@ -124,17 +126,33 @@ function readArtifactData(reader: CharacterReader): CharacterArtifact | undefine
   return { slot: ARTIFACT_SLOTS[slotIndex] ?? `Artifact ${slotIndex}`, itemId, refine, gems, substats };
 }
 
-function readCharacterHistory(reader: CharacterReader): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & { skills: CharacterSkill[] } {
+function readCharacterHistory(
+  reader: CharacterReader,
+  equipped: readonly CharacterEquipment[],
+  artifacts: readonly CharacterArtifact[],
+): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & {
+  skills: CharacterSkill[];
+  currentWeight: number;
+} {
+  const equippedWeight = equipped.reduce((total, item) => total + equipmentWeight(item.itemId), 0) + artifacts.length * 10;
   try {
     const skills = readSkillSystem(reader);
     reader.list(() => readEquipmentData(reader, -1));
+    let inventoryWeight = 0;
     if (reader.object()) {
-      reader.dictionary(() => readEquipmentData(reader, -1));
-      reader.dictionary(() => readArtifactData(reader));
-      reader.dictionary(() => skipStackable(reader));
-      reader.dictionary(() => readRefinableItem(reader));
-      reader.dictionary(() => skipStackable(reader));
-      reader.dictionary(() => skipStackable(reader));
+      reader.dictionary(() => {
+        const item = readEquipmentData(reader, -1);
+        if (item) inventoryWeight += equipmentWeight(item.itemId);
+      });
+      reader.dictionary(() => {
+        if (readArtifactData(reader)) inventoryWeight += 10;
+      });
+      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
+      reader.dictionary(() => {
+        if (readRefinableItem(reader)) inventoryWeight += 10;
+      });
+      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
+      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
       reader.dictionary(() => skipCosmetic(reader));
     }
     reader.packed();
@@ -142,10 +160,10 @@ function readCharacterHistory(reader: CharacterReader): Partial<Pick<CharacterSn
     const monsterKills = reader.packed();
     const bossKills = reader.packed();
     const deaths = reader.packed();
-    return { skills, playtimeSeconds, monsterKills, bossKills, deaths };
+    return { skills, currentWeight: equippedWeight + inventoryWeight, playtimeSeconds, monsterKills, bossKills, deaths };
   } catch {
     // A partial callback may end after build data. The already-decoded snapshot remains useful.
-    return { skills: [] };
+    return { skills: [], currentWeight: equippedWeight };
   }
 }
 
@@ -184,9 +202,11 @@ function readSkill(reader: CharacterReader): CharacterSkill | undefined {
     })),
   };
 }
-function skipStackable(reader: CharacterReader): void {
-  if (!reader.object()) return;
-  reader.packed(); reader.string(256); reader.boolean();
+function readStackableCount(reader: CharacterReader): number {
+  if (!reader.object()) return 0;
+  const count = reader.packed();
+  reader.string(256); reader.boolean();
+  return Math.max(0, count);
 }
 function skipCosmetic(reader: CharacterReader): void {
   if (!reader.object()) return;
@@ -200,6 +220,10 @@ function readRefinableItem(reader: CharacterReader): { id: string; refine: numbe
   const id = reader.string(256) ?? undefined;
   reader.boolean();
   return id ? { id, refine } : undefined;
+}
+
+function equipmentWeight(itemId: string): number {
+  return resolveFishNetItem(2, itemId)?.weight ?? 10;
 }
 
 function readRawSubstat(reader: CharacterReader): { type: number; roll: number } | undefined {

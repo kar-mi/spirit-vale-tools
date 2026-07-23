@@ -74,6 +74,9 @@ function App() {
       <OverlayElement id="personalDps" settings={next.elements.personalDps} locked={next.locked}>
         <PersonalDpsElement state={next} />
       </OverlayElement>
+      <OverlayElement id="weight" settings={next.elements.weight} locked={next.locked}>
+        <WeightElement state={next} />
+      </OverlayElement>
       <OverlayElement id="partyRanking" settings={next.elements.partyRanking} locked={next.locked}>
         <PartyRankingElement state={next} />
       </OverlayElement>
@@ -240,6 +243,22 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
           </div>
         </>
       ) : <WaitingForDps />}
+    </div>
+  );
+}
+
+function WeightElement({ state: next }: { state: OverlayState }) {
+  const weight = next.weight;
+  return (
+    <div class="element-content">
+      <h2 class="element-title">Weight</h2>
+      {weight ? (
+        <div class="weight-value" aria-label={`Weight ${weight.current} of ${weight.maximum}`}>
+          <strong>{numberFormat.format(weight.current)}</strong>
+          <span>/</span>
+          <strong>{numberFormat.format(weight.maximum)}</strong>
+        </div>
+      ) : <div class="empty weight-empty"><span>Waiting for weight</span></div>}
     </div>
   );
 }

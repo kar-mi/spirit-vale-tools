@@ -42,6 +42,8 @@ export interface FishNetItemDefinition {
   readonly itemType: FishNetItemType;
   readonly id: string;
   readonly displayName: string;
+  /** Per-item inventory weight when this item category uses a fixed weight. */
+  readonly weight?: number;
   readonly substatGroup?: FishNetItemSubstatGroup;
   readonly effects?: readonly FishNetItemEffect[];
   /** Effects added once for every refine level on this item. */
@@ -55,6 +57,8 @@ export interface FishNetItemDefinition {
 
 export interface FishNetEquipmentItemDefinition extends FishNetItemDefinition {
   readonly itemType: 2;
+  /** Inventory weight used by the game for one copy of this equipment item. */
+  readonly weight: number;
 }
 
 export interface FishNetItemCatalog {

@@ -27,6 +27,7 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   dpsChart: { enabled: true, x: 318, y: 775, width: 462, height: 226 },
   personalDps: { enabled: true, x: 794, y: 873, width: 160, height: 127 },
   partyRanking: { enabled: true, x: 315, y: 434, width: 360, height: 300 },
+  weight: { enabled: true, x: 794, y: 759, width: 160, height: 100 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {

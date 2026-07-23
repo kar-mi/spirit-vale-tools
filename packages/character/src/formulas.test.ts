@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, materializeGearStats, type ItemResolver } from "./formulas.ts";
-import type { CharacterArtifact, CharacterEquipment, CharacterSubstat } from "./types.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, type ItemResolver, type SkillResolver } from "./formulas.ts";
+import type { CharacterArtifact, CharacterEquipment, CharacterSnapshot, CharacterSubstat } from "./types.ts";
 
 describe("calculateCharacterStats", () => {
   test("uses the corrected current-build hit, flee, and critical formulas", () => {
@@ -59,6 +59,34 @@ describe("calculateCharacterStats", () => {
       { id: "gear-stat-101", label: "Weight limit", category: "Utility" },
       { id: "gear-stat-103", label: "Damage from ranged", category: "Mitigation", unit: "%" },
     ]);
+  });
+
+  test("calculates weight capacity from level and persistent weight-limit bonuses", () => {
+    const snapshot: CharacterSnapshot = {
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Fictional Carrier",
+      archetypes: ["Warrior"],
+      level: 10,
+      experience: 0,
+      jobLevel: 1,
+      jobExperience: 0,
+      attributes: { STR: 1, VIT: 1, AGI: 1, DEX: 1, INT: 1, LUK: 1 },
+      activeLoadout: "Normal",
+      equipment: [{ slot: "Back", itemId: "Fictional Pack", refine: 2, cards: [], substats: [] }],
+      artifacts: [],
+      skills: [{ id: "Fictional Porter", displayName: "Fictional Porter", level: 3, effects: [] }],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "live",
+    };
+    const resolveItem: ItemResolver = (itemType, itemId) => itemType === 2 && itemId === "Fictional Pack"
+      ? { itemType: 2, id: itemId, displayName: itemId, weight: 10, effects: [{ type: 101, value: 100 }], refineEffects: [{ type: 101, value: 50 }] }
+      : undefined;
+    const resolveSkill: SkillResolver = (skillId) => skillId === "Fictional Porter"
+      ? { id: skillId, displayName: skillId, kinds: ["passive"], effects: [{ type: 101, value: 25, valuePerLevel: 5 }] }
+      : undefined;
+
+    expect(calculateWeightLimit(snapshot, resolveItem, resolveSkill)).toBe(2_540);
   });
 
   test("scales move speed from the verified 7.5 base", () => {

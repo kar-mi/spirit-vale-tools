@@ -14,10 +14,11 @@ afterEach(async () => {
 });
 
 describe("overlay settings", () => {
-  test("defaults to unlocked with all v1 elements enabled", () => {
+  test("defaults to unlocked with all elements, including weight, enabled", () => {
     const settings = defaultOverlaySettings(bounds);
     expect(settings.locked).toBe(false);
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
+    expect(settings.elements.weight).toEqual({ enabled: true, x: 794, y: 620, width: 160, height: 100 });
   });
 
   test("normalizes values and clamps elements to the display", async () => {
@@ -37,6 +38,7 @@ describe("overlay settings", () => {
     expect(settings.elements.dpsChart).toEqual({ enabled: false, x: 780, y: 0, width: 500, height: 200 });
     expect(settings.elements.personalDps.width).toBe(160);
     expect(settings.elements.personalDps.height).toBe(100);
+    expect(settings.elements.weight.enabled).toBe(true);
   });
 
   test("round-trips normalized settings", async () => {
