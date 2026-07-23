@@ -14,11 +14,13 @@ afterEach(async () => {
 });
 
 describe("overlay settings", () => {
-  test("defaults to unlocked with all elements, including weight, enabled", () => {
+  test("defaults to unlocked with all elements, including resources, enabled", () => {
     const settings = defaultOverlaySettings(bounds);
     expect(settings.locked).toBe(false);
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
     expect(Object.values(settings.elements).every((element) => element.opacity === 1)).toBe(true);
+    expect(settings.elements.health).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
+    expect(settings.elements.mana).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
     expect(settings.elements.weight).toEqual({ enabled: true, opacity: 1, x: 794, y: 648, width: 160, height: 72 });
   });
 
@@ -41,6 +43,10 @@ describe("overlay settings", () => {
     expect(settings.elements.dpsChart).toEqual({ enabled: false, opacity: 0.55, x: 780, y: 0, width: 500, height: 200 });
     expect(settings.elements.personalDps.width).toBe(160);
     expect(settings.elements.personalDps.height).toBe(100);
+    expect(settings.elements.health.enabled).toBe(true);
+    expect(settings.elements.health.height).toBe(40);
+    expect(settings.elements.mana.enabled).toBe(true);
+    expect(settings.elements.mana.height).toBe(40);
     expect(settings.elements.weight.enabled).toBe(true);
     expect(settings.elements.weight.height).toBe(72);
   });

@@ -172,6 +172,24 @@ describe("FishNetCharacterTracker", () => {
     expect(state.stats.find((stat) => stat.id === "max-health")?.record).toBe(13_236);
     expect(state.stats.find((stat) => stat.id === "move-speed")?.record).toBeCloseTo(8.925, 3);
   });
+
+  test("clears server-synced resources when the local object changes", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(101));
+    tracker.consume(resourcePacket(101, "HealthComponent", 750, 1_000));
+    tracker.consume(resourcePacket(101, "SkillsComponent", 120, 240));
+
+    expect(tracker.state().records).toMatchObject({
+      currentHealth: 750,
+      maxHealth: 1_000,
+      currentMana: 120,
+      maxMana: 240,
+    });
+
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.state().records).toBeUndefined();
+  });
 });
 
 function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: string): CapturedFishNetPacket {
@@ -185,6 +203,24 @@ function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: 
     payload: Buffer.from(payloadHex, "hex"),
     connectionId: "test-connection",
   } as CapturedFishNetPacket;
+}
+
+function pinPacket(objectId: number): CapturedFishNetPacket {
+  return {
+    ...syncPacket(objectId, "HealthComponent", ""),
+    packetName: "serverRpc",
+  };
+}
+
+function resourcePacket(
+  objectId: number,
+  networkBehaviourType: "HealthComponent" | "SkillsComponent",
+  current: number,
+  maximum: number,
+): CapturedFishNetPacket {
+  const packet = syncPacket(objectId, networkBehaviourType, "");
+  packet.payload = Buffer.concat([Buffer.from([0]), packed(current), Buffer.from([1]), packed(maximum)]);
+  return packet;
 }
 
 function packed(value: number): Buffer {

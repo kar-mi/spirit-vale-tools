@@ -3,7 +3,7 @@ import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
 import type { CharacterWeight } from "@spiritvale/character";
 import type { WindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
 
-export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "weight"] as const;
+export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "health", "mana", "weight"] as const;
 export type OverlayElementId = (typeof OVERLAY_ELEMENT_IDS)[number];
 
 export interface OverlayElementSettings {
@@ -17,6 +17,11 @@ export interface OverlayElementSettings {
 
 export type OverlayStatus = "waiting" | "capturing" | "ready" | "error";
 
+export interface OverlayResource {
+  current: number;
+  maximum: number;
+}
+
 export interface OverlayState {
   locked: boolean;
   personalName: string;
@@ -24,6 +29,8 @@ export interface OverlayState {
   statusDetail: string;
   elements: Record<OverlayElementId, OverlayElementSettings>;
   snapshot?: FishNetDpsEncounterSnapshot;
+  health?: OverlayResource;
+  mana?: OverlayResource;
   weight?: CharacterWeight;
 }
 

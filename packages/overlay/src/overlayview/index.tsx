@@ -7,9 +7,11 @@ import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
 import type {
   OverlayElementId,
   OverlayElementSettings,
+  OverlayResource,
   OverlayRpc,
   OverlayState,
 } from "../app-types.ts";
+import { resourceFill } from "../personal-resources.ts";
 import { visiblePartyActors } from "./party-ranking.ts";
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
@@ -17,6 +19,7 @@ const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", ma
 const MIN_ELEMENT_WIDTH = 160;
 const MIN_ELEMENT_HEIGHT = 100;
 const MIN_WEIGHT_HEIGHT = 50;
+const MIN_RESOURCE_HEIGHT = 40;
 const RESIZE_EDGES = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
 const CLASS_ICON_BY_ARCHETYPE: Readonly<Record<number, string>> = {
   0: "warrior",
@@ -75,6 +78,12 @@ function App() {
       </OverlayElement>
       <OverlayElement id="personalDps" settings={next.elements.personalDps} locked={next.locked}>
         <PersonalDpsElement state={next} />
+      </OverlayElement>
+      <OverlayElement id="health" settings={next.elements.health} locked={next.locked}>
+        <ResourceElement kind="health" resource={next.health} />
+      </OverlayElement>
+      <OverlayElement id="mana" settings={next.elements.mana} locked={next.locked}>
+        <ResourceElement kind="mana" resource={next.mana} />
       </OverlayElement>
       <OverlayElement id="weight" settings={next.elements.weight} locked={next.locked}>
         <WeightElement state={next} />
@@ -206,7 +215,11 @@ function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number
   let top = start.y;
   let right = start.x + start.width;
   let bottom = start.y + start.height;
-  const minimumHeight = id === "weight" ? MIN_WEIGHT_HEIGHT : MIN_ELEMENT_HEIGHT;
+  const minimumHeight = id === "health" || id === "mana"
+    ? MIN_RESOURCE_HEIGHT
+    : id === "weight"
+      ? MIN_WEIGHT_HEIGHT
+      : MIN_ELEMENT_HEIGHT;
   if (edge.includes("w")) left = clamp(start.x + dx, 0, right - MIN_ELEMENT_WIDTH);
   if (edge.includes("e")) right = clamp(start.x + start.width + dx, left + MIN_ELEMENT_WIDTH, window.innerWidth);
   if (edge.includes("n")) top = clamp(start.y + dy, 0, bottom - minimumHeight);
@@ -288,6 +301,29 @@ function WeightElement({ state: next }: { state: OverlayState }) {
           <strong>{numberFormat.format(weight.maximum)}</strong>
         </div>
       ) : <div class="empty weight-empty"><span>Waiting for weight</span></div>}
+    </div>
+  );
+}
+
+function ResourceElement({ kind, resource }: { kind: "health" | "mana"; resource: OverlayResource | undefined }) {
+  const label = kind === "health" ? "HP" : "MP";
+  const description = resource
+    ? `${label} ${resource.current} of ${resource.maximum}`
+    : `Waiting for ${label}`;
+  return (
+    <div
+      class={`resource-value resource-${kind}${resource ? "" : " resource-waiting"}`}
+      style={`--resource-fill:${resource ? resourceFill(resource) : 0}%`}
+      aria-label={description}
+    >
+      <strong class="resource-label">{label}</strong>
+      {resource ? (
+        <span class="resource-numbers">
+          <strong>{numberFormat.format(resource.current)}</strong>
+          <span>/</span>
+          <strong>{numberFormat.format(resource.maximum)}</strong>
+        </span>
+      ) : <span class="resource-empty">Waiting</span>}
     </div>
   );
 }

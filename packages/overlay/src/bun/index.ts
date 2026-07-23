@@ -10,6 +10,7 @@ import { BrowserView, BrowserWindow, GlobalShortcut, Screen } from "electrobun/b
 
 import type { OverlayRpc, OverlaySettingsRpc, OverlayState, OverlayStatus } from "../app-types.ts";
 import { createPersonalDpsMeter, detectedPersonalName, syncPersonalCharacter } from "../personal-character.ts";
+import { personalResources } from "../personal-resources.ts";
 import {
   loadOverlaySettings,
   normalizeOverlaySettings,
@@ -208,6 +209,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
 
   function appState(): OverlayState {
     const snapshot = meter.getLatestSnapshot(relativeNowMs());
+    const resources = personalResources(characterState.records);
     return {
       locked: settings.locked,
       personalName: detectedPersonalName(characterState),
@@ -215,6 +217,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
       statusDetail,
       elements: settings.elements,
       ...(snapshot ? { snapshot } : {}),
+      ...resources,
       ...(characterState.weight ? { weight: characterState.weight } : {}),
     };
   }
