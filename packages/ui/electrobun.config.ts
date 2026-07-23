@@ -108,7 +108,6 @@ export default {
     win: {
       bundleCEF: false,
       defaultRenderer: "native",
-      icon: "../../static/icon/eggplant_icon_320px.png",
     },
   },
   runtime: {

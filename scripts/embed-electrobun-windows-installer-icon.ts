@@ -23,7 +23,7 @@ function runTar(arguments_: string[]): void {
 if (Bun.env["ELECTROBUN_OS"] === "win" && Bun.env["ELECTROBUN_BUILD_ENV"] !== "dev") {
   const buildDirectory = requiredEnvironmentValue("ELECTROBUN_BUILD_DIR");
   const artifactDirectory = requiredEnvironmentValue("ELECTROBUN_ARTIFACT_DIR");
-  const iconPath = path.join(buildDirectory, "temp-icon.ico");
+  const iconPath = path.join(buildDirectory, "app-icon.ico");
   if (!existsSync(iconPath)) throw new Error(`Electrobun installer icon input is missing: ${iconPath}`);
 
   const installerArchives = (await readdir(artifactDirectory))
@@ -54,6 +54,5 @@ if (Bun.env["ELECTROBUN_OS"] === "win" && Bun.env["ELECTROBUN_BUILD_ENV"] !== "d
   } finally {
     await rm(stagingDirectory, { force: true, recursive: true });
     await rm(repackedArchivePath, { force: true });
-    await rm(iconPath, { force: true });
   }
 }

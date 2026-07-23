@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
+import * as ResEdit from "resedit";
 
 import config from "../../electrobun.config.ts";
 
@@ -34,11 +36,13 @@ test("every configured static asset source exists", () => {
   }
 });
 
-test("Electrobun uses the bundled eggplant artwork for the Windows application icon", () => {
-  const icon = config.build.win.icon;
-  expect(icon).toBe("../../static/icon/eggplant_icon_320px.png");
-  expect(existsSync(path.resolve(import.meta.dir, "../..", icon))).toBe(true);
+test("Electrobun delegates Windows icon embedding to the project hooks", async () => {
+  expect("icon" in config.build.win).toBe(false);
   expect(config.build.copy["../../static/icon/eggplant_icon_320px.png"]).toBe("views/assets/app-icon.png");
   expect(config.scripts?.postBuild).toBe("../../scripts/embed-electrobun-windows-icon.ts");
   expect(config.scripts?.postPackage).toBe("../../scripts/embed-electrobun-windows-installer-icon.ts");
+
+  const iconPath = path.resolve(import.meta.dir, "../../../../static/icon/eggplant_icon.ico");
+  expect(existsSync(iconPath)).toBe(true);
+  expect(ResEdit.Data.IconFile.from(await readFile(iconPath)).icons.length).toBeGreaterThan(1);
 });
