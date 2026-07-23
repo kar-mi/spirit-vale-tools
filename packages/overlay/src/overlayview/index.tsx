@@ -13,6 +13,14 @@ import type {
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+const MIN_ELEMENT_WIDTH = 160;
+const MIN_ELEMENT_HEIGHT = 100;
+const RESIZE_EDGES = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
+type ResizeEdge = (typeof RESIZE_EDGES)[number];
+interface ElementRect { x: number; y: number; width: number; height: number }
+type PointerGesture =
+  | { kind: "drag"; pointerId: number; originX: number; originY: number; start: ElementRect }
+  | { kind: "resize"; pointerId: number; originX: number; originY: number; start: ElementRect; edge: ResizeEdge };
 const state = signal<OverlayState | undefined>(undefined);
 
 const rpc = Electroview.defineRPC<OverlayRpc>({
@@ -54,41 +62,101 @@ interface OverlayElementProps {
 }
 
 function OverlayElement({ id, settings, locked, children }: OverlayElementProps) {
-  const [drag, setDrag] = useState<{ pointerId: number; originX: number; originY: number; dx: number; dy: number }>();
+  const [gesture, setGesture] = useState<PointerGesture>();
+  const [preview, setPreview] = useState<ElementRect>();
   if (!settings.enabled) return null;
+  const rect = preview ?? settings;
   const move = (event: PointerEvent): void => {
-    if (!drag || event.pointerId !== drag.pointerId) return;
-    setDrag({ ...drag, dx: event.clientX - drag.originX, dy: event.clientY - drag.originY });
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const dx = event.clientX - gesture.originX;
+    const dy = event.clientY - gesture.originY;
+    setPreview(gesture.kind === "drag"
+      ? dragRect(gesture.start, dx, dy)
+      : resizeRect(gesture.start, gesture.edge, dx, dy));
   };
   const finish = (event: PointerEvent): void => {
-    if (!drag || event.pointerId !== drag.pointerId) return;
-    const x = Math.max(0, Math.min(window.innerWidth - settings.width, settings.x + drag.dx));
-    const y = Math.max(0, Math.min(window.innerHeight - settings.height, settings.y + drag.dy));
-    setDrag(undefined);
-    void electroview.rpc?.request.setElementPosition({ id, x, y }).then((next) => { state.value = next; });
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const finalRect = preview ?? gesture.start;
+    const wasResize = gesture.kind === "resize";
+    setGesture(undefined);
+    setPreview(undefined);
+    const request = wasResize
+      ? electroview.rpc?.request.setElementBounds({ id, ...finalRect })
+      : electroview.rpc?.request.setElementPosition({ id, x: finalRect.x, y: finalRect.y });
+    void request?.then((next) => { state.value = next; });
   };
   return (
     <section
-      class={drag ? "overlay-element dragging" : "overlay-element"}
+      class={gesture ? `overlay-element ${gesture.kind === "resize" ? "resizing" : "dragging"}` : "overlay-element"}
       style={{
-        left: `${settings.x}px`,
-        top: `${settings.y}px`,
-        width: `${settings.width}px`,
-        height: `${settings.height}px`,
-        transform: drag ? `translate(${drag.dx}px, ${drag.dy}px)` : undefined,
+        left: `${rect.x}px`,
+        top: `${rect.y}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
       }}
       onPointerDown={(event) => {
         if (locked || event.button !== 0) return;
         event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag({ pointerId: event.pointerId, originX: event.clientX, originY: event.clientY, dx: 0, dy: 0 });
+        const start = { x: settings.x, y: settings.y, width: settings.width, height: settings.height };
+        setPreview(start);
+        setGesture({ kind: "drag", pointerId: event.pointerId, originX: event.clientX, originY: event.clientY, start });
       }}
       onPointerMove={move}
       onPointerUp={finish}
-      onPointerCancel={() => setDrag(undefined)}
+      onPointerCancel={() => {
+        setGesture(undefined);
+        setPreview(undefined);
+      }}
     >
       {children}
+      {!locked && RESIZE_EDGES.map((edge) => (
+        <span
+          key={edge}
+          class={`resize-handle resize-${edge}`}
+          aria-hidden="true"
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.stopPropagation();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            const start = { x: settings.x, y: settings.y, width: settings.width, height: settings.height };
+            setPreview(start);
+            setGesture({
+              kind: "resize",
+              pointerId: event.pointerId,
+              originX: event.clientX,
+              originY: event.clientY,
+              start,
+              edge,
+            });
+          }}
+        />
+      ))}
     </section>
   );
+}
+
+function dragRect(start: ElementRect, dx: number, dy: number): ElementRect {
+  return {
+    ...start,
+    x: clamp(start.x + dx, 0, Math.max(0, window.innerWidth - start.width)),
+    y: clamp(start.y + dy, 0, Math.max(0, window.innerHeight - start.height)),
+  };
+}
+
+function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number): ElementRect {
+  let left = start.x;
+  let top = start.y;
+  let right = start.x + start.width;
+  let bottom = start.y + start.height;
+  if (edge.includes("w")) left = clamp(start.x + dx, 0, right - MIN_ELEMENT_WIDTH);
+  if (edge.includes("e")) right = clamp(start.x + start.width + dx, left + MIN_ELEMENT_WIDTH, window.innerWidth);
+  if (edge.includes("n")) top = clamp(start.y + dy, 0, bottom - MIN_ELEMENT_HEIGHT);
+  if (edge.includes("s")) bottom = clamp(start.y + start.height + dy, top + MIN_ELEMENT_HEIGHT, window.innerHeight);
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, Math.round(value)));
 }
 
 function DpsChartElement({ state: next }: { state: OverlayState }) {

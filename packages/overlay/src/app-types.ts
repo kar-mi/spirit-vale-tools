@@ -36,6 +36,10 @@ export type OverlayRpc = {
         params: { id: OverlayElementId; x: number; y: number };
         response: OverlayState;
       };
+      setElementBounds: {
+        params: { id: OverlayElementId; x: number; y: number; width: number; height: number };
+        response: OverlayState;
+      };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: OverlayState } }>;

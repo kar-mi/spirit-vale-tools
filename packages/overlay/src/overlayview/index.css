@@ -60,7 +60,7 @@
   z-index: 5;
   min-width: 160px;
   min-height: 100px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 12px;
   background: rgba(10, 12, 18, 0.76);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.38);
@@ -77,7 +77,53 @@
   cursor: grabbing;
 }
 
-.element-content { width: 100%; height: 100%; padding: 14px; }
+.overlay-root.editing .overlay-element.resizing {
+  z-index: 10;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 3;
+}
+
+.resize-n,
+.resize-s {
+  right: 12px;
+  left: 12px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.resize-e,
+.resize-w {
+  top: 12px;
+  bottom: 12px;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.resize-n { top: -5px; }
+.resize-s { bottom: -5px; }
+.resize-e { right: -5px; }
+.resize-w { left: -5px; }
+
+.resize-ne,
+.resize-nw,
+.resize-se,
+.resize-sw {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(204, 187, 255, 0.95);
+  border-radius: 50%;
+  background: rgba(78, 52, 132, 0.95);
+}
+
+.resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.resize-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
+.resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+
+.element-content { width: 100%; height: 100%; overflow: hidden; padding: 14px; border-radius: inherit; }
 .element-title { margin: 0 0 10px; color: rgba(255,255,255,.72); font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .empty { display: grid; height: calc(100% - 26px); place-items: center; color: rgba(255,255,255,.6); font-size: 12px; }
 
@@ -86,7 +132,7 @@
 .chart-line { fill: none; stroke: #c9b7ff; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
 .chart-label { fill: rgba(255,255,255,.68); font-size: 11px; }
 
-.personal-value { font-size: clamp(28px, 4vw, 50px); font-weight: 800; line-height: 1; }
+.personal-value { font-size: clamp(12px, 2vw, 24px); font-weight: 800; line-height: 1; }
 .personal-unit { margin-left: 6px; color: rgba(255,255,255,.65); font-size: 13px; }
 .personal-details { display: flex; gap: 18px; margin-top: 15px; color: rgba(255,255,255,.78); font-size: 12px; }
 .personal-details strong { display: block; margin-top: 3px; color: white; font-size: 15px; }

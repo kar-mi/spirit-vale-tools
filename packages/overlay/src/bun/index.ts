@@ -77,6 +77,16 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           publish();
           return appState();
         },
+        setElementBounds: ({ id, x, y, width, height }) => {
+          const element = settings.elements[id];
+          settings = normalizeOverlaySettings({
+            ...settings,
+            elements: { ...settings.elements, [id]: { ...element, x, y, width, height } },
+          }, bounds);
+          persist();
+          publish();
+          return appState();
+        },
       },
       messages: {},
     },
