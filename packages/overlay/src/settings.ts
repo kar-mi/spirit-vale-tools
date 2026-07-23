@@ -24,10 +24,10 @@ export interface DisplayBounds {
 }
 
 const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
-  dpsChart: { enabled: true, x: 318, y: 775, width: 462, height: 226 },
-  personalDps: { enabled: true, x: 794, y: 873, width: 160, height: 127 },
-  partyRanking: { enabled: true, x: 315, y: 434, width: 360, height: 300 },
-  weight: { enabled: true, x: 794, y: 787, width: 160, height: 72 },
+  dpsChart: { enabled: true, opacity: 1, x: 318, y: 775, width: 462, height: 226 },
+  personalDps: { enabled: true, opacity: 1, x: 794, y: 873, width: 160, height: 127 },
+  partyRanking: { enabled: true, opacity: 1, x: 315, y: 434, width: 360, height: 300 },
+  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 72 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -67,6 +67,7 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
     const height = clampNumber(value.height, defaults.height, minimumHeight, Math.max(minimumHeight, bounds.height));
     return [id, {
       enabled: typeof value.enabled === "boolean" ? value.enabled : defaults.enabled,
+      opacity: normalizeOpacity(value.opacity ?? source.opacity),
       x: clampNumber(value.x, defaults.x, 0, Math.max(0, bounds.width - width)),
       y: clampNumber(value.y, defaults.y, 0, Math.max(0, bounds.height - height)),
       width,
@@ -78,6 +79,11 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
     personalName: typeof source.personalName === "string" ? source.personalName.trim().slice(0, 64) : "",
     elements,
   };
+}
+
+function normalizeOpacity(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 1;
+  return Math.round(Math.max(0.2, Math.min(1, value)) * 20) / 20;
 }
 
 function clampNumber(value: unknown, fallback: number, minimum: number, maximum: number): number {

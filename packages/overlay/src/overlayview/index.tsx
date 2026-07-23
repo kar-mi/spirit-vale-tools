@@ -140,7 +140,32 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
         setPreview(undefined);
       }}
     >
-      {children}
+      <div class="overlay-surface" style={`--element-background-alpha:${settings.opacity * 0.76}`}>
+        {children}
+      </div>
+      {!locked && (
+        <label
+          class="element-opacity-control"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <span>Tile opacity</span>
+          <output>{Math.round(settings.opacity * 100)}%</output>
+          <input
+            type="range"
+            min="0.2"
+            max="1"
+            step="0.05"
+            value={settings.opacity}
+            onInput={(event) => {
+              const request = electroview.rpc?.request.setElementOpacity({
+                id,
+                opacity: event.currentTarget.valueAsNumber,
+              });
+              void request?.then((next) => { state.value = next; });
+            }}
+          />
+        </label>
+      )}
       {!locked && RESIZE_EDGES.map((edge) => (
         <span
           key={edge}

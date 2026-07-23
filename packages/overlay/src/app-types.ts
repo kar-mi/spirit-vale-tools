@@ -8,6 +8,7 @@ export type OverlayElementId = (typeof OVERLAY_ELEMENT_IDS)[number];
 
 export interface OverlayElementSettings {
   enabled: boolean;
+  opacity: number;
   x: number;
   y: number;
   width: number;
@@ -40,6 +41,10 @@ export type OverlayRpc = {
       };
       setElementBounds: {
         params: { id: OverlayElementId; x: number; y: number; width: number; height: number };
+        response: OverlayState;
+      };
+      setElementOpacity: {
+        params: { id: OverlayElementId; opacity: number };
         response: OverlayState;
       };
     };

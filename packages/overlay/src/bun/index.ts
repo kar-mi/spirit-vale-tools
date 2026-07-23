@@ -99,6 +99,16 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           publish();
           return appState();
         },
+        setElementOpacity: ({ id, opacity }) => {
+          const element = settings.elements[id];
+          settings = normalizeOverlaySettings({
+            ...settings,
+            elements: { ...settings.elements, [id]: { ...element, opacity } },
+          }, bounds);
+          persist();
+          publish();
+          return appState();
+        },
       },
       messages: {},
     },
