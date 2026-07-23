@@ -11,6 +11,7 @@ export { OVERLAY_ELEMENT_IDS };
 export type { OverlayElementId, OverlayElementSettings };
 
 export interface OverlaySettings {
+  schemaVersion: 2;
   locked: boolean;
   elements: Record<OverlayElementId, OverlayElementSettings>;
 }
@@ -28,7 +29,7 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   partyRanking: { enabled: true, opacity: 1, x: 315, y: 434, width: 360, height: 300 },
   health: { enabled: true, opacity: 1, x: 794, y: 695, width: 160, height: 40 },
   mana: { enabled: true, opacity: 1, x: 794, y: 741, width: 160, height: 40 },
-  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 72 },
+  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -55,6 +56,7 @@ export async function saveOverlaySettings(settings: OverlaySettings, settingsPat
 
 export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBounds): OverlaySettings {
   const source = candidate && typeof candidate === "object" ? candidate as Record<string, unknown> : {};
+  const legacySettings = source.schemaVersion !== 2;
   const sourceElements = source.elements && typeof source.elements === "object"
     ? source.elements as Record<string, unknown>
     : {};
@@ -64,8 +66,11 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
       ? sourceElements[id] as Record<string, unknown>
       : {};
     const width = clampNumber(value.width, defaults.width, 160, Math.max(160, bounds.width));
-    const minimumHeight = id === "health" || id === "mana" ? 40 : id === "weight" ? 72 : 100;
-    const height = clampNumber(value.height, defaults.height, minimumHeight, Math.max(minimumHeight, bounds.height));
+    const minimumHeight = id === "health" || id === "mana" || id === "weight" ? 40 : 100;
+    const savedHeight = legacySettings && id === "weight" && value.height === 72
+      ? defaults.height
+      : value.height;
+    const height = clampNumber(savedHeight, defaults.height, minimumHeight, Math.max(minimumHeight, bounds.height));
     return [id, {
       enabled: typeof value.enabled === "boolean" ? value.enabled : defaults.enabled,
       opacity: normalizeOpacity(value.opacity ?? source.opacity),
@@ -76,6 +81,7 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
     }];
   })) as unknown as Record<OverlayElementId, OverlayElementSettings>;
   return {
+    schemaVersion: 2,
     locked: typeof source.locked === "boolean" ? source.locked : false,
     elements,
   };

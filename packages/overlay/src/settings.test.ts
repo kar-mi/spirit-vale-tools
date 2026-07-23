@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { defaultOverlaySettings, loadOverlaySettings, saveOverlaySettings } from "./settings.ts";
+import { defaultOverlaySettings, loadOverlaySettings, normalizeOverlaySettings, saveOverlaySettings } from "./settings.ts";
 
 let temporaryRoot: string | undefined;
 const bounds = { x: 0, y: 0, width: 1280, height: 720 };
@@ -17,11 +17,12 @@ describe("overlay settings", () => {
   test("defaults to unlocked with all elements, including resources, enabled", () => {
     const settings = defaultOverlaySettings(bounds);
     expect(settings.locked).toBe(false);
+    expect(settings.schemaVersion).toBe(2);
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
     expect(Object.values(settings.elements).every((element) => element.opacity === 1)).toBe(true);
     expect(settings.elements.health).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
     expect(settings.elements.mana).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
-    expect(settings.elements.weight).toEqual({ enabled: true, opacity: 1, x: 794, y: 648, width: 160, height: 72 });
+    expect(settings.elements.weight).toEqual({ enabled: true, opacity: 1, x: 794, y: 680, width: 160, height: 40 });
   });
 
   test("normalizes values and clamps elements to the display", async () => {
@@ -48,7 +49,7 @@ describe("overlay settings", () => {
     expect(settings.elements.mana.enabled).toBe(true);
     expect(settings.elements.mana.height).toBe(40);
     expect(settings.elements.weight.enabled).toBe(true);
-    expect(settings.elements.weight.height).toBe(72);
+    expect(settings.elements.weight.height).toBe(40);
   });
 
   test("round-trips normalized settings", async () => {
@@ -57,6 +58,19 @@ describe("overlay settings", () => {
     settings.elements.partyRanking.x = 640;
     await saveOverlaySettings(settings, settingsPath);
     expect(await loadOverlaySettings(settingsPath, bounds)).toEqual(settings);
+  });
+
+  test("compacts the legacy weight default without overriding current custom heights", () => {
+    const legacy = normalizeOverlaySettings({
+      elements: { weight: { height: 72 } },
+    }, bounds);
+    const current = normalizeOverlaySettings({
+      schemaVersion: 2,
+      elements: { weight: { height: 72 } },
+    }, bounds);
+
+    expect(legacy.elements.weight.height).toBe(40);
+    expect(current.elements.weight.height).toBe(72);
   });
 });
 

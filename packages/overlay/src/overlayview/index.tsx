@@ -18,7 +18,6 @@ const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 const MIN_ELEMENT_WIDTH = 160;
 const MIN_ELEMENT_HEIGHT = 100;
-const MIN_WEIGHT_HEIGHT = 50;
 const MIN_RESOURCE_HEIGHT = 40;
 const RESIZE_EDGES = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
 const CLASS_ICON_BY_ARCHETYPE: Readonly<Record<number, string>> = {
@@ -215,11 +214,9 @@ function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number
   let top = start.y;
   let right = start.x + start.width;
   let bottom = start.y + start.height;
-  const minimumHeight = id === "health" || id === "mana"
+  const minimumHeight = id === "health" || id === "mana" || id === "weight"
     ? MIN_RESOURCE_HEIGHT
-    : id === "weight"
-      ? MIN_WEIGHT_HEIGHT
-      : MIN_ELEMENT_HEIGHT;
+    : MIN_ELEMENT_HEIGHT;
   if (edge.includes("w")) left = clamp(start.x + dx, 0, right - MIN_ELEMENT_WIDTH);
   if (edge.includes("e")) right = clamp(start.x + start.width + dx, left + MIN_ELEMENT_WIDTH, window.innerWidth);
   if (edge.includes("n")) top = clamp(start.y + dy, 0, bottom - minimumHeight);
@@ -292,15 +289,15 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
 function WeightElement({ state: next }: { state: OverlayState }) {
   const weight = next.weight;
   return (
-    <div class="element-content">
-      <h2 class="element-title">Weight</h2>
+    <div class={`weight-value${weight ? "" : " weight-waiting"}`}>
+      <strong class="weight-label">Weight</strong>
       {weight ? (
-        <div class="weight-value" aria-label={`Weight ${weight.current} of ${weight.maximum}`}>
+        <span class="weight-numbers" aria-label={`Weight ${weight.current} of ${weight.maximum}`}>
           <strong>{numberFormat.format(weight.current)}</strong>
           <span>/</span>
           <strong>{numberFormat.format(weight.maximum)}</strong>
-        </div>
-      ) : <div class="empty weight-empty"><span>Waiting for weight</span></div>}
+        </span>
+      ) : <span class="weight-empty">Waiting</span>}
     </div>
   );
 }
