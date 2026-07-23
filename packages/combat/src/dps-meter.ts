@@ -351,6 +351,16 @@ export class FishNetDpsMeter {
     );
     const mergedActors = mergeActors(encounter.actors);
     const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
+    const rowForActor = (actor: ActorAggregate): FishNetDpsActorRow => actorRow(
+      actor,
+      encounter.startedAtMs,
+      durationMs,
+      totalDamage,
+      snapshotNowMs,
+      this.currentWindowMs,
+      this.minimumDurationMs,
+      actor.displayName === undefined,
+    );
     const namedActors = mergedActors.filter((actor) => actor.displayName !== undefined);
     const anonymousActors = mergedActors.filter((actor) => actor.displayName === undefined);
     const visibleAnonymousActors = anonymousActors.filter((actor) => encounter.endedAtMs !== undefined
@@ -361,36 +371,22 @@ export class FishNetDpsMeter {
       ? namedActors
       : [...namedActors, combineActors(visibleAnonymousActors)];
     const actors = displayActors
-      .map((actor) => actorRow(
-        actor,
-        encounter.startedAtMs,
-        durationMs,
-        totalDamage,
-        snapshotNowMs,
-        this.currentWindowMs,
-        this.minimumDurationMs,
-        actor.displayName === undefined,
-      ))
+      .map(rowForActor)
       .sort(compareRows);
-    const partyCurrentDps = mergedActors.reduce((sum, actor) => sum + actorRow(
-      actor,
-      encounter.startedAtMs,
-      durationMs,
-      totalDamage,
-      snapshotNowMs,
-      this.currentWindowMs,
-      this.minimumDurationMs,
-      actor.displayName === undefined,
-    ).currentDps, 0);
+    const partyCurrentDps = mergedActors.reduce((sum, actor) => sum + rowForActor(actor).currentDps, 0);
     const normalizedPersonalName = normalizeName(this.personalName);
     const activeMatches = normalizedPersonalName
       ? new Set(encounter.actors
         .filter((actor) => actor.activeIdentity && normalizeName(actor.displayName ?? "") === normalizedPersonalName)
         .map(identityKey))
       : new Set<string>();
-    const selectedPersonal = this.personalActorId === undefined
+    const selectedPersonalActor = this.personalActorId === undefined
       ? undefined
-      : actors.find((actor) => actor.actorIds.includes(this.personalActorId!));
+      : mergedActors
+        .find((actor) => actor.actorIds.includes(this.personalActorId!));
+    const selectedPersonal = selectedPersonalActor === undefined
+      ? undefined
+      : rowForActor(selectedPersonalActor);
     const personal = selectedPersonal ?? (normalizedPersonalName
       ? actors.find((actor) => normalizeName(actor.displayName) === normalizedPersonalName)
       : undefined);

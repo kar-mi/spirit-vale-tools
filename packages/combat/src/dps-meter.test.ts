@@ -344,6 +344,35 @@ describe("FishNetDpsMeter", () => {
     });
   });
 
+  test("keeps explicit personal damage separate from the unidentified party aggregate", () => {
+    const meter = new FishNetDpsMeter({ personalActorId: 303 });
+    meter.consumeCombat({ ...damage(303, 100), targetId: 900 }, 0);
+    meter.consumeCombat({ ...damage(404, 300, "SyntheticRain", "Synthetic Rain"), targetId: 901 }, 0);
+
+    const expectSeparatedPersonal = () => {
+      expect(meter.getLatestSnapshot(10_000)).toMatchObject({
+        actors: [{
+          actorIds: [303, 404],
+          displayName: "Unidentified",
+          damage: 400,
+        }],
+        personalMatch: "matched",
+        personal: {
+          actorIds: [303],
+          damage: 100,
+          hits: 1,
+          mobsHit: 1,
+          skills: [{ sourceId: "SyntheticArc", damage: 100 }],
+          timeline: [{ cumulativeDamage: 0 }, { cumulativeDamage: 100 }],
+        },
+      });
+    };
+
+    expectSeparatedPersonal();
+    meter.reset(1_000);
+    expectSeparatedPersonal();
+  });
+
   describe("current DPS", () => {
     test("ramps the divisor up to the rolling window duration", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
