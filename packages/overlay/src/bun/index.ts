@@ -18,7 +18,6 @@ import {
 } from "../settings.ts";
 
 const LIVE_LOG_POLL_MS = 1_000;
-const TOPMOST_REASSERT_MS = 2_000;
 const SETTINGS_WIDTH = 798;
 const SETTINGS_HEIGHT = 680;
 const MINIMUM_SETTINGS_WIDTH = 560;
@@ -184,11 +183,6 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   }
 
   const pollTimer = setInterval(() => void pollLiveLog(), LIVE_LOG_POLL_MS);
-  const topmostTimer = setInterval(() => {
-    if (shuttingDown) return;
-    overlayWindow.setAlwaysOnTop(true);
-    settingsWindow?.setAlwaysOnTop(true);
-  }, TOPMOST_REASSERT_MS);
   unsubscribeCharacter = options.subscribeCharacter((next) => {
     characterState = next;
     syncPersonalCharacter(meter, characterState);
@@ -339,7 +333,6 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     if (shuttingDown) return;
     shuttingDown = true;
     clearInterval(pollTimer);
-    clearInterval(topmostTimer);
     unsubscribeCharacter();
     unsubscribeCharacter = () => {};
     if (shortcutRegistered) GlobalShortcut.unregister(LOCK_SHORTCUT);

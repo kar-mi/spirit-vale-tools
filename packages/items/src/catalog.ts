@@ -121,5 +121,5 @@ export function requireFishNetItem(itemType: number, itemId: string): FishNetIte
 }
 
 function itemKey(itemType: number, itemId: string): string {
-  return `${itemType}\u0000${itemId}`;
+  return `${itemType}|${itemId}`;
 }

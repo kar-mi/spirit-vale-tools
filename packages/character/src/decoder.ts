@@ -18,7 +18,7 @@ const LOADOUTS = ["Normal", "Secondary", "Heavy"] as const;
 export interface DecodedCharacterUpdate {
   updateType: number;
   snapshot: CharacterSnapshot;
-  currentWeight: number;
+  currentWeight?: number;
 }
 
 export function resolveCharacterArchetypeId(name: string): number | undefined {
@@ -69,7 +69,7 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
   const { skills, currentWeight, ...history } = readCharacterHistory(reader, equipped, artifacts);
   return {
     updateType,
-    currentWeight,
+    ...(currentWeight === undefined ? {} : { currentWeight }),
     snapshot: {
       schemaVersion: 1,
       buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
@@ -137,7 +137,7 @@ function readCharacterHistory(
   artifacts: readonly CharacterArtifact[],
 ): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & {
   skills: CharacterSkill[];
-  currentWeight: number;
+  currentWeight?: number;
 } {
   const equippedWeight = equipped.reduce((total, item) => total + equipmentWeight(item.itemId), 0) + artifacts.length * 10;
   try {
@@ -169,7 +169,7 @@ function readCharacterHistory(
     return { skills, currentWeight: equippedWeight + inventoryWeight, playtimeSeconds, monsterKills, bossKills, deaths };
   } catch {
     // A partial callback may end after build data. The already-decoded snapshot remains useful.
-    return { skills: [], currentWeight: equippedWeight };
+    return { skills: [] };
   }
 }
 

@@ -103,6 +103,27 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.currentArchetypeId()).toBe(12);
   });
 
+  test("preserves the last complete weight across partial callbacks", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    const packet = characterPacket("CharacterCallback_T");
+    packet.payload = syntheticCharacter(true, false);
+
+    expect(tracker.consume(packet)).toBe(true);
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+  });
+
+  test("does not carry weight to another character on a partial callback", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    const packet = characterPacket("CharacterCallback_T");
+    packet.payload = syntheticCharacter(true, false, "Example Adventurer");
+
+    expect(tracker.consume(packet)).toBe(true);
+    expect(tracker.current()?.name).toBe("Example Adventurer");
+    expect(tracker.state().weight).toBeUndefined();
+  });
+
   test("re-derives cached substat values from raw rolls using current tables", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.setCached({

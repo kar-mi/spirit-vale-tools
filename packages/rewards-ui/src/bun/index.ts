@@ -4,7 +4,7 @@ import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
 import {
   emptySnapshot,
-  formatRewardsReplaySummary,
+  inspectRewardsReplaySummary,
   loadBundledMobRewardCatalog,
   loadRewardReplay,
   queryMobRewardCatalog,
@@ -65,7 +65,7 @@ const replayPicker = createSessionPicker({
   logDirectory: options.logDirectory,
   stream: "rewards",
   title: "Rewards replays",
-  summarize: formatRewardsReplaySummary,
+  summarize: inspectRewardsReplaySummary,
   loadReplay: loadReplayPath,
   placements: options.placements,
   placementKey: "rewards-session-picker",

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { readRewardsReplaySummary } from "./replay-summary.ts";
+import { inspectRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
 
 describe("replay picker summaries", () => {
   test("aggregates confirmed rewards by kills, mobs, XP, and coins", async () => {
@@ -14,12 +14,14 @@ describe("replay picker summaries", () => {
       record(3, "rewards.kill", kill("kill-c", "mob-b", 30, "6")),
     ], async (file) => {
       expect(await readRewardsReplaySummary(file)).toEqual({ kills: 3, mobs: 2, experience: 60, coins: 12n, invalidLines: 0 });
+      expect(await inspectRewardsReplaySummary(file)).toMatchObject({ recordCount: 3 });
     });
   });
 
   test("empty and malformed logs return stable summaries without crashing", async () => {
     await withText("", async (file) => {
       expect(await readRewardsReplaySummary(file)).toEqual({ kills: 0, mobs: 0, experience: 0, coins: 0n, invalidLines: 0 });
+      expect(await inspectRewardsReplaySummary(file)).toMatchObject({ recordCount: 0 });
     });
     await withText("not-json\n", async (file) => {
       expect((await readRewardsReplaySummary(file)).invalidLines).toBe(1);

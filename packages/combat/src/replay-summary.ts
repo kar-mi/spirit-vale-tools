@@ -8,6 +8,11 @@ export interface CombatReplaySummary {
   invalidLines: number;
 }
 
+export interface CombatReplayInspection {
+  recordCount: number;
+  summary: string;
+}
+
 export async function readCombatReplaySummary(path: string): Promise<CombatReplaySummary> {
   const replay = await loadDpsReplay(path);
   const encounters = replay.meter.getSnapshots();
@@ -20,7 +25,15 @@ export async function readCombatReplaySummary(path: string): Promise<CombatRepla
 }
 
 export async function formatCombatReplaySummary(path: string): Promise<string> {
+  return formatSummary(await readCombatReplaySummary(path));
+}
+
+export async function inspectCombatReplaySummary(path: string): Promise<CombatReplayInspection> {
   const summary = await readCombatReplaySummary(path);
+  return { recordCount: summary.encounters, summary: formatSummary(summary) };
+}
+
+function formatSummary(summary: CombatReplaySummary): string {
   return `${count(summary.encounters, "encounter")} · ${compact(summary.totalDamage)} damage · ${duration(summary.durationMs)}${warnings(summary.invalidLines)}`;
 }
 

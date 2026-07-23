@@ -198,7 +198,7 @@ function safeCount(value: bigint): number {
 function coalesce(items: RewardItem[]): RewardItem[] {
   const totals = new Map<string, RewardItem>();
   for (const item of items) {
-    const key = `${item.category}\u0000${item.itemId}`;
+    const key = `${item.category}|${item.itemId}`;
     const previous = totals.get(key);
     if (previous) previous.count += item.count;
     else totals.set(key, { ...item });

@@ -61,8 +61,11 @@ function sessionRow(session: SessionPickerState["sessions"][number]): HTMLElemen
   summary.className = "session-summary";
   summary.textContent = session.summary;
   row.append(heading, summary);
-  row.addEventListener("click", () => { selectedId = session.id; if (state) render(state); });
-  row.addEventListener("dblclick", () => { selectedId = session.id; openSelected(); });
+  row.addEventListener("click", () => {
+    selectedId = session.id;
+    if (state) render(state);
+    openSelected();
+  });
   return row;
 }
 

@@ -10,6 +10,7 @@ import type {
   OverlayRpc,
   OverlayState,
 } from "../app-types.ts";
+import { visiblePartyActors } from "./party-ranking.ts";
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
@@ -292,7 +293,7 @@ function WeightElement({ state: next }: { state: OverlayState }) {
 }
 
 function PartyRankingElement({ state: next }: { state: OverlayState }) {
-  const actors = [...(next.snapshot?.actors ?? [])].sort((a, b) => b.currentDps - a.currentDps).slice(0, 8);
+  const actors = visiblePartyActors(next.snapshot?.actors ?? []);
   const maxDps = Math.max(1, ...actors.map((actor) => actor.currentDps));
   return (
     <div class="element-content">
