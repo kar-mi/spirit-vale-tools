@@ -28,6 +28,7 @@ export type DpsAppRpc = {
     requests: {
       getState: { params: Record<string, never>; response: DpsAppState };
       openReplayPicker: { params: Record<string, never>; response: void };
+      openOverlay: { params: Record<string, never>; response: void };
       resetSession: { params: Record<string, never>; response: DpsAppState };
       setPersonalName: { params: { name: string }; response: DpsAppState };
       setPersonalActor: { params: { actorId: number | null }; response: DpsAppState };

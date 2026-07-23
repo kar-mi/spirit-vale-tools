@@ -24,6 +24,7 @@ export interface DpsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
   onClosed?: () => void;
+  onOpenOverlay?: () => Promise<void>;
   onReset?: () => Promise<void>;
 }
 
@@ -66,6 +67,7 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
     requests: {
       getState: () => appState(),
       openReplayPicker: () => { replayPicker.open(); },
+      openOverlay: async () => { await options.onOpenOverlay?.(); },
       resetSession: async () => {
         if (!resetting && options.onReset) {
           resetting = true;

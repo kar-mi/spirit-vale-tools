@@ -193,7 +193,7 @@ function DpsChartElement({ state: next }: { state: OverlayState }) {
   return (
     <div class="element-content">
       <h2 class="element-title">{personal ? "Personal DPS over time" : "Party DPS over time"}</h2>
-      {points.length ? <DamageChart points={points} durationMs={duration} /> : <div class="empty">Waiting for combat data</div>}
+      {points.length ? <DamageChart points={points} durationMs={duration} /> : <WaitingForDps />}
     </div>
   );
 }
@@ -239,7 +239,7 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
             <span>Crit rate<strong>{personal.hits ? `${Math.round(personal.criticalHits / personal.hits * 100)}%` : "—"}</strong></span>
           </div>
         </>
-      ) : <div class="empty">{next.personalName ? "Waiting for your character" : "Set your character name in settings"}</div>}
+      ) : <WaitingForDps />}
     </div>
   );
 }
@@ -263,7 +263,16 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
           </span>
           <span class="ranking-dps">{formatDps(actor.dps)}</span>
         </div>
-      ))}</div> : <div class="empty">Waiting for party damage</div>}
+      ))}</div> : <WaitingForDps />}
+    </div>
+  );
+}
+
+function WaitingForDps() {
+  return (
+    <div class="empty">
+      <span>Waiting for DPS</span>
+      <span class="empty-help">Press F11 to toggle overlay settings, or click on overlay button</span>
     </div>
   );
 }

@@ -60,6 +60,7 @@ const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
   logDirectory,
   settingsPath: storagePaths.dpsSettingsPath,
   onClosed,
+  onOpenOverlay: () => overlayWindow.open(),
   onReset: () => capture.resetSession(),
 }));
 const overlayWindow = new WindowSlot((onClosed) => createOverlayWindow({
@@ -220,7 +221,7 @@ async function refreshCaptureDevices(): Promise<void> {
 }
 
 async function openTool(tool: ToolWindow): Promise<void> {
-  if (tool === "combat") await combatWindow.open();
+  if (tool === "combat") await Promise.all([combatWindow.open(), overlayWindow.open()]);
   else if (tool === "overlay") await overlayWindow.open();
   else if (tool === "rewards") await rewardsWindow.open();
   else if (tool === "market") await marketWindow.open();
