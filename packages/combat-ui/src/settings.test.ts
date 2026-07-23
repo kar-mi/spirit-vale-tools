@@ -18,12 +18,28 @@ describe("DPS app settings", () => {
     const settings = {
       personalName: "Fictional Hero",
       tab: "personal" as const,
-      frame: { x: 120, y: 140, width: 420, height: 560 },
+      frame: { x: 120, y: 140, width: 840, height: 900 },
     };
 
     await saveDpsAppSettings(settings, settingsPath);
 
     expect(await loadDpsAppSettings(settingsPath)).toEqual(settings);
+  });
+
+  test("replaces a saved undersized frame with the current combat window size", async () => {
+    const settingsPath = await createSettingsPath();
+    await saveDpsAppSettings({
+      personalName: "",
+      tab: "all",
+      frame: { x: 120, y: 140, width: 420, height: 560 },
+    }, settingsPath);
+
+    expect((await loadDpsAppSettings(settingsPath)).frame).toEqual({
+      x: 80,
+      y: 80,
+      width: 728,
+      height: 776,
+    });
   });
 });
 

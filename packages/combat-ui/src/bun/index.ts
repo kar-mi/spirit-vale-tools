@@ -17,9 +17,10 @@ import { Utils } from "electrobun/bun";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
 import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
 import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { DPS_WINDOW_HEIGHT, DPS_WINDOW_WIDTH } from "../window-size.ts";
 
-const MINIMUM_WIDTH = 320;
-const MINIMUM_HEIGHT = 360;
+const MINIMUM_WIDTH = DPS_WINDOW_WIDTH;
+const MINIMUM_HEIGHT = DPS_WINDOW_HEIGHT;
 const LIVE_LOG_POLL_MS = 1_000;
 export interface DpsWindowOptions {
   logDirectory: string;

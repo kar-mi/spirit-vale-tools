@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { DpsAppTab } from "./app-types.ts";
+import { DPS_WINDOW_HEIGHT, DPS_WINDOW_WIDTH } from "./window-size.ts";
 
 export interface DpsAppSettings {
   personalName: string;
@@ -12,7 +13,7 @@ export interface DpsAppSettings {
 const DEFAULT_SETTINGS: DpsAppSettings = {
   personalName: "",
   tab: "all",
-  frame: { x: 80, y: 80, width: 728, height: 776 },
+  frame: { x: 80, y: 80, width: DPS_WINDOW_WIDTH, height: DPS_WINDOW_HEIGHT },
 };
 
 export async function loadDpsAppSettings(settingsPath?: string): Promise<DpsAppSettings> {
@@ -45,6 +46,6 @@ function validFrame(value: unknown): value is DpsAppSettings["frame"] {
   if (typeof value !== "object" || value === null) return false;
   const frame = value as Record<string, unknown>;
   return ["x", "y", "width", "height"].every((key) => typeof frame[key] === "number" && Number.isFinite(frame[key]))
-    && (frame["width"] as number) >= 320
-    && (frame["height"] as number) >= 360;
+    && (frame["width"] as number) >= DPS_WINDOW_WIDTH
+    && (frame["height"] as number) >= DPS_WINDOW_HEIGHT;
 }
