@@ -145,7 +145,7 @@ function errorMessage(error: unknown): string {
 }
 
 function mergeSnapshot(previous: CharacterSnapshot | undefined, next: CharacterSnapshot, updateType: number): CharacterSnapshot {
-  if (!previous || updateType === 327417855) return next;
+  if (!previous || previous.name !== next.name || updateType === 327417855) return next;
   const merged = { ...previous, updatedAt: next.updatedAt, source: "live" as const };
   if (updateType & (1 | 2)) Object.assign(merged, { level: next.level, experience: next.experience, jobLevel: next.jobLevel, jobExperience: next.jobExperience });
   if (updateType & 4) merged.attributes = next.attributes;

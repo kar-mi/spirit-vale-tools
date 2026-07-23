@@ -48,6 +48,35 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().statusDetail).toContain("Change maps or channels");
   });
 
+  test("replaces cached state when a callback belongs to a different character", () => {
+    const tracker = new FishNetCharacterTracker({
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Fictional Veteran",
+      archetypes: ["Mage", "Wizard"],
+      level: 70,
+      experience: 0,
+      jobLevel: 30,
+      jobExperience: 0,
+      attributes: { STR: 5, VIT: 20, AGI: 10, DEX: 15, INT: 70, LUK: 10 },
+      activeLoadout: "Normal",
+      equipment: [],
+      artifacts: [],
+      skills: [],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "cached",
+    });
+
+    expect(tracker.consume(characterPacket("CharacterCallback_T"))).toBe(true);
+    expect(tracker.current()).toMatchObject({
+      name: "Example Hero",
+      archetypes: ["Warrior", "Berserker"],
+      level: 42,
+      source: "live",
+    });
+    expect(tracker.currentArchetypeId()).toBe(12);
+  });
+
   test("re-derives cached substat values from raw rolls using current tables", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.setCached({
