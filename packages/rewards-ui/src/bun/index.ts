@@ -69,6 +69,7 @@ const replayPicker = createSessionPicker({
   loadReplay: loadReplayPath,
   placements: options.placements,
   placementKey: "rewards-session-picker",
+  defaultFrame: { x: 120, y: 120, width: 736, height: 612 },
 });
 
 const rpc = BrowserView.defineRPC<RewardsAppRpc>({

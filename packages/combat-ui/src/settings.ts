@@ -12,7 +12,7 @@ export interface DpsAppSettings {
 const DEFAULT_SETTINGS: DpsAppSettings = {
   personalName: "",
   tab: "all",
-  frame: { x: 80, y: 80, width: 420, height: 560 },
+  frame: { x: 80, y: 80, width: 728, height: 776 },
 };
 
 export async function loadDpsAppSettings(settingsPath?: string): Promise<DpsAppSettings> {

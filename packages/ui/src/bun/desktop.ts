@@ -128,7 +128,7 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
   maxRequestTime: 30_000,
   handlers: {
     requests: {
-      ...sharedLauncherHandlers(() => launcherWindow, { x: 80, y: 80, width: 960, height: 430 }),
+      ...sharedLauncherHandlers(() => launcherWindow, { x: 80, y: 80, width: 1200, height: 538 }),
       openTool: async ({ tool }) => {
         await openTool(tool);
         return launcherState;
@@ -147,7 +147,7 @@ const settingsRpc = BrowserView.defineRPC<LauncherSettingsRpc>({
   maxRequestTime: 30_000,
   handlers: {
     requests: {
-      ...sharedLauncherHandlers(() => settingsWindow, { x: 110, y: 110, width: 520, height: 460 }),
+      ...sharedLauncherHandlers(() => settingsWindow, { x: 110, y: 110, width: 658, height: 570 }),
       windowAction: ({ action }) => {
         if (action === "minimize") settingsWindow?.minimize();
         else settingsWindow?.close();
@@ -160,7 +160,7 @@ const settingsRpc = BrowserView.defineRPC<LauncherSettingsRpc>({
 launcherWindow = new BrowserWindow({
   title: "Spirit Vale",
   url: "views://launcherview/index.html",
-  frame: placements.frame("launcher", { x: 80, y: 80, width: 960, height: 430 }, { width: 900, height: 430 }),
+  frame: placements.frame("launcher", { x: 80, y: 80, width: 1200, height: 538 }, { width: 900, height: 430 }),
   titleBarStyle: "hidden",
   transparent: false,
   rpc,
@@ -254,7 +254,7 @@ function openSettings(): void {
     url: "views://settingsview/index.html",
     frame: placements.frame(
       "launcher-settings",
-      { x: 110, y: 110, width: 520, height: 460 },
+      { x: 110, y: 110, width: 658, height: 570 },
       { width: 420, height: 360 },
     ),
     titleBarStyle: "hidden",

@@ -8,6 +8,7 @@ import { registerUiScaleWindow, scaledSize } from "./ui-scale.ts";
 import type { WindowPlacementStore } from "./window-placement.ts";
 
 import type { SessionPickerRpc, SessionPickerState } from "./session-picker-types.ts";
+import type { WindowFrame } from "./window-chrome.ts";
 
 export interface SessionPickerOptions {
   logDirectory: string;
@@ -17,6 +18,7 @@ export interface SessionPickerOptions {
   loadReplay: (path: string) => Promise<void>;
   placements?: WindowPlacementStore;
   placementKey?: string;
+  defaultFrame?: WindowFrame;
   openLogFolder?: () => void;
 }
 
@@ -37,6 +39,7 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
         getState: () => state,
         getWindowFrame: () => window?.getFrame()
           ?? pickerFrame()
+          ?? options.defaultFrame
           ?? { x: 120, y: 120, width: 640, height: 560 },
         setWindowFrame: ({ x, y, width, height }) => { window?.setFrame(x, y, Math.max(480, width), Math.max(400, height)); },
       },
@@ -62,7 +65,7 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
         const nextWindow = new BrowserWindow({
           title: options.title,
           url: "views://sessionpickerview/index.html",
-          frame: pickerFrame() ?? { x: 120, y: 120, width: 640, height: 560 },
+          frame: pickerFrame() ?? options.defaultFrame ?? { x: 120, y: 120, width: 640, height: 560 },
           titleBarStyle: "hidden",
           transparent: false,
           rpc,
@@ -91,7 +94,7 @@ export function createSessionPicker(options: SessionPickerOptions): SessionPicke
     if (!options.placementKey) return undefined;
     return options.placements?.frame(
       options.placementKey,
-      { x: 120, y: 120, width: 640, height: 560 },
+      options.defaultFrame ?? { x: 120, y: 120, width: 640, height: 560 },
       { width: 480, height: 400 },
     );
   }

@@ -17,8 +17,10 @@ import {
 
 const LIVE_LOG_POLL_MS = 2_500;
 const TOPMOST_REASSERT_MS = 2_000;
-const SETTINGS_WIDTH = 560;
-const SETTINGS_HEIGHT = 420;
+const SETTINGS_WIDTH = 798;
+const SETTINGS_HEIGHT = 680;
+const MINIMUM_SETTINGS_WIDTH = 560;
+const MINIMUM_SETTINGS_HEIGHT = 420;
 const LOCK_SHORTCUT = "F11";
 
 export interface OverlayWindowOptions {
@@ -131,15 +133,15 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           ?? options.placements?.frame(
             "overlay-settings",
             { x: bounds.x + 80, y: bounds.y + 80, width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
-            { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
+            { width: MINIMUM_SETTINGS_WIDTH, height: MINIMUM_SETTINGS_HEIGHT },
           )
           ?? { x: bounds.x + 80, y: bounds.y + 80, width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
         setWindowFrame: ({ x, y, width, height }) => {
           settingsWindow?.setFrame(
             x,
             y,
-            Math.max(scaledSize(SETTINGS_WIDTH), width),
-            Math.max(scaledSize(SETTINGS_HEIGHT), height),
+            Math.max(scaledSize(MINIMUM_SETTINGS_WIDTH), width),
+            Math.max(scaledSize(MINIMUM_SETTINGS_HEIGHT), height),
           );
         },
       },
@@ -274,7 +276,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
         y: bounds.y + 80,
         width: SETTINGS_WIDTH,
         height: SETTINGS_HEIGHT,
-      }, { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT }) ?? {
+      }, { width: MINIMUM_SETTINGS_WIDTH, height: MINIMUM_SETTINGS_HEIGHT }) ?? {
         x: bounds.x + 80,
         y: bounds.y + 80,
         width: SETTINGS_WIDTH,

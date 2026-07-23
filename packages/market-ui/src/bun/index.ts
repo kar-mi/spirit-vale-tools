@@ -127,9 +127,9 @@ window = new BrowserWindow({
   url: "views://marketview/index.html",
   frame: options.placements?.frame(
     "market",
-    { x: 100, y: 80, width: 760, height: 720 },
+    { x: 100, y: 80, width: 945, height: 800 },
     { width: 520, height: 480 },
-  ) ?? { x: 100, y: 80, width: 760, height: 720 },
+  ) ?? { x: 100, y: 80, width: 945, height: 800 },
   titleBarStyle: "hidden",
   transparent: false,
   rpc,

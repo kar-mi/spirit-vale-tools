@@ -12,8 +12,8 @@ export interface RewardsAppSettings {
 }
 
 const defaults: RewardsAppSettings = {
-  frame: { x: 120, y: 90, width: 860, height: 720 },
-  catalogFrame: { x: 170, y: 140, width: 760, height: 680 },
+  frame: { x: 120, y: 90, width: 1020, height: 695 },
+  catalogFrame: { x: 170, y: 140, width: 830, height: 745 },
   pinned: false,
   view: "summary",
 };
