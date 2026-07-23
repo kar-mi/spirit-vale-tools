@@ -1,5 +1,5 @@
 import type { CapturedFishNetPacket } from "@spiritvale/core";
-import { decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
+import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
 import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
@@ -61,6 +61,11 @@ export class FishNetCharacterTracker {
   }
 
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
+
+  currentArchetypeId(): number | undefined {
+    const archetype = this.snapshot?.archetypes.at(-1);
+    return archetype === undefined ? undefined : resolveCharacterArchetypeId(archetype);
+  }
 
   state(): CharacterViewState {
     // Stored substat values were baked by whatever build decoded them; always re-derive

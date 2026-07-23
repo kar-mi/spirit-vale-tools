@@ -37,6 +37,7 @@ export type FishNetActorIdentityEvent =
 export interface FishNetLocalIdentity {
   displayName: string;
   uid?: string;
+  archetype?: number;
   /** @deprecated retained for backwards-compatible callers; never used for matching. */
   accountId?: string;
 }
@@ -115,7 +116,12 @@ export class FishNetActorDirectory {
       && this.localIdentity !== undefined && !this.identitySources.has(packet.objectId)) {
       return this.applyIdentitySource(
         packet.objectId,
-        { actorId: packet.objectId, displayName: this.localIdentity.displayName },
+        {
+          actorId: packet.objectId,
+          displayName: this.localIdentity.displayName,
+          ...(this.localIdentity.uid === undefined ? {} : { uid: this.localIdentity.uid }),
+          ...(this.localIdentity.archetype === undefined ? {} : { archetype: this.localIdentity.archetype }),
+        },
         packet.tick,
       );
     }
@@ -123,11 +129,18 @@ export class FishNetActorDirectory {
     if (packet.objectId !== undefined && packet.rpcName !== undefined && CHARACTER_RPC_NAMES.has(packet.rpcName)) {
       const character = decodeCharacterDataName(packet.payload);
       if (character === undefined) return [];
-      this.learnUidIdentity(character.uid, { displayName: character.displayName });
-      this.updateLocalIdentity(character);
+      const archetype = this.localIdentity?.displayName === character.displayName
+        ? this.localIdentity.archetype
+        : undefined;
+      const identity = {
+        ...character,
+        ...(archetype === undefined ? {} : { archetype }),
+      };
+      this.learnUidIdentity(character.uid, identity);
+      this.updateLocalIdentity(identity);
       return this.applyIdentitySource(
         packet.objectId,
-        { actorId: packet.objectId, displayName: character.displayName, uid: character.uid },
+        { actorId: packet.objectId, ...identity },
         packet.tick,
       );
     }
@@ -187,16 +200,28 @@ export class FishNetActorDirectory {
     this.seedLocalIdentity();
   }
 
+  setLocalIdentity(identity: FishNetLocalIdentity): void {
+    this.localIdentity = mergeLocalIdentity(this.localIdentity, identity);
+    this.seedLocalIdentity();
+  }
+
   private seedLocalIdentity(): void {
     if (!this.localIdentity) return;
-    if (this.localIdentity.uid) this.learnUidIdentity(this.localIdentity.uid, { displayName: this.localIdentity.displayName });
+    if (this.localIdentity.uid) {
+      this.learnUidIdentity(this.localIdentity.uid, {
+        displayName: this.localIdentity.displayName,
+        ...(this.localIdentity.archetype === undefined ? {} : { archetype: this.localIdentity.archetype }),
+      });
+    }
   }
 
   private updateLocalIdentity(identity: FishNetLocalIdentity): void {
-    if (this.localIdentity?.displayName === identity.displayName
-      && this.localIdentity.uid === identity.uid) return;
-    this.localIdentity = identity;
-    this.options.onLocalIdentity?.(identity);
+    const next = mergeLocalIdentity(this.localIdentity, identity);
+    if (this.localIdentity?.displayName === next.displayName
+      && this.localIdentity.uid === next.uid
+      && this.localIdentity.archetype === next.archetype) return;
+    this.localIdentity = next;
+    this.options.onLocalIdentity?.(next);
   }
 
   /** Names a spawn from embedded VisualData, falling back to the UID cache for delta spawns. */
@@ -352,6 +377,20 @@ function validOwner(ownerConnectionId: number | undefined): number | undefined {
   return ownerConnectionId !== undefined && Number.isInteger(ownerConnectionId) && ownerConnectionId >= 0
     ? ownerConnectionId
     : undefined;
+}
+
+function mergeLocalIdentity(
+  current: FishNetLocalIdentity | undefined,
+  next: FishNetLocalIdentity,
+): FishNetLocalIdentity {
+  const sameCharacter = current?.displayName === next.displayName;
+  const uid = next.uid ?? (sameCharacter ? current?.uid : undefined);
+  const archetype = next.archetype ?? (sameCharacter ? current?.archetype : undefined);
+  return {
+    displayName: next.displayName,
+    ...(uid === undefined ? {} : { uid }),
+    ...(archetype === undefined ? {} : { archetype }),
+  };
 }
 
 function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {

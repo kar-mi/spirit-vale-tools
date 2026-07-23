@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import type { CharacterSnapshot } from "@spiritvale/character";
 import { DpsSessionLogFollower } from "@spiritvale/combat";
 import type { CapturedFishNetPacket, CaptureConfig } from "@spiritvale/core";
 import type { PacketCapture } from "@spiritvale/core/capture";
@@ -142,6 +143,64 @@ describe("central capture coordinator", () => {
       const combatPointer = await readCurrentLogStream("combat", directory);
       const combatRecords = records(await readFile(combatPointer!.path, "utf8"));
       expect(combatRecords.some((record) => record.type === "combat.spawnIdentityMiss")).toBe(false);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("writes the cached local character archetype onto serverRpc actor identities", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-local-class-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      coordinator.setCachedCharacter(syntheticCachedCharacter());
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      capture.packet({
+        tick: 2,
+        packetId: 1,
+        packetName: "objectSpawn",
+        objectId: 80,
+        ownerConnectionId: 31,
+        rpcLinkRegistrations: [{
+          linkId: 980,
+          objectId: 80,
+          componentIndex: 0,
+          rpcHash: 1,
+          packetName: "observersRpc",
+          networkBehaviourType: "PlayerController",
+        }],
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+      });
+      capture.packet({
+        tick: 3,
+        packetId: 2,
+        packetName: "serverRpc",
+        objectId: 80,
+        raw: Buffer.alloc(0),
+        payload: Buffer.alloc(0),
+      });
+      await coordinator.stop();
+
+      const combatPointer = await readCurrentLogStream("combat", directory);
+      const combat = records(await readFile(combatPointer!.path, "utf8")) as Array<{
+        type: string;
+        data?: Record<string, unknown>;
+      }>;
+      expect(combat).toContainEqual(expect.objectContaining({
+        type: "combat.actorIdentity",
+        data: expect.objectContaining({
+          operation: "upsert",
+          actorId: 80,
+          displayName: "Fictional Hero",
+          archetype: 12,
+        }),
+      }));
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
@@ -558,6 +617,26 @@ function identityPacket(tick: number, objectId: number, displayName: string, con
     raw: Buffer.alloc(0),
     payload: Buffer.alloc(0),
     connectionId,
+  };
+}
+
+function syntheticCachedCharacter(): CharacterSnapshot {
+  return {
+    schemaVersion: 1,
+    buildFingerprint: "synthetic-build",
+    name: "Fictional Hero",
+    archetypes: ["Warrior", "Berserker"],
+    level: 42,
+    experience: 0,
+    jobLevel: 18,
+    jobExperience: 0,
+    attributes: { STR: 60, VIT: 30, AGI: 10, DEX: 20, INT: 5, LUK: 15 },
+    activeLoadout: "Normal",
+    equipment: [],
+    artifacts: [],
+    skills: [],
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    source: "cached",
   };
 }
 

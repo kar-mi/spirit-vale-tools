@@ -284,6 +284,7 @@ describe("FishNetActorDirectory", () => {
 
   test("names a delta spawn from a UID learned via CharacterCallback_T", () => {
     const directory = new FishNetActorDirectory();
+    directory.setLocalIdentity({ displayName: "Fictional Hero", archetype: 12 });
     directory.consume(spawn(1, 62698, 21, "PlayerController"));
     directory.consume({
       ...packet(2, "rpcLink", 62698),
@@ -300,7 +301,25 @@ describe("FishNetActorDirectory", () => {
       actorId: 71,
       displayName: "Fictional Hero",
       uid: syntheticUid,
+      archetype: 12,
       ownerConnectionId: 30,
+    }]);
+  });
+
+  test("uses the cached local archetype for an actor discovered through serverRpc", () => {
+    const directory = new FishNetActorDirectory({
+      localIdentity: { displayName: "Fictional Hero", archetype: 12 },
+    });
+    directory.consume(spawn(1, 80, 31, "PlayerController"));
+
+    expect(directory.consume(packet(2, "serverRpc", 80))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 2,
+      actorId: 80,
+      displayName: "Fictional Hero",
+      archetype: 12,
+      ownerConnectionId: 31,
     }]);
   });
 

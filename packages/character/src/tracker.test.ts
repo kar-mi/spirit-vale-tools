@@ -25,6 +25,7 @@ describe("FishNetCharacterTracker", () => {
       weight: { current: 71, maximum: 3_260 },
     });
     expect(tracker.state().stats).not.toHaveLength(0);
+    expect(tracker.currentArchetypeId()).toBe(12);
   });
 
   test("rejects packets without a character RPC name", () => {
@@ -33,6 +34,7 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.consume(characterPacket())).toBe(false);
     expect(tracker.consume(characterPacket("UnrelatedRpc"))).toBe(false);
     expect(tracker.state()).toMatchObject({ status: "waiting", stats: [] });
+    expect(tracker.currentArchetypeId()).toBeUndefined();
   });
 
   test("reports unsupported status when a named character payload cannot be decoded", () => {
