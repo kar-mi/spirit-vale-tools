@@ -260,4 +260,68 @@ describe("FishNetDpsMeter", () => {
       personal: { actorIds: [303], damage: 240 },
     });
   });
+
+  describe("current DPS", () => {
+    test("ramps the divisor up to the rolling window duration", () => {
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      meter.consumeCombat(damage(101, 300), 0);
+      meter.consumeCombat(damage(101, 300), 10_000);
+
+      expect(meter.getLatestSnapshot(10_000)).toMatchObject({
+        partyCurrentDps: 60,
+        actors: [{ currentDps: 60 }],
+        personal: { currentDps: 60 },
+      });
+    });
+
+    test("includes only damage inside the rolling window", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 150), 29_000);
+
+      expect(meter.getLatestSnapshot(31_000)?.actors[0]?.currentDps).toBe(10);
+    });
+
+    test("drops hits at the window boundary and reaches zero after the last hit expires", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 150), 0);
+      meter.consumeCombat(damage(101, 150), 7_500);
+
+      expect(meter.getLatestSnapshot(15_000)?.actors[0]?.currentDps).toBe(10);
+      expect(meter.getLatestSnapshot(22_500)?.actors[0]?.currentDps).toBe(0);
+    });
+
+    test("defaults the window end to the last damage timestamp", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 200), 14_000);
+
+      expect(meter.getLatestSnapshot()?.actors[0]?.currentDps)
+        .toBe(meter.getLatestSnapshot(14_000)?.actors[0]?.currentDps);
+    });
+
+    test("supports a custom window and validates its duration", () => {
+      const meter = new FishNetDpsMeter({ currentWindowMs: 10_000 });
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(101, 100), 9_000);
+
+      expect(meter.getLatestSnapshot(10_000)?.actors[0]?.currentDps).toBe(10);
+      expect(() => new FishNetDpsMeter({ currentWindowMs: 0 })).toThrow(
+        "currentWindowMs must be a positive finite number",
+      );
+      expect(() => new FishNetDpsMeter({ currentWindowMs: Number.NaN })).toThrow(
+        "currentWindowMs must be a positive finite number",
+      );
+    });
+
+    test("sums actor current DPS into the party value", () => {
+      const meter = new FishNetDpsMeter();
+      meter.consumeCombat(damage(101, 100), 0);
+      meter.consumeCombat(damage(202, 300), 10_000);
+
+      const snapshot = meter.getLatestSnapshot(10_000);
+      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([30, 10]);
+      expect(snapshot?.partyCurrentDps).toBe(40);
+    });
+  });
 });

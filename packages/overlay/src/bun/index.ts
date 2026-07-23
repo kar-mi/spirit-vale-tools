@@ -16,7 +16,7 @@ import {
   type OverlayElementId,
 } from "../settings.ts";
 
-const LIVE_LOG_POLL_MS = 2_500;
+const LIVE_LOG_POLL_MS = 1_000;
 const TOPMOST_REASSERT_MS = 2_000;
 const SETTINGS_WIDTH = 798;
 const SETTINGS_HEIGHT = 680;
@@ -55,6 +55,8 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   let publishing = false;
   let shuttingDown = false;
   let closedCallbackSent = false;
+  let lastEventObservedAtMs: number | undefined;
+  let lastEventWallMs: number | undefined;
   let unsubscribeCharacter = () => {};
 
   const persistence = new SafeSaveQueue<typeof settings>({
@@ -216,7 +218,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   };
 
   function appState(): OverlayState {
-    const snapshot = meter.getLatestSnapshot();
+    const snapshot = meter.getLatestSnapshot(relativeNowMs());
     return {
       locked: settings.locked,
       personalName: settings.personalName,
@@ -243,8 +245,9 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     if (publishing || shuttingDown) return;
     publishing = true;
     try {
-      try { overlayRpc.send.stateChanged(appState()); } catch { /* View may still be connecting. */ }
-      try { settingsRpc.send.stateChanged(appState()); } catch { /* Settings may be closed. */ }
+      const state = appState();
+      try { overlayRpc.send.stateChanged(state); } catch { /* View may still be connecting. */ }
+      try { settingsRpc.send.stateChanged(state); } catch { /* Settings may be closed. */ }
     } finally {
       publishing = false;
     }
@@ -255,11 +258,23 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     polling = true;
     try {
       const batch = await liveLog.poll();
-      if (batch.reset) meter = new FishNetDpsMeter({ personalName: settings.personalName });
+      if (batch.reset) {
+        meter = new FishNetDpsMeter({ personalName: settings.personalName });
+        lastEventObservedAtMs = undefined;
+        lastEventWallMs = undefined;
+      }
+      let batchLastObservedAtMs: number | undefined;
       for (const { event, observedAtMs } of batch.events) {
         if (event.kind === "actorIdentity") meter.consumeIdentity(event, observedAtMs);
         else meter.consumeCombat(event, observedAtMs);
+        batchLastObservedAtMs = Math.max(batchLastObservedAtMs ?? observedAtMs, observedAtMs);
       }
+      if (batchLastObservedAtMs !== undefined) {
+        lastEventObservedAtMs = batchLastObservedAtMs;
+        lastEventWallMs = Date.now();
+      }
+      const nowMs = relativeNowMs();
+      if (nowMs !== undefined) meter.advance(nowMs);
       const fileName = path.basename(batch.path ?? liveLogOverride ?? "combat.jsonl");
       if (batch.missing) {
         status = "waiting";
@@ -279,6 +294,11 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     } finally {
       polling = false;
     }
+  }
+
+  function relativeNowMs(): number | undefined {
+    if (lastEventObservedAtMs === undefined || lastEventWallMs === undefined) return undefined;
+    return lastEventObservedAtMs + (Date.now() - lastEventWallMs);
   }
 
   function openSettings(): void {

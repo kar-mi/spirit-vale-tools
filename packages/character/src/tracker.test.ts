@@ -77,6 +77,32 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.currentArchetypeId()).toBe(12);
   });
 
+  test("updates the active class for the same character", () => {
+    const tracker = new FishNetCharacterTracker({
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Example Hero",
+      archetypes: ["Mage", "Wizard"],
+      level: 42,
+      experience: 0,
+      jobLevel: 18,
+      jobExperience: 0,
+      attributes: { STR: 5, VIT: 20, AGI: 10, DEX: 15, INT: 70, LUK: 10 },
+      activeLoadout: "Normal",
+      equipment: [],
+      artifacts: [],
+      skills: [],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "cached",
+    });
+    const packet = characterPacket("CharacterCallback_T");
+    packet.payload = Buffer.concat([packed(131072), packet.payload.subarray(1)]);
+
+    expect(tracker.consume(packet)).toBe(true);
+    expect(tracker.current()?.archetypes).toEqual(["Warrior", "Berserker"]);
+    expect(tracker.currentArchetypeId()).toBe(12);
+  });
+
   test("re-derives cached substat values from raw rolls using current tables", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.setCached({
@@ -138,4 +164,15 @@ function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: 
     payload: Buffer.from(payloadHex, "hex"),
     connectionId: "test-connection",
   } as CapturedFishNetPacket;
+}
+
+function packed(value: number): Buffer {
+  let encoded = BigInt(value) << 1n;
+  const bytes: number[] = [];
+  while (encoded >= 0x80n) {
+    bytes.push(Number(encoded & 0x7fn) | 0x80);
+    encoded >>= 7n;
+  }
+  bytes.push(Number(encoded));
+  return Buffer.from(bytes);
 }

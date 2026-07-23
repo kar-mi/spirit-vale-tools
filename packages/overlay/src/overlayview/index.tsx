@@ -264,7 +264,7 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
       </div>
       {personal ? (
         <>
-          <span class="personal-value">{formatDps(personal.dps)}</span><span class="personal-unit">DPS</span>
+          <span class="personal-value">{formatDps(personal.currentDps)}</span><span class="personal-unit">DPS</span>
           <div class="personal-details">
             <span>Damage<strong>{compactFormat.format(personal.damage)}</strong></span>
             <span>Crit rate<strong>{personal.hits ? `${Math.round(personal.criticalHits / personal.hits * 100)}%` : "—"}</strong></span>

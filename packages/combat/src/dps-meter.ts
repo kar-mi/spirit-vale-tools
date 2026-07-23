@@ -6,6 +6,8 @@ export interface FishNetDpsMeterOptions {
   idleGapMs?: number;
   /** Minimum duration used as the DPS divisor. Defaults to one second. */
   minimumDurationMs?: number;
+  /** Milliseconds of recent damage included in current DPS. Defaults to 15 seconds. */
+  currentWindowMs?: number;
   /** FishNet ticks per second used for replay records without wall-clock timestamps. Defaults to 30. */
   replayTicksPerSecond?: number;
   personalName?: string;
@@ -39,6 +41,7 @@ export interface FishNetDpsActorRow {
   archetype?: number;
   damage: number;
   dps: number;
+  currentDps: number;
   contribution: number;
   hits: number;
   criticalHits: number;
@@ -57,6 +60,7 @@ export interface FishNetDpsEncounterSnapshot {
   durationMs: number;
   totalDamage: number;
   partyDps: number;
+  partyCurrentDps: number;
   actors: FishNetDpsActorRow[];
   personalName: string;
   personalMatch: FishNetPersonalMatch;
@@ -103,6 +107,7 @@ interface EncounterAggregate {
 
 const DEFAULT_IDLE_GAP_MS = 30_000;
 const DEFAULT_MINIMUM_DURATION_MS = 1_000;
+const DEFAULT_CURRENT_WINDOW_MS = 15_000;
 const DEFAULT_REPLAY_TICKS_PER_SECOND = 30;
 const ANALYSIS_BUCKET_MS = 5_000;
 
@@ -110,6 +115,7 @@ const ANALYSIS_BUCKET_MS = 5_000;
 export class FishNetDpsMeter {
   private readonly idleGapMs: number;
   private readonly minimumDurationMs: number;
+  private readonly currentWindowMs: number;
   private readonly replayTicksPerSecond: number;
   private readonly finished: EncounterAggregate[] = [];
   private readonly identities = new Map<number, {
@@ -128,6 +134,10 @@ export class FishNetDpsMeter {
     this.minimumDurationMs = positiveFinite(
       options.minimumDurationMs ?? DEFAULT_MINIMUM_DURATION_MS,
       "minimumDurationMs",
+    );
+    this.currentWindowMs = positiveFinite(
+      options.currentWindowMs ?? DEFAULT_CURRENT_WINDOW_MS,
+      "currentWindowMs",
     );
     this.replayTicksPerSecond = positiveFinite(
       options.replayTicksPerSecond ?? DEFAULT_REPLAY_TICKS_PER_SECOND,
@@ -272,14 +282,14 @@ export class FishNetDpsMeter {
     return this.personalActorId;
   }
 
-  getSnapshots(): FishNetDpsEncounterSnapshot[] {
+  getSnapshots(nowMs?: number): FishNetDpsEncounterSnapshot[] {
     const encounters = this.current ? [...this.finished, this.current] : this.finished;
-    return encounters.map((encounter) => this.snapshot(encounter));
+    return encounters.map((encounter) => this.snapshot(encounter, nowMs));
   }
 
-  getLatestSnapshot(): FishNetDpsEncounterSnapshot | undefined {
+  getLatestSnapshot(nowMs?: number): FishNetDpsEncounterSnapshot | undefined {
     const encounter = this.current ?? this.finished.at(-1);
-    return encounter ? this.snapshot(encounter) : undefined;
+    return encounter ? this.snapshot(encounter, nowMs) : undefined;
   }
 
   /** Maps a FishNet tick onto replay time relative to a caller-selected origin. */
@@ -295,7 +305,8 @@ export class FishNetDpsMeter {
     this.current = undefined;
   }
 
-  private snapshot(encounter: EncounterAggregate): FishNetDpsEncounterSnapshot {
+  private snapshot(encounter: EncounterAggregate, nowMs?: number): FishNetDpsEncounterSnapshot {
+    const snapshotNowMs = Math.max(nowMs ?? encounter.lastDamageAtMs, encounter.lastDamageAtMs);
     const durationMs = Math.max(
       this.minimumDurationMs,
       encounter.lastDamageAtMs - encounter.startedAtMs,
@@ -303,8 +314,17 @@ export class FishNetDpsMeter {
     const mergedActors = mergeActors(encounter.actors);
     const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
     const actors = mergedActors
-      .map((actor) => actorRow(actor, encounter.startedAtMs, durationMs, totalDamage))
+      .map((actor) => actorRow(
+        actor,
+        encounter.startedAtMs,
+        durationMs,
+        totalDamage,
+        snapshotNowMs,
+        this.currentWindowMs,
+        this.minimumDurationMs,
+      ))
       .sort(compareRows);
+    const partyCurrentDps = actors.reduce((sum, actor) => sum + actor.currentDps, 0);
     const normalizedPersonalName = normalizeName(this.personalName);
     const activeMatches = normalizedPersonalName
       ? new Set(encounter.actors
@@ -336,6 +356,7 @@ export class FishNetDpsMeter {
       durationMs,
       totalDamage,
       partyDps: perSecond(totalDamage, durationMs),
+      partyCurrentDps,
       actors,
       personalName: this.personalName,
       personalMatch,
@@ -423,7 +444,24 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
   return [...merged.values()];
 }
 
-function actorRow(actor: ActorAggregate, startedAtMs: number, durationMs: number, partyDamage: number): FishNetDpsActorRow {
+function actorRow(
+  actor: ActorAggregate,
+  startedAtMs: number,
+  durationMs: number,
+  partyDamage: number,
+  nowMs: number,
+  currentWindowMs: number,
+  minimumDurationMs: number,
+): FishNetDpsActorRow {
+  const currentCutoffMs = nowMs - currentWindowMs;
+  const windowDamage = actor.damagePoints.reduce(
+    (sum, point) => point.observedAtMs > currentCutoffMs ? sum + point.damage : sum,
+    0,
+  );
+  const currentDurationMs = Math.max(
+    minimumDurationMs,
+    Math.min(currentWindowMs, nowMs - startedAtMs),
+  );
   const skills = [...actor.skills.values()]
     .map((skill): FishNetDpsSkillRow => ({
       ...skill,
@@ -437,6 +475,7 @@ function actorRow(actor: ActorAggregate, startedAtMs: number, durationMs: number
     ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
+    currentDps: perSecond(windowDamage, currentDurationMs),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
     hits: actor.hits,
     criticalHits: actor.criticalHits,
