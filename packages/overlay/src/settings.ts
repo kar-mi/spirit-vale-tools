@@ -24,9 +24,9 @@ export interface DisplayBounds {
 }
 
 const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
-  dpsChart: { enabled: true, x: 40, y: 40, width: 480, height: 240 },
-  personalDps: { enabled: true, x: 40, y: 300, width: 280, height: 150 },
-  partyRanking: { enabled: true, x: 540, y: 40, width: 360, height: 300 },
+  dpsChart: { enabled: true, x: 318, y: 775, width: 462, height: 226 },
+  personalDps: { enabled: true, x: 794, y: 873, width: 160, height: 127 },
+  partyRanking: { enabled: true, x: 315, y: 434, width: 360, height: 300 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
