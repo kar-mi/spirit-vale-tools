@@ -1,6 +1,5 @@
 import { signal } from "@preact/signals";
 import { render } from "preact";
-import { useEffect, useRef } from "preact/hooks";
 import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-theme/title-bar";
 
@@ -26,12 +25,6 @@ void electroview.rpc?.request.getState({}).then((next) => { state.value = next; 
 
 function App() {
   const next = state.value;
-  const nameRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (nameRef.current && next && document.activeElement !== nameRef.current) {
-      nameRef.current.value = next.personalName;
-    }
-  }, [next?.personalName]);
   if (!next) return <main class="app-shell" />;
   return (
     <main class="app-shell">
@@ -69,14 +62,9 @@ function App() {
         </section>
         <section class="settings-section">
           <h2>Personal character</h2>
-          <form class="name-form" onSubmit={(event) => {
-            event.preventDefault();
-            void setPersonalName(nameRef.current?.value ?? "");
-            nameRef.current?.blur();
-          }}>
-            <input ref={nameRef} class="input" type="text" maxLength={64} autocomplete="off" placeholder="Exact in-game display name" defaultValue={next.personalName} />
-            <button class="btn" type="submit">Save</button>
-          </form>
+          <p>{next.personalName
+            ? <>Detected automatically: <strong>{next.personalName}</strong></>
+            : "Waiting to detect your active character."}</p>
         </section>
         <div class="actions">
           <button class="btn danger" type="button" onClick={() => void electroview.rpc?.request.closeOverlay({})}>Close overlay</button>
@@ -92,10 +80,6 @@ function updateLock(locked: boolean): Promise<void> {
 
 function setEnabled(id: OverlayElementId, enabled: boolean): Promise<void> {
   return electroview.rpc?.request.setElementEnabled({ id, enabled }).then((next) => { state.value = next; }) ?? Promise.resolve();
-}
-
-function setPersonalName(name: string): Promise<void> {
-  return electroview.rpc?.request.setPersonalName({ name }).then((next) => { state.value = next; }) ?? Promise.resolve();
 }
 
 render(<App />, document.getElementById("root")!);

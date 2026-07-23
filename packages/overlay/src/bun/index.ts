@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { FishNetDpsMeter, DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
+import { DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
 import type { CharacterViewState } from "@spiritvale/character";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { applyRoundedCorners, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
@@ -9,6 +9,7 @@ import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement
 import { BrowserView, BrowserWindow, GlobalShortcut, Screen } from "electrobun/bun";
 
 import type { OverlayRpc, OverlaySettingsRpc, OverlayState, OverlayStatus } from "../app-types.ts";
+import { createPersonalDpsMeter, detectedPersonalName, syncPersonalCharacter } from "../personal-character.ts";
 import {
   loadOverlaySettings,
   normalizeOverlaySettings,
@@ -39,8 +40,8 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   const bounds = Screen.getPrimaryDisplay().bounds;
   let settings = await loadOverlaySettings(options.settingsPath, bounds);
   if (options.lockOnCreate) settings.locked = true;
-  let meter = new FishNetDpsMeter({ personalName: settings.personalName });
   let characterState = options.getCharacterState();
+  let meter = createPersonalDpsMeter(characterState);
   const liveLogOverride = process.env.SPIRIT_VALE_COMBAT_LOG;
   const liveLog = liveLogOverride
     ? new DpsLogFollower(liveLogOverride)
@@ -131,13 +132,6 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           publish();
           return appState();
         },
-        setPersonalName: ({ name }) => {
-          settings.personalName = name.trim().slice(0, 64);
-          meter.setPersonalName(settings.personalName);
-          persist();
-          publish();
-          return appState();
-        },
         closeOverlay: async () => {
           await shutdown();
           overlayWindow.close();
@@ -197,6 +191,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   }, TOPMOST_REASSERT_MS);
   unsubscribeCharacter = options.subscribeCharacter((next) => {
     characterState = next;
+    syncPersonalCharacter(meter, characterState);
     publish();
   });
 
@@ -221,7 +216,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     const snapshot = meter.getLatestSnapshot(relativeNowMs());
     return {
       locked: settings.locked,
-      personalName: settings.personalName,
+      personalName: detectedPersonalName(characterState),
       status,
       statusDetail,
       elements: settings.elements,
@@ -259,7 +254,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     try {
       const batch = await liveLog.poll();
       if (batch.reset) {
-        meter = new FishNetDpsMeter({ personalName: settings.personalName });
+        meter = createPersonalDpsMeter(characterState);
         lastEventObservedAtMs = undefined;
         lastEventWallMs = undefined;
       }

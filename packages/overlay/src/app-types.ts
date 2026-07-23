@@ -59,7 +59,6 @@ export type OverlaySettingsRpc = {
         params: { id: OverlayElementId; enabled: boolean };
         response: OverlayState;
       };
-      setPersonalName: { params: { name: string }; response: OverlayState };
       closeOverlay: { params: Record<string, never>; response: void };
     };
   }>;

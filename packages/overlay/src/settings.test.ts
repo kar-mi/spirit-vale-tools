@@ -37,7 +37,7 @@ describe("overlay settings", () => {
     const settings = await loadOverlaySettings(settingsPath, bounds);
     expect(settings.locked).toBe(true);
     expect(Object.values(settings.elements).every((element) => element.opacity === 0.55)).toBe(true);
-    expect(settings.personalName).toBe("Fictional Hero");
+    expect(settings).not.toHaveProperty("personalName");
     expect(settings.elements.dpsChart).toEqual({ enabled: false, opacity: 0.55, x: 780, y: 0, width: 500, height: 200 });
     expect(settings.elements.personalDps.width).toBe(160);
     expect(settings.elements.personalDps.height).toBe(100);
@@ -48,7 +48,6 @@ describe("overlay settings", () => {
   test("round-trips normalized settings", async () => {
     const settingsPath = await createSettingsPath();
     const settings = defaultOverlaySettings(bounds);
-    settings.personalName = "Fictional Hero";
     settings.elements.partyRanking.x = 640;
     await saveOverlaySettings(settings, settingsPath);
     expect(await loadOverlaySettings(settingsPath, bounds)).toEqual(settings);

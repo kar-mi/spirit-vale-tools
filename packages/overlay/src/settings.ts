@@ -12,7 +12,6 @@ export type { OverlayElementId, OverlayElementSettings };
 
 export interface OverlaySettings {
   locked: boolean;
-  personalName: string;
   elements: Record<OverlayElementId, OverlayElementSettings>;
 }
 
@@ -76,7 +75,6 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
   })) as unknown as Record<OverlayElementId, OverlayElementSettings>;
   return {
     locked: typeof source.locked === "boolean" ? source.locked : false,
-    personalName: typeof source.personalName === "string" ? source.personalName.trim().slice(0, 64) : "",
     elements,
   };
 }
