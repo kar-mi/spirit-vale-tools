@@ -35,7 +35,7 @@ function App() {
   return (
     <main class="app-shell">
       <TitleBar
-        appTag="Combat Analysis"
+        appTag="Overlay Settings"
         minWidth={560}
         minHeight={420}
         getFrame={async () => (await electroview.rpc?.request.getWindowFrame({})) ?? { x: 0, y: 0, width: 560, height: 420 }}
@@ -46,7 +46,7 @@ function App() {
       <section class="settings-content">
         <section class="settings-section">
           <div class="toggle-row">
-            <span><strong>{next.locked ? "Combat analysis locked" : "Edit mode"}</strong></span>
+            <span><strong>{next.locked ? "Overlay locked" : "Edit mode"}</strong></span>
             <button class="btn" type="button" onClick={() => void updateLock(!next.locked)}>
               {next.locked ? "Unlock overlay" : "Lock overlay"}
             </button>
@@ -78,7 +78,7 @@ function App() {
           </form>
         </section>
         <div class="actions">
-          <button class="btn danger" type="button" onClick={() => void electroview.rpc?.request.closeOverlay({})}>Close combat analysis</button>
+          <button class="btn danger" type="button" onClick={() => void electroview.rpc?.request.closeOverlay({})}>Close overlay</button>
         </div>
       </section>
     </main>

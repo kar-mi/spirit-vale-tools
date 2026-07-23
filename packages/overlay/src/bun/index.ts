@@ -128,7 +128,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
   });
 
   overlayWindow = new BrowserWindow({
-    title: "Spirit Vale Combat Analysis",
+    title: "Spirit Vale Overlay",
     url: "views://overlayview/index.html",
     frame: bounds,
     titleBarStyle: "hidden",
@@ -246,7 +246,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
       return;
     }
     const nextWindow = new BrowserWindow({
-      title: "Spirit Vale Combat Analysis Settings",
+      title: "Spirit Vale Overlay Settings",
       url: "views://overlaysettingsview/index.html",
       frame: {
         x: bounds.x + 80,
