@@ -26,19 +26,32 @@ describe("DPS app settings", () => {
     expect(await loadDpsAppSettings(settingsPath)).toEqual(settings);
   });
 
-  test("replaces a saved undersized frame with the current combat window size", async () => {
+  test("preserves a saved frame between the minimum and default combat window sizes", async () => {
+    const settingsPath = await createSettingsPath();
+    const settings = {
+      personalName: "",
+      tab: "all" as const,
+      frame: { x: 120, y: 140, width: 700, height: 600 },
+    };
+
+    await saveDpsAppSettings(settings, settingsPath);
+
+    expect((await loadDpsAppSettings(settingsPath)).frame).toEqual(settings.frame);
+  });
+
+  test("replaces a saved undersized frame with the default combat window size", async () => {
     const settingsPath = await createSettingsPath();
     await saveDpsAppSettings({
       personalName: "",
       tab: "all",
-      frame: { x: 120, y: 140, width: 420, height: 560 },
+      frame: { x: 120, y: 140, width: 619, height: 519 },
     }, settingsPath);
 
     expect((await loadDpsAppSettings(settingsPath)).frame).toEqual({
       x: 80,
       y: 80,
-      width: 728,
-      height: 776,
+      width: 945,
+      height: 800,
     });
   });
 });
