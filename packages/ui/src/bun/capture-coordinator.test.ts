@@ -206,6 +206,41 @@ describe("central capture coordinator", () => {
     }
   });
 
+  test("writes an owner-resolved identity before damage from an observed player actor", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-combat-identity-"));
+    const capture = new FakeCapture();
+    try {
+      const coordinator = new CaptureCoordinator({
+        logDirectory: directory,
+        captureFactory: () => capture as unknown as PacketCapture,
+      });
+      await coordinator.start();
+
+      capture.packet(authenticatedPacket(1, "test-connection"));
+      capture.packet(ownedSpawnPacket(2, 40, 7, "PlayerController"));
+      capture.packet(ownedSpawnPacket(3, 140, 7, "UnrecognizedComponent"));
+      capture.packet(identityPacket(4, 40, "Aster Vale", "test-connection"));
+      capture.packet(damagePacket(5, 900, 140));
+      await coordinator.stop();
+
+      const combatPointer = await readCurrentLogStream("combat", directory);
+      const combat = records(await readFile(combatPointer!.path, "utf8")) as Array<{
+        type: string;
+        data?: { actorId?: number; displayName?: string };
+      }>;
+      const resolvedIndex = combat.findIndex((record) => record.type === "combat.actorIdentity"
+        && record.data?.actorId === 140
+        && record.data.displayName === "Aster Vale");
+      const damageIndex = combat.findIndex((record) => record.type === "combat.event"
+        && record.data?.actorId === 140);
+
+      expect(resolvedIndex).toBeGreaterThan(-1);
+      expect(damageIndex).toBeGreaterThan(resolvedIndex);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("keeps new-connection actor identities when a stale connection trails a map change", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-central-reconnect-"));
     const capture = new FakeCapture();
@@ -617,6 +652,60 @@ function identityPacket(tick: number, objectId: number, displayName: string, con
     raw: Buffer.alloc(0),
     payload: Buffer.alloc(0),
     connectionId,
+  };
+}
+
+function ownedSpawnPacket(
+  tick: number,
+  objectId: number,
+  ownerConnectionId: number,
+  networkBehaviourType: string,
+): TestPacket {
+  return {
+    tick,
+    packetId: 5,
+    packetName: "objectSpawn",
+    objectId,
+    ownerConnectionId,
+    rpcLinkRegistrations: [{
+      linkId: 900 + objectId,
+      objectId,
+      componentIndex: 0,
+      rpcHash: 1,
+      packetName: "observersRpc",
+      networkBehaviourType,
+    }],
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+  };
+}
+
+function damagePacket(tick: number, targetId: number, actorId: number): TestPacket {
+  return {
+    tick,
+    packetId: 900,
+    packetName: "rpcLink",
+    objectId: targetId,
+    rpcName: "ApplyDamage_C",
+    networkBehaviourType: "HealthComponent",
+    decodedFields: [
+      { name: "dmg.Team", codec: "packedInt32", value: 0 },
+      { name: "dmg.Value", codec: "packedInt32", value: 100 },
+      { name: "dmg.Type", codec: "packedInt32", value: 0 },
+      { name: "dmg.Hit", codec: "packedInt32", value: 0 },
+      { name: "dmg.Hits", codec: "packedInt32", value: 1 },
+      { name: "dmg.DamageSourceId", codec: "stringUtf8Packed", value: "SyntheticArc" },
+      { name: "dmg.AttackerId", codec: "packedInt32", value: actorId },
+      { name: "dmg.IsClone", codec: "boolean", value: false },
+      { name: "dmg.IsSummon", codec: "boolean", value: false },
+      { name: "dmg.Element", codec: "packedInt32", value: 0 },
+      { name: "dmg.WeaponType", codec: "packedInt32", value: 4 },
+      { name: "dmg.Range", codec: "packedInt32", value: 2 },
+      { name: "position", codec: "vector3", value: [1, 2, 3] },
+      { name: "origin", codec: "vector3", value: [4, 5, 6] },
+    ],
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
   };
 }
 

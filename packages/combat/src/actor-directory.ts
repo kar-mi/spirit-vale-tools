@@ -59,6 +59,8 @@ export class FishNetActorDirectory {
   private readonly ownerObjects = new Map<number, Set<number>>();
   private readonly identitySources = new Map<number, FishNetActorIdentity>();
   private readonly sourceRevisions = new Map<number, number>();
+  /** Combat attacker IDs that should inherit the identity of another object with the same owner. */
+  private readonly observedPlayerActors = new Set<number>();
   /** UID-keyed names survive map-change resets when delta respawns repeat the UID. */
   private readonly uidIdentities = new Map<string, { displayName: string; archetype?: number }>();
   private nextSourceRevision = 1;
@@ -76,11 +78,13 @@ export class FishNetActorDirectory {
     }
 
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
+      const observedPlayerActor = this.observedPlayerActors.has(packet.objectId);
       const events = this.removeObject(packet.objectId, packet.tick);
+      if (observedPlayerActor) this.observedPlayerActors.add(packet.objectId);
       const ownerConnectionId = validOwner(packet.ownerConnectionId);
       const identityEligible = packet.rpcLinkRegistrations?.some(({ networkBehaviourType }) => {
         return networkBehaviourType !== undefined && IDENTITY_BEHAVIOURS.has(networkBehaviourType);
-      }) ?? false;
+      }) || observedPlayerActor;
       this.objects.set(packet.objectId, {
         ...(ownerConnectionId === undefined ? {} : { ownerConnectionId }),
         identityEligible,
@@ -194,6 +198,21 @@ export class FishNetActorDirectory {
     return [...this.identities.values()].map((identity) => ({ ...identity }));
   }
 
+  /**
+   * Marks an attacker ID from a player-team combat event as eligible for owner-based identity
+   * propagation. Spawn RPC metadata is sometimes incomplete, while the combat event itself is
+   * definitive evidence that this object participates in player damage.
+   */
+  observePlayerActor(actorId: number, tick: number): FishNetActorIdentityEvent[] {
+    if (!Number.isInteger(actorId) || actorId < 0) return [];
+    this.observedPlayerActors.add(actorId);
+    const object = this.objects.get(actorId);
+    if (!object) return [];
+    object.identityEligible = true;
+    if (object.ownerConnectionId !== undefined) return this.refreshOwner(object.ownerConnectionId, tick);
+    return this.reconcile(actorId, this.identitySources.get(actorId), tick);
+  }
+
   reset(): void {
     this.uidIdentities.clear();
     this.clear();
@@ -270,6 +289,7 @@ export class FishNetActorDirectory {
     const ownerConnectionId = object?.ownerConnectionId;
     if (ownerConnectionId !== undefined) this.removeOwnerObject(ownerConnectionId, actorId);
     this.objects.delete(actorId);
+    this.observedPlayerActors.delete(actorId);
     this.identitySources.delete(actorId);
     this.sourceRevisions.delete(actorId);
     const events = this.reconcile(actorId, undefined, tick);
@@ -367,6 +387,7 @@ export class FishNetActorDirectory {
     this.ownerObjects.clear();
     this.identitySources.clear();
     this.sourceRevisions.clear();
+    this.observedPlayerActors.clear();
     this.nextSourceRevision = 1;
   }
 }

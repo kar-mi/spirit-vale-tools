@@ -367,6 +367,11 @@ export class CaptureCoordinator {
     try {
       const identities = this.actors.consume(packet);
       const events = this.combat.consume(packet);
+      for (const event of events) {
+        if ((event.kind === "damage" || event.kind === "death") && event.team === 0) {
+          identities.push(...this.actors.observePlayerActor(event.actorId, event.tick));
+        }
+      }
       handled ||= identities.length > 0 || events.length > 0;
       for (const event of identities) this.combatLog?.log("combat.actorIdentity", jsonObject(event));
       for (const event of events) this.combatLog?.log("combat.event", jsonObject(event));
