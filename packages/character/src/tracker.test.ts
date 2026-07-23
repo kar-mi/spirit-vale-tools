@@ -22,7 +22,7 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.consume(characterPacket("CharacterCallback_T"))).toBe(true);
     expect(tracker.state()).toMatchObject({
       status: "live",
-      weight: { current: 81, maximum: 3_260 },
+      weight: { current: 71, maximum: 3_260 },
     });
     expect(tracker.state().stats).not.toHaveLength(0);
   });

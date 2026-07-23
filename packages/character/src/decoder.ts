@@ -149,7 +149,8 @@ function readCharacterHistory(
       });
       reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
       reader.dictionary(() => {
-        if (readRefinableItem(reader)) inventoryWeight += 10;
+        // The game's inventory-total routine reads gems but omits them from weight.
+        readRefinableItem(reader);
       });
       reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
       reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
