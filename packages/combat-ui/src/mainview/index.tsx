@@ -21,7 +21,7 @@ const STATUS_TONE: Record<DpsAppState["status"], StatusTone> = {
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 
-type ActorSortKey = "dps" | "damage" | "contribution" | "critRate" | "kills";
+type ActorSortKey = "dps" | "damage" | "contribution" | "critRate" | "kills" | "mobsHit";
 type SortDirection = "ascending" | "descending";
 interface ActorSort { key: ActorSortKey; direction: SortDirection }
 
@@ -148,7 +148,7 @@ function App() {
                   <SortableHeader label="DMG %" sortKey="contribution" sort={actorSort} onSort={sortActorsBy} />
                   <SortableHeader label="CRT %" sortKey="critRate" sort={actorSort} onSort={sortActorsBy} />
                   <SortableHeader label="Kills" sortKey="kills" sort={actorSort} onSort={sortActorsBy} />
-                  <th>Mobs hit</th>
+                  <SortableHeader label="Mobs hit" sortKey="mobsHit" sort={actorSort} onSort={sortActorsBy} />
                 </tr></thead>
                 <tbody>{sortedActors.map((actor) => (
                   <tr key={actor.actorIds[0]} class="meter-table-row" style={`--row-fill:${Math.max(0, Math.min(100, actor.contribution * 100))}%`}>
