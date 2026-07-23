@@ -36,6 +36,7 @@ export interface FishNetDpsTimelinePoint {
 export interface FishNetDpsActorRow {
   actorIds: number[];
   displayName: string;
+  archetype?: number;
   damage: number;
   dps: number;
   contribution: number;
@@ -386,12 +387,18 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
         hits: 0,
         criticalHits: 0,
         kills: 0,
+        ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
         ...(actor.ownerConnectionId === undefined ? {} : { ownerConnectionId: actor.ownerConnectionId }),
         ...(actor.uid === undefined ? {} : { uid: actor.uid }),
       };
       merged.set(key, target);
     }
-    if (actor.activeIdentity) target.displayName = displayName;
+    if (actor.activeIdentity) {
+      target.displayName = displayName;
+      target.archetype = actor.archetype;
+    } else if (target.archetype === undefined) {
+      target.archetype = actor.archetype;
+    }
     target.activeIdentity ||= actor.activeIdentity;
     target.damage += actor.damage;
     target.hits += actor.hits;
@@ -425,6 +432,7 @@ function actorRow(actor: ActorAggregate, startedAtMs: number, durationMs: number
   return {
     actorIds: [...actor.actorIds],
     displayName: actor.displayName ?? "Unknown",
+    ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,

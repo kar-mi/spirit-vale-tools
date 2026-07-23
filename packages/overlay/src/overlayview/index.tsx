@@ -16,6 +16,23 @@ const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", ma
 const MIN_ELEMENT_WIDTH = 160;
 const MIN_ELEMENT_HEIGHT = 100;
 const RESIZE_EDGES = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
+const CLASS_ICON_BY_ARCHETYPE: Readonly<Record<number, string>> = {
+  0: "warrior",
+  1: "mage",
+  2: "rogue",
+  3: "knight",
+  4: "summoner",
+  5: "acolyte",
+  6: "scout",
+  10: "paladin",
+  12: "berserker",
+  14: "priest",
+  16: "wizard",
+  21: "shinobi",
+  22: "gunslinger",
+  26: "necromancer",
+  31: "weaver",
+};
 type ResizeEdge = (typeof RESIZE_EDGES)[number];
 interface ElementRect { x: number; y: number; width: number; height: number }
 type PointerGesture =
@@ -220,14 +237,23 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
   return (
     <div class="element-content">
       <h2 class="element-title">Party DPS</h2>
-      {actors.length ? <div class="ranking">{actors.map((actor) => (
+      {actors.length ? <div class="ranking">{actors.map((actor, index) => (
         <div class="ranking-row" key={actor.actorIds[0]} style={`--row-fill:${actor.dps / maxDps * 100}%`}>
-          <span class="ranking-name">{actor.displayName}</span>
+          <span class="ranking-player">
+            <img class="ranking-class-icon" src={classIcon(actor.archetype)} alt="" aria-hidden="true" />
+            <span class="ranking-rank">{index + 1}.</span>
+            <span class="ranking-name">{actor.displayName}</span>
+          </span>
           <span class="ranking-dps">{formatDps(actor.dps)}</span>
         </div>
       ))}</div> : <div class="empty">Waiting for party damage</div>}
     </div>
   );
+}
+
+function classIcon(archetype: number | undefined): string {
+  const icon = archetype === undefined ? "weaver" : CLASS_ICON_BY_ARCHETYPE[archetype] ?? "weaver";
+  return `views://assets/class-icons/class-${icon}.webp`;
 }
 
 function partyTimeline(next: OverlayState): FishNetDpsTimelinePoint[] {

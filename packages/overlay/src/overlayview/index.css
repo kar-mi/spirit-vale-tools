@@ -141,5 +141,8 @@
 .ranking-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 6px 8px; overflow: hidden; border-radius: 6px; }
 .ranking-row::before { position: absolute; inset: 0 auto 0 0; width: var(--row-fill); background: rgba(127, 92, 210, .48); content: ""; }
 .ranking-row > * { position: relative; z-index: 1; }
+.ranking-player { display: flex; min-width: 0; align-items: center; gap: 7px; }
+.ranking-class-icon { width: 22px; height: 22px; flex: 0 0 auto; object-fit: contain; }
+.ranking-rank { width: 2ch; flex: 0 0 auto; color: rgba(255,255,255,.68); text-align: right; font-variant-numeric: tabular-nums; }
 .ranking-name { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .ranking-dps { font-variant-numeric: tabular-nums; }

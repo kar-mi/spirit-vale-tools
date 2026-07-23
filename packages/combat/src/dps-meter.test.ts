@@ -9,7 +9,7 @@ function identity(
   displayName: string,
   tick = 1,
   ownerConnectionId?: number,
-): FishNetActorIdentityEvent {
+): Extract<FishNetActorIdentityEvent, { operation: "upsert" }> {
   return {
     kind: "actorIdentity",
     operation: "upsert",
@@ -63,7 +63,7 @@ function death(actorId: number, value: number, duplicate: boolean): FishNetComba
 describe("FishNetDpsMeter", () => {
   test("ranks identified players and groups personal skill DPS over the encounter duration", () => {
     const meter = new FishNetDpsMeter({ personalName: " aster vale " });
-    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeIdentity({ ...identity(101, "Aster Vale"), archetype: 12 }, 0);
     meter.consumeIdentity(identity(202, "Briar Stone"), 0);
     meter.consumeCombat(damage(101, 300, "SyntheticArc", "Synthetic Arc", 0, "critical"), 0);
     meter.consumeCombat(damage(101, 200, "SyntheticRain", "Synthetic Rain"), 2_000);
@@ -75,6 +75,7 @@ describe("FishNetDpsMeter", () => {
       ["Aster Vale", 250],
       ["Briar Stone", 125],
     ]);
+    expect(snapshot?.actors[0]?.archetype).toBe(12);
     expect(snapshot?.personal?.skills).toMatchObject([
       { sourceId: "SyntheticArc", damage: 300, dps: 150, criticalHits: 1 },
       { sourceId: "SyntheticRain", damage: 200, dps: 100 },
