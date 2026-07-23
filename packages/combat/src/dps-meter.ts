@@ -41,6 +41,8 @@ export interface FishNetDpsActorRow {
   actorIds: number[];
   displayName: string;
   archetype?: number;
+  /** Milliseconds used as the DPS divisor and timeline span for this row. */
+  durationMs?: number;
   damage: number;
   dps: number;
   currentDps: number;
@@ -91,6 +93,7 @@ interface ActorAggregate {
   activeIdentity: boolean;
   damage: number;
   firstDamageAtMs?: number;
+  lastDamageAtMs?: number;
   hits: number;
   criticalHits: number;
   kills: number;
@@ -258,6 +261,7 @@ export class FishNetDpsMeter {
     if (countedDamage) {
       actor.damage += event.value;
       actor.firstDamageAtMs ??= observedAtMs;
+      actor.lastDamageAtMs = observedAtMs;
       actor.hits += 1;
       if (event.hitResult === "critical") actor.criticalHits += 1;
       actor.damagePoints.push({ observedAtMs, damage: event.value });
@@ -384,13 +388,10 @@ export class FishNetDpsMeter {
       ? undefined
       : mergedActors
         .find((actor) => actor.actorIds.includes(this.personalActorId!));
-    const selectedPersonal = selectedPersonalActor === undefined
-      ? undefined
-      : rowForActor(selectedPersonalActor);
-    const personal = selectedPersonal ?? (normalizedPersonalName
-      ? actors.find((actor) => normalizeName(actor.displayName) === normalizedPersonalName)
+    const personalActor = selectedPersonalActor ?? (normalizedPersonalName
+      ? namedActors.find((actor) => normalizeName(actor.displayName ?? "") === normalizedPersonalName)
       : undefined);
-    const personalMatch: FishNetPersonalMatch = selectedPersonal
+    const personalMatch: FishNetPersonalMatch = selectedPersonalActor
       ? "matched"
       : this.personalActorId !== undefined
         ? "missing"
@@ -398,9 +399,26 @@ export class FishNetDpsMeter {
       ? "unconfigured"
       : activeMatches.size > 1
         ? "ambiguous"
-        : personal
+        : personalActor
           ? "matched"
           : "missing";
+    const personalStartMs = personalActor?.firstDamageAtMs ?? encounter.startedAtMs;
+    const personalDurationMs = Math.max(
+      this.minimumDurationMs,
+      (personalActor?.lastDamageAtMs ?? personalStartMs) - personalStartMs,
+    );
+    const personal = personalActor === undefined
+      ? undefined
+      : actorRow(
+        personalActor,
+        personalStartMs,
+        personalDurationMs,
+        totalDamage,
+        snapshotNowMs,
+        this.currentWindowMs,
+        this.minimumDurationMs,
+        personalActor.displayName === undefined,
+      );
     return {
       id: encounter.id,
       startedAtMs: encounter.startedAtMs,
@@ -492,6 +510,11 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
       : actor.firstDamageAtMs === undefined
         ? target.firstDamageAtMs
         : Math.min(target.firstDamageAtMs, actor.firstDamageAtMs);
+    target.lastDamageAtMs = target.lastDamageAtMs === undefined
+      ? actor.lastDamageAtMs
+      : actor.lastDamageAtMs === undefined
+        ? target.lastDamageAtMs
+        : Math.max(target.lastDamageAtMs, actor.lastDamageAtMs);
     target.hits += actor.hits;
     target.criticalHits += actor.criticalHits;
     target.kills += actor.kills;
@@ -543,6 +566,7 @@ function actorRow(
     actorIds: [...actor.actorIds],
     displayName: actor.displayName ?? (isUnidentified ? "Unidentified" : "Unknown"),
     ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
+    durationMs,
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
     currentDps: perSecond(windowDamage, currentDurationMs),
@@ -568,6 +592,11 @@ function combineActors(actors: readonly ActorAggregate[]): ActorAggregate {
       : actor.firstDamageAtMs === undefined
         ? combined.firstDamageAtMs
         : Math.min(combined.firstDamageAtMs, actor.firstDamageAtMs);
+    combined.lastDamageAtMs = combined.lastDamageAtMs === undefined
+      ? actor.lastDamageAtMs
+      : actor.lastDamageAtMs === undefined
+        ? combined.lastDamageAtMs
+        : Math.max(combined.lastDamageAtMs, actor.lastDamageAtMs);
     combined.hits += actor.hits;
     combined.criticalHits += actor.criticalHits;
     combined.kills += actor.kills;

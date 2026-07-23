@@ -221,7 +221,7 @@ function clamp(value: number, minimum: number, maximum: number): number {
 function DpsChartElement({ state: next }: { state: OverlayState }) {
   const personal = next.snapshot?.personal;
   const points = personal?.timeline ?? partyTimeline(next);
-  const duration = next.snapshot?.durationMs ?? 0;
+  const duration = personal?.durationMs ?? next.snapshot?.durationMs ?? 0;
   return (
     <div class="element-content">
       <h2 class="element-title">{personal ? "Personal DPS over time" : "Party DPS over time"}</h2>

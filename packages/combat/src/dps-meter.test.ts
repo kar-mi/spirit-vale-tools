@@ -82,6 +82,41 @@ describe("FishNetDpsMeter", () => {
     ]);
   });
 
+  test("uses the personal first-to-last-hit span without changing the party ranking clock", () => {
+    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    meter.consumeIdentity(identity(101, "Aster Vale"), 0);
+    meter.consumeIdentity(identity(202, "Briar Stone"), 0);
+    meter.consumeCombat(damage(202, 100), 0);
+    meter.consumeCombat(damage(101, 300), 5_000);
+    meter.consumeCombat(damage(101, 300), 10_000);
+    meter.consumeCombat(damage(202, 100), 20_000);
+
+    const snapshot = meter.getLatestSnapshot();
+    expect(snapshot).toMatchObject({
+      durationMs: 20_000,
+      personalMatch: "matched",
+      personal: { damage: 600, durationMs: 5_000, dps: 120 },
+    });
+    expect(snapshot?.actors.find((actor) => actor.actorIds.includes(101))).toMatchObject({
+      damage: 600,
+      durationMs: 20_000,
+      dps: 30,
+    });
+  });
+
+  test("floors a single-hit personal duration at the configured minimum", () => {
+    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    meter.consumeCombat(damage(202, 100), 0);
+    meter.consumeCombat(damage(101, 300), 5_000);
+    meter.consumeCombat(damage(202, 100), 10_000);
+
+    expect(meter.getLatestSnapshot()?.personal).toMatchObject({
+      damage: 300,
+      durationMs: 1_000,
+      dps: 300,
+    });
+  });
+
   test("counts distinct enemy targets as mobs hit without counting the player target", () => {
     const meter = new FishNetDpsMeter();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
