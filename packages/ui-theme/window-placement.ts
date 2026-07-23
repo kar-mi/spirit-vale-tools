@@ -69,19 +69,23 @@ export class WindowPlacementStore {
   track(key: string, window: BrowserWindow): void {
     const capture = (frame: WindowFrame): void => {
       if (window.isMaximized()) return;
-      this.placements.frames[key] = {
-        x: Math.round(frame.x),
-        y: Math.round(frame.y),
-        width: unscaledSize(frame.width),
-        height: unscaledSize(frame.height),
-      };
-      this.persistence.schedule(this.placements);
+      this.remember(key, frame);
     };
     Electrobun.events.on(`move-${window.id}`, (event: { data: WindowFrame }) => capture(event.data));
     Electrobun.events.on(`resize-${window.id}`, (event: { data: WindowFrame }) => capture(event.data));
     window.on("close", () => {
       if (!window.isMaximized()) capture(window.getFrame());
     });
+  }
+
+  remember(key: string, frame: WindowFrame): void {
+    this.placements.frames[key] = {
+      x: Math.round(frame.x),
+      y: Math.round(frame.y),
+      width: unscaledSize(frame.width),
+      height: unscaledSize(frame.height),
+    };
+    this.persistence.schedule(this.placements);
   }
 
   async flush(): Promise<void> {

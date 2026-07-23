@@ -236,7 +236,7 @@ async function refreshCaptureDevices(): Promise<void> {
 }
 
 async function openTool(tool: ToolWindow): Promise<void> {
-  if (tool === "combat") await Promise.all([combatWindow.open(), overlayWindow.open()]);
+  if (tool === "combat") await combatWindow.open();
   else if (tool === "overlay") await overlayWindow.open();
   else if (tool === "rewards") await rewardsWindow.open();
   else if (tool === "market") await marketWindow.open();
@@ -308,6 +308,7 @@ function updateStorageWarning(): void {
 async function shutdown(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
+  placements.remember("launcher", launcherWindow.getFrame());
   launcherWindow.hide();
   settingsWindow?.close();
   try {
