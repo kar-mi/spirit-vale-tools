@@ -20,7 +20,7 @@ import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale
 
 const MINIMUM_WIDTH = 320;
 const MINIMUM_HEIGHT = 360;
-const LIVE_LOG_POLL_MS = 2_500;
+const LIVE_LOG_POLL_MS = 1_000;
 export interface DpsWindowOptions {
   logDirectory: string;
   settingsPath?: string;
@@ -45,6 +45,8 @@ let publishing = false;
 let shuttingDown = false;
 let storageWarning: string | undefined;
 let resetting = false;
+let lastEventObservedAtMs: number | undefined;
+let lastEventWallMs: number | undefined;
 
 const settingsPersistence = new SafeSaveQueue<typeof settings>({
   label: "DPS settings",
@@ -82,6 +84,8 @@ const rpc = BrowserView.defineRPC<DpsAppRpc>({
               personalName: settings.personalName,
               ...(manualPersonalActorId === undefined ? {} : { personalActorId: manualPersonalActorId }),
             });
+            lastEventObservedAtMs = undefined;
+            lastEventWallMs = undefined;
           } catch {
             // Keep the existing meter/UI data unchanged when rotation fails.
           } finally {
@@ -164,7 +168,7 @@ return {
 };
 
 function appState(): DpsAppState {
-  const snapshot = liveMeter.getLatestSnapshot();
+  const snapshot = liveMeter.getLatestSnapshot(relativeNowMs());
   return {
     tab: settings.tab,
     status,
@@ -199,11 +203,21 @@ async function pollLiveLog(): Promise<void> {
         personalName: settings.personalName,
         ...(manualPersonalActorId === undefined ? {} : { personalActorId: manualPersonalActorId }),
       });
+      lastEventObservedAtMs = undefined;
+      lastEventWallMs = undefined;
     }
+    let batchLastObservedAtMs: number | undefined;
     for (const { event, observedAtMs } of batch.events) {
       if (event.kind === "actorIdentity") liveMeter.consumeIdentity(event, observedAtMs);
       else liveMeter.consumeCombat(event, observedAtMs);
+      batchLastObservedAtMs = Math.max(batchLastObservedAtMs ?? observedAtMs, observedAtMs);
     }
+    if (batchLastObservedAtMs !== undefined) {
+      lastEventObservedAtMs = batchLastObservedAtMs;
+      lastEventWallMs = Date.now();
+    }
+    const nowMs = relativeNowMs();
+    if (nowMs !== undefined) liveMeter.advance(nowMs);
     const fileName = path.basename(batch.path ?? liveLogOverride ?? "combat.jsonl");
     if (batch.missing) updateLiveStatus("waiting", `Waiting for ${fileName}`);
     else if (batch.invalidLines > 0) updateLiveStatus("ready", `Reading ${fileName} with skipped lines`);
@@ -214,6 +228,11 @@ async function pollLiveLog(): Promise<void> {
   } finally {
     liveLogPolling = false;
   }
+}
+
+function relativeNowMs(): number | undefined {
+  if (lastEventObservedAtMs === undefined || lastEventWallMs === undefined) return undefined;
+  return lastEventObservedAtMs + (Date.now() - lastEventWallMs);
 }
 
 function updateLiveStatus(nextStatus: DpsAppStatus, detail: string): void {

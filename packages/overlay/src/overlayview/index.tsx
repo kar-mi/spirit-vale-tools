@@ -292,8 +292,8 @@ function WeightElement({ state: next }: { state: OverlayState }) {
 }
 
 function PartyRankingElement({ state: next }: { state: OverlayState }) {
-  const actors = [...(next.snapshot?.actors ?? [])].sort((a, b) => b.dps - a.dps).slice(0, 8);
-  const maxDps = Math.max(1, ...actors.map((actor) => actor.dps));
+  const actors = [...(next.snapshot?.actors ?? [])].sort((a, b) => b.currentDps - a.currentDps).slice(0, 8);
+  const maxDps = Math.max(1, ...actors.map((actor) => actor.currentDps));
   return (
     <div class="element-content">
       <h2 class="element-title">Party DPS</h2>
@@ -301,14 +301,14 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
         <div
           class="ranking-row"
           key={actor.actorIds[0]}
-          style={`--row-fill:${actor.dps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
+          style={`--row-fill:${actor.currentDps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
         >
           <span class="ranking-player">
             <img class="ranking-class-icon" src={classIcon(actor.archetype)} alt="" aria-hidden="true" />
             <span class="ranking-rank">{index + 1}.</span>
             <span class="ranking-name">{actor.displayName}</span>
           </span>
-          <span class="ranking-dps">{formatDps(actor.dps)}</span>
+          <span class="ranking-dps">{formatDps(actor.currentDps)}</span>
         </div>
       ))}</div> : <WaitingForDps />}
     </div>

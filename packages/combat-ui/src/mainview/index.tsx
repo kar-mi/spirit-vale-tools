@@ -115,7 +115,7 @@ function App() {
             <thead><tr><th>Timer</th><th>Party</th><th>Total damage</th><th>Total kills</th></tr></thead>
             <tbody><tr>
               <td>{next.snapshot ? formatDuration(next.snapshot.durationMs) : "—"}</td>
-              <td>{formatDps(next.snapshot?.partyDps ?? 0)}</td>
+              <td>{formatDps(next.snapshot?.partyCurrentDps ?? 0)}</td>
               <td>{compactFormat.format(next.snapshot?.totalDamage ?? 0)}</td>
               <td>{numberFormat.format(next.snapshot?.actors.reduce((total, actor) => total + actor.kills, 0) ?? 0)}</td>
             </tr></tbody>
