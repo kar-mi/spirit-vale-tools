@@ -104,8 +104,13 @@ interface OverlayElementProps {
 function OverlayElement({ id, settings, locked, children }: OverlayElementProps) {
   const [gesture, setGesture] = useState<PointerGesture>();
   const [preview, setPreview] = useState<ElementRect>();
-  if (!settings.enabled) return null;
+  if (locked && !settings.enabled) return null;
   const rect = preview ?? settings;
+  const className = [
+    "overlay-element",
+    !settings.enabled && "hidden-preview",
+    gesture?.kind === "resize" ? "resizing" : gesture?.kind === "drag" ? "dragging" : undefined,
+  ].filter(Boolean).join(" ");
   const move = (event: PointerEvent): void => {
     if (!gesture || event.pointerId !== gesture.pointerId) return;
     const dx = event.clientX - gesture.originX;
@@ -127,7 +132,7 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
   };
   return (
     <section
-      class={gesture ? `overlay-element ${gesture.kind === "resize" ? "resizing" : "dragging"}` : "overlay-element"}
+      class={className}
       data-element-id={id}
       style={{
         left: `${rect.x}px`,
@@ -142,6 +147,12 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
         setPreview(start);
         setGesture({ kind: "drag", pointerId: event.pointerId, originX: event.clientX, originY: event.clientY, start });
       }}
+      onContextMenu={(event) => {
+        if (locked) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void setElementEnabled(id, !settings.enabled);
+      }}
       onPointerMove={move}
       onPointerUp={finish}
       onPointerCancel={() => {
@@ -152,6 +163,7 @@ function OverlayElement({ id, settings, locked, children }: OverlayElementProps)
       <div class="overlay-surface" style={`--element-background-alpha:${settings.opacity * 0.76}`}>
         {children}
       </div>
+      {!locked && !settings.enabled && <span class="hidden-indicator">Hidden</span>}
       {!locked && (
         <label
           class="element-opacity-control"
@@ -391,6 +403,10 @@ function partyTimeline(next: OverlayState): FishNetDpsTimelinePoint[] {
 
 function setLocked(locked: boolean): Promise<void> {
   return electroview.rpc?.request.setLocked({ locked }).then((next) => { state.value = next; }) ?? Promise.resolve();
+}
+
+function setElementEnabled(id: OverlayElementId, enabled: boolean): Promise<void> {
+  return electroview.rpc?.request.setElementEnabled({ id, enabled }).then((next) => { state.value = next; }) ?? Promise.resolve();
 }
 
 function formatDps(value: number): string {

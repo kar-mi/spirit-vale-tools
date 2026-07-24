@@ -40,6 +40,10 @@ export interface OverlayState {
 type OverlaySharedRequests = {
   getState: { params: Record<string, never>; response: OverlayState };
   setLocked: { params: { locked: boolean }; response: OverlayState };
+  setElementEnabled: {
+    params: { id: OverlayElementId; enabled: boolean };
+    response: OverlayState;
+  };
 };
 
 export type OverlayRpc = {
@@ -66,10 +70,6 @@ export type OverlayRpc = {
 export type OverlaySettingsRpc = {
   bun: RPCSchema<{
     requests: OverlaySharedRequests & WindowChromeRequests & {
-      setElementEnabled: {
-        params: { id: OverlayElementId; enabled: boolean };
-        response: OverlayState;
-      };
       setResetShortcut: { params: { shortcut: string }; response: OverlayState };
       closeOverlay: { params: Record<string, never>; response: void };
     };
