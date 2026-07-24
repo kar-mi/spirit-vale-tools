@@ -6,14 +6,18 @@ const rpc = Electroview.defineRPC<LauncherSettingsRpc>({ handlers: { requests: {
 const electroview = new Electroview({ rpc });
 const adapterSelect = element("adapter-select") as HTMLSelectElement;
 const uiScaleSelect = element("ui-scale-select") as HTMLSelectElement;
+const closeToTrayInput = element("close-to-tray-input") as HTMLInputElement;
 const npcapStatus = element("npcap-status");
 const npcapDetail = element("npcap-detail");
 const adapterDetail = element("adapter-detail");
 const installNpcapButton = button("install-npcap-button");
 const storageWarning = element("storage-warning");
+const tabs = [button("general-tab"), button("network-tab")];
+const panels = [element("general-panel"), element("network-panel")];
 
 button("minimize-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "minimize" }));
 button("close-button").addEventListener("click", () => void electroview.rpc?.request.windowAction({ action: "close" }));
+tabs.forEach((tab, index) => tab.addEventListener("click", () => selectTab(index)));
 button("refresh-adapters-button").addEventListener("click", () => void electroview.rpc?.request.refreshCaptureDevices({}).then(render));
 installNpcapButton.addEventListener("click", () => void electroview.rpc?.request.openNpcapDownload({}));
 adapterSelect.addEventListener("change", () => {
@@ -27,6 +31,10 @@ uiScaleSelect.addEventListener("change", () => {
   uiScaleSelect.disabled = true;
   void electroview.rpc?.request.setUiScale({ uiScale: Number(uiScaleSelect.value) as LauncherState["uiScale"] }).then(render).finally(() => { uiScaleSelect.disabled = false; });
 });
+closeToTrayInput.addEventListener("change", () => {
+  closeToTrayInput.disabled = true;
+  void electroview.rpc?.request.setCloseToTray({ closeToTray: closeToTrayInput.checked }).then(render).finally(() => { closeToTrayInput.disabled = false; });
+});
 
 initWindowChrome({
   titlebar: element("titlebar"), minWidth: 420, minHeight: 360,
@@ -38,6 +46,7 @@ void electroview.rpc?.request.getState({}).then(render);
 
 function render(state: LauncherState): void {
   uiScaleSelect.value = String(state.uiScale);
+  closeToTrayInput.checked = state.closeToTray;
   storageWarning.hidden = state.storageWarning === undefined;
   storageWarning.textContent = state.storageWarning ?? "";
   npcapStatus.textContent = availabilityLabel(state.npcapAvailability);
@@ -52,6 +61,15 @@ function render(state: LauncherState): void {
   adapterSelect.replaceChildren(...options); adapterSelect.value = state.selectedAdapter; adapterSelect.disabled = state.npcapAvailability !== "ready";
   const effective = state.adapters.find((adapter) => adapter.id === state.effectiveAdapter)?.label;
   adapterDetail.textContent = state.adapterFallback ? `The saved adapter is unavailable. Currently using ${effective ?? "automatic selection"}.` : effective ? `Currently using ${effective}.` : "Select Automatic to follow the active default route.";
+}
+
+function selectTab(index: number): void {
+  tabs.forEach((tab, tabIndex) => {
+    const selected = tabIndex === index;
+    tab.classList.toggle("is-active", selected);
+    tab.setAttribute("aria-selected", String(selected));
+    panels[tabIndex]!.hidden = !selected;
+  });
 }
 
 function availabilityLabel(value: LauncherState["npcapAvailability"]): string { if (value === "ready") return "Ready"; if (value === "missing") return "Not installed"; if (value === "admin-only") return "Administrator-only installation"; if (value === "error") return "Unavailable"; return "Checking…"; }

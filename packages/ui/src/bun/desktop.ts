@@ -1,4 +1,4 @@
-import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
+import Electrobun, { BrowserView, BrowserWindow, Tray, Utils } from "electrobun/bun";
 import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
 import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core/capture";
 
@@ -25,6 +25,7 @@ import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-pa
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { launcherCloseAction, trayAction } from "./launcher-tray-actions.ts";
 
 makeProcessDpiAware();
 
@@ -54,6 +55,7 @@ let launcherState: LauncherState = {
   adapterFallback: false,
   adapters: [],
   uiScale: settings.uiScale,
+  closeToTray: settings.closeToTray,
 };
 let shuttingDown = false;
 let characterStorageWarning: string | undefined;
@@ -126,6 +128,7 @@ function sharedLauncherHandlers(getWindow: () => BrowserWindow | undefined, fall
     getState: () => launcherState,
     setCaptureAdapter: ({ deviceName }: { deviceName: string | null }) => setCaptureAdapter(deviceName),
     setUiScale: ({ uiScale }: { uiScale: typeof settings.uiScale }) => setLauncherUiScale(uiScale),
+    setCloseToTray: ({ closeToTray }: { closeToTray: boolean }) => setCloseToTray(closeToTray),
     refreshCaptureDevices: async () => {
       await refreshCaptureDevices();
       if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
@@ -151,7 +154,7 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
       openSettings: () => { openSettings(); },
       windowAction: async ({ action }) => {
         if (action === "minimize") launcherWindow.minimize();
-        else await shutdown();
+        else await closeLauncher();
       },
     },
     messages: {},
@@ -183,6 +186,31 @@ launcherWindow = new BrowserWindow({
 applyRoundedCorners(launcherWindow.ptr);
 registerUiScaleWindow(launcherWindow, { scaleInitialFrame: false });
 placements.track("launcher", launcherWindow);
+
+const tray = new Tray({
+  title: "Spirit Vale",
+  image: "views://assets/app-icon.ico",
+  width: 32,
+  height: 32,
+});
+tray.setMenu([
+  { type: "normal", label: "Main launcher", action: "show-launcher" },
+  { type: "normal", label: "Combat", action: "open-combat" },
+  { type: "normal", label: "Overlay", action: "open-overlay" },
+  { type: "normal", label: "Rewards", action: "open-rewards" },
+  { type: "normal", label: "Market", action: "open-market" },
+  { type: "divider" },
+  { type: "normal", label: "Exit", action: "exit" },
+]);
+tray.on("tray-clicked", (event) => {
+  const action = trayAction((event as { data: { action: string } }).data.action);
+  if (action === "show-launcher") showLauncher();
+  else if (action === "open-combat") void openTool("combat");
+  else if (action === "open-overlay") void openTool("overlay");
+  else if (action === "open-rewards") void openTool("rewards");
+  else if (action === "open-market") void openTool("market");
+  else if (action === "exit") void shutdown();
+});
 
 Electrobun.events.on(`resize-${launcherWindow.id}`, (event: { data: { width: number; height: number } }) => {
   const width = Math.max(scaledSize(900), event.data.width);
@@ -304,6 +332,27 @@ async function setLauncherUiScale(uiScale: typeof settings.uiScale): Promise<Lau
   launcherSettingsPersistence.schedule(settings);
   publish();
   return launcherState;
+}
+
+function setCloseToTray(closeToTray: boolean): LauncherState {
+  settings.closeToTray = closeToTray;
+  launcherState = { ...launcherState, closeToTray };
+  launcherSettingsPersistence.schedule(settings);
+  publish();
+  return launcherState;
+}
+
+async function closeLauncher(): Promise<void> {
+  if (launcherCloseAction(settings.closeToTray) === "hide") {
+    launcherWindow.hide();
+    return;
+  }
+  await shutdown();
+}
+
+function showLauncher(): void {
+  launcherWindow.show();
+  launcherWindow.activate();
 }
 
 function publish(): void {

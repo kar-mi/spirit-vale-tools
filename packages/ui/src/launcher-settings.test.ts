@@ -12,22 +12,23 @@ afterEach(async () => {
   temporaryRoot = undefined;
 });
 
-test("launcher UI scale defaults to 100% and rejects unsupported values", async () => {
+test("launcher settings default safely and reject unsupported UI scales", async () => {
   const settingsPath = await createSettingsPath();
   await writeFile(settingsPath, JSON.stringify({ uiScale: 1.5 }), "utf8");
   expect((await loadLauncherSettings(settingsPath)).uiScale).toBe(1.5);
 
   await writeFile(settingsPath, JSON.stringify({ uiScale: 1.1 }), "utf8");
   expect((await loadLauncherSettings(settingsPath)).uiScale).toBe(1);
+  expect((await loadLauncherSettings(settingsPath)).closeToTray).toBe(false);
 
   await writeFile(settingsPath, "{}", "utf8");
-  expect((await loadLauncherSettings(settingsPath)).uiScale).toBe(1);
+  expect(await loadLauncherSettings(settingsPath)).toEqual({ captureAdapter: "auto", uiScale: 1, closeToTray: false });
 });
 
-test("launcher UI scale round-trips with capture settings", async () => {
+test("launcher settings round-trip with capture settings", async () => {
   const settingsPath = await createSettingsPath();
-  await saveLauncherSettings({ captureAdapter: "auto", uiScale: 2 }, settingsPath);
-  expect(await loadLauncherSettings(settingsPath)).toEqual({ captureAdapter: "auto", uiScale: 2 });
+  await saveLauncherSettings({ captureAdapter: "auto", uiScale: 2, closeToTray: true }, settingsPath);
+  expect(await loadLauncherSettings(settingsPath)).toEqual({ captureAdapter: "auto", uiScale: 2, closeToTray: true });
 });
 
 async function createSettingsPath(): Promise<string> {
