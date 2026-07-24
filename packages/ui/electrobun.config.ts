@@ -46,6 +46,7 @@ export default {
     },
     copy: {
       "../../static/icon/eggplant_icon_320px.png": "views/assets/app-icon.png",
+      "../../static/icon/eggplant_icon.ico": "views/assets/app-icon.ico",
       "../../static/class_icons/class-acolyte.webp": "views/assets/class-icons/class-acolyte.webp",
       "../../static/class_icons/class-berserker.webp": "views/assets/class-icons/class-berserker.webp",
       "../../static/class_icons/class-gunslinger.webp": "views/assets/class-icons/class-gunslinger.webp",

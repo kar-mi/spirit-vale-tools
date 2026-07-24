@@ -1,12 +1,20 @@
 export type LauncherCloseAction = "hide" | "shutdown";
-export type TrayAction = "show-launcher" | "exit" | undefined;
+export type TrayAction = "show-launcher" | "open-combat" | "open-overlay" | "open-rewards" | "open-market" | "exit" | undefined;
 
 export function launcherCloseAction(closeToTray: boolean): LauncherCloseAction {
   return closeToTray ? "hide" : "shutdown";
 }
 
 export function trayAction(action: string): TrayAction {
-  if (action === "" || action === "show-launcher") return "show-launcher";
+  if (action === "show-launcher") return "show-launcher";
+  if (action === "open-combat") return "open-combat";
+  if (action === "open-overlay") return "open-overlay";
+  if (action === "open-rewards") return "open-rewards";
+  if (action === "open-market") return "open-market";
   if (action === "exit") return "exit";
   return undefined;
+}
+
+export function isTrayDoubleClick(previousClickAt: number, currentClickAt: number, intervalMs = 350): boolean {
+  return previousClickAt > 0 && currentClickAt >= previousClickAt && currentClickAt - previousClickAt <= intervalMs;
 }
