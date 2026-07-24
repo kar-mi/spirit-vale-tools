@@ -1,8 +1,8 @@
-export type LauncherCloseAction = "hide" | "shutdown";
+export type LauncherMinimizeAction = "hide" | "minimize";
 export type TrayAction = "show-launcher" | "open-combat" | "open-overlay" | "open-rewards" | "open-market" | "exit" | undefined;
 
-export function launcherCloseAction(closeToTray: boolean): LauncherCloseAction {
-  return closeToTray ? "hide" : "shutdown";
+export function launcherMinimizeAction(minimizeToTray: boolean): LauncherMinimizeAction {
+  return minimizeToTray ? "hide" : "minimize";
 }
 
 export function trayAction(action: string): TrayAction {

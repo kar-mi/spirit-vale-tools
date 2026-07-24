@@ -86,6 +86,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           updateLocked(locked || !settingsWindow);
           return appState();
         },
+        setElementEnabled: ({ id, enabled }) => setElementEnabled(id, enabled),
         setElementPosition: ({ id, x, y }) => {
           const element = settings.elements[id];
           settings = normalizeOverlaySettings({
@@ -131,12 +132,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
           updateLocked(locked);
           return appState();
         },
-        setElementEnabled: ({ id, enabled }) => {
-          settings.elements[id].enabled = enabled;
-          persist();
-          publish();
-          return appState();
-        },
+        setElementEnabled: ({ id, enabled }) => setElementEnabled(id, enabled),
         setResetShortcut: ({ shortcut }) => setResetShortcut(shortcut),
         closeOverlay: async () => {
           await shutdown();
@@ -238,6 +234,17 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     setWindowClickThrough(overlayWindow.ptr, locked);
     persist();
     publish();
+  }
+
+  function setElementEnabled(id: OverlayElementId, enabled: boolean): OverlayState {
+    const element = settings.elements[id];
+    settings = normalizeOverlaySettings({
+      ...settings,
+      elements: { ...settings.elements, [id]: { ...element, enabled } },
+    }, bounds);
+    persist();
+    publish();
+    return appState();
   }
 
   function setResetShortcut(shortcut: string): OverlayState {

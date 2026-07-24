@@ -6,7 +6,7 @@ const rpc = Electroview.defineRPC<LauncherSettingsRpc>({ handlers: { requests: {
 const electroview = new Electroview({ rpc });
 const adapterSelect = element("adapter-select") as HTMLSelectElement;
 const uiScaleSelect = element("ui-scale-select") as HTMLSelectElement;
-const closeToTrayInput = element("close-to-tray-input") as HTMLInputElement;
+const minimizeToTrayInput = element("minimize-to-tray-input") as HTMLInputElement;
 const npcapStatus = element("npcap-status");
 const npcapDetail = element("npcap-detail");
 const adapterDetail = element("adapter-detail");
@@ -31,9 +31,9 @@ uiScaleSelect.addEventListener("change", () => {
   uiScaleSelect.disabled = true;
   void electroview.rpc?.request.setUiScale({ uiScale: Number(uiScaleSelect.value) as LauncherState["uiScale"] }).then(render).finally(() => { uiScaleSelect.disabled = false; });
 });
-closeToTrayInput.addEventListener("change", () => {
-  closeToTrayInput.disabled = true;
-  void electroview.rpc?.request.setCloseToTray({ closeToTray: closeToTrayInput.checked }).then(render).finally(() => { closeToTrayInput.disabled = false; });
+minimizeToTrayInput.addEventListener("change", () => {
+  minimizeToTrayInput.disabled = true;
+  void electroview.rpc?.request.setMinimizeToTray({ minimizeToTray: minimizeToTrayInput.checked }).then(render).finally(() => { minimizeToTrayInput.disabled = false; });
 });
 
 initWindowChrome({
@@ -46,7 +46,7 @@ void electroview.rpc?.request.getState({}).then(render);
 
 function render(state: LauncherState): void {
   uiScaleSelect.value = String(state.uiScale);
-  closeToTrayInput.checked = state.closeToTray;
+  minimizeToTrayInput.checked = state.minimizeToTray;
   storageWarning.hidden = state.storageWarning === undefined;
   storageWarning.textContent = state.storageWarning ?? "";
   npcapStatus.textContent = availabilityLabel(state.npcapAvailability);

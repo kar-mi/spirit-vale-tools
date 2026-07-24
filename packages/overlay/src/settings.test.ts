@@ -58,6 +58,7 @@ describe("overlay settings", () => {
     const settingsPath = await createSettingsPath();
     const settings = defaultOverlaySettings(bounds);
     settings.elements.partyRanking.x = 640;
+    settings.elements.health.enabled = false;
     await saveOverlaySettings(settings, settingsPath);
     expect(await loadOverlaySettings(settingsPath, bounds)).toEqual(settings);
   });

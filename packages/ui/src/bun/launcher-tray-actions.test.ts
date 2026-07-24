@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 
-import { launcherCloseAction, trayAction } from "./launcher-tray-actions.ts";
+import { launcherMinimizeAction, trayAction } from "./launcher-tray-actions.ts";
 
-test("launcher close hides only when close-to-tray is enabled", () => {
-  expect(launcherCloseAction(false)).toBe("shutdown");
-  expect(launcherCloseAction(true)).toBe("hide");
+test("launcher minimize hides only when minimize-to-tray is enabled", () => {
+  expect(launcherMinimizeAction(false)).toBe("minimize");
+  expect(launcherMinimizeAction(true)).toBe("hide");
 });
 
 test("tray menu actions restore the launcher or perform a full exit", () => {

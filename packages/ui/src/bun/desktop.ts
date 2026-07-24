@@ -25,7 +25,7 @@ import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-pa
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
-import { launcherCloseAction, trayAction } from "./launcher-tray-actions.ts";
+import { launcherMinimizeAction, trayAction } from "./launcher-tray-actions.ts";
 
 makeProcessDpiAware();
 
@@ -55,7 +55,7 @@ let launcherState: LauncherState = {
   adapterFallback: false,
   adapters: [],
   uiScale: settings.uiScale,
-  closeToTray: settings.closeToTray,
+  minimizeToTray: settings.minimizeToTray,
 };
 let shuttingDown = false;
 let characterStorageWarning: string | undefined;
@@ -128,7 +128,7 @@ function sharedLauncherHandlers(getWindow: () => BrowserWindow | undefined, fall
     getState: () => launcherState,
     setCaptureAdapter: ({ deviceName }: { deviceName: string | null }) => setCaptureAdapter(deviceName),
     setUiScale: ({ uiScale }: { uiScale: typeof settings.uiScale }) => setLauncherUiScale(uiScale),
-    setCloseToTray: ({ closeToTray }: { closeToTray: boolean }) => setCloseToTray(closeToTray),
+    setMinimizeToTray: ({ minimizeToTray }: { minimizeToTray: boolean }) => setMinimizeToTray(minimizeToTray),
     refreshCaptureDevices: async () => {
       await refreshCaptureDevices();
       if (launcherState.npcapAvailability === "ready" && capture.state().captureStatus !== "capturing") {
@@ -153,7 +153,7 @@ const rpc = BrowserView.defineRPC<LauncherRpc>({
       },
       openSettings: () => { openSettings(); },
       windowAction: async ({ action }) => {
-        if (action === "minimize") launcherWindow.minimize();
+        if (action === "minimize") minimizeLauncher();
         else await closeLauncher();
       },
     },
@@ -334,19 +334,23 @@ async function setLauncherUiScale(uiScale: typeof settings.uiScale): Promise<Lau
   return launcherState;
 }
 
-function setCloseToTray(closeToTray: boolean): LauncherState {
-  settings.closeToTray = closeToTray;
-  launcherState = { ...launcherState, closeToTray };
+function setMinimizeToTray(minimizeToTray: boolean): LauncherState {
+  settings.minimizeToTray = minimizeToTray;
+  launcherState = { ...launcherState, minimizeToTray };
   launcherSettingsPersistence.schedule(settings);
   publish();
   return launcherState;
 }
 
-async function closeLauncher(): Promise<void> {
-  if (launcherCloseAction(settings.closeToTray) === "hide") {
+function minimizeLauncher(): void {
+  if (launcherMinimizeAction(settings.minimizeToTray) === "hide") {
     launcherWindow.hide();
     return;
   }
+  launcherWindow.minimize();
+}
+
+async function closeLauncher(): Promise<void> {
   await shutdown();
 }
 
