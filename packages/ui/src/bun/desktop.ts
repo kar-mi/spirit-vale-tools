@@ -17,21 +17,25 @@ import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
 import { createOverlayWindow } from "@spiritvale/overlay";
-import { resolveLogDirectory } from "./paths.ts";
+import { isWorkspaceDevelopmentRoot } from "@spiritvale/ui-theme/local-storage";
+import { resolveLocalRoot } from "./paths.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
 import { WindowSlot } from "./window-slot.ts";
-import { resolveDesktopStoragePaths } from "./portable-paths.ts";
+import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-paths.ts";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 
 makeProcessDpiAware();
 
+const localRoot = resolveLocalRoot();
 const storagePaths = resolveDesktopStoragePaths({
-  portableRoot: process.env.SPIRIT_VALE_PORTABLE_ROOT,
-  fallbackUserData: Utils.paths.userData,
-  fallbackLogDirectory: resolveLogDirectory(),
+  root: localRoot,
+  workspaceDev: isWorkspaceDevelopmentRoot(localRoot),
+  portable: Boolean(process.env.SPIRIT_VALE_PORTABLE_ROOT?.trim()),
+  logDirectoryOverride: process.env.SPIRIT_VALE_LOG_DIRECTORY,
 });
+await migrateLegacyUserData(storagePaths, Utils.paths.userData);
 const logDirectory = storagePaths.logDirectory;
 const settings = await loadLauncherSettings(storagePaths.launcherSettingsPath);
 setUiScale(settings.uiScale);

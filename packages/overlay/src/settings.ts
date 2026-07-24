@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 
 import {
   OVERLAY_ELEMENT_IDS,
@@ -30,6 +31,9 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   health: { enabled: true, opacity: 1, x: 1037, y: 921, width: 330, height: 40 },
   mana: { enabled: true, opacity: 1, x: 1377, y: 921, width: 338, height: 40 },
   weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
+  permaBuffs: { enabled: false, opacity: 1, x: 794, y: 700, width: 160, height: 100 },
+  buffs: { enabled: true, opacity: 1, x: 794, y: 650, width: 250, height: 48 },
+  debuffs: { enabled: true, opacity: 1, x: 1052, y: 650, width: 250, height: 48 },
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -66,7 +70,7 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
       ? sourceElements[id] as Record<string, unknown>
       : {};
     const width = clampNumber(value.width, defaults.width, 160, Math.max(160, bounds.width));
-    const minimumHeight = id === "health" || id === "mana" || id === "weight" ? 40 : 100;
+    const minimumHeight = id === "health" || id === "mana" || id === "weight" || id === "permaBuffs" || id === "buffs" || id === "debuffs" ? 40 : 100;
     const savedHeight = legacySettings && id === "weight" && value.height === 72
       ? defaults.height
       : value.height;
@@ -99,6 +103,5 @@ function clampNumber(value: unknown, fallback: number, minimum: number, maximum:
 
 async function resolveSettingsPath(settingsPath: string | undefined): Promise<string> {
   if (settingsPath) return settingsPath;
-  const { Utils } = await import("electrobun/bun");
-  return path.join(Utils.paths.userData, "spirit-vale-overlay", "settings.json");
+  return path.join(resolveLocalStorageRoot(), "data", "settings", "overlay.json");
 }

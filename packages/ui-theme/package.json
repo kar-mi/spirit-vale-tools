@@ -16,7 +16,8 @@
     "./window-rpc": "./window-rpc.ts",
     "./window-publish": "./window-publish.ts",
     "./window-placement": "./window-placement.ts",
-    "./ui-scale": "./ui-scale.ts"
+    "./ui-scale": "./ui-scale.ts",
+    "./local-storage": "./local-storage.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.9.4",
