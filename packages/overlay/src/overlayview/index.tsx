@@ -12,7 +12,7 @@ import type {
   OverlayState,
 } from "../app-types.ts";
 import { resourceFill } from "../personal-resources.ts";
-import { PARTY_ACTOR_IDLE_TIMEOUT_MS, visiblePartyActors } from "./party-ranking.ts";
+import { visiblePartyActors } from "./party-ranking.ts";
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
@@ -266,21 +266,16 @@ function DamageChart({ points, durationMs }: { points: readonly FishNetDpsTimeli
 }
 
 function PersonalDpsElement({ state: next }: { state: OverlayState }) {
-  const snapshotNowMs = next.snapshotNowMs ?? next.snapshot?.lastDamageAtMs ?? 0;
-  const candidate = next.snapshot?.personal;
-  const personal = candidate && candidate.lastDamageAtMs !== undefined
-    && snapshotNowMs - candidate.lastDamageAtMs <= PARTY_ACTOR_IDLE_TIMEOUT_MS
-    ? candidate
-    : undefined;
+  const personal = next.snapshot?.personal;
   return (
     <div class="element-content">
       <div class="personal-heading">
         <img class="personal-class-icon" src={classIcon(personal?.archetype)} alt="" aria-hidden="true" />
-        <h2 class="element-title">Personal encounter DPS</h2>
+        <h2 class="element-title">Personal DPS</h2>
       </div>
       {personal ? (
         <>
-          <span class="personal-value">{formatDps(personal.dps)}</span><span class="personal-unit">DPS</span>
+          <span class="personal-value">{formatDps(personal.currentDps)}</span><span class="personal-unit">DPS</span>
           <div class="personal-details">
             <span>Damage<strong>{compactFormat.format(personal.damage)}</strong></span>
             <span>Crit rate<strong>{personal.hits ? `${Math.round(personal.criticalHits / personal.hits * 100)}%` : "—"}</strong></span>
