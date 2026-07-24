@@ -3,7 +3,7 @@ import path from "node:path";
 import { DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
 import type { CharacterViewState } from "@spiritvale/character";
 import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
-import { applyRoundedCorners, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners, hideWindowFromTaskbar, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
 import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
 import { BrowserView, BrowserWindow, GlobalShortcut, Screen } from "electrobun/bun";
@@ -176,6 +176,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     rpc: overlayRpc,
   });
   overlayWindow.setAlwaysOnTop(true);
+  hideWindowFromTaskbar(overlayWindow.ptr);
   setWindowClickThrough(overlayWindow.ptr, settings.locked);
   overlayWindow.showInactive();
   overlayWindow.on("close", () => {

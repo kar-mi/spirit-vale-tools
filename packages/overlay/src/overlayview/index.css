@@ -258,8 +258,9 @@
 .resource-empty { overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 
 .ranking { display: grid; gap: 7px; }
-.party-heading { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.party-heading { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
 .party-heading .element-title { margin: 0; }
+.party-duration { display: block; margin-top: 2px; color: rgba(255,255,255,.54); font-size: 11px; font-variant-numeric: tabular-nums; }
 .party-reset-hint { margin-left: auto; color: rgba(255,255,255,.54); font-size: 10px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
 .ranking-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 6px 8px; overflow: hidden; border-radius: 6px; }
 .ranking-row::before { position: absolute; inset: 0 auto 0 0; width: var(--row-fill); background: var(--row-color); content: ""; }

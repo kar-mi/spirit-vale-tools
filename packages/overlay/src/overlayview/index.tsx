@@ -331,10 +331,14 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
     next.snapshotNowMs ?? next.snapshot?.lastDamageAtMs ?? 0,
   );
   const maxDps = Math.max(1, ...actors.map((actor) => actor.dps));
+  const duration = next.snapshot?.durationMs ?? 0;
   return (
     <div class="element-content">
       <div class="party-heading">
-        <h2 class="element-title">Party encounter DPS</h2>
+        <div>
+          <h2 class="element-title">Party encounter DPS</h2>
+          <span class="party-duration">{formatDuration(duration)}</span>
+        </div>
         <span class="party-reset-hint">{next.resetShortcut} to reset</span>
       </div>
       {actors.length ? <div class="ranking">{actors.map((actor, index) => (
