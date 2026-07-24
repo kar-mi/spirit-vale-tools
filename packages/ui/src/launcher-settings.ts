@@ -7,19 +7,19 @@ import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 export interface LauncherSettings {
   captureAdapter: "auto" | string;
   uiScale: UiScale;
-  closeToTray: boolean;
+  minimizeToTray: boolean;
 }
 
-const defaults: LauncherSettings = { captureAdapter: "auto", uiScale: 1, closeToTray: false };
+const defaults: LauncherSettings = { captureAdapter: "auto", uiScale: 1, minimizeToTray: false };
 export async function loadLauncherSettings(file = defaultSettingsFile()): Promise<LauncherSettings> {
   try {
-    const candidate = JSON.parse(await readFile(file, "utf8")) as Partial<LauncherSettings>;
+    const candidate = JSON.parse(await readFile(file, "utf8")) as Partial<LauncherSettings> & { closeToTray?: unknown };
     return {
       captureAdapter: typeof candidate.captureAdapter === "string" && candidate.captureAdapter.trim()
         ? candidate.captureAdapter
         : defaults.captureAdapter,
       uiScale: normalizeUiScale(candidate.uiScale),
-      closeToTray: candidate.closeToTray === true,
+      minimizeToTray: candidate.minimizeToTray === true || (candidate.minimizeToTray !== false && candidate.closeToTray === true),
     };
   } catch {
     return { ...defaults };

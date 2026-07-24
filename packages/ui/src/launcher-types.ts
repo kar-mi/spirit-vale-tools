@@ -23,14 +23,14 @@ export interface LauncherState {
   adapterFallback: boolean;
   adapters: CaptureAdapterOption[];
   uiScale: UiScale;
-  closeToTray: boolean;
+  minimizeToTray: boolean;
 }
 
 type LauncherSharedRequests = {
   getState: { params: Record<string, never>; response: LauncherState };
   setCaptureAdapter: { params: { deviceName: string | null }; response: LauncherState };
   setUiScale: { params: { uiScale: UiScale }; response: LauncherState };
-  setCloseToTray: { params: { closeToTray: boolean }; response: LauncherState };
+  setMinimizeToTray: { params: { minimizeToTray: boolean }; response: LauncherState };
   refreshCaptureDevices: { params: Record<string, never>; response: LauncherState };
   openNpcapDownload: { params: Record<string, never>; response: void };
   windowAction: { params: { action: "minimize" | "close" }; response: void };
