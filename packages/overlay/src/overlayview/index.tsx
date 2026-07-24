@@ -12,7 +12,7 @@ import type {
   OverlayState,
 } from "../app-types.ts";
 import { resourceFill } from "../personal-resources.ts";
-import { visiblePartyActors } from "./party-ranking.ts";
+import { PARTY_ACTOR_IDLE_TIMEOUT_MS, visiblePartyActors } from "./party-ranking.ts";
 
 const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const compactFormat = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
@@ -266,16 +266,21 @@ function DamageChart({ points, durationMs }: { points: readonly FishNetDpsTimeli
 }
 
 function PersonalDpsElement({ state: next }: { state: OverlayState }) {
-  const personal = next.snapshot?.personal;
+  const snapshotNowMs = next.snapshotNowMs ?? next.snapshot?.lastDamageAtMs ?? 0;
+  const candidate = next.snapshot?.personal;
+  const personal = candidate && candidate.lastDamageAtMs !== undefined
+    && snapshotNowMs - candidate.lastDamageAtMs <= PARTY_ACTOR_IDLE_TIMEOUT_MS
+    ? candidate
+    : undefined;
   return (
     <div class="element-content">
       <div class="personal-heading">
         <img class="personal-class-icon" src={classIcon(personal?.archetype)} alt="" aria-hidden="true" />
-        <h2 class="element-title">Personal damage</h2>
+        <h2 class="element-title">Personal encounter DPS</h2>
       </div>
       {personal ? (
         <>
-          <span class="personal-value">{formatDps(personal.currentDps)}</span><span class="personal-unit">DPS</span>
+          <span class="personal-value">{formatDps(personal.dps)}</span><span class="personal-unit">DPS</span>
           <div class="personal-details">
             <span>Damage<strong>{compactFormat.format(personal.damage)}</strong></span>
             <span>Crit rate<strong>{personal.hits ? `${Math.round(personal.criticalHits / personal.hits * 100)}%` : "—"}</strong></span>
@@ -326,23 +331,29 @@ function ResourceElement({ kind, resource }: { kind: "health" | "mana"; resource
 }
 
 function PartyRankingElement({ state: next }: { state: OverlayState }) {
-  const actors = visiblePartyActors(next.snapshot?.actors ?? []);
-  const maxDps = Math.max(1, ...actors.map((actor) => actor.currentDps));
+  const actors = visiblePartyActors(
+    next.snapshot?.actors ?? [],
+    next.snapshotNowMs ?? next.snapshot?.lastDamageAtMs ?? 0,
+  );
+  const maxDps = Math.max(1, ...actors.map((actor) => actor.dps));
   return (
     <div class="element-content">
-      <h2 class="element-title">Party DPS</h2>
+      <div class="party-heading">
+        <h2 class="element-title">Party encounter DPS</h2>
+        <span class="party-reset-hint">{next.resetShortcut} to reset</span>
+      </div>
       {actors.length ? <div class="ranking">{actors.map((actor, index) => (
         <div
           class="ranking-row"
           key={actor.actorIds[0]}
-          style={`--row-fill:${actor.currentDps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
+          style={`--row-fill:${actor.dps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
         >
           <span class="ranking-player">
             <img class="ranking-class-icon" src={classIcon(actor.archetype)} alt="" aria-hidden="true" />
             <span class="ranking-rank">{index + 1}.</span>
             <span class="ranking-name">{actor.displayName}</span>
           </span>
-          <span class="ranking-dps">{formatDps(actor.currentDps)}</span>
+          <span class="ranking-dps">{formatDps(actor.dps)}</span>
         </div>
       ))}</div> : <WaitingForDps />}
     </div>

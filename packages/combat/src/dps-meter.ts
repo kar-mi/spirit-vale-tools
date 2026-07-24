@@ -43,6 +43,8 @@ export interface FishNetDpsActorRow {
   archetype?: number;
   /** Milliseconds used as the DPS divisor and timeline span for this row. */
   durationMs?: number;
+  /** Timestamp of this actor's most recent positive damage in the encounter. */
+  lastDamageAtMs?: number;
   damage: number;
   dps: number;
   currentDps: number;
@@ -567,6 +569,7 @@ function actorRow(
     displayName: actor.displayName ?? (isUnidentified ? "Unidentified" : "Unknown"),
     ...(actor.archetype === undefined ? {} : { archetype: actor.archetype }),
     durationMs,
+    ...(actor.lastDamageAtMs === undefined ? {} : { lastDamageAtMs: actor.lastDamageAtMs }),
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
     currentDps: perSecond(windowDamage, currentDurationMs),

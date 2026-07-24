@@ -87,6 +87,7 @@ const overlayWindow = new WindowSlot((onClosed) => createOverlayWindow({
   placements,
   showSettingsOnCreate: false,
   lockOnCreate: true,
+  onReset: () => capture.resetSession(),
   onClosed,
 }));
 const rewardsWindow = new WindowSlot((onClosed) => createRewardsWindow({
