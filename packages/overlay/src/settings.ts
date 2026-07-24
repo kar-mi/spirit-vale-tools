@@ -12,8 +12,9 @@ export { OVERLAY_ELEMENT_IDS };
 export type { OverlayElementId, OverlayElementSettings };
 
 export interface OverlaySettings {
-  schemaVersion: 2;
+  schemaVersion: 3;
   locked: boolean;
+  resetShortcut: string;
   elements: Record<OverlayElementId, OverlayElementSettings>;
 }
 
@@ -57,7 +58,7 @@ export async function saveOverlaySettings(settings: OverlaySettings, settingsPat
 
 export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBounds): OverlaySettings {
   const source = candidate && typeof candidate === "object" ? candidate as Record<string, unknown> : {};
-  const legacySettings = source.schemaVersion !== 2;
+  const legacySettings = source.schemaVersion !== 2 && source.schemaVersion !== 3;
   const sourceElements = source.elements && typeof source.elements === "object"
     ? source.elements as Record<string, unknown>
     : {};
@@ -82,10 +83,25 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
     }];
   })) as unknown as Record<OverlayElementId, OverlayElementSettings>;
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     locked: typeof source.locked === "boolean" ? source.locked : false,
+    resetShortcut: normalizeResetShortcut(source.resetShortcut),
     elements,
   };
+}
+
+export function normalizeResetShortcut(value: unknown): string {
+  if (typeof value !== "string") return "F5";
+  const tokens = value.split("+").map((token) => token.trim()).filter(Boolean);
+  if (tokens.length === 0) return "F5";
+  const key = tokens.at(-1)?.toUpperCase();
+  if (!key || key === "F11" || !/^(F(?:[1-9]|1[0-9]|2[0-4])|[A-Z0-9]|SPACE|ENTER|ESCAPE|TAB|BACKSPACE|DELETE|HOME|END|PAGEUP|PAGEDOWN|ARROWUP|ARROWDOWN|ARROWLEFT|ARROWRIGHT)$/.test(key)) {
+    return "F5";
+  }
+  const modifiers = new Set(tokens.slice(0, -1).map((token) => token.toLowerCase()));
+  if ([...modifiers].some((modifier) => !["ctrl", "alt", "shift", "meta"].includes(modifier))) return "F5";
+  const orderedModifiers = ["ctrl", "alt", "shift", "meta"].filter((modifier) => modifiers.has(modifier));
+  return [...orderedModifiers.map((modifier) => modifier[0]!.toUpperCase() + modifier.slice(1)), key].join("+");
 }
 
 function normalizeOpacity(value: unknown): number {

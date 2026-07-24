@@ -29,6 +29,9 @@ export interface OverlayState {
   statusDetail: string;
   elements: Record<OverlayElementId, OverlayElementSettings>;
   snapshot?: FishNetDpsEncounterSnapshot;
+  snapshotNowMs?: number;
+  resetShortcut: string;
+  resetShortcutError?: string;
   health?: OverlayResource;
   mana?: OverlayResource;
   weight?: CharacterWeight;
@@ -54,6 +57,7 @@ export type OverlayRpc = {
         params: { id: OverlayElementId; opacity: number };
         response: OverlayState;
       };
+      setResetShortcut: { params: { shortcut: string }; response: OverlayState };
     };
   }>;
   webview: RPCSchema<{ messages: { stateChanged: OverlayState } }>;
@@ -66,6 +70,7 @@ export type OverlaySettingsRpc = {
         params: { id: OverlayElementId; enabled: boolean };
         response: OverlayState;
       };
+      setResetShortcut: { params: { shortcut: string }; response: OverlayState };
       closeOverlay: { params: Record<string, never>; response: void };
     };
   }>;

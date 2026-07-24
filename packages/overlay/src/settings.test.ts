@@ -17,7 +17,8 @@ describe("overlay settings", () => {
   test("defaults to unlocked with all elements, including resources, enabled", () => {
     const settings = defaultOverlaySettings(bounds);
     expect(settings.locked).toBe(false);
-    expect(settings.schemaVersion).toBe(2);
+    expect(settings.schemaVersion).toBe(3);
+    expect(settings.resetShortcut).toBe("F5");
     expect(Object.values(settings.elements).every((element) => element.enabled)).toBe(true);
     expect(Object.values(settings.elements).every((element) => element.opacity === 1)).toBe(true);
     expect(settings.elements.health).toEqual({ enabled: true, opacity: 1, x: 950, y: 680, width: 330, height: 40 });
@@ -39,6 +40,7 @@ describe("overlay settings", () => {
 
     const settings = await loadOverlaySettings(settingsPath, bounds);
     expect(settings.locked).toBe(true);
+    expect(settings.resetShortcut).toBe("F5");
     expect(Object.values(settings.elements).every((element) => element.opacity === 0.55)).toBe(true);
     expect(settings).not.toHaveProperty("personalName");
     expect(settings.elements.dpsChart).toEqual({ enabled: false, opacity: 0.55, x: 780, y: 0, width: 500, height: 200 });
@@ -71,6 +73,15 @@ describe("overlay settings", () => {
 
     expect(legacy.elements.weight.height).toBe(40);
     expect(current.elements.weight.height).toBe(72);
+  });
+
+  test("normalizes and persists the reset shortcut", async () => {
+    const settingsPath = await createSettingsPath();
+    const settings = normalizeOverlaySettings({ schemaVersion: 3, resetShortcut: "shift+ctrl+f8" }, bounds);
+    expect(settings.resetShortcut).toBe("Ctrl+Shift+F8");
+    expect(normalizeOverlaySettings({ resetShortcut: "F11" }, bounds).resetShortcut).toBe("F5");
+    await saveOverlaySettings(settings, settingsPath);
+    expect((await loadOverlaySettings(settingsPath, bounds)).resetShortcut).toBe("Ctrl+Shift+F8");
   });
 });
 

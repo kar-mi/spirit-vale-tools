@@ -271,7 +271,7 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
     <div class="element-content">
       <div class="personal-heading">
         <img class="personal-class-icon" src={classIcon(personal?.archetype)} alt="" aria-hidden="true" />
-        <h2 class="element-title">Personal damage</h2>
+        <h2 class="element-title">Personal DPS</h2>
       </div>
       {personal ? (
         <>
@@ -326,23 +326,33 @@ function ResourceElement({ kind, resource }: { kind: "health" | "mana"; resource
 }
 
 function PartyRankingElement({ state: next }: { state: OverlayState }) {
-  const actors = visiblePartyActors(next.snapshot?.actors ?? []);
-  const maxDps = Math.max(1, ...actors.map((actor) => actor.currentDps));
+  const actors = visiblePartyActors(
+    next.snapshot?.actors ?? [],
+    next.snapshotNowMs ?? next.snapshot?.lastDamageAtMs ?? 0,
+  );
+  const maxDps = Math.max(1, ...actors.map((actor) => actor.dps));
+  const duration = next.snapshot?.durationMs ?? 0;
   return (
     <div class="element-content">
-      <h2 class="element-title">Party DPS</h2>
+      <div class="party-heading">
+        <div>
+          <h2 class="element-title">Party encounter DPS</h2>
+          <span class="party-duration">{formatDuration(duration)}</span>
+        </div>
+        <span class="party-reset-hint">{next.resetShortcut} to reset</span>
+      </div>
       {actors.length ? <div class="ranking">{actors.map((actor, index) => (
         <div
           class="ranking-row"
           key={actor.actorIds[0]}
-          style={`--row-fill:${actor.currentDps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
+          style={`--row-fill:${actor.dps / maxDps * 100}%;--row-color:${PARTY_ROW_COLORS[index % PARTY_ROW_COLORS.length]}`}
         >
           <span class="ranking-player">
             <img class="ranking-class-icon" src={classIcon(actor.archetype)} alt="" aria-hidden="true" />
             <span class="ranking-rank">{index + 1}.</span>
             <span class="ranking-name">{actor.displayName}</span>
           </span>
-          <span class="ranking-dps">{formatDps(actor.currentDps)}</span>
+          <span class="ranking-dps">{formatDps(actor.dps)}</span>
         </div>
       ))}</div> : <WaitingForDps />}
     </div>
