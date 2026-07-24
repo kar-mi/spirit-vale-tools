@@ -1,7 +1,7 @@
 import { Electroview } from "electrobun/view";
-import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
+import { initWindowChrome } from "@spiritvale/ui-core/window-chrome";
 
-import type { SessionPickerRpc, SessionPickerState } from "@spiritvale/ui-theme/session-picker-types";
+import type { SessionPickerRpc, SessionPickerState } from "@spiritvale/ui-core/session-picker-types";
 
 let state: SessionPickerState | undefined;
 let selectedId: string | undefined;

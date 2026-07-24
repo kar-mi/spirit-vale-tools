@@ -42,7 +42,7 @@
         "@preact/signals": "^2.9.4",
         "@spiritvale/combat": "workspace:*",
         "@spiritvale/logging": "workspace:*",
-        "@spiritvale/ui-theme": "workspace:*",
+        "@spiritvale/ui-core": "workspace:*",
         "electrobun": "1.18.1",
         "preact": "^10.29.7",
       },
@@ -72,7 +72,7 @@
       "dependencies": {
         "@preact/signals": "^2.9.4",
         "@spiritvale/market": "workspace:*",
-        "@spiritvale/ui-theme": "workspace:*",
+        "@spiritvale/ui-core": "workspace:*",
         "electrobun": "1.18.1",
         "preact": "^10.29.7",
       },
@@ -81,9 +81,10 @@
       "name": "@spiritvale/overlay",
       "dependencies": {
         "@preact/signals": "^2.9.4",
+        "@spiritvale/character": "workspace:*",
         "@spiritvale/combat": "workspace:*",
         "@spiritvale/logging": "workspace:*",
-        "@spiritvale/ui-theme": "workspace:*",
+        "@spiritvale/ui-core": "workspace:*",
         "electrobun": "1.18.1",
         "preact": "^10.29.7",
       },
@@ -102,7 +103,7 @@
       "dependencies": {
         "@preact/signals": "^2.9.4",
         "@spiritvale/rewards": "workspace:*",
-        "@spiritvale/ui-theme": "workspace:*",
+        "@spiritvale/ui-core": "workspace:*",
         "electrobun": "1.18.1",
         "preact": "^10.29.7",
       },
@@ -128,14 +129,14 @@
         "@spiritvale/rewards": "workspace:*",
         "@spiritvale/rewards-ui": "workspace:*",
         "@spiritvale/skills": "workspace:*",
-        "@spiritvale/ui-theme": "workspace:*",
+        "@spiritvale/ui-core": "workspace:*",
       },
       "devDependencies": {
         "electrobun": "1.18.1",
       },
     },
-    "packages/ui-theme": {
-      "name": "@spiritvale/ui-theme",
+    "packages/ui-core": {
+      "name": "@spiritvale/ui-core",
       "version": "0.1.0",
       "dependencies": {
         "@preact/signals": "^2.9.4",
@@ -182,7 +183,7 @@
 
     "@spiritvale/ui": ["@spiritvale/ui@workspace:packages/ui"],
 
-    "@spiritvale/ui-theme": ["@spiritvale/ui-theme@workspace:packages/ui-theme"],
+    "@spiritvale/ui-core": ["@spiritvale/ui-core@workspace:packages/ui-core"],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 

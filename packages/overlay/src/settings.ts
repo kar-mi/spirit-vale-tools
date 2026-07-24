@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-core/local-storage";
+import { loadJsonSettings } from "@spiritvale/ui-core/json-settings";
 
 import {
   OVERLAY_ELEMENT_IDS,
@@ -42,12 +43,9 @@ export async function loadOverlaySettings(
   settingsPath: string | undefined,
   bounds: DisplayBounds,
 ): Promise<OverlaySettings> {
-  try {
-    const candidate = JSON.parse(await readFile(await resolveSettingsPath(settingsPath), "utf8")) as unknown;
-    return normalizeOverlaySettings(candidate, bounds);
-  } catch {
-    return defaultOverlaySettings(bounds);
-  }
+  return loadJsonSettings(await resolveSettingsPath(settingsPath),
+    (candidate) => normalizeOverlaySettings(candidate, bounds),
+    () => defaultOverlaySettings(bounds));
 }
 
 export async function saveOverlaySettings(settings: OverlaySettings, settingsPath?: string): Promise<void> {

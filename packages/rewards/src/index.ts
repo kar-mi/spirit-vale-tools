@@ -27,3 +27,12 @@ export { emptySnapshot, loadRewardReplay, RewardLogFollower, RewardSessionLogFol
 export type { RewardLogBatch, RewardLogStatus } from "./live-log.ts";
 export { formatRewardsReplaySummary, inspectRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
 export type { RewardsReplayInspection, RewardsReplaySummary } from "./replay-summary.ts";
+export { bigintRatio, buildCumulativeTrend, buildRateTrend, trendExtent } from "./trend.ts";
+export type {
+  CumulativeTrendPoint,
+  RateTrendPoint,
+  TrendMetric,
+  TrendMode,
+  TrendRange,
+  TrendSample,
+} from "./trend.ts";

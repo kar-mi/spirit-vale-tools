@@ -2,9 +2,10 @@ import { render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
-import { StatusDot } from "@spiritvale/ui-theme/status-dot";
-import type { StatusTone } from "@spiritvale/ui-theme/status-dot";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
+import { StatusDot } from "@spiritvale/ui-core/status-dot";
+import type { StatusTone } from "@spiritvale/ui-core/status-dot";
+import { formatDps, formatDuration } from "@spiritvale/ui-core/format";
 
 import type { DpsAppRpc, DpsAppState, DpsAppTab } from "../app-types.ts";
 import {
@@ -44,25 +45,16 @@ function setTab(tab: DpsAppTab): void {
   void electroview.rpc?.request.setTab({ tab });
 }
 
-function formatDps(value: number): string {
-  return value >= 10_000 ? compactFormat.format(value) : numberFormat.format(value);
-}
-
-function formatDuration(milliseconds: number): string {
-  const seconds = Math.round(milliseconds / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
 function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-function formatCritRate(hits: number, criticalHits: number): string {
-  return hits === 0 ? "—" : formatPercent(criticalHits / hits);
+function formatCritRate(critRate: number | undefined): string {
+  return critRate === undefined ? "—" : formatPercent(critRate);
 }
 
 function actorSortValue(actor: NonNullable<DpsAppState["snapshot"]>["actors"][number], key: ActorSortKey): number {
-  if (key === "critRate") return actor.hits === 0 ? 0 : actor.criticalHits / actor.hits;
+  if (key === "critRate") return actor.critRate ?? 0;
   return actor[key];
 }
 
@@ -161,7 +153,7 @@ function App() {
                     <td>{formatDps(actor.dps)}</td>
                     <td>{compactFormat.format(actor.damage)}</td>
                     <td>{formatPercent(actor.contribution)}</td>
-                    <td>{formatCritRate(actor.hits, actor.criticalHits)}</td>
+                    <td>{formatCritRate(actor.critRate)}</td>
                     <td>{numberFormat.format(actor.kills)}</td>
                     <td>{numberFormat.format(actor.mobsHit)}</td>
                   </tr>
@@ -223,7 +215,7 @@ function App() {
                     <td>{formatPercent(skill.contribution)}</td>
                     <td>{numberFormat.format(skill.hits)}</td>
                     <td>{numberFormat.format(skill.criticalHits)}</td>
-                    <td>{formatCritRate(skill.hits, skill.criticalHits)}</td>
+                    <td>{formatCritRate(skill.critRate)}</td>
                   </tr>
                 ))}</tbody>
               </table>

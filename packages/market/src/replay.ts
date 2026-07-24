@@ -1,6 +1,6 @@
 import { FishNetSessionDecoder, loadBundledFishNetRpcMap, decodeLiteNetLibDatagram } from "@spiritvale/core";
 import { parseLogRecord } from "@spiritvale/logging";
-import { FishNetMarketTracker } from "@spiritvale/market";
+import { FishNetMarketTracker } from "./market.ts";
 
 export interface MarketReplayResult {
   datagrams: number;

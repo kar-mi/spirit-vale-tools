@@ -2,10 +2,10 @@ import path from "node:path";
 
 import { DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
 import type { CharacterViewState } from "@spiritvale/character";
-import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
-import { applyRoundedCorners, hideWindowFromTaskbar, setWindowClickThrough } from "@spiritvale/ui-theme/win32";
-import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
-import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";
+import { applyRoundedCorners, hideWindowFromTaskbar, setWindowClickThrough } from "@spiritvale/ui-core/win32";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 import { BrowserView, BrowserWindow, GlobalShortcut, Screen } from "electrobun/bun";
 
 import type { OverlayRpc, OverlaySettingsRpc, OverlayState, OverlayStatus } from "../app-types.ts";

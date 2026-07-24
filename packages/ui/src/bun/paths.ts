@@ -2,7 +2,7 @@ import path from "node:path";
 import {
   resolveLocalStorageRoot,
   resolveWorkspaceRoot as findWorkspaceRoot,
-} from "@spiritvale/ui-theme/local-storage";
+} from "@spiritvale/ui-core/local-storage";
 
 export function resolveLogDirectory(): string {
   const override = process.env.SPIRIT_VALE_LOG_DIRECTORY?.trim();

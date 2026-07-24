@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
-import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-core/local-storage";
+import type { WindowFrame } from "@spiritvale/ui-core/window-chrome";
+import { loadJsonSettings } from "@spiritvale/ui-core/json-settings";
 import type { RewardsAppView } from "./app-types.ts";
 
 export interface RewardsAppSettings {
@@ -20,15 +21,15 @@ const defaults: RewardsAppSettings = {
 const defaultSettingsPath = path.join(resolveLocalStorageRoot(), "data", "settings", "rewards.json");
 
 export async function loadRewardsSettings(settingsPath = defaultSettingsPath): Promise<RewardsAppSettings> {
-  try {
-    const value = JSON.parse(await readFile(settingsPath, "utf8")) as Partial<RewardsAppSettings>;
+  return loadJsonSettings(settingsPath, (candidate) => {
+    const value = candidate as Partial<RewardsAppSettings>;
     return {
       frame: validFrame(value.frame) ? value.frame : defaults.frame,
       catalogFrame: validFrame(value.catalogFrame) ? value.catalogFrame : defaults.catalogFrame,
       pinned: typeof value.pinned === "boolean" ? value.pinned : defaults.pinned,
       view: value.view === "summary" || value.view === "recent" || value.view === "trends" ? value.view : defaults.view,
     };
-  } catch { return { ...defaults, frame: { ...defaults.frame }, catalogFrame: { ...defaults.catalogFrame } }; }
+  }, () => ({ ...defaults, frame: { ...defaults.frame }, catalogFrame: { ...defaults.catalogFrame } }));
 }
 
 export async function saveRewardsSettings(settings: RewardsAppSettings, settingsPath = defaultSettingsPath): Promise<void> {

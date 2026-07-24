@@ -2,6 +2,7 @@ import { signal } from "@preact/signals";
 import { render, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import { Electroview } from "electrobun/view";
+import { formatDps, formatDuration } from "@spiritvale/ui-core/format";
 
 import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
 import type {
@@ -290,7 +291,7 @@ function PersonalDpsElement({ state: next }: { state: OverlayState }) {
           <span class="personal-value">{formatDps(personal.currentDps)}</span><span class="personal-unit">DPS</span>
           <div class="personal-details">
             <span>Damage<strong>{compactFormat.format(personal.damage)}</strong></span>
-            <span>Crit rate<strong>{personal.hits ? `${Math.round(personal.criticalHits / personal.hits * 100)}%` : "—"}</strong></span>
+            <span>Crit rate<strong>{personal.critRate === undefined ? "—" : `${Math.round(personal.critRate * 100)}%`}</strong></span>
           </div>
         </>
       ) : <WaitingForDps />}
@@ -409,13 +410,5 @@ function setElementEnabled(id: OverlayElementId, enabled: boolean): Promise<void
   return electroview.rpc?.request.setElementEnabled({ id, enabled }).then((next) => { state.value = next; }) ?? Promise.resolve();
 }
 
-function formatDps(value: number): string {
-  return value >= 10_000 ? compactFormat.format(value) : numberFormat.format(value);
-}
-
-function formatDuration(milliseconds: number): string {
-  const seconds = Math.round(milliseconds / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 render(<App />, document.getElementById("root")!);

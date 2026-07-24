@@ -240,7 +240,8 @@ describe("FishNetDpsMeter", () => {
     meter.reset(7_000);
 
     const actor = meter.getLatestSnapshot()?.actors[0];
-    expect(actor).toMatchObject({ hits: 2, criticalHits: 1, damage: 150 });
+    expect(actor).toMatchObject({ hits: 2, criticalHits: 1, critRate: 0.5, damage: 150 });
+    expect(actor?.skills[0]).toMatchObject({ hits: 2, criticalHits: 1, critRate: 0.5 });
     expect(actor?.timeline).toEqual([
       { elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 },
       { elapsedMs: 5_000, damage: 100, cumulativeDamage: 100, dps: 20 },

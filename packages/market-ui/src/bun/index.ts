@@ -1,7 +1,7 @@
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
-import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
-import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-core/window-publish";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 
 import {
   FISHNET_MARKET_STAT_NAMES,

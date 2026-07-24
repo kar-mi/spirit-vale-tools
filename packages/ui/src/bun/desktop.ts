@@ -1,5 +1,5 @@
 import Electrobun, { BrowserView, BrowserWindow, Tray, Utils } from "electrobun/bun";
-import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-core/win32";
 import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core/capture";
 
 import { createMarketWindow } from "@spiritvale/market-ui";
@@ -17,14 +17,14 @@ import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
 import { createOverlayWindow } from "@spiritvale/overlay";
-import { isWorkspaceDevelopmentRoot } from "@spiritvale/ui-theme/local-storage";
+import { isWorkspaceDevelopmentRoot } from "@spiritvale/ui-core/local-storage";
 import { resolveLocalRoot } from "./paths.ts";
-import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
+import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";
 import { WindowSlot } from "./window-slot.ts";
 import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-paths.ts";
-import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
-import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
-import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import type { WindowFrame } from "@spiritvale/ui-core/window-chrome";
+import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-core/ui-scale";
+import { WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 import { launcherMinimizeAction, trayAction } from "./launcher-tray-actions.ts";
 
 makeProcessDpiAware();

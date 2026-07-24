@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { bigintRatio, buildCumulativeTrend, buildRateTrend, trendExtent } from "./trend-model.ts";
+import { bigintRatio, buildCumulativeTrend, buildRateTrend, trendExtent } from "./trend.ts";
 
 const samples = [
   { recordedAt: "2026-01-01T00:00:00.000Z", experience: 10, jobExperience: 3, coins: "4" },

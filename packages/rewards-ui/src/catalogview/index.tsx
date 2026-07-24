@@ -2,7 +2,7 @@ import { Fragment, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
 
 import type { RewardsCatalogRpc, RewardsCatalogState } from "../app-types.ts";
 import { sortRewardCatalog } from "../table-sort.ts";

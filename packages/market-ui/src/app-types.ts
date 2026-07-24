@@ -1,6 +1,6 @@
 import type { RPCSchema } from "electrobun";
 import type { MarketLogStatus } from "@spiritvale/market";
-import type { MaximizableWindowChromeRequests, WindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
+import type { MaximizableWindowChromeRequests, WindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
 export type MarketUiStatus = MarketLogStatus;
 export type MarketUiSortKey = "name" | "price" | "available" | "seller" | "shopName" | "mapId";

@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-core/local-storage";
+import { loadJsonSettings } from "@spiritvale/ui-core/json-settings";
 
 import type { DpsAppTab } from "./app-types.ts";
 import {
@@ -24,16 +25,14 @@ const DEFAULT_SETTINGS: DpsAppSettings = {
 
 export async function loadDpsAppSettings(settingsPath?: string): Promise<DpsAppSettings> {
   const resolvedSettingsPath = await resolveSettingsPath(settingsPath);
-  try {
-    const candidate = JSON.parse(await readFile(resolvedSettingsPath, "utf8")) as Partial<DpsAppSettings>;
+  return loadJsonSettings(resolvedSettingsPath, (value) => {
+    const candidate = value as Partial<DpsAppSettings>;
     return {
       personalName: typeof candidate.personalName === "string" ? candidate.personalName.trim() : "",
       tab: candidate.tab === "personal" ? "personal" : "all",
       frame: validFrame(candidate.frame) ? candidate.frame : { ...DEFAULT_SETTINGS.frame },
     };
-  } catch {
-    return { ...DEFAULT_SETTINGS, frame: { ...DEFAULT_SETTINGS.frame } };
-  }
+  }, () => ({ ...DEFAULT_SETTINGS, frame: { ...DEFAULT_SETTINGS.frame } }));
 }
 
 export async function saveDpsAppSettings(settings: DpsAppSettings, settingsPath?: string): Promise<void> {
