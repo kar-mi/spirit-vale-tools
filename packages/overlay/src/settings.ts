@@ -30,10 +30,7 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   partyRanking: { enabled: true, opacity: 1, x: 315, y: 434, width: 360, height: 300 },
   health: { enabled: true, opacity: 1, x: 1037, y: 921, width: 330, height: 40 },
   mana: { enabled: true, opacity: 1, x: 1377, y: 921, width: 338, height: 40 },
-  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
-  permaBuffs: { enabled: false, opacity: 1, x: 794, y: 700, width: 160, height: 100 },
-  buffs: { enabled: true, opacity: 1, x: 794, y: 650, width: 250, height: 48 },
-  debuffs: { enabled: true, opacity: 1, x: 1052, y: 650, width: 250, height: 48 },
+  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 }
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -70,7 +67,7 @@ export function normalizeOverlaySettings(candidate: unknown, bounds: DisplayBoun
       ? sourceElements[id] as Record<string, unknown>
       : {};
     const width = clampNumber(value.width, defaults.width, 160, Math.max(160, bounds.width));
-    const minimumHeight = id === "health" || id === "mana" || id === "weight" || id === "permaBuffs" || id === "buffs" || id === "debuffs" ? 40 : 100;
+    const minimumHeight = id === "health" || id === "mana" || id === "weight" ? 40 : 100;
     const savedHeight = legacySettings && id === "weight" && value.height === 72
       ? defaults.height
       : value.height;
