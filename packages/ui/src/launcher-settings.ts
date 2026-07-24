@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { Utils } from "electrobun/bun";
 import { normalizeUiScale, type UiScale } from "@spiritvale/ui-theme/ui-scale";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 
 export interface LauncherSettings {
   captureAdapter: "auto" | string;
@@ -30,5 +30,5 @@ export async function saveLauncherSettings(settings: LauncherSettings, file = de
 }
 
 function defaultSettingsFile(): string {
-  return path.join(Utils.paths.userData, "spirit-vale-tools", "settings.json");
+  return path.join(resolveLocalStorageRoot(), "data", "settings", "launcher.json");
 }

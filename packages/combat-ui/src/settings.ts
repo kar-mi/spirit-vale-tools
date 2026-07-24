@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 
 import type { DpsAppTab } from "./app-types.ts";
 import {
@@ -43,8 +44,7 @@ export async function saveDpsAppSettings(settings: DpsAppSettings, settingsPath?
 
 async function resolveSettingsPath(settingsPath: string | undefined): Promise<string> {
   if (settingsPath) return settingsPath;
-  const { Utils } = await import("electrobun/bun");
-  return path.join(Utils.paths.userData, "spirit-vale-dps", "settings.json");
+  return path.join(resolveLocalStorageRoot(), "data", "settings", "dps.json");
 }
 
 function validFrame(value: unknown): value is DpsAppSettings["frame"] {

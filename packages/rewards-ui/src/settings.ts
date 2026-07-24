@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { Utils } from "electrobun/bun";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import type { RewardsAppView } from "./app-types.ts";
 
@@ -17,7 +17,7 @@ const defaults: RewardsAppSettings = {
   pinned: false,
   view: "summary",
 };
-const defaultSettingsPath = path.join(Utils.paths.userData, "rewards-settings.json");
+const defaultSettingsPath = path.join(resolveLocalStorageRoot(), "data", "settings", "rewards.json");
 
 export async function loadRewardsSettings(settingsPath = defaultSettingsPath): Promise<RewardsAppSettings> {
   try {

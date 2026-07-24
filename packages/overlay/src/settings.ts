@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveLocalStorageRoot } from "@spiritvale/ui-theme/local-storage";
 
 import {
   OVERLAY_ELEMENT_IDS,
@@ -29,7 +30,7 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   partyRanking: { enabled: true, opacity: 1, x: 315, y: 434, width: 360, height: 300 },
   health: { enabled: true, opacity: 1, x: 1037, y: 921, width: 330, height: 40 },
   mana: { enabled: true, opacity: 1, x: 1377, y: 921, width: 338, height: 40 },
-  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
+  weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 }
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
@@ -99,6 +100,5 @@ function clampNumber(value: unknown, fallback: number, minimum: number, maximum:
 
 async function resolveSettingsPath(settingsPath: string | undefined): Promise<string> {
   if (settingsPath) return settingsPath;
-  const { Utils } = await import("electrobun/bun");
-  return path.join(Utils.paths.userData, "spirit-vale-overlay", "settings.json");
+  return path.join(resolveLocalStorageRoot(), "data", "settings", "overlay.json");
 }

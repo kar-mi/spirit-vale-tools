@@ -1,15 +1,13 @@
 import { expect, test } from "bun:test";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
-import { resolveDesktopStoragePaths } from "./portable-paths.ts";
+import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-paths.ts";
 
-test("portable storage remains beneath the extracted application root", () => {
+test("environment-root storage remains beneath the extracted application root", () => {
   const root = path.resolve("fictional-portable-app");
-  const paths = resolveDesktopStoragePaths({
-    portableRoot: `  ${root}  `,
-    fallbackUserData: path.resolve("fictional-user-data"),
-    fallbackLogDirectory: path.resolve("fictional-workspace-logs"),
-  });
+  const paths = resolveDesktopStoragePaths({ root, portable: true, workspaceDev: false });
 
   expect(paths).toEqual({
     portable: true,
@@ -24,21 +22,45 @@ test("portable storage remains beneath the extracted application root", () => {
   });
 });
 
-test("development storage retains the existing user-data and workspace locations", () => {
-  const userData = path.resolve("fictional-user-data");
-  const logs = path.resolve("fictional-workspace-logs");
-  const paths = resolveDesktopStoragePaths({
-    fallbackUserData: userData,
-    fallbackLogDirectory: logs,
-  });
+test("workspace development keeps logs at the workspace root", () => {
+  const root = path.resolve("fictional-workspace");
+  const paths = resolveDesktopStoragePaths({ root, workspaceDev: true });
 
   expect(paths.portable).toBe(false);
-  expect(paths.root).toBeUndefined();
-  expect(paths.logDirectory).toBe(logs);
-  expect(paths.launcherSettingsPath).toBe(path.join(userData, "spirit-vale-tools", "settings.json"));
-  expect(paths.dpsSettingsPath).toBe(path.join(userData, "spirit-vale-dps", "settings.json"));
-  expect(paths.overlaySettingsPath).toBe(path.join(userData, "spirit-vale-overlay", "settings.json"));
-  expect(paths.rewardsSettingsPath).toBe(path.join(userData, "rewards-settings.json"));
-  expect(paths.windowPlacementsPath).toBe(path.join(userData, "spirit-vale-tools", "windows.json"));
-  expect(paths.characterStatePath).toBe(path.join(userData, "spirit-vale-tools", "character.json"));
+  expect(paths.logDirectory).toBe(path.join(root, "logs"));
+  expect(paths.launcherSettingsPath).toBe(path.join(root, "data", "settings", "launcher.json"));
+});
+
+test("executable-adjacent storage uses packaged log layout and honors an override", () => {
+  const root = path.resolve("fictional-executable-directory");
+  const override = path.resolve("fictional-log-override");
+  const paths = resolveDesktopStoragePaths({ root, workspaceDev: false, logDirectoryOverride: `  ${override}  ` });
+
+  expect(paths.root).toBe(root);
+  expect(paths.logDirectory).toBe(override);
+  expect(paths.characterStatePath).toBe(path.join(root, "data", "character.json"));
+});
+
+test("migration copies missing legacy files without replacing local state", async () => {
+  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "spirit-vale-storage-"));
+  try {
+    const legacyUserData = path.join(temporaryDirectory, "legacy");
+    const root = path.join(temporaryDirectory, "local");
+    const paths = resolveDesktopStoragePaths({ root, workspaceDev: false });
+    const legacyLauncher = path.join(legacyUserData, "spirit-vale-tools", "settings.json");
+    const legacyDps = path.join(legacyUserData, "spirit-vale-dps", "settings.json");
+    await mkdir(path.dirname(legacyLauncher), { recursive: true });
+    await mkdir(path.dirname(legacyDps), { recursive: true });
+    await mkdir(path.dirname(paths.dpsSettingsPath), { recursive: true });
+    await writeFile(legacyLauncher, "legacy", "utf8");
+    await writeFile(legacyDps, "dps", "utf8");
+    await writeFile(paths.dpsSettingsPath, "local", "utf8");
+
+    await migrateLegacyUserData(paths, legacyUserData);
+
+    expect(await readFile(paths.launcherSettingsPath, "utf8")).toBe("legacy");
+    expect(await readFile(paths.dpsSettingsPath, "utf8")).toBe("local");
+  } finally {
+    await rm(temporaryDirectory, { recursive: true, force: true });
+  }
 });
