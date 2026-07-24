@@ -25,7 +25,7 @@ import { migrateLegacyUserData, resolveDesktopStoragePaths } from "./portable-pa
 import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
 import { registerUiScaleWindow, scaledSize, setUiScale } from "@spiritvale/ui-theme/ui-scale";
 import { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
-import { isTrayDoubleClick, launcherCloseAction, trayAction } from "./launcher-tray-actions.ts";
+import { launcherCloseAction, trayAction } from "./launcher-tray-actions.ts";
 
 makeProcessDpiAware();
 
@@ -193,7 +193,6 @@ const tray = new Tray({
   width: 32,
   height: 32,
 });
-let lastTrayIconClickAt = 0;
 tray.setMenu([
   { type: "normal", label: "Main launcher", action: "show-launcher" },
   { type: "normal", label: "Combat", action: "open-combat" },
@@ -204,18 +203,7 @@ tray.setMenu([
   { type: "normal", label: "Exit", action: "exit" },
 ]);
 tray.on("tray-clicked", (event) => {
-  const rawAction = (event as { data: { action: string } }).data.action;
-  if (rawAction === "") {
-    const clickedAt = Date.now();
-    if (isTrayDoubleClick(lastTrayIconClickAt, clickedAt)) {
-      lastTrayIconClickAt = 0;
-      showLauncher();
-    } else {
-      lastTrayIconClickAt = clickedAt;
-    }
-    return;
-  }
-  const action = trayAction(rawAction);
+  const action = trayAction((event as { data: { action: string } }).data.action);
   if (action === "show-launcher") showLauncher();
   else if (action === "open-combat") void openTool("combat");
   else if (action === "open-overlay") void openTool("overlay");

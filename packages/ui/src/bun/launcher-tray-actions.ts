@@ -14,7 +14,3 @@ export function trayAction(action: string): TrayAction {
   if (action === "exit") return "exit";
   return undefined;
 }
-
-export function isTrayDoubleClick(previousClickAt: number, currentClickAt: number, intervalMs = 350): boolean {
-  return previousClickAt > 0 && currentClickAt >= previousClickAt && currentClickAt - previousClickAt <= intervalMs;
-}
