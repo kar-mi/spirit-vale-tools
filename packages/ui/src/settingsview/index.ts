@@ -1,5 +1,5 @@
 import { Electroview } from "electrobun/view";
-import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
+import { initWindowChrome } from "@spiritvale/ui-core/window-chrome";
 import type { LauncherSettingsRpc, LauncherState } from "../launcher-types.ts";
 
 const rpc = Electroview.defineRPC<LauncherSettingsRpc>({ handlers: { requests: {}, messages: { stateChanged: render } } });

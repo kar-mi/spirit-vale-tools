@@ -2,7 +2,8 @@ import { render } from "preact";
 import type { JSX } from "preact";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
+import { formatDuration } from "@spiritvale/ui-core/format";
 
 import type { CombatAnalysisRpc, CombatAnalysisState } from "../app-types.ts";
 
@@ -18,11 +19,6 @@ const rpc = Electroview.defineRPC<CombatAnalysisRpc>({
 const electroview = new Electroview({ rpc });
 
 void electroview.rpc?.request.getState({}).then((next) => { state.value = next; });
-
-function formatDuration(milliseconds: number): string {
-  const seconds = Math.round(milliseconds / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 function activateRow(event: JSX.TargetedKeyboardEvent<HTMLTableRowElement>, activate: () => void): void {
   if (event.key !== "Enter" && event.key !== " ") return;
@@ -101,7 +97,7 @@ function App() {
                   <td>{percentFormat.format(player.contribution)}</td>
                   <td>{numberFormat.format(player.hits)}</td>
                   <td>{numberFormat.format(player.criticalHits)}</td>
-                  <td>{player.hits === 0 ? "—" : percentFormat.format(player.criticalHits / player.hits)}</td>
+                  <td>{player.critRate === undefined ? "—" : percentFormat.format(player.critRate)}</td>
                   <td>{numberFormat.format(player.kills)}</td>
                 </tr>;
               })}</tbody>

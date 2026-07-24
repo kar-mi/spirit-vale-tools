@@ -1,5 +1,5 @@
 import { Electroview } from "electrobun/view";
-import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
+import { initWindowChrome } from "@spiritvale/ui-core/window-chrome";
 import { resolveFishNetItem, type FishNetArtifactSlot } from "@spiritvale/items";
 import { type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
@@ -36,7 +36,9 @@ function render(state: CharacterViewState): void {
   element("job-level").textContent = format(character.jobLevel);
   element("experience").textContent = format(character.experience);
   element("job-experience").textContent = format(character.jobExperience);
-  element("status-detail").textContent = state.statusDetail;
+  element("status-detail").textContent = state.status === "cached"
+    ? `${state.statusDetail} · updated ${new Date(character.updatedAt).toLocaleString()}`
+    : state.statusDetail;
   renderRecordTile("record-health-tile", "record-health", state.records?.maxHealth, format);
   renderRecordTile("record-mana-tile", "record-mana", state.records?.maxMana, format);
   renderRecordTile("record-speed-tile", "record-speed", state.records?.moveSpeed, (value) => value.toFixed(2));

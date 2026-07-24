@@ -1,6 +1,6 @@
 import type { RPCSchema } from "electrobun";
-import type { WindowFrame } from "@spiritvale/ui-theme/window-chrome";
-import type { UiScale } from "@spiritvale/ui-theme/ui-scale";
+import type { WindowFrame } from "@spiritvale/ui-core/window-chrome";
+import type { UiScale } from "@spiritvale/ui-core/ui-scale";
 
 export type CaptureStatus = "starting" | "capturing" | "unavailable" | "stopped";
 export type ToolWindow = "combat" | "overlay" | "rewards" | "market" | "character";

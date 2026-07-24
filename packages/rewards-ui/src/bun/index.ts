@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-theme/window-publish";
+import { mountRoundedWindow, publishSafely } from "@spiritvale/ui-core/window-publish";
 import {
   emptySnapshot,
   inspectRewardsReplaySummary,
@@ -20,10 +20,10 @@ import type {
   RewardsCatalogState,
 } from "../app-types.ts";
 import { loadRewardsSettings, saveRewardsSettings } from "../settings.ts";
-import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
-import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
-import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
-import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";
+import { createSessionPicker } from "@spiritvale/ui-core/session-picker";
+import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-core/ui-scale";
+import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 
 const POLL_MS = 1_000;
 const catalog = loadBundledMobRewardCatalog();

@@ -1,6 +1,6 @@
 import type { RPCSchema } from "electrobun";
 import type { RewardLogStatus } from "@spiritvale/rewards";
-import type { MaximizableWindowChromeRequests } from "@spiritvale/ui-theme/window-rpc";
+import type { MaximizableWindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
 export type RewardsAppMode = "live" | "replay";
 export type RewardsAppView = "summary" | "recent" | "trends";

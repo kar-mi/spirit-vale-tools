@@ -2,8 +2,8 @@ import { Fragment, render } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
-import { StatusDot } from "@spiritvale/ui-theme/status-dot";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
+import { StatusDot } from "@spiritvale/ui-core/status-dot";
 
 import type { MarketUiRpc, MarketUiSortDirection, MarketUiSortKey, MarketUiState, MarketUiStat } from "../app-types.ts";
 

@@ -2,7 +2,8 @@ import { render } from "preact";
 import { useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
+import { formatDuration } from "@spiritvale/ui-core/format";
 
 import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
 import type { CombatAnalysisDetailRpc, CombatAnalysisDetailState } from "../app-types.ts";
@@ -22,11 +23,6 @@ const electroview = new Electroview({ rpc });
 
 void electroview.rpc?.request.getState({}).then((next) => { state.value = next; });
 
-function formatDuration(milliseconds: number): string {
-  const seconds = Math.round(milliseconds / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
 function App() {
   const [metric, setMetric] = useState<Metric>("dps");
   const next = state.value;
@@ -39,7 +35,7 @@ function App() {
     ["Hits", numberFormat.format(player.hits)],
     ["Kills", numberFormat.format(player.kills)],
     ["Crit hits", numberFormat.format(player.criticalHits)],
-    ["Crit rate", player.hits === 0 ? "—" : percentFormat.format(player.criticalHits / player.hits)],
+    ["Crit rate", player.critRate === undefined ? "—" : percentFormat.format(player.critRate)],
   ];
 
   return (
@@ -97,7 +93,7 @@ function App() {
                       <td>{percentFormat.format(skill.contribution)}</td>
                       <td>{numberFormat.format(skill.hits)}</td>
                       <td>{numberFormat.format(skill.criticalHits)}</td>
-                      <td>{skill.hits === 0 ? "—" : percentFormat.format(skill.criticalHits / skill.hits)}</td>
+                      <td>{skill.critRate === undefined ? "—" : percentFormat.format(skill.critRate)}</td>
                     </tr>
                   ))}</tbody>
                 </table>

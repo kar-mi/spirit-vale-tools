@@ -1,9 +1,9 @@
 {
-  "name": "@spiritvale/ui-theme",
+  "name": "@spiritvale/ui-core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Shared Material 3 theme (theme.css) and frameless window chrome for the Spirit Vale desktop apps.",
+  "description": "Shared UI platform utilities, Material 3 theme, and frameless window chrome for the Spirit Vale desktop apps.",
   "exports": {
     "./theme.css": "./theme.css",
     "./win32": "./win32.ts",
@@ -11,6 +11,8 @@
     "./title-bar": "./title-bar.tsx",
     "./status-dot": "./status-dot.tsx",
     "./safe-save": "./safe-save.ts",
+    "./json-settings": "./json-settings.ts",
+    "./format": "./format.ts",
     "./session-picker": "./session-picker.ts",
     "./session-picker-types": "./session-picker-types.ts",
     "./window-rpc": "./window-rpc.ts",

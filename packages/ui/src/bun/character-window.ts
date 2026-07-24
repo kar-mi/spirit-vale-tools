@@ -1,9 +1,9 @@
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners } from "@spiritvale/ui-core/win32";
 import type { CharacterViewState } from "@spiritvale/character";
 import type { CharacterRpc } from "../character-types.ts";
-import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
-import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 
 export interface CharacterWindowOptions {
   getState: () => CharacterViewState;

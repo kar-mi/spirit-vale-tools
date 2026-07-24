@@ -110,7 +110,7 @@ export class FishNetCharacterTracker {
       status: snapshot.source,
       statusDetail: snapshot.source === "live"
         ? "Live character data"
-        : `Last known character · updated ${new Date(snapshot.updatedAt).toLocaleString()}`,
+        : "Last known character",
     };
   }
 

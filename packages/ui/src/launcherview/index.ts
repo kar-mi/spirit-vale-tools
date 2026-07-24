@@ -1,5 +1,5 @@
 import { Electroview } from "electrobun/view";
-import { initWindowChrome } from "@spiritvale/ui-theme/window-chrome";
+import { initWindowChrome } from "@spiritvale/ui-core/window-chrome";
 
 import type { LauncherRpc, LauncherState, ToolWindow } from "../launcher-types.ts";
 

@@ -24,6 +24,8 @@ export interface FishNetDpsSkillRow {
   contribution: number;
   hits: number;
   criticalHits: number;
+  /** Critical hits as a fraction of total hits, when the skill has hit. */
+  critRate?: number;
 }
 
 export interface FishNetDpsTimelinePoint {
@@ -51,6 +53,8 @@ export interface FishNetDpsActorRow {
   contribution: number;
   hits: number;
   criticalHits: number;
+  /** Critical hits as a fraction of total hits, when the actor has hit. */
+  critRate?: number;
   kills: number;
   /** Number of distinct enemy object IDs damaged by this actor during the encounter. */
   mobsHit: number;
@@ -562,6 +566,7 @@ function actorRow(
       ...skill,
       dps: perSecond(skill.damage, durationMs),
       contribution: actor.damage === 0 ? 0 : skill.damage / actor.damage,
+      ...(skill.hits === 0 ? {} : { critRate: skill.criticalHits / skill.hits }),
     }))
     .sort(compareRows);
   return {
@@ -576,6 +581,7 @@ function actorRow(
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
     hits: actor.hits,
     criticalHits: actor.criticalHits,
+    ...(actor.hits === 0 ? {} : { critRate: actor.criticalHits / actor.hits }),
     kills: actor.kills,
     mobsHit: actor.targetIds.size,
     skills,

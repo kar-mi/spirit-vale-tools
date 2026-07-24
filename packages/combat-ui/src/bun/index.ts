@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
+import { applyRoundedCorners } from "@spiritvale/ui-core/win32";
 
 import {
   FishNetDpsMeter,
@@ -11,12 +11,12 @@ import {
 } from "@spiritvale/combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
-import { SafeSaveQueue } from "@spiritvale/ui-theme/safe-save";
-import { createSessionPicker } from "@spiritvale/ui-theme/session-picker";
+import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";
+import { createSessionPicker } from "@spiritvale/ui-core/session-picker";
 import { Utils } from "electrobun/bun";
 import { createCombatAnalysisWindow } from "./combat-analysis-window.ts";
-import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-theme/ui-scale";
-import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { registerUiScaleWindow, scaledSize, unscaledSize } from "@spiritvale/ui-core/ui-scale";
+import { visibleScaledWindowFrame, type WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 import { DPS_WINDOW_MINIMUM_HEIGHT, DPS_WINDOW_MINIMUM_WIDTH } from "../window-size.ts";
 
 const MINIMUM_WIDTH = DPS_WINDOW_MINIMUM_WIDTH;

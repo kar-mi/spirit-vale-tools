@@ -17,7 +17,7 @@ if (!packageJson.version) throw new Error("package.json must define a version be
  * silently collapse duplicate keys and most views would end up without a theme.css.
  */
 function themeCssSource(variant: number): string {
-  return `../ui-theme/${"./".repeat(variant)}theme.css`;
+  return `../ui-core/${"./".repeat(variant)}theme.css`;
 }
 
 export default {
@@ -105,7 +105,7 @@ export default {
     buildFolder: "dist/electrobun",
     artifactFolder: "dist/artifacts",
     targets: "win-x64",
-    watch: ["src", "../character/src", "../combat-ui/src", "../core/src/fishnet", "../items/src", "../market-ui/src", "../overlay/src", "../rewards-ui/src", "../ui-theme"],
+    watch: ["src", "../character/src", "../combat-ui/src", "../core/src/fishnet", "../items/src", "../market-ui/src", "../overlay/src", "../rewards-ui/src", "../ui-core"],
     win: {
       bundleCEF: false,
       defaultRenderer: "native",

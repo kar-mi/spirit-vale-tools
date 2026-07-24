@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { FishNetMarketTracker } from "@spiritvale/market";
-import { decodeMarketCaptureJsonLines } from "./market-replay.ts";
+import { decodeMarketCaptureJsonLines, FishNetMarketTracker } from "@spiritvale/market";
 
 function record(type: string, data: Record<string, unknown>): string {
   return JSON.stringify({

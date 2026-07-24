@@ -1,7 +1,7 @@
 import { render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
 
 import type { MarketFiltersRpc, MarketFiltersState, MarketUiFilter } from "../app-types.ts";
 

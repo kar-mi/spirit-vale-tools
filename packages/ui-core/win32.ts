@@ -18,7 +18,7 @@ export function makeProcessDpiAware(): void {
     // E_ACCESSDENIED means awareness was already set — not an error.
     shcore.symbols.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
   } catch (error) {
-    console.warn("[ui-theme] could not set DPI awareness:", error);
+    console.warn("[ui-core] could not set DPI awareness:", error);
   }
 }
 
@@ -49,7 +49,7 @@ export function applyRoundedCorners(windowPtr: unknown): void {
       preference.byteLength,
     );
   } catch (error) {
-    console.warn("[ui-theme] could not request rounded corners:", error);
+    console.warn("[ui-core] could not request rounded corners:", error);
   }
 }
 
@@ -93,7 +93,7 @@ export function hideWindowFromTaskbar(windowPtr: unknown): boolean {
     );
     return true;
   } catch (error) {
-    console.warn("[ui-theme] could not hide overlay from the taskbar:", error);
+    console.warn("[ui-core] could not hide overlay from the taskbar:", error);
     return false;
   }
 }
@@ -150,7 +150,7 @@ export function setWindowClickThrough(windowPtr: unknown, enabled: boolean): boo
     );
     return true;
   } catch (error) {
-    console.warn("[ui-theme] could not change overlay hit testing:", error);
+    console.warn("[ui-core] could not change overlay hit testing:", error);
     return false;
   }
 }

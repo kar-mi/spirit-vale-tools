@@ -2,18 +2,18 @@ import { Fragment, render } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
-import { StatusDot } from "@spiritvale/ui-theme/status-dot";
-import type { StatusTone } from "@spiritvale/ui-theme/status-dot";
-
-import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
+import { StatusDot } from "@spiritvale/ui-core/status-dot";
+import type { StatusTone } from "@spiritvale/ui-core/status-dot";
 import {
   bigintRatio,
   buildCumulativeTrend,
   buildRateTrend,
   trendExtent,
-} from "./trend-model.ts";
-import type { TrendMetric, TrendMode, TrendRange, TrendSample } from "./trend-model.ts";
+} from "@spiritvale/rewards";
+import type { TrendMetric, TrendMode, TrendRange, TrendSample } from "@spiritvale/rewards";
+
+import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
 import { sortRewardKills, sortRewardSummaries } from "../table-sort.ts";
 import type { KillSortKey, SortDirection, SummarySortKey, TableSort } from "../table-sort.ts";
 

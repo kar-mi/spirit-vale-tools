@@ -20,7 +20,7 @@
     "@spiritvale/rewards": "workspace:*",
     "@spiritvale/rewards-ui": "workspace:*",
     "@spiritvale/skills": "workspace:*",
-    "@spiritvale/ui-theme": "workspace:*"
+    "@spiritvale/ui-core": "workspace:*"
   },
   "devDependencies": {
     "electrobun": "1.18.1"

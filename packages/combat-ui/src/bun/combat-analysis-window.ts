@@ -3,9 +3,10 @@ import path from "node:path";
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
 import { loadDpsReplay } from "@spiritvale/combat";
 import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
-import { applyRoundedCorners } from "@spiritvale/ui-theme/win32";
-import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-theme/ui-scale";
-import type { WindowPlacementStore } from "@spiritvale/ui-theme/window-placement";
+import { formatDuration } from "@spiritvale/ui-core/format";
+import { applyRoundedCorners } from "@spiritvale/ui-core/win32";
+import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";
+import type { WindowPlacementStore } from "@spiritvale/ui-core/window-placement";
 
 import type {
   CombatAnalysisDetailRpc,
@@ -256,9 +257,4 @@ function encounterOptions(snapshots: readonly FishNetDpsEncounterSnapshot[]): Dp
     id: encounter.id,
     label: `Encounter ${index + 1} · ${formatDuration(encounter.durationMs)}`,
   }));
-}
-
-function formatDuration(milliseconds: number): string {
-  const seconds = Math.round(milliseconds / 1_000);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }

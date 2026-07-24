@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 import { render } from "preact";
 import { Electroview } from "electrobun/view";
-import { TitleBar } from "@spiritvale/ui-theme/title-bar";
+import { TitleBar } from "@spiritvale/ui-core/title-bar";
 
 import {
   OVERLAY_ELEMENT_IDS,

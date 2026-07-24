@@ -3,7 +3,7 @@ import { PacketCapture } from "@spiritvale/core/capture";
 import { createLogSession } from "@spiritvale/logging";
 import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
 import type { FishNetMarketQuery } from "@spiritvale/market";
-import { replayMarketCapture } from "./market-replay.ts";
+import { replayMarketCapture } from "@spiritvale/market";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
