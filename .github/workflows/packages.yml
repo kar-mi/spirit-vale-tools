@@ -45,5 +45,6 @@ jobs:
           version: bun run version:packages
           publish: bun run release:packages
         env:
+          HOME: ${{ runner.temp }}
           GITHUB_TOKEN: ${{ github.token }}
           NODE_AUTH_TOKEN: ${{ github.token }}
