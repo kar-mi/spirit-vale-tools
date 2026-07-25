@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 0.2.0
+
+### Minor Changes
+
+- d2d24da: add status effects
+
 ## 0.1.1
 
 ### Patch Changes
