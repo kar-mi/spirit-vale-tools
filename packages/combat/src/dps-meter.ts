@@ -459,8 +459,8 @@ function createActor(actorId: number): ActorAggregate {
 
 // Summon hits already carry the summoner's actor ID on the wire; isSummon needs no separate aggregation path.
 function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
-  if (event.kind === "activation"
-    || event.team !== 0
+  if (event.kind !== "damage" && event.kind !== "death") return false;
+  if (event.team !== 0
     || event.actorId === event.targetId
     || !Number.isFinite(event.value)
     || event.value <= 0) return false;

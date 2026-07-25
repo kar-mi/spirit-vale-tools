@@ -107,10 +107,24 @@ export interface FishNetCombatDeathEvent {
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
+export interface FishNetCombatStatusEvent {
+  kind: "status";
+  rpc: "ApplyEffect_T" | "RemoveEffect_T";
+  tick: number;
+  payloadBytes: number;
+  fields: Record<string, FishNetDecodedValue>;
+  actorId: number;
+  statusId: string;
+  level: number;
+  action: "applied" | "removed";
+  actorIdentity?: FishNetCombatActorIdentity;
+}
+
 export type FishNetCombatEvent =
   | FishNetCombatActivationEvent
   | FishNetCombatDamageEvent
-  | FishNetCombatDeathEvent;
+  | FishNetCombatDeathEvent
+  | FishNetCombatStatusEvent;
 
 interface ActivationState {
   id: string;
@@ -193,6 +207,13 @@ export class FishNetCombatTracker {
       const death = packet.rpcName === "Death_C";
       if (!isCompleteDamagePacket(packet, !death)) return events;
       events.push(...this.consumeDamage(packet, death));
+      return events;
+    }
+    if ((packet.rpcName === "ApplyEffect_T" || packet.rpcName === "RemoveEffect_T")
+      && matchesBehaviour(packet, "StatusComponent")) {
+      const statusEvent = this.consumeStatus(packet);
+      if (statusEvent) events.push(statusEvent);
+      return events;
     }
     return events;
   }
@@ -380,6 +401,25 @@ export class FishNetCombatTracker {
       });
     }
     return events;
+  }
+
+  private consumeStatus(packet: DecodedFishNetPacket): FishNetCombatStatusEvent | undefined {
+    const statusId = stringField(packet, "statusId");
+    const level = numberField(packet, "level");
+    if (statusId === undefined || level === undefined) return undefined;
+    const actorId = packet.objectId!;
+    return {
+      kind: "status",
+      rpc: packet.rpcName as "ApplyEffect_T" | "RemoveEffect_T",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: decodedFieldRecord(packet),
+      actorId,
+      statusId,
+      level,
+      action: packet.rpcName === "ApplyEffect_T" ? "applied" : "removed",
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    };
   }
 
   private createActivation(

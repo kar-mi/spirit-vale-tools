@@ -88,6 +88,15 @@ function death(
   return result;
 }
 
+function statusEffect(
+  tick: number,
+  actorId: number,
+  rpcName: "ApplyEffect_T" | "RemoveEffect_T",
+  fields: FishNetDecodedField[],
+): DecodedFishNetPacket {
+  return packet(tick, actorId, "StatusComponent", rpcName, fields);
+}
+
 describe("FishNetCombatTracker", () => {
   test("attributes overlapping different skills by attacker and source", () => {
     const tracker = new FishNetCombatTracker();
@@ -294,5 +303,47 @@ describe("FishNetCombatTracker", () => {
       sourceId: "AxeArc",
       sourceLabel: "Twin Cleave",
     });
+  });
+
+  test("emits a status event when a status effect is applied", () => {
+    const tracker = new FishNetCombatTracker();
+    const [event] = tracker.consume(statusEffect(5, 10, "ApplyEffect_T", [
+      field("statusId", "Bleed"),
+      field("level", 2),
+    ]));
+
+    expect(event).toMatchObject({
+      kind: "status",
+      rpc: "ApplyEffect_T",
+      tick: 5,
+      actorId: 10,
+      statusId: "Bleed",
+      level: 2,
+      action: "applied",
+    });
+  });
+
+  test("emits a status event when a status effect is removed", () => {
+    const tracker = new FishNetCombatTracker();
+    const [event] = tracker.consume(statusEffect(6, 10, "RemoveEffect_T", [
+      field("statusId", "Bleed"),
+      field("level", 2),
+    ]));
+
+    expect(event).toMatchObject({
+      kind: "status",
+      rpc: "RemoveEffect_T",
+      tick: 6,
+      actorId: 10,
+      statusId: "Bleed",
+      level: 2,
+      action: "removed",
+    });
+  });
+
+  test("skips status packets missing statusId or level", () => {
+    const tracker = new FishNetCombatTracker();
+    expect(tracker.consume(statusEffect(1, 10, "ApplyEffect_T", [field("statusId", "Bleed")]))).toEqual([]);
+    expect(tracker.consume(statusEffect(1, 10, "ApplyEffect_T", [field("level", 2)]))).toEqual([]);
   });
 });

@@ -12,7 +12,8 @@ export class StatusComponentRpcDefinition {
       "parameters": [
         {
           "name": "id",
-          "typeName": "System.String"
+          "typeName": "System.String",
+          "codec": "stringUtf8Packed"
         }
       ]
     },
@@ -40,7 +41,8 @@ export class StatusComponentRpcDefinition {
       "parameters": [
         {
           "name": "id",
-          "typeName": "System.String"
+          "typeName": "System.String",
+          "codec": "stringUtf8Packed"
         }
       ]
     },
@@ -51,11 +53,13 @@ export class StatusComponentRpcDefinition {
       "parameters": [
         {
           "name": "statusId",
-          "typeName": "System.String"
+          "typeName": "System.String",
+          "codec": "stringUtf8Packed"
         },
         {
           "name": "level",
-          "typeName": "System.Int32"
+          "typeName": "System.Int32",
+          "codec": "packedInt32"
         }
       ]
     },
@@ -66,11 +70,13 @@ export class StatusComponentRpcDefinition {
       "parameters": [
         {
           "name": "statusId",
-          "typeName": "System.String"
+          "typeName": "System.String",
+          "codec": "stringUtf8Packed"
         },
         {
           "name": "level",
-          "typeName": "System.Int32"
+          "typeName": "System.Int32",
+          "codec": "packedInt32"
         }
       ]
     },

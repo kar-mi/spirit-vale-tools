@@ -30,7 +30,37 @@ describe("loadDpsReplay", () => {
       await utf16File.delete();
     }
   });
+
+  test("accepts status events without treating them as invalid or counting damage", async () => {
+    const basePath = `${import.meta.dir}/../../../.local/replay-test-${crypto.randomUUID()}`;
+    const file = Bun.file(`${basePath}.jsonl`);
+    const records = [
+      logRecord(1, "combat.event", combatDamage(300, 101, 120)),
+      logRecord(2, "combat.event", combatStatus(300, 101, "Bleed", 2, "applied")),
+      logRecord(3, "combat.event", combatStatus(301, 101, "Bleed", 2, "removed")),
+      logRecord(4, "combat.event", { kind: "status", tick: 302, actorId: 101 }),
+    ];
+    const text = records.map((record) => JSON.stringify(record)).join("\n");
+    await Bun.write(file, text);
+    try {
+      const result = await loadDpsReplay(file.name!);
+      expect(result.invalidLines).toBe(1);
+      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+    } finally {
+      await file.delete();
+    }
+  });
 });
+
+function combatStatus(
+  tick: number,
+  actorId: number,
+  statusId: string,
+  level: number,
+  action: "applied" | "removed",
+): Record<string, unknown> {
+  return { kind: "status", rpc: action === "applied" ? "ApplyEffect_T" : "RemoveEffect_T", tick, actorId, statusId, level, action };
+}
 
 function combatDamage(tick: number, actorId: number, value: number): Record<string, unknown> {
   return {

@@ -31,6 +31,7 @@ export type {
   FishNetCombatDamageEvent,
   FishNetCombatDeathEvent,
   FishNetCombatEvent,
+  FishNetCombatStatusEvent,
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
   FishNetHitResult,

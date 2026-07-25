@@ -11,6 +11,14 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "actorIdentity", operation: "upsert", tick: 1, actorId: 2, displayName: "Example", uid: "00000000-0000-4000-8000-000000000001", ownerConnectionId: 3 });
   });
 
+  test("keeps status effect fields", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "status", tick: 1, actorId: 2, statusId: "Bleed", level: 3, action: "applied",
+      fields: { statusId: "Bleed" }, payloadBytes: 4,
+    });
+    expect(value).toEqual({ kind: "status", tick: 1, actorId: 2, statusId: "Bleed", level: 3, action: "applied" });
+  });
+
   test("drops diagnostics and unknown records", () => {
     expect(sanitizeCombatData("combat.spawnIdentityMiss", { raw: "payload" })).toBeUndefined();
     expect(sanitizeCombatData("combat.warning", { message: "error" })).toBeUndefined();
