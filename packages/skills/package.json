@@ -1,12 +1,22 @@
 {
   "name": "@kar-mi/spirit-vale-tools-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build-scoped Spirit Vale skill catalog utilities.",
   "type": "module",
-  "files": ["dist", "README.md"],
-  "scripts": { "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm --external @kar-mi/spirit-vale-tools-capture && bunx tsc --project ./tsconfig.build.json" },
-  "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm --external @kar-mi/spirit-vale-tools-capture && bunx tsc --project ./tsconfig.build.json"
   },
-  "dependencies": { "@kar-mi/spirit-vale-tools-capture": "^0.1.0" }
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@kar-mi/spirit-vale-tools-capture": "^0.1.1"
+  }
 }
