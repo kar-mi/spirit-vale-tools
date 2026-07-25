@@ -5,6 +5,8 @@ character, reward, and market information. It uses your existing Npcap
 installation in non-promiscuous mode and never sends, modifies, drops, or
 injects game traffic.
 
+> Building with the reusable packages? See the [developer guide](developer.md).
+
 ## Prerequisites
 
 - Windows 10 or 11 (x64)
