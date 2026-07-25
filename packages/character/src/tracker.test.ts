@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { CapturedFishNetPacket } from "@spiritvale/core";
+import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { FishNetCharacterTracker } from "./tracker.ts";
 import { syntheticCharacter } from "./synthetic-character.test-helper.ts";
 

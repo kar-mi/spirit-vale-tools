@@ -1,4 +1,4 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import { ItemCatalogDefinitions } from "./definitions/index.ts";
 
 export type FishNetItemType = 0 | 1 | 2 | 3 | 4 | 5 | 6;

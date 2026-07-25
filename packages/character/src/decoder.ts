@@ -1,6 +1,6 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
-import { resolveFishNetItem } from "@spiritvale/items";
-import { resolveFishNetSkill } from "@spiritvale/skills";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
+import { resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
+import { resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterSubstat } from "./types.ts";
 

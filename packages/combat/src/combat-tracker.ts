@@ -1,10 +1,10 @@
 import {
   CURRENT_GAME_BUILD_FINGERPRINT,
   loadBundledFishNetSemanticMap,
-} from "@spiritvale/core";
-import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetSemanticMap } from "@spiritvale/core";
-import { loadBundledSkillCatalog } from "@spiritvale/skills";
-import type { FishNetSkillCatalog } from "@spiritvale/skills";
+} from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";

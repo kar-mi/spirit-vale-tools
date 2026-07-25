@@ -1,5 +1,5 @@
 import type { RPCSchema } from "electrobun";
-import type { MarketLogStatus } from "@spiritvale/market";
+import type { MarketLogStatus } from "@kar-mi/spirit-vale-tools-market";
 import type { MaximizableWindowChromeRequests, WindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
 export type MarketUiStatus = MarketLogStatus;

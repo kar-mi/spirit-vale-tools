@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetActorDirectory } from "./actor-directory.ts";
-import type { DecodedFishNetPacket, FishNetDecodedField, FishNetPacketName } from "@spiritvale/core";
+import type { DecodedFishNetPacket, FishNetDecodedField, FishNetPacketName } from "@kar-mi/spirit-vale-tools-capture";
 
 function packet(
   tick: number,

@@ -1,8 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveLocalStorageRoot } from "@spiritvale/ui-core/local-storage";
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
-import type { CharacterSnapshot } from "@spiritvale/character";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
+import type { CharacterSnapshot } from "@kar-mi/spirit-vale-tools-character";
 
 const defaultFile = path.join(resolveLocalStorageRoot(), "data", "character.json");
 

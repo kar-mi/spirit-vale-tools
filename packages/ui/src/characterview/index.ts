@@ -1,7 +1,7 @@
 import { Electroview } from "electrobun/view";
 import { initWindowChrome } from "@spiritvale/ui-core/window-chrome";
-import { resolveFishNetItem, type FishNetArtifactSlot } from "@spiritvale/items";
-import { type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@spiritvale/character";
+import { resolveFishNetItem, type FishNetArtifactSlot } from "@kar-mi/spirit-vale-tools-items";
+import { type CharacterStatBreakdown, type CharacterViewState, type GearStatTotal } from "@kar-mi/spirit-vale-tools-character";
 import type { CharacterRpc } from "../character-types.ts";
 import { formatItemEffects } from "./item-effects.ts";
 

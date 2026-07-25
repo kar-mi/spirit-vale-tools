@@ -1,4 +1,4 @@
-import type { FishNetDpsActorRow } from "@spiritvale/combat";
+import type { FishNetDpsActorRow } from "@kar-mi/spirit-vale-tools-combat";
 
 const MAX_PARTY_ROWS = 12;
 export const PARTY_ACTOR_IDLE_TIMEOUT_MS = 60_000;

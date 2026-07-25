@@ -16,7 +16,19 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "types": ["bun"]
+    "types": ["bun"],
+    "paths": {
+      "@kar-mi/spirit-vale-tools-capture": ["./packages/core/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-capture/capture": ["./packages/core/src/capture.ts"],
+      "@kar-mi/spirit-vale-tools-capture/wire-reader": ["./packages/core/src/fishnet/wire-reader.ts"],
+      "@kar-mi/spirit-vale-tools-character": ["./packages/character/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-combat": ["./packages/combat/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-items": ["./packages/items/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-logging": ["./packages/logging/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-market": ["./packages/market/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-rewards": ["./packages/rewards/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-skills": ["./packages/skills/src/index.ts"]
+    }
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "scripts/**/*.ts", "packages/*/electrobun.config.ts"]
 }

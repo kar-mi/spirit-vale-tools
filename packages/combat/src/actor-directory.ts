@@ -1,5 +1,5 @@
-import type { DecodedFishNetPacket, FishNetDecodedValue } from "@spiritvale/core";
-import { checkedEnd, readSignedPackedWhole } from "@spiritvale/core/wire-reader";
+import type { DecodedFishNetPacket, FishNetDecodedValue } from "@kar-mi/spirit-vale-tools-capture";
+import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
 export interface FishNetActorIdentity {
   readonly actorId: number;

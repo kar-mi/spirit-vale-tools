@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { DecodedFishNetPacket } from "@spiritvale/core";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeFishNetRewardPacket } from "./reward-decoder.ts";
 
 describe("reward packet decoder", () => {

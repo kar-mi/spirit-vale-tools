@@ -9,6 +9,7 @@ the detailed behavior and contributor references.
   logging, and command-line tools.
 - [Character stat formula comparison](stats/character_stat_formula_comparison.md)
   — notes on calculated character stats.
+- [Packages](packages.md) — installing the reusable Bun packages from GitHub Packages.
 
 ## Capture and protocol guides
 

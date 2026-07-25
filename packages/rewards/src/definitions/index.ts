@@ -1,6 +1,6 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
-import { FishNetItemDirectory } from "@spiritvale/items";
-import type { FishNetItemType } from "@spiritvale/items";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
+import { FishNetItemDirectory } from "@kar-mi/spirit-vale-tools-items";
+import type { FishNetItemType } from "@kar-mi/spirit-vale-tools-items";
 import type { MobDropCategory, MobRewardCatalog, MobRewardDefinition } from "../catalog.ts";
 import { ExperienceRequirementDefinitions } from "./experience-requirements.ts";
 import { MobDefinitions } from "./mobs.ts";

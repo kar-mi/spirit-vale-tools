@@ -1,9 +1,9 @@
-import { FishNetMarketTracker, marketEventLogData, parseFishNetMarketStatExpression } from "@spiritvale/market";
-import { PacketCapture } from "@spiritvale/core/capture";
-import { createLogSession } from "@spiritvale/logging";
-import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
-import type { FishNetMarketQuery } from "@spiritvale/market";
-import { replayMarketCapture } from "@spiritvale/market";
+import { FishNetMarketTracker, marketEventLogData, parseFishNetMarketStatExpression } from "@kar-mi/spirit-vale-tools-market";
+import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
+import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonLinesLogger, JsonObject } from "@kar-mi/spirit-vale-tools-logging";
+import type { FishNetMarketQuery } from "@kar-mi/spirit-vale-tools-market";
+import { replayMarketCapture } from "@kar-mi/spirit-vale-tools-market";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);

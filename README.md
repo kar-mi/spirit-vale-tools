@@ -78,3 +78,5 @@ Reads existing game traffic through Npcap without sending or altering traffic.
 
 Detailed feature behavior, command-line tools, logging, and protocol references
 are available in the [documentation](docs/README.md).
+
+Reusable Bun packages, including the standalone packet-capture API, are documented in the [package guide](docs/packages.md).

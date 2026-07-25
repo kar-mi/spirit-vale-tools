@@ -9,8 +9,8 @@ import {
   loadRewardReplay,
   queryMobRewardCatalog,
   RewardSessionLogFollower,
-} from "@spiritvale/rewards";
-import type { RewardLogStatus } from "@spiritvale/rewards";
+} from "@kar-mi/spirit-vale-tools-rewards";
+import type { RewardLogStatus } from "@kar-mi/spirit-vale-tools-rewards";
 import type {
   RewardsAppMode,
   RewardsAppRpc,

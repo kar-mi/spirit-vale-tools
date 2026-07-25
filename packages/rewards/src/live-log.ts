@@ -6,8 +6,8 @@ import {
   JsonlTailReader,
   LiveLogSessionFollower,
   parseLogRecord,
-} from "@spiritvale/logging";
-import type { LiveLogStatus } from "@spiritvale/logging";
+} from "@kar-mi/spirit-vale-tools-logging";
+import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
 import { MobRewardSession } from "./session.ts";
 import type { MobRewardSessionSnapshot } from "./session.ts";

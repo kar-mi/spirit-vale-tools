@@ -1,6 +1,6 @@
-import { FishNetProtocolError } from "@spiritvale/core";
-import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@spiritvale/core/wire-reader";
-import type { DecodedFishNetPacket } from "@spiritvale/core";
+import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
+import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 
 export interface ExperienceCoinsState {
   experience: number;

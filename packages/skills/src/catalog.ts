@@ -1,4 +1,4 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import { SkillCatalogDefinitions } from "./definitions/index.ts";
 
 export type FishNetSkillKind = "active" | "passive" | "mastery";

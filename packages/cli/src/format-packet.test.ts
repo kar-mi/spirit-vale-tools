@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { CapturedLiteNetLibPacket, CapturedFishNetPacket, CapturedUdpPacket } from "@spiritvale/core";
+import type { CapturedLiteNetLibPacket, CapturedFishNetPacket, CapturedUdpPacket } from "@kar-mi/spirit-vale-tools-capture";
 import {
   domainEventData,
   fishNetPacketData,

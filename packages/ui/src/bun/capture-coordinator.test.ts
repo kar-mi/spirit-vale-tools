@@ -4,13 +4,13 @@ import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import type { CharacterSnapshot } from "@spiritvale/character";
-import { DpsSessionLogFollower } from "@spiritvale/combat";
-import type { CapturedFishNetPacket, CaptureConfig } from "@spiritvale/core";
-import type { PacketCapture } from "@spiritvale/core/capture";
-import { readCurrentLogStream } from "@spiritvale/logging";
-import { MarketSessionLogFollower } from "@spiritvale/market";
-import { RewardSessionLogFollower } from "@spiritvale/rewards";
+import type { CharacterSnapshot } from "@kar-mi/spirit-vale-tools-character";
+import { DpsSessionLogFollower } from "@kar-mi/spirit-vale-tools-combat";
+import type { CapturedFishNetPacket, CaptureConfig } from "@kar-mi/spirit-vale-tools-capture";
+import type { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
+import { readCurrentLogStream } from "@kar-mi/spirit-vale-tools-logging";
+import { MarketSessionLogFollower } from "@kar-mi/spirit-vale-tools-market";
+import { RewardSessionLogFollower } from "@kar-mi/spirit-vale-tools-rewards";
 
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 

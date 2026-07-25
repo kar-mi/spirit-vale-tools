@@ -1,8 +1,8 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow } from "electrobun/bun";
-import { loadDpsReplay } from "@spiritvale/combat";
-import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
+import { loadDpsReplay } from "@kar-mi/spirit-vale-tools-combat";
+import type { FishNetDpsEncounterSnapshot } from "@kar-mi/spirit-vale-tools-combat";
 import { formatDuration } from "@spiritvale/ui-core/format";
 import { applyRoundedCorners } from "@spiritvale/ui-core/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";

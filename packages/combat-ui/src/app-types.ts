@@ -2,7 +2,7 @@ import type { RPCSchema } from "electrobun";
 
 /** Typed renderer contracts for the combat UI windows. */
 
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "@kar-mi/spirit-vale-tools-combat";
 
 export type DpsAppTab = "all" | "personal";
 export type DpsAppStatus = "waiting" | "capturing" | "loading" | "ready" | "stopped" | "error";

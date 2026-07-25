@@ -4,7 +4,7 @@ import { useState } from "preact/hooks";
 import { Electroview } from "electrobun/view";
 import { formatDps, formatDuration } from "@spiritvale/ui-core/format";
 
-import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
+import type { FishNetDpsTimelinePoint } from "@kar-mi/spirit-vale-tools-combat";
 import type {
   OverlayElementId,
   OverlayElementSettings,

@@ -1,5 +1,5 @@
 import type { FishNetItemCatalog } from "../catalog.ts";
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import { ArtifactItemDefinitions } from "./artifacts.ts";
 import { CardItemDefinitions } from "./cards.ts";
 import { ConsumableItemDefinitions } from "./consumables.ts";

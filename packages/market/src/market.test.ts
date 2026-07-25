@@ -5,9 +5,9 @@ import {
   decodeFishNetMarketPacket,
   resolveFishNetMarketListingDisplayName,
 } from "./market.ts";
-import { FishNetProtocolError } from "@spiritvale/core";
-import { FishNetItemDirectory } from "@spiritvale/items";
-import type { DecodedFishNetPacket } from "@spiritvale/core";
+import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
+import { FishNetItemDirectory } from "@kar-mi/spirit-vale-tools-items";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 
 describe("FishNet market decoding", () => {
   test("resolves build names before live names and safe fallbacks", () => {

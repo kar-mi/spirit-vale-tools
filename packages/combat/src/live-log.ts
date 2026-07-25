@@ -1,4 +1,4 @@
-import { JsonlTailReader, LiveLogSessionFollower, parseLogRecord } from "@spiritvale/logging";
+import { JsonlTailReader, LiveLogSessionFollower, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { parseDpsLogRecord } from "./replay.ts";

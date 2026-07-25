@@ -1,4 +1,4 @@
-import { compact, count, warnings } from "@spiritvale/core";
+import { compact, count, warnings } from "@kar-mi/spirit-vale-tools-capture";
 import { loadDpsReplay } from "./replay.ts";
 
 export interface CombatReplaySummary {

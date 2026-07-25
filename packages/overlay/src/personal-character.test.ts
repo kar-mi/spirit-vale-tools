@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { CharacterViewState } from "@spiritvale/character";
+import type { CharacterViewState } from "@kar-mi/spirit-vale-tools-character";
 
 import {
   createPersonalDpsMeter,

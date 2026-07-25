@@ -1,11 +1,12 @@
 {
-  "name": "@spiritvale/items",
-  "private": true,
+  "name": "@kar-mi/spirit-vale-tools-items",
+  "version": "0.1.0",
+  "description": "Build-scoped Spirit Vale item catalog utilities.",
   "type": "module",
+  "files": ["dist", "README.md"],
+  "scripts": { "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm --external @kar-mi/spirit-vale-tools-capture && bunx tsc --project ./tsconfig.build.json" },
   "exports": {
-    ".": "./src/index.ts"
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
   },
-  "dependencies": {
-    "@spiritvale/core": "workspace:*"
-  }
+  "dependencies": { "@kar-mi/spirit-vale-tools-capture": "^0.1.0" }
 }

@@ -3,8 +3,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import type { CharacterSnapshot } from "@spiritvale/character";
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import type { CharacterSnapshot } from "@kar-mi/spirit-vale-tools-character";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import {
   activeCharacterSnapshot,
   loadCharacterCache,

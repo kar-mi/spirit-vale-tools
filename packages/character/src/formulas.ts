@@ -1,5 +1,5 @@
-import { resolveFishNetItem, type FishNetItemEffect } from "@spiritvale/items";
-import { resolveFishNetSkill } from "@spiritvale/skills";
+import { resolveFishNetItem, type FishNetItemEffect } from "@kar-mi/spirit-vale-tools-items";
+import { resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
 import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 

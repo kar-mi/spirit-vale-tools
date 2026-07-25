@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "v*.*.*"
+      - "app-v*.*.*"
 
 permissions:
   contents: write
@@ -29,7 +29,7 @@ jobs:
         shell: pwsh
         run: |
           $package = Get-Content package.json -Raw | ConvertFrom-Json
-          $expectedTag = "v$($package.version)"
+          $expectedTag = "app-v$($package.version)"
           if ($env:GITHUB_REF_NAME -ne $expectedTag) {
             throw "Release tag $env:GITHUB_REF_NAME does not match package.json version $($package.version). Expected $expectedTag."
           }

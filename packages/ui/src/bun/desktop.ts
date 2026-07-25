@@ -1,6 +1,6 @@
 import Electrobun, { BrowserView, BrowserWindow, Tray, Utils } from "electrobun/bun";
 import { applyRoundedCorners, makeProcessDpiAware } from "@spiritvale/ui-core/win32";
-import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@spiritvale/core/capture";
+import { getNpcapStatus, listNpcapDevices, resolveCaptureDevice } from "@kar-mi/spirit-vale-tools-capture/capture";
 
 import { createMarketWindow } from "@spiritvale/market-ui";
 import { createRewardsWindow } from "@spiritvale/rewards-ui";

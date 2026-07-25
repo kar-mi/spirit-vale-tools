@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import type { FishNetDpsActorRow } from "@spiritvale/combat";
+import type { FishNetDpsActorRow } from "@kar-mi/spirit-vale-tools-combat";
 import { PARTY_ACTOR_IDLE_TIMEOUT_MS, visiblePartyActors } from "./party-ranking.ts";
 
 test("party ranking uses encounter DPS and excludes inactive actors before sorting and limiting", () => {

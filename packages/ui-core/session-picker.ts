@@ -1,8 +1,8 @@
 import path from "node:path";
 
 import Electrobun, { BrowserView, BrowserWindow, Utils } from "electrobun/bun";
-import { listLogSessions } from "@spiritvale/logging";
-import type { LogStream } from "@spiritvale/logging";
+import { listLogSessions } from "@kar-mi/spirit-vale-tools-logging";
+import type { LogStream } from "@kar-mi/spirit-vale-tools-logging";
 import { applyRoundedCorners } from "./win32.ts";
 import { registerUiScaleWindow, scaledSize } from "./ui-scale.ts";
 import type { WindowPlacementStore } from "./window-placement.ts";

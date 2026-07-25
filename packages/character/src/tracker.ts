@@ -1,4 +1,4 @@
-import type { CapturedFishNetPacket } from "@spiritvale/core";
+import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";

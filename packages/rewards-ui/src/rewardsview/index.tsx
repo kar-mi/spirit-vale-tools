@@ -10,8 +10,8 @@ import {
   buildCumulativeTrend,
   buildRateTrend,
   trendExtent,
-} from "@spiritvale/rewards";
-import type { TrendMetric, TrendMode, TrendRange, TrendSample } from "@spiritvale/rewards";
+} from "@kar-mi/spirit-vale-tools-rewards";
+import type { TrendMetric, TrendMode, TrendRange, TrendSample } from "@kar-mi/spirit-vale-tools-rewards";
 
 import type { RewardsAppRpc, RewardsAppState, RewardsAppView, RewardsUiDrop } from "../app-types.ts";
 import { sortRewardKills, sortRewardSummaries } from "../table-sort.ts";

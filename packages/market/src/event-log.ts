@@ -1,5 +1,5 @@
-import { decimal, isRecord, nullableString } from "@spiritvale/logging";
-import type { JsonObject } from "@spiritvale/logging";
+import { decimal, isRecord, nullableString } from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 
 import type {
   FishNetMarketAccount,

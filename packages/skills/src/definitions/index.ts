@@ -1,4 +1,4 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import type { FishNetSkillCatalog } from "../catalog.ts";
 import { SkillDefinitions } from "./skills.ts";
 

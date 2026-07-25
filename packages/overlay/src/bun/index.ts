@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { DpsLogFollower, DpsSessionLogFollower } from "@spiritvale/combat";
-import type { CharacterViewState } from "@spiritvale/character";
+import { DpsLogFollower, DpsSessionLogFollower } from "@kar-mi/spirit-vale-tools-combat";
+import type { CharacterViewState } from "@kar-mi/spirit-vale-tools-character";
 import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";
 import { applyRoundedCorners, hideWindowFromTaskbar, setWindowClickThrough } from "@spiritvale/ui-core/win32";
 import { registerUiScaleWindow, scaledSize } from "@spiritvale/ui-core/ui-scale";

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetCombatTracker } from "./combat-tracker.ts";
-import { LEGACY_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
-import type { DecodedFishNetPacket, FishNetDecodedField, FishNetSemanticMap } from "@spiritvale/core";
-import type { FishNetSkillCatalog } from "@spiritvale/skills";
+import { LEGACY_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedField, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 
 function packet(
   tick: number,

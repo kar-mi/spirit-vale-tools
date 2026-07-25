@@ -1,11 +1,11 @@
-import { FishNetProtocolError } from "@spiritvale/core";
-import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@spiritvale/core/wire-reader";
-import { isRecord } from "@spiritvale/logging";
+import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
+import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
+import { isRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { fishNetMarketStatName, resolveFishNetMarketStat } from "./market-stats.ts";
 import type { FishNetMarketStatName } from "./market-stats.ts";
 import { calculateFishNetMarketStatValues } from "./market-stat-values.ts";
-import type { DecodedFishNetPacket } from "@spiritvale/core";
-import { FishNetItemDirectory } from "@spiritvale/items";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
+import { FishNetItemDirectory } from "@kar-mi/spirit-vale-tools-items";
 
 const DEFAULT_ITEM_DIRECTORY = new FishNetItemDirectory();
 

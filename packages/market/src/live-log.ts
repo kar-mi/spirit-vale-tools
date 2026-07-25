@@ -5,8 +5,8 @@ import {
   LiveLogSessionFollower,
   nullableString,
   parseLogRecord,
-} from "@spiritvale/logging";
-import type { LiveLogStatus } from "@spiritvale/logging";
+} from "@kar-mi/spirit-vale-tools-logging";
+import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
 import { parseMarketEventLogData } from "./event-log.ts";
 import { FishNetMarketTracker, resolveFishNetMarketListingDisplayName } from "./market.ts";
 import type { FishNetMarketListingView, FishNetMarketStat } from "./market.ts";

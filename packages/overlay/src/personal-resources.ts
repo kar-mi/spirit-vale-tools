@@ -1,4 +1,4 @@
-import type { CharacterRecordValues } from "@spiritvale/character";
+import type { CharacterRecordValues } from "@kar-mi/spirit-vale-tools-character";
 
 import type { OverlayResource } from "./app-types.ts";
 

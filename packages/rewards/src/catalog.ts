@@ -1,4 +1,4 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import { MobRewardCatalogDefinitions } from "./definitions/index.ts";
 
 export type MobDropCategory = "equipment" | "artifact" | "card" | "gem" | "material" | "consumable" | "cosmetic";

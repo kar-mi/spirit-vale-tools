@@ -1,6 +1,6 @@
 import type { RPCSchema } from "electrobun";
-import type { FishNetDpsEncounterSnapshot } from "@spiritvale/combat";
-import type { CharacterWeight } from "@spiritvale/character";
+import type { FishNetDpsEncounterSnapshot } from "@kar-mi/spirit-vale-tools-combat";
+import type { CharacterWeight } from "@kar-mi/spirit-vale-tools-character";
 import type { WindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
 export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "health", "mana", "weight"] as const;

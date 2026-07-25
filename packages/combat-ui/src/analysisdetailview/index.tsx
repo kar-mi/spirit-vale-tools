@@ -5,7 +5,7 @@ import { Electroview } from "electrobun/view";
 import { TitleBar } from "@spiritvale/ui-core/title-bar";
 import { formatDuration } from "@spiritvale/ui-core/format";
 
-import type { FishNetDpsTimelinePoint } from "@spiritvale/combat";
+import type { FishNetDpsTimelinePoint } from "@kar-mi/spirit-vale-tools-combat";
 import type { CombatAnalysisDetailRpc, CombatAnalysisDetailState } from "../app-types.ts";
 
 type Metric = "cumulative" | "dps";

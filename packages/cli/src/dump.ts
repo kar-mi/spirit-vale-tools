@@ -1,11 +1,11 @@
 import {
   BUNDLED_GAME_BUILD_FINGERPRINTS,
   loadBundledFishNetSemanticMap,
-} from "@spiritvale/core";
-import { PacketCapture } from "@spiritvale/core/capture";
-import type { CaptureProtocol } from "@spiritvale/core";
-import { FishNetActorDirectory, FishNetCombatTracker } from "@spiritvale/combat";
-import { createLogSession } from "@spiritvale/logging";
+} from "@kar-mi/spirit-vale-tools-capture";
+import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
+import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
+import { FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
+import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
 import {
   domainEventData,
   fishNetPacketData,

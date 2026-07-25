@@ -1,6 +1,6 @@
-import { FishNetCombatTracker } from "@spiritvale/combat";
-import type { DecodedFishNetPacket, FishNetDecodedValue } from "@spiritvale/core";
-import { checkedEnd, readSignedPackedWhole } from "@spiritvale/core/wire-reader";
+import { FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
+import type { DecodedFishNetPacket, FishNetDecodedValue } from "@kar-mi/spirit-vale-tools-capture";
+import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import type { ExperienceCoinsState, RewardItem } from "./reward-decoder.ts";
 import { decodeFishNetRewardPacket } from "./reward-decoder.ts";
 import { loadBundledMobRewardCatalog } from "./catalog.ts";

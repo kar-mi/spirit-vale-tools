@@ -4,8 +4,8 @@ import path from "node:path";
 
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { createLogSession } from "@spiritvale/logging";
-import type { JsonObject } from "@spiritvale/logging";
+import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 import { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
 import { marketEventLogData } from "./event-log.ts";
 

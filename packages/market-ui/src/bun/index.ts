@@ -7,8 +7,8 @@ import {
   FISHNET_MARKET_STAT_NAMES,
   MarketSessionLogFollower,
   queryFishNetMarketListings,
-} from "@spiritvale/market";
-import type { FishNetMarketListingView, FishNetMarketStatFilter } from "@spiritvale/market";
+} from "@kar-mi/spirit-vale-tools-market";
+import type { FishNetMarketListingView, FishNetMarketStatFilter } from "@kar-mi/spirit-vale-tools-market";
 import type {
   MarketFiltersRpc,
   MarketFiltersState,

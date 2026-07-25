@@ -2,8 +2,8 @@ import { appendFile, mkdir, rm, writeFile } from "node:fs/promises";
 
 import { describe, expect, test } from "bun:test";
 
-import { createLogSession } from "@spiritvale/logging";
-import type { JsonObject } from "@spiritvale/logging";
+import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 import { DpsLogFollower, DpsSessionLogFollower } from "./live-log.ts";
 
 describe("DpsLogFollower", () => {

@@ -1,8 +1,8 @@
-import { PacketCapture } from "@spiritvale/core/capture";
-import { createLogSession } from "@spiritvale/logging";
-import { FishNetMobRewardTracker, MobRewardSession } from "@spiritvale/rewards";
-import type { FishNetMobRewardEvent } from "@spiritvale/rewards";
-import type { JsonLinesLogger, JsonObject } from "@spiritvale/logging";
+import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
+import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
+import { FishNetMobRewardTracker, MobRewardSession } from "@kar-mi/spirit-vale-tools-rewards";
+import type { FishNetMobRewardEvent } from "@kar-mi/spirit-vale-tools-rewards";
+import type { JsonLinesLogger, JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 
 function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);

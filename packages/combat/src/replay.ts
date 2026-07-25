@@ -1,7 +1,7 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { FishNetDpsMeter } from "./dps-meter.ts";
-import { isRecord, parseLogRecord } from "@spiritvale/logging";
+import { isRecord, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 export interface DpsReplayResult {
   meter: FishNetDpsMeter;

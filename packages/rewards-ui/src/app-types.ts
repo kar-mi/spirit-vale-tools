@@ -1,5 +1,5 @@
 import type { RPCSchema } from "electrobun";
-import type { RewardLogStatus } from "@spiritvale/rewards";
+import type { RewardLogStatus } from "@kar-mi/spirit-vale-tools-rewards";
 import type { MaximizableWindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
 export type RewardsAppMode = "live" | "replay";

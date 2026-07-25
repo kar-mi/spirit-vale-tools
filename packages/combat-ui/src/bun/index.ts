@@ -8,7 +8,7 @@ import {
   DpsLogFollower,
   DpsSessionLogFollower,
   inspectCombatReplaySummary,
-} from "@spiritvale/combat";
+} from "@kar-mi/spirit-vale-tools-combat";
 import { loadDpsAppSettings, saveDpsAppSettings } from "../settings.ts";
 import type { DpsAppRpc, DpsAppState, DpsAppStatus } from "../app-types.ts";
 import { SafeSaveQueue } from "@spiritvale/ui-core/safe-save";

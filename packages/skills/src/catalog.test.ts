@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@spiritvale/core";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import {
   FishNetSkillDirectory,
   loadBundledSkillCatalog,

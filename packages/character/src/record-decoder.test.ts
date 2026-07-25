@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { CapturedFishNetPacket } from "@spiritvale/core";
+import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
 
 function syncPacket(networkBehaviourType: string | undefined, payloadHex: string): CapturedFishNetPacket {

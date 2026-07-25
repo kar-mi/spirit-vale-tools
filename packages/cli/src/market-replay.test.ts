@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { decodeMarketCaptureJsonLines, FishNetMarketTracker } from "@spiritvale/market";
+import { decodeMarketCaptureJsonLines, FishNetMarketTracker } from "@kar-mi/spirit-vale-tools-market";
 
 function record(type: string, data: Record<string, unknown>): string {
   return JSON.stringify({

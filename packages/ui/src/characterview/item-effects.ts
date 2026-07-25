@@ -1,6 +1,6 @@
-import type { FishNetItemEffect } from "@spiritvale/items";
-import { resolveFishNetSkillDisplayName } from "@spiritvale/skills";
-import { PERCENT_STATS, STAT_NAMES } from "@spiritvale/character";
+import type { FishNetItemEffect } from "@kar-mi/spirit-vale-tools-items";
+import { resolveFishNetSkillDisplayName } from "@kar-mi/spirit-vale-tools-skills";
+import { PERCENT_STATS, STAT_NAMES } from "@kar-mi/spirit-vale-tools-character";
 
 export function formatItemEffects(effects: readonly FishNetItemEffect[]): string {
   return effects.map(formatItemEffect).join(", ");

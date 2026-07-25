@@ -1,5 +1,5 @@
-import { FishNetSessionDecoder, loadBundledFishNetRpcMap, decodeLiteNetLibDatagram } from "@spiritvale/core";
-import { parseLogRecord } from "@spiritvale/logging";
+import { FishNetSessionDecoder, loadBundledFishNetRpcMap, decodeLiteNetLibDatagram } from "@kar-mi/spirit-vale-tools-capture";
+import { parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { FishNetMarketTracker } from "./market.ts";
 
 export interface MarketReplayResult {

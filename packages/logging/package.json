@@ -1,8 +1,11 @@
 {
-  "name": "@spiritvale/logging",
-  "private": true,
+  "name": "@kar-mi/spirit-vale-tools-logging",
+  "version": "0.1.0",
+  "description": "Session-oriented logging utilities for Spirit Vale tools.",
   "type": "module",
+  "files": ["dist", "README.md"],
+  "scripts": { "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm && bunx tsc --project ./tsconfig.build.json" },
   "exports": {
-    ".": "./src/index.ts"
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
   }
 }

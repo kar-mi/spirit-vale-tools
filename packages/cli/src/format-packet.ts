@@ -1,5 +1,5 @@
-import type { CapturedTransportPacket, CapturedLiteNetLibPacket, CapturedFishNetPacket } from "@spiritvale/core";
-import type { JsonData, JsonObject } from "@spiritvale/logging";
+import type { CapturedTransportPacket, CapturedLiteNetLibPacket, CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
+import type { JsonData, JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 
 export function transportPacketData(packet: CapturedTransportPacket): JsonObject {
   return {

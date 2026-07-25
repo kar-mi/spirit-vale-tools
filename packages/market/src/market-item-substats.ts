@@ -1,5 +1,5 @@
-import { resolveFishNetItem } from "@spiritvale/items";
-import type { FishNetItemSubstatGroup } from "@spiritvale/items";
+import { resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
+import type { FishNetItemSubstatGroup } from "@kar-mi/spirit-vale-tools-items";
 
 export type FishNetMarketSubstatGroup = FishNetItemSubstatGroup;
 

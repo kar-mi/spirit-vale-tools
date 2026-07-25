@@ -1,4 +1,4 @@
-import type { CapturedFishNetPacket } from "@spiritvale/core";
+import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import type { CharacterRecordValues } from "./types.ts";
 
 /**
