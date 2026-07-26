@@ -1,5 +1,16 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 0.2.2
+
+### Patch Changes
+
+- 4a996f0: Add usage samples to package READMEs, fix the package-guide link to resolve on the registry, and mark the logging package as internal.
+- Updated dependencies [4a996f0]
+  - @kar-mi/spirit-vale-tools-capture@0.2.2
+  - @kar-mi/spirit-vale-tools-logging@0.2.2
+  - @kar-mi/spirit-vale-tools-skills@0.1.4
+  - @kar-mi/spirit-vale-tools-statuses@0.1.3
+
 ## 0.2.1
 
 ### Patch Changes
