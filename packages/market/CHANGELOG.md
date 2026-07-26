@@ -1,5 +1,16 @@
 # @kar-mi/spirit-vale-tools-market
 
+## 0.1.3
+
+### Patch Changes
+
+- 9ecf64b: Release the status catalog and tracking support.
+- Updated dependencies [9ecf64b]
+- Updated dependencies [9ecf64b]
+  - @kar-mi/spirit-vale-tools-logging@0.2.1
+  - @kar-mi/spirit-vale-tools-capture@0.2.1
+  - @kar-mi/spirit-vale-tools-items@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

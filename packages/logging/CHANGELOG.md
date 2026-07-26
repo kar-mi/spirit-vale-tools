@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.2.1
+
+### Patch Changes
+
+- 9ecf64b: add status effects
+
 ## 0.2.0
 
 ### Minor Changes
