@@ -217,7 +217,10 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     const snapshot = meter.getLatestSnapshot(snapshotNowMs);
     const resources = personalResources(characterState.records);
     const personalName = detectedPersonalName(characterState);
-    const activeStatuses = statusTracker.getActiveStatusesForName(personalName, snapshotNowMs ?? 0);
+    // Statuses with no data-mine icon (a small upstream gap, e.g. SlowImmunity/BlindImmunity) are
+    // omitted entirely rather than shown as a text-initials placeholder.
+    const activeStatuses = statusTracker.getActiveStatusesForName(personalName, snapshotNowMs ?? 0)
+      .filter((activeStatus) => activeStatus.spriteId !== undefined);
     return {
       locked: settings.locked,
       personalName,

@@ -405,9 +405,7 @@ function StatusCell({ status }: { status: FishNetActiveStatus }) {
       style={remainingFraction === undefined ? undefined : `--status-remaining:${Math.round(remainingFraction * 100)}%`}
       title={status.displayName}
     >
-      {status.spriteId
-        ? <img class="status-icon" src={statusIcon(status.spriteId)} alt="" aria-hidden="true" />
-        : <span class="status-icon-fallback" aria-hidden="true">{status.displayName.slice(0, 2).toUpperCase()}</span>}
+      <img class="status-icon" src={statusIcon(status.spriteId)} alt="" aria-hidden="true" />
       {remainingFraction !== undefined && <span class="status-timer-fill" aria-hidden="true" />}
       {status.level > 1 && <span class="status-level">{status.level}</span>}
       {status.remainingMs !== undefined && <span class="status-remaining">{formatRemaining(status.remainingMs)}</span>}
@@ -415,8 +413,8 @@ function StatusCell({ status }: { status: FishNetActiveStatus }) {
   );
 }
 
-function statusIcon(spriteId: string): string {
-  return `views://assets/status-icons/${spriteId}.webp`;
+function statusIcon(spriteId: string | undefined): string {
+  return spriteId ? `views://assets/status-icons/${spriteId}.webp` : "";
 }
 
 function formatRemaining(remainingMs: number): string {
