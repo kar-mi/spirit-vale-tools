@@ -1,6 +1,6 @@
 # Packet routing
 
-`@spiritvale/core` owns packet capture and protocol decoding. Other packages
+`@kar-mi/spirit-vale-tools-capture` owns packet capture and protocol decoding. Other packages
 interpret the resulting typed FishNet stream for a specific feature. This keeps
 transport and wire-format knowledge in one place and lets domain packages
 remain testable with synthetic `DecodedFishNetPacket` values.
@@ -9,26 +9,26 @@ remain testable with synthetic `DecodedFishNetPacket` values.
 
 ```mermaid
 flowchart TD
-  C[@spiritvale/core/capture] --> U[CapturedUdpPacket]
+  C[@kar-mi/spirit-vale-tools-capture/capture] --> U[CapturedUdpPacket]
   U --> L[CapturedLiteNetLibPacket]
   L --> F[CapturedFishNetPacket]
   F --> UI[UI CaptureCoordinator]
-  UI --> COM[@spiritvale/combat]
-  UI --> CHR[@spiritvale/character]
-  UI --> REW[@spiritvale/rewards]
-  UI --> MAR[@spiritvale/market]
-  COM --> LOG[@spiritvale/logging]
+  UI --> COM[@kar-mi/spirit-vale-tools-combat]
+  UI --> CHR[@kar-mi/spirit-vale-tools-character]
+  UI --> REW[@kar-mi/spirit-vale-tools-rewards]
+  UI --> MAR[@kar-mi/spirit-vale-tools-market]
+  COM --> LOG[@kar-mi/spirit-vale-tools-logging]
   REW --> LOG
   MAR --> LOG
 ```
 
 | Type | Owner | What it represents | Typical consumer |
 | --- | --- | --- | --- |
-| `CapturedTransportPacket` | core | Normalized TCP or UDP metadata and raw transport payload | capture diagnostics/CLI |
-| `CapturedUdpPacket` | core | UDP branch of the transport union | LiteNetLib decoder |
-| `CapturedLiteNetLibPacket` | core | A logical LiteNetLib leaf plus its UDP source and merge path | CLI/replay, FishNet decoder |
-| `DecodedFishNetPacket` | core | A decoded FishNet message; usable without live-capture provenance | domain trackers, replay |
-| `CapturedFishNetPacket` | core | A decoded FishNet message plus LiteNetLib and connection provenance | desktop routing, character tracking |
+| `CapturedTransportPacket` | capture | Normalized TCP or UDP metadata and raw transport payload | capture diagnostics/CLI |
+| `CapturedUdpPacket` | capture | UDP branch of the transport union | LiteNetLib decoder |
+| `CapturedLiteNetLibPacket` | capture | A logical LiteNetLib leaf plus its UDP source and merge path | CLI/replay, FishNet decoder |
+| `DecodedFishNetPacket` | capture | A decoded FishNet message; usable without live-capture provenance | domain trackers, replay |
+| `CapturedFishNetPacket` | capture | A decoded FishNet message plus LiteNetLib and connection provenance | desktop routing, character tracking |
 
 `PacketCapture` emits `packet` for TCP only, `udpPacket` for UDP only,
 `transportPacket` for both union branches, `liteNetPacket` for each LiteNetLib
@@ -39,20 +39,20 @@ the normal live-capture handoff to feature packages.
 
 | Package | Input from the decoded stream | Output/responsibility |
 | --- | --- | --- |
-| `@spiritvale/core` | Npcap frames and optional typed map configuration | Capture events, protocol types, LiteNetLib leaves, FishNet packets, RPC/SyncType/broadcast resolution |
-| `@spiritvale/combat` | `DecodedFishNetPacket` | Actor identities plus combat activation, damage, and death events |
-| `@spiritvale/character` | `CapturedFishNetPacket` | Local-character records and view state from PlayerSave data |
-| `@spiritvale/rewards` | `DecodedFishNetPacket` | Monster/reward session state and reward events; uses combat context where needed |
-| `@spiritvale/market` | `DecodedFishNetPacket` | Market response decoding, tracker state, queryable market events |
-| `@spiritvale/logging` | Domain events and diagnostics | Versioned JSON Lines session streams; it does not decode packets |
-| `@spiritvale/items` and `@spiritvale/skills` | Build fingerprint/catalog lookups | Static item and skill metadata used to enrich domain output; neither parses transport bytes |
+| `@kar-mi/spirit-vale-tools-capture` | Npcap frames and optional typed map configuration | Capture events, protocol types, LiteNetLib leaves, FishNet packets, RPC/SyncType/broadcast resolution |
+| `@kar-mi/spirit-vale-tools-combat` | `DecodedFishNetPacket` | Actor identities plus combat activation, damage, and death events |
+| `@kar-mi/spirit-vale-tools-character` | `CapturedFishNetPacket` | Local-character records and view state from PlayerSave data |
+| `@kar-mi/spirit-vale-tools-rewards` | `DecodedFishNetPacket` | Monster/reward session state and reward events; uses combat context where needed |
+| `@kar-mi/spirit-vale-tools-market` | `DecodedFishNetPacket` | Market response decoding, tracker state, queryable market events |
+| `@kar-mi/spirit-vale-tools-logging` | Domain events and diagnostics | Versioned JSON Lines session streams; it does not decode packets |
+| `@kar-mi/spirit-vale-tools-items` and `@kar-mi/spirit-vale-tools-skills` | Build fingerprint/catalog lookups | Static item and skill metadata used to enrich domain output; neither parses transport bytes |
 
-The desktop `CaptureCoordinator` is the live fan-out point. It starts core
+The desktop `CaptureCoordinator` is the live fan-out point. It starts packet
 capture with UDP and FishNet decoding enabled. Character packets are considered
 before active-connection admission so a valid local snapshot survives a
 connection overlap; admitted packets then flow to actor, combat, rewards, and
 market consumers before their resulting events are written to separate log
-streams. The CLI uses the same core types for live dumps and replay; replay
+streams. The CLI uses the same capture-package types for live dumps and replay; replay
 retains a session decoder so link and split state behave like live capture.
 
 Combat identity matching uses the CharacterData UID as an internal stable key;

@@ -8,4 +8,23 @@ Spirit Vale market decoding and replay utilities.
 bun add @kar-mi/spirit-vale-tools-market
 ```
 
-See the [package guide](../../docs/packages.md) for registry setup and usage.
+## Usage
+
+```ts
+import { FishNetMarketTracker } from "@kar-mi/spirit-vale-tools-market";
+
+const tracker = new FishNetMarketTracker();
+
+// packet: DecodedFishNetPacket from @kar-mi/spirit-vale-tools-capture
+tracker.consume(packet);
+
+const listings = tracker.query({ text: "sword", statMode: "all" });
+for (const listing of listings) {
+  console.log(listing.displayName, listing.shopName);
+}
+```
+
+Use `replayMarketCapture` to rebuild tracker state from a recorded log session
+and `MarketSessionLogFollower` to follow a live session.
+
+See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

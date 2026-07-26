@@ -18,9 +18,9 @@
     "target": "ESNext",
     "types": ["bun"],
     "paths": {
-      "@kar-mi/spirit-vale-tools-capture": ["./packages/core/src/index.ts"],
-      "@kar-mi/spirit-vale-tools-capture/capture": ["./packages/core/src/capture.ts"],
-      "@kar-mi/spirit-vale-tools-capture/wire-reader": ["./packages/core/src/fishnet/wire-reader.ts"],
+      "@kar-mi/spirit-vale-tools-capture": ["./packages/capture/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-capture/capture": ["./packages/capture/src/capture.ts"],
+      "@kar-mi/spirit-vale-tools-capture/wire-reader": ["./packages/capture/src/fishnet/wire-reader.ts"],
       "@kar-mi/spirit-vale-tools-character": ["./packages/character/src/index.ts"],
       "@kar-mi/spirit-vale-tools-combat": ["./packages/combat/src/index.ts"],
       "@kar-mi/spirit-vale-tools-items": ["./packages/items/src/index.ts"],

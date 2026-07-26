@@ -46,11 +46,12 @@ bun add @kar-mi/spirit-vale-tools-combat
 bun add @kar-mi/spirit-vale-tools-character
 bun add @kar-mi/spirit-vale-tools-market
 bun add @kar-mi/spirit-vale-tools-rewards
-bun add @kar-mi/spirit-vale-tools-logging
 ```
 
 The package manager installs the packages' declared dependencies. You do not
-need to add those separately.
+need to add those separately. Internal support packages such as
+`@kar-mi/spirit-vale-tools-logging` are installed automatically this way; they
+are not a supported public API.
 
 | Package | Use it for |
 | --- | --- |
@@ -61,7 +62,6 @@ need to add those separately.
 | `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation. |
 | `@kar-mi/spirit-vale-tools-market` | Market packet decoding, tracking, querying, and replay. |
 | `@kar-mi/spirit-vale-tools-rewards` | Reward decoding, mob tracking, trends, and replay. |
-| `@kar-mi/spirit-vale-tools-logging` | JSONL session logging and log followers. |
 
 ## Import APIs
 
@@ -93,7 +93,6 @@ import { FishNetCombatTracker, FishNetDpsMeter } from "@kar-mi/spirit-vale-tools
 import { calculateCharacterStats, decodeCharacterRpcPayload } from "@kar-mi/spirit-vale-tools-character";
 import { FishNetMarketTracker, queryFishNetMarketListings } from "@kar-mi/spirit-vale-tools-market";
 import { FishNetMobRewardTracker, queryMobRewardCatalog } from "@kar-mi/spirit-vale-tools-rewards";
-import { createLogSession, JsonLinesLogger } from "@kar-mi/spirit-vale-tools-logging";
 ```
 
 Consult each package's README and TypeScript declarations for its complete API

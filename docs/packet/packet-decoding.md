@@ -1,6 +1,6 @@
 # Packet decoding
 
-This guide describes the UDP decoding path implemented by `@spiritvale/core`.
+This guide describes the UDP decoding path implemented by `@kar-mi/spirit-vale-tools-capture`.
 It is a parser for packets already observed by passive capture; it is not a
 network client and does not participate in a game connection.
 
@@ -141,7 +141,7 @@ LiteNetLib leaf and stable transport `connectionId`.
 
 When extending support, keep responsibilities separate:
 
-- Add a verified wire layout or parser to `@spiritvale/core`.
+- Add a verified wire layout or parser to `@kar-mi/spirit-vale-tools-capture`.
 - Add build-scoped RPC, SyncType, broadcast, or codec metadata to the FishNet
   map definitions when the exact wire representation is known.
 - Add game-feature interpretation in the relevant domain package, consuming
