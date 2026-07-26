@@ -1,4 +1,5 @@
 import { FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
+import type { FishNetKnownIdentity } from "@kar-mi/spirit-vale-tools-combat";
 import { FishNetCharacterTracker } from "@kar-mi/spirit-vale-tools-character";
 import type { CharacterSnapshot, CharacterViewState } from "@kar-mi/spirit-vale-tools-character";
 import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
@@ -26,12 +27,16 @@ export interface CaptureCoordinatorOptions {
    * FishNet packets. Defaults to the SPIRIT_VALE_DIAGNOSTIC_LOGS environment variable.
    */
   diagnosticLogging?: boolean;
+  /** Party-member identities learned in prior sessions, used to seed the actor directory. */
+  knownIdentities?: readonly FishNetKnownIdentity[];
+  /** Invoked whenever a party member's identity is newly learned or changed, for persistence. */
+  onIdentityLearned?: (identity: FishNetKnownIdentity) => void;
 }
 
 export class CaptureCoordinator {
   private readonly capture: PacketCapture;
   private readonly diagnosticLogging: boolean;
-  private readonly actors = new FishNetActorDirectory();
+  private readonly actors: FishNetActorDirectory;
   private readonly combat = new FishNetCombatTracker({
     actorIdentityResolver: (actorId) => this.actors.getAttribution(actorId),
   });
@@ -59,6 +64,10 @@ export class CaptureCoordinator {
   private lifecycleChain: Promise<void> = Promise.resolve();
 
   constructor(private readonly options: CaptureCoordinatorOptions) {
+    this.actors = new FishNetActorDirectory({
+      ...(options.knownIdentities === undefined ? {} : { knownIdentities: options.knownIdentities }),
+      ...(options.onIdentityLearned === undefined ? {} : { onIdentityLearned: options.onIdentityLearned }),
+    });
     this.diagnosticLogging = options.diagnosticLogging ?? envFlag(Bun.env["SPIRIT_VALE_DIAGNOSTIC_LOGS"]);
     this.capture = options.captureFactory?.() ?? new PacketCapture();
     this.capture.on("started", () => this.captureStarted());

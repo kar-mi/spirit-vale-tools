@@ -394,7 +394,7 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
-  test("leaves empty delta spawns unnamed and wipes the UID cache on reset", () => {
+  test("leaves empty delta spawns unnamed but keeps the UID cache across reset", () => {
     const directory = new FishNetActorDirectory();
     const fullSpawn = Buffer.concat([
       Buffer.from([0, 1, 5]),
@@ -409,8 +409,49 @@ describe("FishNetActorDirectory", () => {
       .toEqual([]);
 
     directory.reset();
+    // The UID cache survives reset(), so a later delta spawn for the same character still resolves.
     const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString(syntheticUid)]);
-    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([]);
+    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 3,
+      actorId: 70,
+      displayName: "Delta Ranger",
+      uid: syntheticUid,
+      archetype: 6,
+      ownerConnectionId: 44,
+    }]);
+  });
+
+  test("seeds the UID cache from knownIdentities and reports newly learned identities", () => {
+    const learned: { uid: string; displayName: string; archetype?: number }[] = [];
+    const directory = new FishNetActorDirectory({
+      knownIdentities: [{ uid: syntheticUid, displayName: "Delta Ranger", archetype: 6 }],
+      onIdentityLearned: (identity) => learned.push(identity),
+    });
+
+    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString(syntheticUid)]);
+    expect(directory.consume(spawn(1, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 1,
+      actorId: 70,
+      displayName: "Delta Ranger",
+      uid: syntheticUid,
+      archetype: 6,
+      ownerConnectionId: 44,
+    }]);
+    // Resolving from the seeded cache does not re-learn an unchanged identity.
+    expect(learned).toEqual([]);
+
+    const fullSpawn = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Delta Ranger"),
+      packed(9),
+      packedString(syntheticUid),
+    ]);
+    directory.consume(spawn(2, 71, 45, "PlayerController", fullSpawn));
+    expect(learned).toEqual([{ uid: syntheticUid, displayName: "Delta Ranger", archetype: 9 }]);
   });
 
   test("snapshots every currently known identity without mutating the directory", () => {

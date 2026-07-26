@@ -24,6 +24,7 @@ export type {
   FishNetActorIdentityRemoveEvent,
   FishNetActorIdentityResetEvent,
   FishNetActorIdentityUpsertEvent,
+  FishNetKnownIdentity,
   FishNetLocalIdentity,
 } from "./actor-directory.ts";
 export type {

@@ -19,6 +19,7 @@ test("environment-root storage remains beneath the extracted application root", 
     rewardsSettingsPath: path.join(root, "data", "settings", "rewards.json"),
     windowPlacementsPath: path.join(root, "data", "settings", "windows.json"),
     characterStatePath: path.join(root, "data", "character.json"),
+    actorIdentitiesPath: path.join(root, "data", "actor-identities.json"),
   });
 });
 

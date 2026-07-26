@@ -42,6 +42,13 @@ export interface FishNetLocalIdentity {
   accountId?: string;
 }
 
+/** A durable, uid-keyed identity learned in a prior session, used to seed a fresh directory. */
+export interface FishNetKnownIdentity {
+  readonly uid: string;
+  readonly displayName: string;
+  readonly archetype?: number;
+}
+
 export interface FishNetActorDirectoryOptions {
   /**
    * Persisted local-player identity. Only the local player's objects emit serverRpc traffic, so
@@ -50,6 +57,10 @@ export interface FishNetActorDirectoryOptions {
   localIdentity?: FishNetLocalIdentity;
   /** Invoked whenever the local player's identity is decoded from CharacterData RPCs. */
   onLocalIdentity?: (identity: FishNetLocalIdentity) => void;
+  /** Previously learned party-member identities, keyed by uid, used to seed the UID cache. */
+  knownIdentities?: readonly FishNetKnownIdentity[];
+  /** Invoked whenever a uid's cached displayName/archetype is newly learned or changed. */
+  onIdentityLearned?: (identity: FishNetKnownIdentity) => void;
 }
 
 /** Tracks public display names by the FishNet object IDs used by combat events. */
@@ -68,6 +79,12 @@ export class FishNetActorDirectory {
 
   constructor(private readonly options: FishNetActorDirectoryOptions = {}) {
     this.localIdentity = options.localIdentity;
+    for (const known of options.knownIdentities ?? []) {
+      this.uidIdentities.set(known.uid, {
+        displayName: known.displayName,
+        ...(known.archetype === undefined ? {} : { archetype: known.archetype }),
+      });
+    }
     this.seedLocalIdentity();
   }
 
@@ -236,8 +253,12 @@ export class FishNetActorDirectory {
     return this.reconcile(actorId, this.identitySources.get(actorId), tick);
   }
 
+  /**
+   * Clears per-connection state (spawned objects, owner mappings, in-session identity sources).
+   * The uid-keyed identity cache is intentionally preserved: it isn't tied to a stale connection
+   * and is the durable record that lets party members stay named across a stop/restart.
+   */
   reset(): void {
-    this.uidIdentities.clear();
     this.clear();
     this.seedLocalIdentity();
   }
@@ -284,10 +305,13 @@ export class FishNetActorDirectory {
     const current = this.uidIdentities.get(uid);
     const archetype = identity.archetype
       ?? (current?.displayName === identity.displayName ? current.archetype : undefined);
-    this.uidIdentities.set(uid, {
+    const next = {
       displayName: identity.displayName,
       ...(archetype === undefined ? {} : { archetype }),
-    });
+    };
+    if (current?.displayName === next.displayName && current.archetype === next.archetype) return;
+    this.uidIdentities.set(uid, next);
+    this.options.onIdentityLearned?.({ uid, ...next });
   }
 
   private changeOwner(actorId: number, ownerConnectionId: number | undefined, tick: number): FishNetActorIdentityEvent[] {

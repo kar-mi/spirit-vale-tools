@@ -13,6 +13,12 @@ import {
   updateCharacterCache,
   type CharacterSnapshotCache,
 } from "../character-storage.ts";
+import {
+  loadActorIdentityCache,
+  saveActorIdentityCache,
+  updateActorIdentityCache,
+  type ActorIdentityCache,
+} from "../actor-identity-storage.ts";
 import { CaptureCoordinator } from "./capture-coordinator.ts";
 import { createCharacterWindow } from "./character-window.ts";
 import { createDpsWindow } from "@spiritvale/combat-ui";
@@ -60,6 +66,7 @@ let launcherState: LauncherState = {
 let shuttingDown = false;
 let characterStorageWarning: string | undefined;
 let launcherSettingsStorageWarning: string | undefined;
+let actorIdentityStorageWarning: string | undefined;
 
 const launcherSettingsPersistence = new SafeSaveQueue<typeof settings>({
   label: "launcher settings",
@@ -71,6 +78,12 @@ const characterPersistence = new SafeSaveQueue<CharacterSnapshotCache>({
   label: "character snapshot",
   save: (value) => saveCharacterCache(value, storagePaths.characterStatePath),
   onWarning: (warning) => { characterStorageWarning = warning; updateStorageWarning(); },
+});
+let actorIdentityCache: ActorIdentityCache = await loadActorIdentityCache(storagePaths.actorIdentitiesPath);
+const actorIdentityPersistence = new SafeSaveQueue<ActorIdentityCache>({
+  label: "actor identities",
+  save: (value) => saveActorIdentityCache(value, storagePaths.actorIdentitiesPath),
+  onWarning: (warning) => { actorIdentityStorageWarning = warning; updateStorageWarning(); },
 });
 
 const combatWindow = new WindowSlot((onClosed) => createDpsWindow({
@@ -107,6 +120,11 @@ const capture = new CaptureCoordinator({
   onStatus: (state) => {
     launcherState = { ...launcherState, ...state };
     publish();
+  },
+  knownIdentities: actorIdentityCache.entries,
+  onIdentityLearned: (identity) => {
+    actorIdentityCache = updateActorIdentityCache(actorIdentityCache, { ...identity, lastSeenAtMs: Date.now() });
+    actorIdentityPersistence.schedule(actorIdentityCache);
   },
 });
 characterCache = await loadCharacterCache(storagePaths.characterStatePath);
@@ -368,7 +386,7 @@ function publish(): void {
 function updateStorageWarning(): void {
   launcherState = {
     ...launcherState,
-    storageWarning: characterStorageWarning ?? launcherSettingsStorageWarning ?? placementStorageWarning,
+    storageWarning: characterStorageWarning ?? launcherSettingsStorageWarning ?? placementStorageWarning ?? actorIdentityStorageWarning,
   };
   publish();
 }
@@ -385,6 +403,7 @@ async function shutdown(): Promise<void> {
     const character = capture.characterState().snapshot;
     if (character?.source === "live") characterCache = updateCharacterCache(characterCache, character);
     await characterPersistence.flush(characterCache);
+    await actorIdentityPersistence.flush(actorIdentityCache);
     await launcherSettingsPersistence.flush();
     await placements.flush();
   } finally {
