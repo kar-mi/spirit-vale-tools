@@ -4,7 +4,7 @@ import { useState } from "preact/hooks";
 import { Electroview } from "electrobun/view";
 import { formatDps, formatDuration } from "@spiritvale/ui-core/format";
 
-import type { FishNetDpsTimelinePoint } from "@kar-mi/spirit-vale-tools-combat";
+import type { FishNetActiveStatus, FishNetDpsTimelinePoint } from "@kar-mi/spirit-vale-tools-combat";
 import type {
   OverlayElementId,
   OverlayElementSettings,
@@ -90,6 +90,12 @@ function App() {
       </OverlayElement>
       <OverlayElement id="partyRanking" settings={next.elements.partyRanking} locked={next.locked}>
         <PartyRankingElement state={next} />
+      </OverlayElement>
+      <OverlayElement id="buffs" settings={next.elements.buffs} locked={next.locked}>
+        <StatusGridElement statuses={next.buffs} />
+      </OverlayElement>
+      <OverlayElement id="debuffs" settings={next.elements.debuffs} locked={next.locked}>
+        <StatusGridElement statuses={next.debuffs} />
       </OverlayElement>
     </main>
   );
@@ -227,7 +233,7 @@ function resizeRect(start: ElementRect, edge: ResizeEdge, dx: number, dy: number
   let top = start.y;
   let right = start.x + start.width;
   let bottom = start.y + start.height;
-  const minimumHeight = id === "health" || id === "mana" || id === "weight"
+  const minimumHeight = id === "health" || id === "mana" || id === "weight" || id === "buffs" || id === "debuffs"
     ? MIN_RESOURCE_HEIGHT
     : MIN_ELEMENT_HEIGHT;
   if (edge.includes("w")) left = clamp(start.x + dx, 0, right - MIN_ELEMENT_WIDTH);
@@ -370,6 +376,53 @@ function PartyRankingElement({ state: next }: { state: OverlayState }) {
       ))}</div> : <WaitingForDps />}
     </div>
   );
+}
+
+function StatusGridElement({ statuses }: { statuses: FishNetActiveStatus[] | undefined }) {
+  const list = statuses ?? [];
+  if (list.length === 0) {
+    return (
+      <div class="status-grid-empty">
+        <span>None active</span>
+      </div>
+    );
+  }
+  return (
+    <div class="status-grid">
+      {list.map((status) => <StatusCell key={status.statusId} status={status} />)}
+    </div>
+  );
+}
+
+function StatusCell({ status }: { status: FishNetActiveStatus }) {
+  const totalMs = status.expiresAtMs === undefined ? undefined : status.expiresAtMs - status.appliedAtMs;
+  const remainingFraction = totalMs !== undefined && totalMs > 0 && status.remainingMs !== undefined
+    ? Math.max(0, Math.min(1, status.remainingMs / totalMs))
+    : undefined;
+  return (
+    <div
+      class="status-cell"
+      style={remainingFraction === undefined ? undefined : `--status-remaining:${Math.round(remainingFraction * 100)}%`}
+      title={status.displayName}
+    >
+      {status.spriteId
+        ? <img class="status-icon" src={statusIcon(status.spriteId)} alt="" aria-hidden="true" />
+        : <span class="status-icon-fallback" aria-hidden="true">{status.displayName.slice(0, 2).toUpperCase()}</span>}
+      {remainingFraction !== undefined && <span class="status-timer-fill" aria-hidden="true" />}
+      {status.level > 1 && <span class="status-level">{status.level}</span>}
+      {status.remainingMs !== undefined && <span class="status-remaining">{formatRemaining(status.remainingMs)}</span>}
+    </div>
+  );
+}
+
+function statusIcon(spriteId: string): string {
+  return `views://assets/status-icons/${spriteId}.webp`;
+}
+
+function formatRemaining(remainingMs: number): string {
+  const totalSeconds = Math.ceil(remainingMs / 1_000);
+  if (totalSeconds >= 60) return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+  return `${totalSeconds}`;
 }
 
 function WaitingForDps() {

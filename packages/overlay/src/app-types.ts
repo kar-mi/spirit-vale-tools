@@ -1,9 +1,9 @@
 import type { RPCSchema } from "electrobun";
-import type { FishNetDpsEncounterSnapshot } from "@kar-mi/spirit-vale-tools-combat";
+import type { FishNetActiveStatus, FishNetDpsEncounterSnapshot } from "@kar-mi/spirit-vale-tools-combat";
 import type { CharacterWeight } from "@kar-mi/spirit-vale-tools-character";
 import type { WindowChromeRequests } from "@spiritvale/ui-core/window-rpc";
 
-export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "health", "mana", "weight"] as const;
+export const OVERLAY_ELEMENT_IDS = ["dpsChart", "personalDps", "partyRanking", "health", "mana", "weight", "buffs", "debuffs"] as const;
 export type OverlayElementId = (typeof OVERLAY_ELEMENT_IDS)[number];
 
 export interface OverlayElementSettings {
@@ -35,6 +35,8 @@ export interface OverlayState {
   health?: OverlayResource;
   mana?: OverlayResource;
   weight?: CharacterWeight;
+  buffs?: FishNetActiveStatus[];
+  debuffs?: FishNetActiveStatus[];
 }
 
 type OverlaySharedRequests = {

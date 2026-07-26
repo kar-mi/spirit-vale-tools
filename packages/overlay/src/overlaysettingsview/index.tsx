@@ -17,6 +17,8 @@ const LABELS: Record<OverlayElementId, string> = {
   health: "HP bar",
   mana: "MP bar",
   weight: "Weight",
+  buffs: "Buffs",
+  debuffs: "Debuffs",
 };
 const state = signal<OverlayState | undefined>(undefined);
 const recordingResetShortcut = signal(false);

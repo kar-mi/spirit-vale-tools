@@ -6,7 +6,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "bun run build:packages && bun run --filter @spiritvale/ui build",
-    "build:packages": "bun run --filter @kar-mi/spirit-vale-tools-capture build && bun run --filter @kar-mi/spirit-vale-tools-logging build && bun run --filter @kar-mi/spirit-vale-tools-items build && bun run --filter @kar-mi/spirit-vale-tools-skills build && bun run --filter @kar-mi/spirit-vale-tools-combat build && bun run --filter @kar-mi/spirit-vale-tools-character build && bun run --filter @kar-mi/spirit-vale-tools-market build && bun run --filter @kar-mi/spirit-vale-tools-rewards build",
+    "build:packages": "bun run --filter @kar-mi/spirit-vale-tools-capture build && bun run --filter @kar-mi/spirit-vale-tools-logging build && bun run --filter @kar-mi/spirit-vale-tools-items build && bun run --filter @kar-mi/spirit-vale-tools-skills build && bun run --filter @kar-mi/spirit-vale-tools-statuses build && bun run --filter @kar-mi/spirit-vale-tools-combat build && bun run --filter @kar-mi/spirit-vale-tools-character build && bun run --filter @kar-mi/spirit-vale-tools-market build && bun run --filter @kar-mi/spirit-vale-tools-rewards build",
     "build:stable": "bun run build:packages && bun run --filter @spiritvale/ui build -- --env=stable",
     "capture:dump": "bun run packages/cli/src/dump.ts",
     "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-only",

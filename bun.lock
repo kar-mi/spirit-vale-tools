@@ -13,7 +13,7 @@
     },
     "packages/character": {
       "name": "@kar-mi/spirit-vale-tools-character",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
         "@kar-mi/spirit-vale-tools-items": "^0.1.0",
@@ -32,11 +32,12 @@
     },
     "packages/combat": {
       "name": "@kar-mi/spirit-vale-tools-combat",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
-        "@kar-mi/spirit-vale-tools-logging": "^0.1.0",
-        "@kar-mi/spirit-vale-tools-skills": "^0.1.0",
+        "@kar-mi/spirit-vale-tools-capture": "^0.1.1",
+        "@kar-mi/spirit-vale-tools-logging": "^0.1.1",
+        "@kar-mi/spirit-vale-tools-skills": "^0.1.1",
+        "@kar-mi/spirit-vale-tools-statuses": "^0.1.0",
       },
     },
     "packages/combat-ui": {
@@ -52,22 +53,22 @@
     },
     "packages/core": {
       "name": "@kar-mi/spirit-vale-tools-capture",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/items": {
       "name": "@kar-mi/spirit-vale-tools-items",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
       },
     },
     "packages/logging": {
       "name": "@kar-mi/spirit-vale-tools-logging",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/market": {
       "name": "@kar-mi/spirit-vale-tools-market",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
         "@kar-mi/spirit-vale-tools-items": "^0.1.0",
@@ -98,7 +99,7 @@
     },
     "packages/rewards": {
       "name": "@kar-mi/spirit-vale-tools-rewards",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
         "@kar-mi/spirit-vale-tools-combat": "^0.1.0",
@@ -118,9 +119,16 @@
     },
     "packages/skills": {
       "name": "@kar-mi/spirit-vale-tools-skills",
+      "version": "0.1.1",
+      "dependencies": {
+        "@kar-mi/spirit-vale-tools-capture": "^0.1.1",
+      },
+    },
+    "packages/statuses": {
+      "name": "@kar-mi/spirit-vale-tools-statuses",
       "version": "0.1.0",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-capture": "^0.1.0",
+        "@kar-mi/spirit-vale-tools-capture": "^0.1.1",
       },
     },
     "packages/ui": {
@@ -211,6 +219,8 @@
     "@kar-mi/spirit-vale-tools-rewards": ["@kar-mi/spirit-vale-tools-rewards@workspace:packages/rewards"],
 
     "@kar-mi/spirit-vale-tools-skills": ["@kar-mi/spirit-vale-tools-skills@workspace:packages/skills"],
+
+    "@kar-mi/spirit-vale-tools-statuses": ["@kar-mi/spirit-vale-tools-statuses@workspace:packages/statuses"],
 
     "@malept/cross-spawn-promise": ["@malept/cross-spawn-promise@1.1.1", "", { "dependencies": { "cross-spawn": "^7.0.1" } }, "sha512-RTBGWL5FWQcg9orDOCcp4LvItNzUPcyEU9bwaeJX0rJ1IQxzucC48Y0/sQLp/g6t99IQgAlGIaesJS+gTn7tVQ=="],
 
