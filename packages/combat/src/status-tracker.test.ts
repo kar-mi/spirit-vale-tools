@@ -114,3 +114,32 @@ describe("FishNetStatusTracker", () => {
     expect(tracker.getActiveStatuses(1, 0)).toHaveLength(0);
   });
 });
+
+describe("FishNetStatusTracker identity resolution", () => {
+  test("resolves statuses by name learned from an actorIdentity event, before any damage is dealt", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero" });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura" }), 0);
+    expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(1);
+    expect(tracker.getActiveStatusesForName("hero", 0)).toHaveLength(1);
+    expect(tracker.getActiveStatusesForName("Someone Else", 0)).toHaveLength(0);
+  });
+
+  test("resolves statuses by name learned from the status event's own embedded identity", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura", actorIdentity: { displayName: "Hero" } }), 0);
+    expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(1);
+  });
+
+  test("actorIdentity remove/reset drop learned names", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero" });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura" }), 0);
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "remove", tick: 1, actorId: 1 });
+    expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(0);
+
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 1, displayName: "Hero" });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 3 });
+    expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(0);
+  });
+});

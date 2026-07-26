@@ -4,6 +4,7 @@ import {
   statusDurationSeconds,
 } from "@kar-mi/spirit-vale-tools-statuses";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
+import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
 
 export interface FishNetActiveStatus {
@@ -32,6 +33,8 @@ interface TrackedStatus {
 export class FishNetStatusTracker {
   private readonly directory: FishNetStatusDirectory;
   private readonly active = new Map<number, Map<string, TrackedStatus>>();
+  /** Actor display names, tracked independently of damage so statuses resolve before an actor has hit anything. */
+  private readonly identities = new Map<number, string>();
 
   constructor(options: FishNetStatusTrackerOptions = {}) {
     this.directory = new FishNetStatusDirectory(options.statusCatalog ?? loadBundledStatusCatalog());
@@ -42,7 +45,20 @@ export class FishNetStatusTracker {
     this.consumeStatus(event, observedAtMs);
   }
 
+  consumeIdentity(event: FishNetActorIdentityEvent): void {
+    if (event.operation === "reset") {
+      this.identities.clear();
+      return;
+    }
+    if (event.operation === "remove") {
+      this.identities.delete(event.actorId);
+      return;
+    }
+    this.identities.set(event.actorId, event.displayName);
+  }
+
   consumeStatus(event: FishNetCombatStatusEvent, observedAtMs: number): void {
+    if (event.actorIdentity) this.identities.set(event.actorId, event.actorIdentity.displayName);
     const statuses = this.active.get(event.actorId) ?? new Map<string, TrackedStatus>();
     if (event.action === "removed") {
       statuses.delete(event.statusId);
@@ -104,8 +120,19 @@ export class FishNetStatusTracker {
     return [...byStatusId.values()].sort((left, right) => left.appliedAtMs - right.appliedAtMs);
   }
 
+  /** Resolves active statuses by display name, independent of whether that actor has dealt any damage. */
+  getActiveStatusesForName(personalName: string, nowMs: number): FishNetActiveStatus[] {
+    const normalized = personalName.trim().toLocaleLowerCase();
+    if (!normalized) return [];
+    const actorIds = [...this.identities]
+      .filter(([, displayName]) => displayName.trim().toLocaleLowerCase() === normalized)
+      .map(([actorId]) => actorId);
+    return this.getActiveStatusesForActors(actorIds, nowMs);
+  }
+
   /** Discards all tracked statuses, e.g. when the encounter/session resets. */
   reset(): void {
     this.active.clear();
+    this.identities.clear();
   }
 }

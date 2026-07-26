@@ -216,13 +216,11 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
     const snapshotNowMs = relativeNowMs();
     const snapshot = meter.getLatestSnapshot(snapshotNowMs);
     const resources = personalResources(characterState.records);
-    const personalActorIds = snapshot?.personal?.actorIds;
-    const activeStatuses = personalActorIds?.length
-      ? statusTracker.getActiveStatusesForActors(personalActorIds, snapshotNowMs ?? snapshot?.lastDamageAtMs ?? 0)
-      : [];
+    const personalName = detectedPersonalName(characterState);
+    const activeStatuses = statusTracker.getActiveStatusesForName(personalName, snapshotNowMs ?? 0);
     return {
       locked: settings.locked,
-      personalName: detectedPersonalName(characterState),
+      personalName,
       status,
       statusDetail,
       elements: settings.elements,
@@ -321,6 +319,7 @@ export async function createOverlayWindow(options: OverlayWindowOptions) {
       for (const { event, observedAtMs } of batch.events) {
         if (event.kind === "actorIdentity") {
           meter.consumeIdentity(event, observedAtMs);
+          statusTracker.consumeIdentity(event);
         } else {
           meter.consumeCombat(event, observedAtMs);
           statusTracker.consume(event, observedAtMs);
