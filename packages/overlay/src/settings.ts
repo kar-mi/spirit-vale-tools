@@ -33,8 +33,8 @@ const DEFAULT_ELEMENTS: Record<OverlayElementId, OverlayElementSettings> = {
   health: { enabled: true, opacity: 1, x: 1037, y: 921, width: 330, height: 40 },
   mana: { enabled: true, opacity: 1, x: 1377, y: 921, width: 338, height: 40 },
   weight: { enabled: true, opacity: 1, x: 794, y: 787, width: 160, height: 40 },
-  buffs: { enabled: true, opacity: 1, x: 1037, y: 20, width: 330, height: 80 },
-  debuffs: { enabled: true, opacity: 1, x: 1037, y: 108, width: 330, height: 80 }
+  buffs: { enabled: false, opacity: 1, x: 1037, y: 20, width: 330, height: 80 },
+  debuffs: { enabled: false, opacity: 1, x: 1037, y: 108, width: 330, height: 80 }
 };
 
 export function defaultOverlaySettings(bounds: DisplayBounds): OverlaySettings {
