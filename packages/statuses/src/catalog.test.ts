@@ -32,6 +32,19 @@ describe("FishNetStatusDirectory", () => {
     expect(resolveFishNetStatus("Bleeding")).toMatchObject({ displayName: "Bleeding", isDebuff: true });
   });
 
+  test("classifies hard-CC and negative-stat statuses as debuffs despite the source data's isDebuff flag", () => {
+    // The data-mine's own isDebuff field only marks 8/185 statuses true and misses these entirely.
+    for (const id of ["Stun", "Blind", "Silence", "Slow", "Frozen", "Curse", "ArmorBreak", "Weaken", "Vulnerability"]) {
+      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: true });
+    }
+  });
+
+  test("keeps self-cast buffs with drawbacks classified as buffs", () => {
+    for (const id of ["Berserk", "Counter", "Cloaking", "Taunt", "HighGuard"]) {
+      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: false });
+    }
+  });
+
   test("resolves synthetic definitions and returns defensive copies", () => {
     const directory = new FishNetStatusDirectory(SYNTHETIC_CATALOG);
     const first = directory.require("SyntheticBurn");
