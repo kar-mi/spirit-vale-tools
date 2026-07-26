@@ -101,7 +101,7 @@ function metricSamples(samples: readonly TrendSample[], metric: TrendMetric): Me
       const value = metric === "coins" ? BigInt(sample.coins) : BigInt(sample[metric]);
       if (value >= 0n) values.push({ time, value });
     } catch {
-      // Invalid UI samples are ignored rather than breaking the chart.
+      // Invalid samples are ignored rather than breaking the trend.
     }
   }
   return values.sort((left, right) => left.time - right.time);

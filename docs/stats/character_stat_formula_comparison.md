@@ -5,7 +5,7 @@ This document compares three sources:
 - the formulas shared in the **game-mechanics Discord channel**, as transcribed
   in [stat_calculations.md](stat_calculations.md);
 - the formulas used by the current game build;
-- the calculations currently shown by this repository's character UI.
+- the calculations currently exposed by this repository's character package.
 
 The executable, IL2CPP metadata, and generated method information were checked as
 one matching build. References below use game type and method names rather than
@@ -29,7 +29,7 @@ tool-specific filenames or offsets.
   explicitly identified.
 
 The repository does not currently have every input needed by the complete game
-formula. In particular, the character callback used by the UI does not expose
+formula. In particular, the character callback decoded by the package does not expose
 weapon base ATK/MATK, stance, or every runtime conditional modifier. A repository
 formula described as a **scaling preview** is therefore not a complete in-game
 total.
@@ -38,7 +38,7 @@ total.
 
 ### Attribute scaling shared by the full formulas
 
-| Value | Current game formula | Game-mechanics Discord channel | Repository character UI | Game reference |
+| Value | Current game formula | Game-mechanics Discord channel | Character package | Game reference |
 | --- | --- | --- | --- | --- |
 | Melee attribute term | `round(STR * 1.5) + floor(DEX / 5) + floor(LUK / 5) + STR * AtkPerStr` | `STR * 1.5 + DEX / 5 + LUK / 5` | `STR * 1.5 + floor(DEX / 5) + floor(LUK / 5)` | `Formula.GetAttackScaling(StatArray, bool, StatArray)` |
 | Ranged attribute term | `DEX + floor(STR / 5) + floor(LUK / 5) + DEX * AtkPerStr` | `DEX + STR / 5 + LUK / 5` | `DEX + floor(STR / 5) + floor(LUK / 5)` | `Formula.GetAttackScaling(StatArray, bool, StatArray)` |
@@ -264,7 +264,7 @@ The game-mechanics Discord channel contains the core pre-cap formula, but omits
 `CastTimeReduction`, `CastTimeReductionLimit`, the clamp, and the integer division
 of INT before it is added. Its `CTR` expression is also parenthesized as
 `round(1 - factor * 100)`; the game displays `round((1 - factor) * 100)`.
-The repository character UI does not currently calculate cast speed.
+The character package does not currently calculate cast speed.
 
 ### Attack speed and delay
 
@@ -295,7 +295,7 @@ References: `Formula.AttackSpeed(BaseUnitController, StatArray)`,
 
 The game-mechanics Discord channel's `AGI / 250 + DEX / 1000` is close but not identical to the current
 game's `(AGI + floor(DEX / 4)) / 250`. It also omits the flat speed stat and the
-dynamic cap. The repository character UI does not calculate ASPD or attack delay.
+dynamic cap. The character package does not calculate ASPD or attack delay.
 
 The game-mechanics Discord channel records this base attack-delay table:
 
@@ -324,7 +324,7 @@ The dual-wield timing formula itself is present and is
 
 ## Defense and damage reduction
 
-| Value | Current game formula | Difference from game-mechanics Discord channel | Repository character UI | Game reference |
+| Value | Current game formula | Difference from game-mechanics Discord channel | Character package | Game reference |
 | --- | --- | --- | --- | --- |
 | DEF | `round(DEF * (1 + DefMult / 100))` | The old `VIT / 1000` term is not present | Not calculated | `Formula.Def(StatArray, StatArray)` |
 | MDEF | `round(MDEF * (1 + MdefMult / 100))` | The old `VIT / 1000` term is not present | Not calculated | `Formula.MDef(StatArray, StatArray)` |
@@ -337,7 +337,7 @@ logic; they are not folded into the sheet's DEF/MDEF formula. References:
 
 ## Accuracy, evasion, and critical stats
 
-| Value | Current player formula | Difference from game-mechanics Discord channel | Repository character UI | Game reference |
+| Value | Current player formula | Difference from game-mechanics Discord channel | Character package | Game reference |
 | --- | --- | --- | --- | --- |
 | Hit | `round((LV + 2*DEX + floor(LUK/3) + 25 + HIT) * (1 + HitMult/100))` | The game-mechanics Discord channel omits `floor(LUK/3)` | Same formula | `Formula.Hit(BaseUnitController, StatArray)` |
 | Flee before crowd penalty | `round((20 + LV + AGI + floor(LUK/5) + 3*floor(AGI/10) + FLEE) * (1 + FleeMult/100))` | The game-mechanics Discord channel omits the base `20` | Same formula before penalty | `Formula.Flee(BaseUnitController, StatArray)` |
@@ -397,7 +397,7 @@ MaxMP = max(1, round(
 Reference: `Formula.MaxMana(BaseUnitController, StatArray)`.
 
 The game-mechanics Discord channel and repository agree with the current formula. The repository's
-short UI formula label omits flat MP and `MpMult`, but its implementation includes
+short formula label omits flat MP and `MpMult`, but its implementation includes
 both.
 
 ## Regeneration
@@ -452,7 +452,7 @@ and the no-regen branch.
 | Reflect damage | `round((LV + (DEF + DefFlat + ATK) / 2) * 4 * value * (baseMult + ReflectDamage/100))` | Algebraically agrees with the old formula when `value=1` and `baseMult=0`; the game exposes both extra inputs | `Formula.GetReflectDamage(BaseUnitController, float, float)` |
 | HP siphon multiplier | `(LV + VIT) / 50` | The game-mechanics Discord channel says `(LV + STR) / 25`; both attribute and divisor are different | `Formula.SiphonMult(BaseUnitController, StatArray)` |
 | MP siphon multiplier | `(LV + INT) / 50` | The game-mechanics Discord channel says `/25` | `Formula.SiphonMpMult(BaseUnitController, StatArray)` |
-| Final displayed HP siphon | `SiphonHp * (LV + VIT) / 50`, formatted directly as a `Single` | Not reproduced by the repository UI; the game does not apply integer rounding in this display path | `UIUnitStats.Draw()` calling `Formula.SiphonMult` and `Single.ToString()` |
+| Final displayed HP siphon | `SiphonHp * (LV + VIT) / 50`, formatted directly as a `Single` | Not reproduced by the character package; the game does not apply integer rounding in this display path | `UIUnitStats.Draw()` calling `Formula.SiphonMult` and `Single.ToString()` |
 | Final displayed MP siphon | `SiphonMp * (LV + INT) / 50`, formatted directly as a `Single` | Confirmed by the `5.76` and `6.36` live values; the game does not apply integer rounding in this display path | `UIUnitStats.Draw()` calling `Formula.SiphonMpMult` and `Single.ToString()` |
 | HP siphon amount sent to the integer combat queue | `ceil(SiphonHp * (LV + VIT) / 50)` | Separate from the fractional sheet value; this conversion is established by static call-site analysis, not by the sheet display | `CombatComponent.ApplyLeech(...)` calling `Formula.SiphonMult` |
 | MP siphon amount sent to the integer combat queue | `ceil(SiphonMp * (LV + INT) / 50)` | Separate from the fractional sheet value; this conversion is established by static call-site analysis, not by the sheet display | `CombatComponent.ApplyLeech(...)` calling `Formula.SiphonMpMult` |
@@ -583,7 +583,7 @@ skill-specific observations rather than universal current-build rules:
 - multihits count as one trigger and only autoattacks can trigger the listed
   autocasts.
 
-The repository character UI displays learned passive effects, but does not
+The character package exposes learned passive effects, but does not
 calculate autocast levels or chances.
 
 ## Repository implementation summary
@@ -600,10 +600,9 @@ calculate autocast levels or chances.
 | Base HP/MP regeneration | Match only when all explicit regen modifiers are zero and no special runtime branch applies |
 | Attribute status-resistance rows | Match the base attribute contribution, without status-targeted modifiers |
 | Move speed | Matches an ordinary player with no multiplicative move-speed modifier |
-| Advanced gear rows | Raw gear totals only; the UI explicitly reports that no base formula is known |
+| Advanced gear rows | Raw gear totals only; the implementation explicitly reports that no base formula is known |
 
 The repository's “Actual” column is independent of these formula reconstructions:
 it uses synchronized server values for maximum HP, maximum MP, and move speed when
 those records are available. References in repository code:
-`packages/character/src/formulas.ts`, `packages/character/src/tracker.ts`, and
-`packages/ui/src/characterview/index.ts`.
+`packages/character/src/formulas.ts` and `packages/character/src/tracker.ts`.

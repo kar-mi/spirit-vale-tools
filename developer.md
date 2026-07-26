@@ -2,7 +2,7 @@
 
 Spirit Vale Tools publishes reusable Bun packages through GitHub Packages. Use
 them to build your own capture, replay, catalog, combat, character, market, or
-reward tooling without depending on the desktop application.
+reward tooling.
 
 ## Requirements
 
@@ -42,6 +42,7 @@ Add only the capability your application needs:
 bun add @kar-mi/spirit-vale-tools-capture
 bun add @kar-mi/spirit-vale-tools-items
 bun add @kar-mi/spirit-vale-tools-skills
+bun add @kar-mi/spirit-vale-tools-statuses
 bun add @kar-mi/spirit-vale-tools-combat
 bun add @kar-mi/spirit-vale-tools-character
 bun add @kar-mi/spirit-vale-tools-market
@@ -58,6 +59,7 @@ are not a supported public API.
 | `@kar-mi/spirit-vale-tools-capture` | Packet capture and protocol decoding. |
 | `@kar-mi/spirit-vale-tools-items` | Built-in item catalog lookup. |
 | `@kar-mi/spirit-vale-tools-skills` | Built-in skill catalog lookup. |
+| `@kar-mi/spirit-vale-tools-statuses` | Built-in status-effect catalog lookup. |
 | `@kar-mi/spirit-vale-tools-combat` | Combat tracking, DPS calculation, logs, and replay. |
 | `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation. |
 | `@kar-mi/spirit-vale-tools-market` | Market packet decoding, tracking, querying, and replay. |
@@ -89,6 +91,7 @@ Catalog and domain packages export their public APIs from the package root:
 ```ts
 import { loadBundledItemCatalog, resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
 import { loadBundledSkillCatalog, resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
+import { loadBundledStatusCatalog, resolveFishNetStatus } from "@kar-mi/spirit-vale-tools-statuses";
 import { FishNetCombatTracker, FishNetDpsMeter } from "@kar-mi/spirit-vale-tools-combat";
 import { calculateCharacterStats, decodeCharacterRpcPayload } from "@kar-mi/spirit-vale-tools-character";
 import { FishNetMarketTracker, queryFishNetMarketListings } from "@kar-mi/spirit-vale-tools-market";

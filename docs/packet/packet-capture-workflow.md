@@ -2,7 +2,7 @@
 
 Spirit Vale Tools captures TCP and UDP traffic through the user's existing Npcap installation. Bun loads the Npcap API directly, selects a network adapter, normalizes link-layer frames, and restricts emitted packets to endpoints owned by the configured executable.
 
-The application does not bundle Npcap, install drivers, inject packets, or alter traffic.
+The package does not bundle Npcap, install drivers, inject packets, or alter traffic.
 
 For the UDP decoding layers enabled by this workflow, see [Packet Decoding](packet-decoding.md). For the
 packages that consume decoded events, see [Packet Routing](packet-routing.md).
@@ -13,19 +13,10 @@ packages that consume decoded events, see [Packet Routing](packet-routing.md).
 - Bun 1.3 or newer for development
 - A current Npcap installation from [npcap.com](https://npcap.com/#download)
 
-To run Spirit Vale Tools without elevation, install Npcap with **Restrict Npcap driver's access to Administrators only** unchecked. If that option is enabled, the launcher reports the installation as administrator-only and does not trigger an unexpected UAC prompt.
-
-## Desktop capture settings
-
-Open the gear button on the main Tools launcher to view Packet capture settings.
-
-- **Backend** is always Npcap.
-- **Automatic** selects the adapter whose address owns Windows' lowest-metric default route.
-- A manually selected adapter is stored for future launches.
-- If a saved adapter is temporarily unavailable, capture falls back to automatic selection and reports the effective adapter.
-- Changing adapters restarts capture immediately. If the new adapter cannot be opened, the previous adapter is restored.
-
-The settings panel also reports a missing, administrator-only, or unusable Npcap installation and links to the official download page.
+To run live capture without elevation, install Npcap with **Restrict Npcap
+driver's access to Administrators only** unchecked. Consumers can inspect
+`getNpcapStatus()` and `listNpcapDevices()` to report installation and adapter
+availability.
 
 ## Command-line capture
 
@@ -61,7 +52,7 @@ The default filter is derived from `--protocols`. Custom filters use standard li
 
 ## Capture path
 
-1. The application verifies that the loaded capture library identifies itself as Npcap.
+1. The capture package verifies that the loaded capture library identifies itself as Npcap.
 2. Npcap enumerates available adapters and the selected adapter is opened in non-promiscuous, immediate, nonblocking mode.
 3. Ethernet, VLAN, loopback, raw-IP, and common VPN link-layer frames are reduced to IPv4 or IPv6 packets.
 4. TCP and UDP headers and payloads are normalized into the public TypeScript packet types.
@@ -98,7 +89,7 @@ Omit `deviceName` for automatic adapter selection. Omit `targetProcessName` only
 
 ### Npcap is not installed
 
-Use the launcher link to install the current Npcap release, then refresh the settings panel.
+Install the current Npcap release, then call `getNpcapStatus()` again.
 
 ### Npcap is administrator-only
 

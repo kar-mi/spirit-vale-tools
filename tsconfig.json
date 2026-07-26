@@ -2,9 +2,7 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": ["ESNext"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
@@ -31,5 +29,5 @@
       "@kar-mi/spirit-vale-tools-statuses": ["./packages/statuses/src/index.ts"]
     }
   },
-  "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "scripts/**/*.ts", "packages/*/electrobun.config.ts"]
+  "include": ["packages/*/src/**/*.ts"]
 }

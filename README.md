@@ -1,84 +1,53 @@
 # Spirit Vale Tools
 
-Spirit Vale Tools is a passive Windows companion app for viewing live combat,
-character, reward, and market information. It uses your existing Npcap
-installation in non-promiscuous mode and never sends, modifies, drops, or
-injects game traffic.
+Spirit Vale Tools provides reusable Bun packages and command-line utilities for
+passive packet capture, protocol decoding, catalogs, combat, character, market,
+and reward analysis. Capture uses Npcap in non-promiscuous mode and never
+sends, modifies, drops, or injects game traffic.
 
-> Building with the reusable packages? See the [developer guide](developer.md).
+> Looking for the Windows companion application? See
+> [spirit-vale-overlay](https://github.com/kar-mi/spirit-vale-overlay).
 
-## Prerequisites
+## Packages
 
-- Windows 10 or 11 (x64)
-- A current [Npcap](https://npcap.com/#download) installation
-  - Select **Install Npcap in WinPcap API-compatible Mode**.
-  - Leave **Restrict Npcap driver's access to Administrators only** unchecked.
+The public packages are published through GitHub Packages under the `@kar-mi`
+scope:
 
-![Required Npcap installation options](docs/img/npcap_option.png)
+| Package | Capability |
+| --- | --- |
+| `@kar-mi/spirit-vale-tools-capture` | Packet capture and protocol decoding |
+| `@kar-mi/spirit-vale-tools-items` | Build-scoped item catalog |
+| `@kar-mi/spirit-vale-tools-skills` | Build-scoped skill catalog |
+| `@kar-mi/spirit-vale-tools-statuses` | Build-scoped status catalog |
+| `@kar-mi/spirit-vale-tools-combat` | Combat tracking, DPS, logs, and replay |
+| `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation |
+| `@kar-mi/spirit-vale-tools-market` | Market decoding, tracking, querying, and replay |
+| `@kar-mi/spirit-vale-tools-rewards` | Reward decoding, tracking, trends, and replay |
 
-## Installation
+See the [developer guide](developer.md) for registry setup, installation, and
+public API examples.
 
-### Portable release
-
-1. Download the latest `Spirit-Vale-portable-win-x64-v*.zip` from
-   [GitHub Releases](https://github.com/kar-mi/spirit-vale-tools/releases/latest).
-2. Extract the entire ZIP.
-3. Run the top-level `Spirit Vale.exe`.
-
-Npcap is installed separately. The portable app keeps its settings, logs, and
-other writable data inside the extracted folder.
-
-### Run from source
+## Development
 
 [Bun 1.3 or newer](https://bun.sh/) is required.
 
 ```powershell
 bun install
-bun run dev
-```
-
-To verify or build the project:
-
-```powershell
 bun run check
 bun run build
 ```
 
-## Features
+`bun run build` builds every publishable package. Live capture requires Windows
+and a current [Npcap](https://npcap.com/#download) installation with WinPcap
+API-compatible mode enabled.
 
-### Combat
+## Command-line tools
 
-Live DPS tracking, encounter summaries, player analysis, and combat-log replay.
+```powershell
+bun run capture:dump -- --duration 30
+bun run rewards
+bun run market -- --live
+```
 
-![Combat encounter analysis](docs/img/combat_analysis.png)
-
-### Overlay
-
-Customizable in-game DPS and character-stat displays with a click-through
-locked mode.
-
-![Editing the in-game overlay layout](docs/img/sv_overlay_edit.png)
-
-### Rewards
-
-Confirmed kill history, session totals, trends, and a searchable mob reward
-catalog.
-
-![Mob reward session summary](docs/img/combat_rewards.png)
-
-### Market
-
-Locally browse, search, filter, and sort captured market listings.
-
-### Character
-
-View your build, equipment, skills, and calculated stats.
-
-### Passive capture
-
-Reads existing game traffic through Npcap without sending or altering traffic.
-
-Detailed feature behavior, command-line tools, logging, and protocol references
-are available in the [documentation](docs/README.md).
-
-Reusable Bun packages, including the standalone packet-capture API, are documented in the [package guide](docs/packages.md).
+More CLI behavior, package details, logging, and protocol references are
+available in the [documentation](docs/README.md).

@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { inspectCombatReplaySummary, readCombatReplaySummary } from "./replay-summary.ts";
 
-test("combat replay summaries remain owned by combat UI", async () => {
+test("combat replay summaries are provided by the combat package", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "spiritvale-combat-summary-"));
   const file = path.join(directory, "synthetic.jsonl");
   const records = [

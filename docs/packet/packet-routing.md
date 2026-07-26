@@ -12,11 +12,11 @@ flowchart TD
   C[@kar-mi/spirit-vale-tools-capture/capture] --> U[CapturedUdpPacket]
   U --> L[CapturedLiteNetLibPacket]
   L --> F[CapturedFishNetPacket]
-  F --> UI[UI CaptureCoordinator]
-  UI --> COM[@kar-mi/spirit-vale-tools-combat]
-  UI --> CHR[@kar-mi/spirit-vale-tools-character]
-  UI --> REW[@kar-mi/spirit-vale-tools-rewards]
-  UI --> MAR[@kar-mi/spirit-vale-tools-market]
+  F --> FAN[Consumer fan-out]
+  FAN --> COM[@kar-mi/spirit-vale-tools-combat]
+  FAN --> CHR[@kar-mi/spirit-vale-tools-character]
+  FAN --> REW[@kar-mi/spirit-vale-tools-rewards]
+  FAN --> MAR[@kar-mi/spirit-vale-tools-market]
   COM --> LOG[@kar-mi/spirit-vale-tools-logging]
   REW --> LOG
   MAR --> LOG
@@ -28,7 +28,7 @@ flowchart TD
 | `CapturedUdpPacket` | capture | UDP branch of the transport union | LiteNetLib decoder |
 | `CapturedLiteNetLibPacket` | capture | A logical LiteNetLib leaf plus its UDP source and merge path | CLI/replay, FishNet decoder |
 | `DecodedFishNetPacket` | capture | A decoded FishNet message; usable without live-capture provenance | domain trackers, replay |
-| `CapturedFishNetPacket` | capture | A decoded FishNet message plus LiteNetLib and connection provenance | desktop routing, character tracking |
+| `CapturedFishNetPacket` | capture | A decoded FishNet message plus LiteNetLib and connection provenance | live routing, character tracking |
 
 `PacketCapture` emits `packet` for TCP only, `udpPacket` for UDP only,
 `transportPacket` for both union branches, `liteNetPacket` for each LiteNetLib
@@ -47,13 +47,11 @@ the normal live-capture handoff to feature packages.
 | `@kar-mi/spirit-vale-tools-logging` | Domain events and diagnostics | Versioned JSON Lines session streams; it does not decode packets |
 | `@kar-mi/spirit-vale-tools-items` and `@kar-mi/spirit-vale-tools-skills` | Build fingerprint/catalog lookups | Static item and skill metadata used to enrich domain output; neither parses transport bytes |
 
-The desktop `CaptureCoordinator` is the live fan-out point. It starts packet
-capture with UDP and FishNet decoding enabled. Character packets are considered
-before active-connection admission so a valid local snapshot survives a
-connection overlap; admitted packets then flow to actor, combat, rewards, and
-market consumers before their resulting events are written to separate log
-streams. The CLI uses the same capture-package types for live dumps and replay; replay
-retains a session decoder so link and split state behave like live capture.
+Consumers own live fan-out. A typical integration starts packet capture with
+UDP and FishNet decoding enabled, forwards decoded messages to the applicable
+domain trackers, and writes resulting events to separate log streams. The CLI
+uses the same capture-package types for live dumps and replay; replay retains a
+session decoder so link and split state behave like live capture.
 
 Combat identity matching uses the CharacterData UID as an internal stable key;
 Steam and account identifiers are not used. Shareable combat records may retain
@@ -70,8 +68,8 @@ diagnostics.
    incompleteness rather than guessing.
 3. Keep feature state in the domain tracker and reset it on the applicable
    authenticated/disconnect lifecycle events.
-4. Route the tracker from the desktop coordinator and/or CLI only after its
-   pure decoding behavior has synthetic unit coverage.
+4. Route the tracker from the consumer or CLI only after its pure decoding
+   behavior has synthetic unit coverage.
 
 For an explanation of the underlying byte layouts and stateful decoding rules,
 see [Packet Decoding](packet-decoding.md).
