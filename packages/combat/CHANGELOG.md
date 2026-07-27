@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [7b7db55]
+  - @kar-mi/spirit-vale-tools-statuses@0.2.0
+
 ## 0.2.3
 
 ### Patch Changes
