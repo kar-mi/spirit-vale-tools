@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 0.2.3
+
+### Patch Changes
+
+- e7fb4ee: Shorten the default rolling "current DPS" window from 15 seconds to 5 seconds, making the displayed value more responsive to recent damage.
+
 ## 0.2.2
 
 ### Patch Changes
