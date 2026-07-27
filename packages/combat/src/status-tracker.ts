@@ -35,6 +35,12 @@ export class FishNetStatusTracker {
   private readonly active = new Map<number, Map<string, TrackedStatus>>();
   /** Actor display names, tracked independently of damage so statuses resolve before an actor has hit anything. */
   private readonly identities = new Map<number, string>();
+  /**
+   * Last known actorId per uid, kept across actorIdentity resets (zone transitions/relogs
+   * reassign a fresh actorId to the same character). Lets a re-upsert for a known uid carry
+   * its still-active statuses over to the new actorId instead of orphaning them.
+   */
+  private readonly actorIdByUid = new Map<string, number>();
 
   constructor(options: FishNetStatusTrackerOptions = {}) {
     this.directory = new FishNetStatusDirectory(options.statusCatalog ?? loadBundledStatusCatalog());
@@ -54,7 +60,31 @@ export class FishNetStatusTracker {
       this.identities.delete(event.actorId);
       return;
     }
+    if (event.uid) {
+      const previousActorId = this.actorIdByUid.get(event.uid);
+      if (previousActorId !== undefined && previousActorId !== event.actorId) {
+        this.migrateActive(previousActorId, event.actorId);
+      }
+      this.actorIdByUid.set(event.uid, event.actorId);
+    }
     this.identities.set(event.actorId, event.displayName);
+  }
+
+  /**
+   * Carries statuses tracked under a stale actorId over to the actorId the same uid was
+   * just reassigned. Without this, a reset (which clears `identities` to avoid misattributing
+   * a recycled actorId to the wrong character) permanently orphans still-active statuses -
+   * e.g. an in-progress Haste buff silently disappearing from the overlay after a zone change.
+   */
+  private migrateActive(fromActorId: number, toActorId: number): void {
+    const fromStatuses = this.active.get(fromActorId);
+    if (!fromStatuses) return;
+    this.active.delete(fromActorId);
+    const toStatuses = this.active.get(toActorId) ?? new Map<string, TrackedStatus>();
+    for (const [statusId, tracked] of fromStatuses) {
+      if (!toStatuses.has(statusId)) toStatuses.set(statusId, tracked);
+    }
+    this.active.set(toActorId, toStatuses);
   }
 
   consumeStatus(event: FishNetCombatStatusEvent, observedAtMs: number): void {
@@ -155,5 +185,6 @@ export class FishNetStatusTracker {
   reset(): void {
     this.active.clear();
     this.identities.clear();
+    this.actorIdByUid.clear();
   }
 }

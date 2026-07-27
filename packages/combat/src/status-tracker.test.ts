@@ -194,4 +194,30 @@ describe("FishNetStatusTracker identity resolution", () => {
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 3 });
     expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(0);
   });
+
+  test("a reset followed by a re-upsert for the same uid carries still-active statuses to the new actorId", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero", uid: "hero-uid" });
+    tracker.consume(statusEvent({ actorId: 1, statusId: "SelfBuff", level: 5, action: "applied" }), 0);
+    expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(1);
+
+    // Zone transition: reset clears learned names, then the same character re-upserts under a new actorId.
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
+    expect(tracker.getActiveStatusesForName("Hero", 1_000)).toHaveLength(0); // orphaned until the re-upsert arrives
+
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 2, displayName: "Hero", uid: "hero-uid" });
+    const [migrated] = tracker.getActiveStatusesForName("Hero", 1_000);
+    expect(migrated).toMatchObject({ statusId: "SelfBuff", appliedAtMs: 0 });
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0); // nothing left orphaned under the old actorId
+  });
+
+  test("a reset+re-upsert without a uid does not migrate statuses (avoids misattributing a recycled actorId)", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero" });
+    tracker.consume(statusEvent({ actorId: 1, statusId: "SelfBuff", level: 5, action: "applied" }), 0);
+
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 2, displayName: "Hero" });
+    expect(tracker.getActiveStatusesForName("Hero", 1_000)).toHaveLength(0);
+  });
 });
