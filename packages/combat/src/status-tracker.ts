@@ -5,7 +5,7 @@ import {
 } from "@kar-mi/spirit-vale-tools-statuses";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import type { FishNetCombatEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
+import type { FishNetCombatActivationEvent, FishNetCombatEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
 
 export interface FishNetActiveStatus {
   statusId: string;
@@ -41,8 +41,8 @@ export class FishNetStatusTracker {
   }
 
   consume(event: FishNetCombatEvent, observedAtMs: number): void {
-    if (event.kind !== "status") return;
-    this.consumeStatus(event, observedAtMs);
+    if (event.kind === "status") this.consumeStatus(event, observedAtMs);
+    else if (event.kind === "activation") this.consumeActivation(event, observedAtMs);
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent): void {
@@ -74,6 +74,27 @@ export class FishNetStatusTracker {
       ...(durationSeconds === undefined ? {} : { expiresAtMs: observedAtMs + durationSeconds * 1_000 }),
     });
     this.active.set(event.actorId, statuses);
+  }
+
+  /**
+   * Refreshes a self-granted status's timer when its granting skill activates again.
+   * Some skills (e.g. Haste, Axe Quicken) don't resend ApplyEffect_T on recast while
+   * already active - the activation event is the only wire-level trace of the recast,
+   * so it's used as a refresh signal. Only self-granting skills (whose id matches an
+   * already-active status of the same actor) are refreshed this way; skills that grant
+   * a differently-named status are left alone since we can't tell whether a given
+   * activation actually re-applied that status without an explicit ApplyEffect_T.
+   */
+  private consumeActivation(event: FishNetCombatActivationEvent, observedAtMs: number): void {
+    if (event.phase === "interrupt" || event.phase === "cancel") return;
+    if (!event.sourceId) return;
+    const statuses = this.active.get(event.actorId);
+    const tracked = statuses?.get(event.sourceId);
+    if (!tracked) return;
+    const definition = this.directory.resolve(event.sourceId);
+    const durationSeconds = statusDurationSeconds(definition, event.level ?? tracked.level);
+    tracked.appliedAtMs = observedAtMs;
+    tracked.expiresAtMs = durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
   }
 
   /** Drops statuses whose computed duration has elapsed; servers do not always send an explicit remove. */

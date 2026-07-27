@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import { FishNetStatusTracker } from "./status-tracker.ts";
-import type { FishNetCombatStatusEvent } from "./combat-tracker.ts";
+import type { FishNetCombatActivationEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
 
 const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
   buildFingerprint: "synthetic-build",
@@ -23,6 +23,15 @@ const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
       fixedDuration: false,
       effects: [],
     },
+    {
+      id: "SelfBuff",
+      displayName: "Self Buff",
+      isDebuff: false,
+      maxLevel: 0,
+      fixedDuration: false,
+      // Self-granting: the skill that casts it shares the same id, like Haste/TwohandQuicken.
+      effects: [{ id: "SelfBuff", duration: 0, durationPerLevel: 60, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 }],
+    },
   ],
 };
 
@@ -37,6 +46,22 @@ function statusEvent(overrides: Partial<FishNetCombatStatusEvent> = {}): FishNet
     statusId: "Burn",
     level: 1,
     action: "applied",
+    ...overrides,
+  };
+}
+
+function activationEvent(overrides: Partial<FishNetCombatActivationEvent> = {}): FishNetCombatActivationEvent {
+  return {
+    kind: "activation",
+    rpc: "CastComplete_C",
+    tick: 0,
+    payloadBytes: 0,
+    fields: {},
+    actorId: 1,
+    actionKind: "skill",
+    phase: "begin",
+    sourceId: "SelfBuff",
+    level: 5,
     ...overrides,
   };
 }
@@ -105,6 +130,33 @@ describe("FishNetStatusTracker", () => {
     const merged = tracker.getActiveStatusesForActors([1, 2], 0);
     expect(merged).toHaveLength(2);
     expect(merged.find((status) => status.statusId === "Aura")?.appliedAtMs).toBe(1_000);
+  });
+
+  test("consume() refreshes a self-granted status's expiry when its skill activates again", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consume(statusEvent({ statusId: "SelfBuff", level: 5, action: "applied" }), 0);
+    const initial = tracker.getActiveStatuses(1, 0)[0];
+    expect(initial?.expiresAtMs).toBe(240_000); // 0 + (5-1)*60s
+
+    tracker.consume(activationEvent(), 200_000); // recast with 40s left on the clock
+    const refreshed = tracker.getActiveStatuses(1, 200_000)[0];
+    expect(refreshed?.appliedAtMs).toBe(200_000);
+    expect(refreshed?.expiresAtMs).toBe(440_000);
+    expect(refreshed?.remainingMs).toBe(240_000);
+  });
+
+  test("consume() ignores activations for skills that aren't an already-active status", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consume(activationEvent({ sourceId: "SelfBuff" }), 0);
+    expect(tracker.getActiveStatuses(1, 0)).toHaveLength(0);
+  });
+
+  test("consume() ignores interrupted/cancelled activations", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consume(statusEvent({ statusId: "SelfBuff", level: 5 }), 0);
+    tracker.consume(activationEvent({ phase: "interrupt" }), 200_000);
+    const active = tracker.getActiveStatuses(1, 200_000)[0];
+    expect(active?.appliedAtMs).toBe(0);
   });
 
   test("reset() clears all tracked statuses", () => {
