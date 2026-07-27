@@ -6,7 +6,7 @@ export interface FishNetDpsMeterOptions {
   idleGapMs?: number;
   /** Minimum duration used as the DPS divisor. Defaults to one second. */
   minimumDurationMs?: number;
-  /** Milliseconds of recent damage included in current DPS. Defaults to 15 seconds. */
+  /** Milliseconds of recent damage included in current DPS. Defaults to 5 seconds. */
   currentWindowMs?: number;
   /** Milliseconds to wait for a late identity before showing unidentified damage. Defaults to ten seconds. */
   anonymousIdentityGraceMs?: number;
@@ -124,7 +124,7 @@ interface EncounterAggregate {
 
 const DEFAULT_IDLE_GAP_MS = 30_000;
 const DEFAULT_MINIMUM_DURATION_MS = 1_000;
-const DEFAULT_CURRENT_WINDOW_MS = 15_000;
+const DEFAULT_CURRENT_WINDOW_MS = 5_000;
 const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 const DEFAULT_REPLAY_TICKS_PER_SECOND = 30;
 const ANALYSIS_BUCKET_MS = 5_000;

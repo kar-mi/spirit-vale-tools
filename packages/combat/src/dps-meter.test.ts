@@ -413,39 +413,39 @@ describe("FishNetDpsMeter", () => {
     test("ramps the divisor up to the rolling window duration", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 300), 0);
-      meter.consumeCombat(damage(101, 300), 10_000);
+      meter.consumeCombat(damage(101, 300), 3_000);
 
-      expect(meter.getLatestSnapshot(10_000)).toMatchObject({
-        partyCurrentDps: 60,
-        actors: [{ currentDps: 60 }],
-        personal: { currentDps: 60 },
+      expect(meter.getLatestSnapshot(3_000)).toMatchObject({
+        partyCurrentDps: 200,
+        actors: [{ currentDps: 200 }],
+        personal: { currentDps: 200 },
       });
     });
 
     test("includes only damage inside the rolling window", () => {
-      const meter = new FishNetDpsMeter();
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
-      meter.consumeCombat(damage(101, 150), 29_000);
+      meter.consumeCombat(damage(101, 50), 9_000);
 
-      expect(meter.getLatestSnapshot(31_000)?.actors[0]?.currentDps).toBe(10);
+      expect(meter.getLatestSnapshot(9_000)?.actors[0]?.currentDps).toBe(10);
     });
 
     test("drops hits at the window boundary and reaches zero after the last hit expires", () => {
-      const meter = new FishNetDpsMeter();
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 150), 0);
-      meter.consumeCombat(damage(101, 150), 7_500);
+      meter.consumeCombat(damage(101, 150), 2_500);
 
-      expect(meter.getLatestSnapshot(15_000)?.actors[0]?.currentDps).toBe(10);
-      expect(meter.getLatestSnapshot(22_500)?.actors[0]?.currentDps).toBe(0);
+      expect(meter.getLatestSnapshot(5_000)?.actors[0]?.currentDps).toBe(30);
+      expect(meter.getLatestSnapshot(7_500)?.actors[0]?.currentDps).toBe(0);
     });
 
     test("defaults the window end to the last damage timestamp", () => {
-      const meter = new FishNetDpsMeter();
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
-      meter.consumeCombat(damage(101, 200), 14_000);
+      meter.consumeCombat(damage(101, 200), 4_000);
 
       expect(meter.getLatestSnapshot()?.actors[0]?.currentDps)
-        .toBe(meter.getLatestSnapshot(14_000)?.actors[0]?.currentDps);
+        .toBe(meter.getLatestSnapshot(4_000)?.actors[0]?.currentDps);
     });
 
     test("supports a custom window and validates its duration", () => {
@@ -468,8 +468,8 @@ describe("FishNetDpsMeter", () => {
       meter.consumeCombat(damage(202, 300), 10_000);
 
       const snapshot = meter.getLatestSnapshot(10_000);
-      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([10]);
-      expect(snapshot?.partyCurrentDps).toBe(40);
+      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([0]);
+      expect(snapshot?.partyCurrentDps).toBe(60);
     });
   });
 });
