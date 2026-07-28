@@ -95,7 +95,8 @@ export class HealthComponentRpcDefinition {
       "parameters": [
         {
           "name": "amount",
-          "typeName": "System.Int32"
+          "typeName": "System.Int32",
+          "codec": "packedInt32"
         },
         {
           "name": "settings",

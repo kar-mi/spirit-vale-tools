@@ -34,8 +34,10 @@ export type {
   FishNetCombatDamageEvent,
   FishNetCombatDeathEvent,
   FishNetCombatEvent,
+  FishNetCombatHealEvent,
   FishNetCombatStatusEvent,
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
+  FishNetHealAttribution,
   FishNetHitResult,
 } from "./combat-tracker.ts";

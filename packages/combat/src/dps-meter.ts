@@ -215,9 +215,10 @@ export class FishNetDpsMeter {
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
     requireTimestamp(observedAtMs);
-    if (event.actorIdentity) {
-      const previousIdentity = this.identities.get(event.actorId);
-      this.identities.set(event.actorId, {
+    const actorId = event.actorId;
+    if (event.actorIdentity && actorId !== undefined) {
+      const previousIdentity = this.identities.get(actorId);
+      this.identities.set(actorId, {
         displayName: event.actorIdentity.displayName,
         ...(event.actorIdentity.archetype ?? previousIdentity?.archetype) === undefined
           ? {} : { archetype: event.actorIdentity.archetype ?? previousIdentity?.archetype },

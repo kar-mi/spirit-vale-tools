@@ -19,6 +19,22 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "status", tick: 1, actorId: 2, statusId: "Bleed", level: 3, action: "applied" });
   });
 
+  test("keeps heal record fields while dropping raw payload/fields", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", value: 150,
+      attribution: "exact", fields: { amount: 150 }, payloadBytes: 4,
+    });
+    expect(value).toEqual({ kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", value: 150 });
+  });
+
+  test("keeps an unattributed heal record without a healer", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "heal", tick: 1, targetId: 20, value: 60, attribution: "unattributed",
+      fields: { amount: 60 }, payloadBytes: 4,
+    });
+    expect(value).toEqual({ kind: "heal", tick: 1, targetId: 20, value: 60 });
+  });
+
   test("drops diagnostics and unknown records", () => {
     expect(sanitizeCombatData("combat.spawnIdentityMiss", { raw: "payload" })).toBeUndefined();
     expect(sanitizeCombatData("combat.warning", { message: "error" })).toBeUndefined();
