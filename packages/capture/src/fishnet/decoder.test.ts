@@ -369,6 +369,59 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
+  test("resolves a hash shared by two behaviours once the other one is bound on the same object", () => {
+    const map: FishNetRpcMap = {
+      buildFingerprint: "synthetic-elimination",
+      metadataVersion: 31,
+      behaviours: [{
+        typeName: "SyntheticHealth",
+        rpcs: [
+          { wireHash: 0, packetKind: "serverRpc", methodName: "SyntheticApplyDamage" },
+          { wireHash: 1, packetKind: "serverRpc", methodName: "SyntheticRecover" },
+          { wireHash: 2, packetKind: "serverRpc", methodName: "SyntheticDeath" },
+        ],
+      }, {
+        typeName: "SyntheticSkills",
+        rpcs: [
+          { wireHash: 1, packetKind: "serverRpc", methodName: "SyntheticSkillRecover" },
+          { wireHash: 9, packetKind: "serverRpc", methodName: "SyntheticCastBegin" },
+        ],
+      }],
+    };
+    const decoder = new FishNetSessionDecoder(map);
+    const context = { reliable: true, connectionId: "elimination" };
+
+    // Recover (hash 1) arrives for an object whose components are entirely unknown: ambiguous
+    // between SyntheticHealth and SyntheticSkills, exactly like HealthComponent/SkillsComponent's
+    // shared Recover_C hash before either component has been observed.
+    const cold = decoder.decode(tick(40, fixedServerRpc(60, 3, 1)), context);
+    expect(cold[0]).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
+
+    // A skill cast (hash 9, unique to SyntheticSkills) on a *different* component index of the
+    // same object establishes that index 5 is SyntheticSkills.
+    const castBegin = decoder.decode(tick(41, fixedServerRpc(60, 5, 9)), context);
+    expect(castBegin[0]).toMatchObject({ networkBehaviourType: "SyntheticSkills", rpcResolution: "verified" });
+
+    // Recover on index 3 is ambiguous in isolation, but index 5 is already claimed by
+    // SyntheticSkills on this same object, so index 3 must be SyntheticHealth.
+    const warm = decoder.decode(tick(42, fixedServerRpc(60, 3, 1)), context);
+    expect(warm[0]).toMatchObject({
+      networkBehaviourType: "SyntheticHealth",
+      rpcName: "SyntheticRecover",
+      rpcResolution: "verified",
+    });
+
+    // A second Recover on the same object+component now resolves directly from the bound state,
+    // without needing to re-run elimination.
+    const bound = decoder.decode(tick(43, fixedServerRpc(60, 3, 1)), context);
+    expect(bound[0]).toMatchObject({ networkBehaviourType: "SyntheticHealth", rpcName: "SyntheticRecover" });
+
+    // A wholly unrelated object with no bound components stays ambiguous: elimination never
+    // guesses when there is nothing to eliminate against.
+    const unrelated = decoder.decode(tick(44, fixedServerRpc(61, 3, 1)), context);
+    expect(unrelated[0]).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
+  });
+
   test("decodes ordered nested parameters and preserves a truncated remainder", () => {
     const fields = [{
       name: "Inputs",

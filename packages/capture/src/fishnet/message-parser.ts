@@ -11,6 +11,7 @@ import {
 import type { RpcLinkRegistrationState } from "./protocol.ts";
 import {
   applyRpcLookup,
+  eliminateBoundBehaviourTypes,
   findBroadcast,
   findSyncType,
   inferBehaviourType,
@@ -266,16 +267,30 @@ function parseFixedRpc(
       ? inferBehaviourType(options.rpcMap, packetName as FishNetRpcPacketName, hash8, hash16)
       : undefined;
     if (inferredType !== undefined) packet.networkBehaviourType = inferredType;
-    const lookup = lookupRpc(options.rpcMap, packet.networkBehaviourType, packetName as FishNetRpcPacketName, hash8, hash16);
+    let lookup = lookupRpc(options.rpcMap, packet.networkBehaviourType, packetName as FishNetRpcPacketName, hash8, hash16);
+    // Some RPCs share the same wire hash and packet kind across behaviour types (e.g.
+    // HealthComponent.Recover_C vs. SkillsComponent.Recover_C) and can't be told apart by
+    // signature alone. If every candidate but one is already bound to a different component
+    // index on this same object, the object-has-one-instance-per-type invariant picks the
+    // remaining candidate, even without ever having resolved this exact component before.
+    let eliminatedType: string | undefined;
+    if (lookup.resolution === "ambiguous" && lookup.ambiguousBehaviourTypes) {
+      eliminatedType = eliminateBoundBehaviourTypes(state.components, header.objectId, header.componentIndex, lookup.ambiguousBehaviourTypes);
+      if (eliminatedType !== undefined) {
+        packet.networkBehaviourType = eliminatedType;
+        lookup = lookupRpc(options.rpcMap, eliminatedType, packetName as FishNetRpcPacketName, hash8, hash16);
+      }
+    }
     const wireHash = lookup.wireHash;
     if (wireHash !== undefined) packet.rpcHash = wireHash;
     packet.payload = buffer.subarray(rpcStart + (wireHash !== undefined && wireHash > 0xff ? 2 : 1), end);
     applyRpcLookup(packet, lookup);
+    const boundType = inferredType ?? eliminatedType;
     return {
       packet,
       end,
       stop,
-      componentBindings: inferredType === undefined ? undefined : [[key, inferredType]],
+      componentBindings: boundType === undefined ? undefined : [[key, boundType]],
     };
   } catch {
     return { packet: opaquePacket(buffer, start, tick, bundleIndex, packetName), end: buffer.length, stop: true };

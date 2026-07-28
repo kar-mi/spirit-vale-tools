@@ -15,6 +15,8 @@ export interface RpcLookup {
   wireHash?: number;
   methodName?: string;
   parameters?: readonly FishNetRpcParameter[];
+  /** Candidate behaviour type names, when `resolution` is `"ambiguous"`. */
+  ambiguousBehaviourTypes?: readonly string[];
 }
 
 export function bindBehaviourTypes(
@@ -71,10 +73,34 @@ export function lookupRpc(
   const behaviours = networkBehaviourType
     ? map.behaviours.filter(({ typeName }) => typeName === networkBehaviourType)
     : map.behaviours;
-  const matches = behaviours.flatMap(({ rpcs }) => rpcs.filter((rpc) => {
-    return rpc.packetKind === packetName && hashes.has(rpc.wireHash);
-  }));
+  const matches = behaviours.flatMap(({ typeName, rpcs }) => rpcs
+    .filter((rpc) => rpc.packetKind === packetName && hashes.has(rpc.wireHash))
+    .map((rpc) => ({ ...rpc, typeName })));
   return definitionLookup(matches);
+}
+
+/**
+ * Narrows an ambiguous behaviour-type match using the invariant that a NetworkObject has at most
+ * one instance of each behaviour type. If every candidate but one is already bound to a *different*
+ * component index on the same object, the remaining candidate must be this component's real type —
+ * even though its own RPC signature alone can't distinguish it (e.g. `HealthComponent.Recover_C` vs.
+ * `SkillsComponent.Recover_C`, which share the same wire hash and packet kind).
+ */
+export function eliminateBoundBehaviourTypes(
+  components: ReadonlyMap<string, string>,
+  objectId: number,
+  componentIndex: number,
+  candidates: readonly string[],
+): string | undefined {
+  const selfKey = componentKey(objectId, componentIndex);
+  const prefix = `${objectId}:`;
+  const boundElsewhere = new Set<string>();
+  for (const [key, typeName] of components) {
+    if (key === selfKey || !key.startsWith(prefix)) continue;
+    boundElsewhere.add(typeName);
+  }
+  const remaining = candidates.filter((typeName) => !boundElsewhere.has(typeName));
+  return remaining.length === 1 ? remaining[0] : undefined;
 }
 
 export function applyRpcLookup(packet: DecodedFishNetPacket, lookup: RpcLookup): void {
@@ -103,7 +129,7 @@ function rpcFingerprint(values: Array<{ wireHash: number; packetKind: FishNetRpc
   return values.map(({ wireHash, packetKind }) => `${wireHash}:${packetKind}`).sort().join(",");
 }
 
-function definitionLookup(matches: readonly FishNetRpcDefinition[]): RpcLookup {
+function definitionLookup(matches: readonly (FishNetRpcDefinition & { typeName?: string })[]): RpcLookup {
   const wireHashes = new Set(matches.map(({ wireHash }) => wireHash));
   if (matches.length === 1 && matches[0]) {
     return {
@@ -113,8 +139,12 @@ function definitionLookup(matches: readonly FishNetRpcDefinition[]): RpcLookup {
       parameters: matches[0].parameters,
     };
   }
+  const ambiguousBehaviourTypes = matches.length > 1
+    ? [...new Set(matches.map(({ typeName }) => typeName).filter((typeName): typeName is string => typeName !== undefined))]
+    : undefined;
   return {
     resolution: matches.length > 1 ? "ambiguous" : "unresolved",
+    ambiguousBehaviourTypes: ambiguousBehaviourTypes?.length ? ambiguousBehaviourTypes : undefined,
     wireHash: wireHashes.size === 1 ? wireHashes.values().next().value : undefined,
   };
 }
