@@ -163,6 +163,16 @@ interface ActivationState {
   inferred: boolean;
 }
 
+/** Attribution for a target's currently active "Regeneration" status, resolved once when the
+ * status is applied and reused for every Recover_C tick until RemoveEffect_T clears it. */
+interface RegenSourceState {
+  actorId?: number;
+  sourceId?: string;
+  sourceLabel?: string;
+  activationId?: string;
+  candidateActivationIds?: string[];
+}
+
 const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> = {
   0: "normal",
   1: "critical",
@@ -173,7 +183,11 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 /** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. Extend as more
  * are confirmed in captures — this is a best-effort allowlist, not derived from game data. */
-const HEALING_SKILL_IDS = new Set(["Heal", "HealAll", "HighHeal", "FieldHealing"]);
+const HEALING_SKILL_IDS = new Set(["Heal", "HighHeal", "FieldHealing"]);
+/** Skill ids that heal indirectly by granting the "Regeneration" status (per
+ * packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
+const REGEN_SKILL_IDS = new Set(["HealAll", "Sanctuary", "GuardianBond", "SanctuaryField"]);
+const REGEN_STATUS_ID = "Regeneration";
 
 /** Converts decoded FishNet RPCs into actor-grouped combat events and summaries. */
 export class FishNetCombatTracker {
@@ -182,6 +196,7 @@ export class FishNetCombatTracker {
   private readonly skillLabels: Map<string, string>;
   private readonly actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   private readonly activations = new Map<string, ActivationState>();
+  private readonly activeRegenSources = new Map<number, RegenSourceState>();
   private readonly recentDamageSignatures = new Set<string>();
   private recentDamageTick: number | undefined;
   private nextActivation = 1;
@@ -253,6 +268,7 @@ export class FishNetCombatTracker {
 
   reset(): void {
     this.activations.clear();
+    this.activeRegenSources.clear();
     this.recentDamageSignatures.clear();
     this.recentDamageTick = undefined;
   }
@@ -440,7 +456,7 @@ export class FishNetCombatTracker {
   private consumeRecover(packet: DecodedFishNetPacket): FishNetCombatHealEvent {
     const targetId = packet.objectId!;
     const value = requiredNumberField(packet, "amount");
-    const candidates = this.eligibleHealActivations(packet.tick, targetId);
+    const candidates = this.eligibleHealActivations(packet.tick, targetId, HEALING_SKILL_IDS);
 
     let attribution: FishNetHealAttribution;
     let actorId: number | undefined;
@@ -448,9 +464,7 @@ export class FishNetCombatTracker {
     let sourceLabel: string | undefined;
     let activationId: string | undefined;
     let candidateActivationIds: string[] | undefined;
-    if (candidates.length === 0) {
-      attribution = "unattributed";
-    } else if (candidates.length === 1) {
+    if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
       attribution = candidate.inferred ? "inferred" : "exact";
@@ -458,9 +472,23 @@ export class FishNetCombatTracker {
       sourceId = candidate.sourceId;
       sourceLabel = candidate.sourceLabel;
       activationId = candidate.id;
-    } else {
+    } else if (candidates.length > 1) {
       attribution = "ambiguous";
       candidateActivationIds = candidates.map(({ id }) => id);
+    } else {
+      const regenSource = this.activeRegenSources.get(targetId);
+      if (regenSource?.candidateActivationIds) {
+        attribution = "ambiguous";
+        candidateActivationIds = regenSource.candidateActivationIds;
+      } else if (regenSource?.actorId !== undefined) {
+        attribution = "inferred";
+        actorId = regenSource.actorId;
+        sourceId = regenSource.sourceId;
+        sourceLabel = regenSource.sourceLabel;
+        activationId = regenSource.activationId;
+      } else {
+        attribution = "unattributed";
+      }
     }
 
     return {
@@ -481,11 +509,11 @@ export class FishNetCombatTracker {
     };
   }
 
-  private eligibleHealActivations(tick: number, recipientId: number): ActivationState[] {
+  private eligibleHealActivations(tick: number, recipientId: number, skillIds: ReadonlySet<string>): ActivationState[] {
     return [...this.activations.values()].filter((activation) =>
       activation.actionKind === "skill"
       && activation.sourceId !== undefined
-      && HEALING_SKILL_IDS.has(activation.sourceId)
+      && skillIds.has(activation.sourceId)
       && activation.startTick <= tick
       && (activation.deadlineTick === undefined || tick <= activation.deadlineTick)
       && activation.targetId === recipientId);
@@ -496,6 +524,27 @@ export class FishNetCombatTracker {
     const level = numberField(packet, "level");
     if (statusId === undefined || level === undefined) return undefined;
     const actorId = packet.objectId!;
+    if (statusId === REGEN_STATUS_ID) {
+      if (packet.rpcName === "ApplyEffect_T") {
+        const candidates = this.eligibleHealActivations(packet.tick, actorId, REGEN_SKILL_IDS);
+        if (candidates.length === 1) {
+          const [candidate] = candidates;
+          if (!candidate) throw new Error("missing combat activation candidate");
+          this.activeRegenSources.set(actorId, {
+            actorId: candidate.actorId,
+            sourceId: candidate.sourceId,
+            sourceLabel: candidate.sourceLabel,
+            activationId: candidate.id,
+          });
+        } else if (candidates.length > 1) {
+          this.activeRegenSources.set(actorId, { candidateActivationIds: candidates.map(({ id }) => id) });
+        } else {
+          this.activeRegenSources.delete(actorId);
+        }
+      } else {
+        this.activeRegenSources.delete(actorId);
+      }
+    }
     return {
       kind: "status",
       rpc: packet.rpcName as "ApplyEffect_T" | "RemoveEffect_T",

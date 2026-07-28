@@ -382,7 +382,7 @@ describe("FishNetCombatTracker", () => {
   test("marks overlapping healing activations targeting the same recipient as ambiguous", () => {
     const tracker = new FishNetCombatTracker();
     const [first] = tracker.consume(castTargeting(1, 10, "Heal", 20));
-    const [second] = tracker.consume(castTargeting(2, 11, "HealAll", 20));
+    const [second] = tracker.consume(castTargeting(2, 11, "HighHeal", 20));
     const [heal] = tracker.consume(recover(3, 20, 80));
 
     expect(heal).toMatchObject({
@@ -425,5 +425,59 @@ describe("FishNetCombatTracker", () => {
     const resourceRecover = packet(1, 10, "SkillsComponent", "Recover_C", [field("amount", 25)]);
 
     expect(tracker.consume(resourceRecover)).toEqual([]);
+  });
+
+  test("attributes Recover_C ticks under an active Regeneration status to the skill that granted it", () => {
+    const tracker = new FishNetCombatTracker();
+    const [cast] = tracker.consume(castTargeting(1, 10, "Sanctuary", 20));
+    tracker.consume(statusEffect(2, 20, "ApplyEffect_T", [field("statusId", "Regeneration"), field("level", 1)]));
+    const [firstTick] = tracker.consume(recover(32, 20, 50));
+    const [secondTick] = tracker.consume(recover(62, 20, 50));
+
+    const activationId = cast && "activationId" in cast ? cast.activationId : undefined;
+    expect(firstTick).toMatchObject({
+      kind: "heal",
+      targetId: 20,
+      actorId: 10,
+      sourceId: "Sanctuary",
+      attribution: "inferred",
+      activationId,
+    });
+    expect(secondTick).toMatchObject({
+      kind: "heal",
+      targetId: 20,
+      actorId: 10,
+      sourceId: "Sanctuary",
+      attribution: "inferred",
+      activationId,
+    });
+  });
+
+  test("stops attributing Recover_C ticks once RemoveEffect_T clears the Regeneration status", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(castTargeting(1, 10, "GuardianBond", 20));
+    tracker.consume(statusEffect(2, 20, "ApplyEffect_T", [field("statusId", "Regeneration"), field("level", 1)]));
+    tracker.consume(statusEffect(32, 20, "RemoveEffect_T", [field("statusId", "Regeneration"), field("level", 1)]));
+    const [heal] = tracker.consume(recover(62, 20, 50));
+
+    expect(heal).toMatchObject({ kind: "heal", attribution: "unattributed", actorId: undefined });
+  });
+
+  test("marks Recover_C ticks under an ambiguous Regeneration status as ambiguous", () => {
+    const tracker = new FishNetCombatTracker();
+    const [first] = tracker.consume(castTargeting(1, 10, "Sanctuary", 20));
+    const [second] = tracker.consume(castTargeting(2, 11, "SanctuaryField", 20));
+    tracker.consume(statusEffect(3, 20, "ApplyEffect_T", [field("statusId", "Regeneration"), field("level", 1)]));
+    const [heal] = tracker.consume(recover(32, 20, 50));
+
+    expect(heal).toMatchObject({
+      kind: "heal",
+      attribution: "ambiguous",
+      actorId: undefined,
+      candidateActivationIds: [
+        first && "activationId" in first ? first.activationId : undefined,
+        second && "activationId" in second ? second.activationId : undefined,
+      ],
+    });
   });
 });
