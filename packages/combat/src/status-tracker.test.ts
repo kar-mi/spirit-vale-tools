@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import { FishNetStatusTracker } from "./status-tracker.ts";
-import type { FishNetCombatActivationEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
+import type { FishNetCombatActivationEvent, FishNetCombatDeathEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
 
 const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
   buildFingerprint: "synthetic-build",
@@ -46,6 +46,33 @@ function statusEvent(overrides: Partial<FishNetCombatStatusEvent> = {}): FishNet
     statusId: "Burn",
     level: 1,
     action: "applied",
+    ...overrides,
+  };
+}
+
+function deathEvent(overrides: Partial<FishNetCombatDeathEvent> = {}): FishNetCombatDeathEvent {
+  return {
+    kind: "death",
+    rpc: "Death_C",
+    tick: 0,
+    payloadBytes: 0,
+    fields: {},
+    actorId: 99,
+    targetId: 1,
+    sourceId: "",
+    sourceLabel: "",
+    value: 0,
+    hitResult: "normal",
+    wireHits: 1,
+    damageType: 0,
+    team: 0,
+    element: 0,
+    weaponType: 0,
+    range: 0,
+    isClone: false,
+    isSummon: false,
+    attribution: "exact",
+    duplicatesDamageEvent: false,
     ...overrides,
   };
 }
@@ -195,20 +222,34 @@ describe("FishNetStatusTracker identity resolution", () => {
     expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(0);
   });
 
-  test("a reset followed by a re-upsert for the same uid carries still-active statuses to the new actorId", () => {
+  test("a reset clears active statuses instead of carrying them to the re-upserted actorId", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero", uid: "hero-uid" });
     tracker.consume(statusEvent({ actorId: 1, statusId: "SelfBuff", level: 5, action: "applied" }), 0);
     expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(1);
 
-    // Zone transition: reset clears learned names, then the same character re-upserts under a new actorId.
+    // Zone transition: reset drops everything tracked so far - a stale status with no expiry
+    // (e.g. one whose remove packet was dropped) doesn't get carried forward into the new zone.
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
-    expect(tracker.getActiveStatusesForName("Hero", 1_000)).toHaveLength(0); // orphaned until the re-upsert arrives
-
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 2, displayName: "Hero", uid: "hero-uid" });
-    const [migrated] = tracker.getActiveStatusesForName("Hero", 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
+    expect(tracker.getActiveStatuses(2, 1_000)).toHaveLength(0);
+
+    // A status that's genuinely still active gets re-applied by the server after the zone loads.
+    tracker.consume(statusEvent({ actorId: 2, statusId: "SelfBuff", level: 5, action: "applied" }), 1_000);
+    expect(tracker.getActiveStatuses(2, 1_000)).toHaveLength(1);
+  });
+
+  test("a uid re-upsert without an intervening reset migrates still-active statuses to the new actorId", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 0, actorId: 1, displayName: "Hero", uid: "hero-uid" });
+    tracker.consume(statusEvent({ actorId: 1, statusId: "SelfBuff", level: 5, action: "applied" }), 0);
+
+    // Ownership handoff (or similar) reassigns the same uid to a new actorId with no reset in between.
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 1, actorId: 2, displayName: "Hero", uid: "hero-uid" });
+    const [migrated] = tracker.getActiveStatuses(2, 1_000);
     expect(migrated).toMatchObject({ statusId: "SelfBuff", appliedAtMs: 0 });
-    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0); // nothing left orphaned under the old actorId
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
   });
 
   test("a reset+re-upsert without a uid does not migrate statuses (avoids misattributing a recycled actorId)", () => {
@@ -219,5 +260,32 @@ describe("FishNetStatusTracker identity resolution", () => {
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 2, displayName: "Hero" });
     expect(tracker.getActiveStatusesForName("Hero", 1_000)).toHaveLength(0);
+  });
+
+  test("a zone reset clears a toggle status that has no expiry, even without a matching remove", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura" }), 0);
+    expect(tracker.getActiveStatuses(1, 0)).toHaveLength(1);
+
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
+  });
+
+  test("despawn clears a toggle status that has no expiry, even without a matching remove", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura" }), 0);
+    expect(tracker.getActiveStatuses(1, 0)).toHaveLength(1);
+
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "remove", tick: 1, actorId: 1 });
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
+  });
+
+  test("death clears a toggle status on the actor that died, even without a matching remove", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Aura" }), 0);
+    expect(tracker.getActiveStatuses(1, 0)).toHaveLength(1);
+
+    tracker.consume(deathEvent({ actorId: 99, targetId: 1 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
   });
 });

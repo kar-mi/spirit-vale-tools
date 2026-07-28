@@ -36,9 +36,10 @@ export class FishNetStatusTracker {
   /** Actor display names, tracked independently of damage so statuses resolve before an actor has hit anything. */
   private readonly identities = new Map<number, string>();
   /**
-   * Last known actorId per uid, kept across actorIdentity resets (zone transitions/relogs
-   * reassign a fresh actorId to the same character). Lets a re-upsert for a known uid carry
-   * its still-active statuses over to the new actorId instead of orphaning them.
+   * Last known actorId per uid. A `reset` (zone transition/relog) always clears `active` for
+   * every actorId before any later upsert is processed, so migrateActive is a no-op on that
+   * path; it only matters for a uid re-upserting under a new actorId without an intervening
+   * reset (e.g. ownership handoff), where it still carries statuses forward.
    */
   private readonly actorIdByUid = new Map<string, number>();
 
@@ -49,15 +50,18 @@ export class FishNetStatusTracker {
   consume(event: FishNetCombatEvent, observedAtMs: number): void {
     if (event.kind === "status") this.consumeStatus(event, observedAtMs);
     else if (event.kind === "activation") this.consumeActivation(event, observedAtMs);
+    else if (event.kind === "death") this.active.delete(event.targetId);
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent): void {
     if (event.operation === "reset") {
       this.identities.clear();
+      this.active.clear();
       return;
     }
     if (event.operation === "remove") {
       this.identities.delete(event.actorId);
+      this.active.delete(event.actorId);
       return;
     }
     if (event.uid) {
@@ -71,10 +75,11 @@ export class FishNetStatusTracker {
   }
 
   /**
-   * Carries statuses tracked under a stale actorId over to the actorId the same uid was
-   * just reassigned. Without this, a reset (which clears `identities` to avoid misattributing
-   * a recycled actorId to the wrong character) permanently orphans still-active statuses -
-   * e.g. an in-progress Haste buff silently disappearing from the overlay after a zone change.
+   * Carries statuses tracked under a stale actorId over to the actorId the same uid was just
+   * reassigned, for a uid re-upsert that wasn't preceded by a `reset` (e.g. ownership handoff).
+   * Statuses that were merely orphaned by a `reset` are already gone by the time this runs -
+   * a zone transition re-syncs whatever's genuinely still active via fresh ApplyEffect_T
+   * packets, so nothing still-active is lost by clearing on reset.
    */
   private migrateActive(fromActorId: number, toActorId: number): void {
     const fromStatuses = this.active.get(fromActorId);
