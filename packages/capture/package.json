@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-capture",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Passive Windows packet capture and Spirit Vale protocol decoding for Bun.",
   "type": "module",
   "engines": {
