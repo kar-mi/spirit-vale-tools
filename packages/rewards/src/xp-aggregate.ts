@@ -13,21 +13,39 @@ export interface XpAggregateSnapshot {
   timeline: XpAggregateBucket[];
 }
 
+/** Durable checkpoint of a tracker's progress, safe to persist and later restore with `restoreCheckpoint`. */
+export interface XpAggregateCheckpoint {
+  total: number;
+  watermarkMs: number;
+  /** How many kills were already counted at exactly `watermarkMs` — disambiguates kills that share a timestamp (e.g. an AoE clearing several mobs at once) from a duplicate replay of the same kill. */
+  watermarkOccurrences: number;
+}
+
 export class XpAggregateTracker {
   private total = 0;
   private watermarkMs = 0;
+  private watermarkOccurrences = 0;
+  private replayedAtWatermark = 0;
   private readonly buckets: XpAggregateBucket[] = [];
 
   /**
    * `atMs` must be the kill's real recorded time, not wall-clock consume time: a fresh log
    * follower (e.g. after a window is closed and reopened) re-tails the current session's log
-   * from the start, re-emitting every kill already counted. Anything at or before the watermark
-   * is treated as already accounted for and skipped, so reopening a window (or resetting, which
-   * bumps the watermark to "now") can't re-inflate the total.
+   * from the start, re-emitting every kill already counted. Anything strictly before the
+   * watermark is skipped outright; kills sharing the watermark's own timestamp are disambiguated
+   * by position (see `watermarkOccurrences`) so a genuine tie (several kills recorded in the same
+   * millisecond) isn't mistaken for a duplicate replay, and vice versa.
    */
   record(experience: number, atMs: number): void {
     if (experience <= 0 || atMs < this.watermarkMs) return;
-    this.watermarkMs = atMs;
+    if (atMs > this.watermarkMs) {
+      this.watermarkMs = atMs;
+      this.watermarkOccurrences = 0;
+      this.replayedAtWatermark = 0;
+    }
+    this.replayedAtWatermark += 1;
+    if (this.replayedAtWatermark <= this.watermarkOccurrences) return;
+    this.watermarkOccurrences = this.replayedAtWatermark;
     this.total += experience;
     const second = Math.floor(atMs / 1_000) * 1_000;
     const last = this.buckets.at(-1);
@@ -40,21 +58,27 @@ export class XpAggregateTracker {
   reset(atMs: number): void {
     this.total = 0;
     this.buckets.length = 0;
-    this.watermarkMs = Math.max(this.watermarkMs, atMs);
+    if (atMs >= this.watermarkMs) {
+      this.watermarkMs = atMs;
+      this.watermarkOccurrences = 0;
+    }
+    this.replayedAtWatermark = 0;
   }
 
   /** Seeds the running total and watermark from a durable checkpoint without affecting the (in-memory-only) rate/graph buckets. */
-  restoreCheckpoint(total: number, watermarkMs: number): void {
-    this.total = Math.max(0, total);
-    this.watermarkMs = Math.max(0, watermarkMs);
+  restoreCheckpoint(checkpoint: XpAggregateCheckpoint): void {
+    this.total = Math.max(0, checkpoint.total);
+    this.watermarkMs = Math.max(0, checkpoint.watermarkMs);
+    this.watermarkOccurrences = Math.max(0, checkpoint.watermarkOccurrences);
+    this.replayedAtWatermark = 0;
   }
 
   currentTotal(): number {
     return this.total;
   }
 
-  currentWatermarkMs(): number {
-    return this.watermarkMs;
+  currentCheckpoint(): XpAggregateCheckpoint {
+    return { total: this.total, watermarkMs: this.watermarkMs, watermarkOccurrences: this.watermarkOccurrences };
   }
 
   snapshot(nowMs: number): XpAggregateSnapshot {
