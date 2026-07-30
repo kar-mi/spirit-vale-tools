@@ -32,6 +32,15 @@ export class XpAggregateTracker {
     this.buckets.length = 0;
   }
 
+  /** Seeds the running total from a durable checkpoint without affecting the (in-memory-only) rate/graph buckets. */
+  restoreTotal(total: number): void {
+    this.total = Math.max(0, total);
+  }
+
+  currentTotal(): number {
+    return this.total;
+  }
+
   snapshot(nowMs: number): XpAggregateSnapshot {
     this.prune(nowMs);
     const rateWindowStart = nowMs - RATE_WINDOW_MS;
