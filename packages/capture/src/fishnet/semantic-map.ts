@@ -1,4 +1,4 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT, LEGACY_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
+import { CURRENT_GAME_BUILD_FINGERPRINT } from "../game-build.ts";
 import { FishNetSemanticDefinitions } from "./semantic-definitions.ts";
 
 export interface FishNetSkillLabel {
@@ -27,7 +27,6 @@ export interface FishNetSemanticMap {
 }
 
 const SEMANTIC_MAPS = {
-  [LEGACY_GAME_BUILD_FINGERPRINT]: FishNetSemanticDefinitions.legacyMap,
   [CURRENT_GAME_BUILD_FINGERPRINT]: FishNetSemanticDefinitions.currentMap,
 } as const;
 

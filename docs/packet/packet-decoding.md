@@ -104,8 +104,9 @@ split state matters.
 `FishNetRpcMap` is build-fingerprinted metadata. It declares behaviours, RPC
 wire hashes and packet kinds, SyncTypes, broadcasts, and optional generated
 writer codecs. `PacketCapture` selects the current bundled map by default when
-FishNet decoding is enabled; `fishNetBuildFingerprint` chooses another bundled
-map, while `fishNetRpcMap` supplies an in-memory override.
+FishNet decoding is enabled. `fishNetBuildFingerprint` validates the requested
+bundled build, while `fishNetRpcMap` supplies an in-memory override. Bundled
+metadata supports only the current game build.
 
 Resolution is deliberately conservative:
 

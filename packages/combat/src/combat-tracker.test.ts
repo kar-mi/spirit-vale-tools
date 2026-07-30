@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetCombatTracker } from "./combat-tracker.ts";
-import { LEGACY_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import type { DecodedFishNetPacket, FishNetDecodedField, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 
@@ -234,16 +233,13 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(cast(1, 10, "SyntheticArc"))[0]).toMatchObject({ sourceLabel: "Override Arc" });
   });
 
-  test("rejects mismatched metadata builds and retains legacy semantic labels", () => {
+  test("rejects mismatched metadata builds", () => {
     const skillCatalog: FishNetSkillCatalog = {
       buildFingerprint: "synthetic-build",
       skills: [{ id: "SyntheticArc", displayName: "Catalog Arc", kinds: ["active"] }],
     };
     expect(() => new FishNetCombatTracker({ buildFingerprint: "other-build", skillCatalog }))
       .toThrow("skill catalog build");
-
-    const legacy = new FishNetCombatTracker({ buildFingerprint: LEGACY_GAME_BUILD_FINGERPRINT });
-    expect(legacy.consume(cast(1, 10, "AxeArc"))[0]).toMatchObject({ sourceLabel: "Twin Cleave" });
   });
 
   test("emits lethal damage as a death event and identifies a paired damage event", () => {
