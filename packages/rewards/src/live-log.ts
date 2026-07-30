@@ -25,13 +25,19 @@ export interface RewardLogBatch {
   sessionId?: string;
 }
 
+export interface RewardLogFollowerOptions {
+  onExperience?: (experience: number) => void;
+}
+
 export class RewardLogFollower {
   private readonly reader: JsonlTailReader;
   private readonly session = new MobRewardSession();
+  private readonly onExperience?: (experience: number) => void;
   private status: RewardLogStatus = "watching";
 
-  constructor(path: string) {
+  constructor(path: string, options: RewardLogFollowerOptions = {}) {
     this.reader = new JsonlTailReader(path);
+    this.onExperience = options.onExperience;
   }
 
   async poll(): Promise<RewardLogBatch> {
@@ -64,6 +70,7 @@ export class RewardLogFollower {
       const event = parseRewardEvent(record.data);
       if (!event) { invalidLines += 1; continue; }
       this.session.consume(event, { recordedAt: record.recordedAt });
+      if (event.kind === "kill" && event.experience > 0) this.onExperience?.(event.experience);
       this.status = "ready";
       changed = true;
     }
@@ -83,11 +90,11 @@ export class RewardLogFollower {
 export class RewardSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<RewardLogFollower, RewardLogBatch>;
 
-  constructor(logDirectory?: string) {
+  constructor(logDirectory?: string, options: RewardLogFollowerOptions = {}) {
     this.inner = new LiveLogSessionFollower({
       stream: "rewards",
       logDirectory,
-      createFollower: (path) => new RewardLogFollower(path),
+      createFollower: (path) => new RewardLogFollower(path, options),
       mergeSessionChange: (batch, changedSession) => ({
         ...batch,
         reset: batch.reset || changedSession,

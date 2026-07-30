@@ -24,7 +24,7 @@ export type {
   RecordedMobRewardKill,
 } from "./session.ts";
 export { emptySnapshot, loadRewardReplay, RewardLogFollower, RewardSessionLogFollower } from "./live-log.ts";
-export type { RewardLogBatch, RewardLogStatus } from "./live-log.ts";
+export type { RewardLogBatch, RewardLogFollowerOptions, RewardLogStatus } from "./live-log.ts";
 export { formatRewardsReplaySummary, inspectRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
 export type { RewardsReplayInspection, RewardsReplaySummary } from "./replay-summary.ts";
 export { bigintRatio, buildCumulativeTrend, buildRateTrend, trendExtent } from "./trend.ts";
@@ -36,3 +36,5 @@ export type {
   TrendRange,
   TrendSample,
 } from "./trend.ts";
+export { XpAggregateTracker } from "./xp-aggregate.ts";
+export type { XpAggregateBucket, XpAggregateSnapshot } from "./xp-aggregate.ts";
