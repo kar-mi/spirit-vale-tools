@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.2.1
+
+### Patch Changes
+
+- 6f655db: Preserve early health and mana syncs until the local multiplayer character is identified, keeping character records accurate when packets arrive in a different order across map changes.
+
 ## 0.2.0
 
 ### Minor Changes
