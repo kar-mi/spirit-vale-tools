@@ -386,11 +386,6 @@ export class FishNetDpsMeter {
       .sort(compareRows);
     const partyCurrentDps = mergedActors.reduce((sum, actor) => sum + rowForActor(actor).currentDps, 0);
     const normalizedPersonalName = normalizeName(this.personalName);
-    const activeMatches = normalizedPersonalName
-      ? new Set(encounter.actors
-        .filter((actor) => actor.activeIdentity && normalizeName(actor.displayName ?? "") === normalizedPersonalName)
-        .map(identityKey))
-      : new Set<string>();
     const selectedPersonalActor = this.personalActorId === undefined
       ? undefined
       : mergedActors
@@ -404,9 +399,7 @@ export class FishNetDpsMeter {
         ? "missing"
         : !normalizedPersonalName
       ? "unconfigured"
-      : activeMatches.size > 1
-        ? "ambiguous"
-        : personalActor
+      : personalActor
           ? "matched"
           : "missing";
     const personalStartMs = personalActor?.firstDamageAtMs ?? encounter.startedAtMs;
@@ -481,13 +474,13 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
   for (const actor of actors) {
     if (actor.damage <= 0) continue;
     const displayName = actor.displayName?.trim() || undefined;
-    const key = actor.uid !== undefined
-      ? `uid:${actor.uid}`
-      : actor.ownerConnectionId !== undefined
-      ? `owner:${actor.ownerConnectionId}`
-      : displayName !== undefined
-        ? `name:${normalizeName(displayName)}`
-        : `actor:${actor.actorId}`;
+    const key = displayName !== undefined
+      ? `name:${normalizeName(displayName)}`
+      : actor.uid !== undefined
+        ? `uid:${actor.uid}`
+        : actor.ownerConnectionId !== undefined
+          ? `owner:${actor.ownerConnectionId}`
+          : `actor:${actor.actorId}`;
     let target = merged.get(key);
     if (!target) {
       target = {
@@ -504,9 +497,8 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
       };
       merged.set(key, target);
     }
-    if (actor.activeIdentity) {
-      target.displayName = displayName;
-      if (actor.archetype !== undefined) target.archetype = actor.archetype;
+    if (actor.activeIdentity && actor.archetype !== undefined) {
+      target.archetype = actor.archetype;
     } else if (target.archetype === undefined) {
       target.archetype = actor.archetype;
     }
@@ -663,10 +655,6 @@ function perSecond(damage: number, durationMs: number): number {
 
 function normalizeName(name: string): string {
   return name.trim().toLocaleLowerCase();
-}
-
-function identityKey(actor: ActorAggregate): string {
-  return actor.ownerConnectionId === undefined ? `actor:${actor.actorId}` : `owner:${actor.ownerConnectionId}`;
 }
 
 function positiveFinite(value: number, label: string): number {

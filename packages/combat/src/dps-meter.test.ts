@@ -278,6 +278,38 @@ describe("FishNetDpsMeter", () => {
     });
   });
 
+  test("merges player damage by trimmed, case-insensitive name across identity changes", () => {
+    const meter = new FishNetDpsMeter({ personalName: " ember sage " });
+    meter.consumeIdentity({
+      ...identity(101, "Ember Sage", 1, 7),
+      uid: "00000000-0000-0000-0000-000000000001",
+    }, 0);
+    meter.consumeCombat(damage(101, 100), 0);
+    meter.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 2 }, 1_000);
+    meter.consumeIdentity({
+      ...identity(202, " ember sage ", 3, 8),
+      uid: "00000000-0000-0000-0000-000000000002",
+    }, 1_100);
+    meter.consumeCombat(damage(202, 50), 2_000);
+
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      totalDamage: 150,
+      personalMatch: "matched",
+      personal: {
+        actorIds: [101, 202],
+        displayName: "Ember Sage",
+        damage: 150,
+        hits: 2,
+      },
+      actors: [{
+        actorIds: [101, 202],
+        displayName: "Ember Sage",
+        damage: 150,
+        hits: 2,
+      }],
+    });
+  });
+
   test("clears encounter history while retaining identity and personal selection", () => {
     const meter = new FishNetDpsMeter({ personalName: "Aster Vale", personalActorId: 101 });
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
@@ -310,12 +342,16 @@ describe("FishNetDpsMeter", () => {
     expect(meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([150, 25]);
   });
 
-  test("reports ambiguous simultaneous personal identities", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+  test("matches simultaneous identities with the same normalized player name", () => {
+    const meter = new FishNetDpsMeter({ personalName: " aster vale " });
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeIdentity(identity(101, "Aster Vale"), 1);
     meter.consumeIdentity(identity(202, "aster vale"), 1);
-    expect(meter.getLatestSnapshot()?.personalMatch).toBe("ambiguous");
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      personalMatch: "matched",
+      actors: [{ actorIds: [101], displayName: "Aster Vale", damage: 100 }],
+      personal: { actorIds: [101], displayName: "Aster Vale", damage: 100 },
+    });
   });
 
   test("merges same-owner combat aliases without making personal matching ambiguous", () => {
@@ -346,15 +382,18 @@ describe("FishNetDpsMeter", () => {
     ]);
   });
 
-  test("keeps identical display names separate when they belong to different owners", () => {
+  test("merges identical display names when they belong to different owners", () => {
     const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
     meter.consumeIdentity(identity(202, "Aster Vale", 1, 8), 0);
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeCombat(damage(202, 150), 1_000);
 
-    expect(meter.getLatestSnapshot()?.personalMatch).toBe("ambiguous");
-    expect(meter.getLatestSnapshot()?.actors).toHaveLength(2);
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      personalMatch: "matched",
+      actors: [{ actorIds: [101, 202], displayName: "Aster Vale", damage: 250 }],
+      personal: { actorIds: [101, 202], damage: 250 },
+    });
   });
 
   test("retains team-zero damage while waiting for a display-name sync", () => {
