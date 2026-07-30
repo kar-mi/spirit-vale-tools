@@ -1,8 +1,9 @@
 import {
+  classifyFishNetRecoveryStyle,
   CURRENT_GAME_BUILD_FINGERPRINT,
   loadBundledFishNetSemanticMap,
 } from "@kar-mi/spirit-vale-tools-capture";
-import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetRecoveryStyle, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 
@@ -30,6 +31,13 @@ export interface FishNetCombatTrackerOptions {
   buildFingerprint?: string;
   /** Resolves an attacker to a known player identity, including owner/UID continuity. */
   actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
+  /** Resolves healing mechanics for actors whose local character build is visible. */
+  healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
+}
+
+export interface FishNetHealingTraits {
+  readonly hasSiphonHealth: boolean;
+  readonly hasHealthLeech: boolean;
 }
 
 export interface FishNetCombatActivationEvent {
@@ -135,6 +143,8 @@ export interface FishNetCombatHealEvent {
   sourceId?: string;
   sourceLabel?: string;
   value: number;
+  /** Semantic style derived from the build-specific Recover_C FloaterSettings. */
+  recoveryStyle?: FishNetRecoveryStyle;
   attribution: FishNetHealAttribution;
   activationId?: string;
   candidateActivationIds?: string[];
@@ -195,6 +205,8 @@ export class FishNetCombatTracker {
   private readonly activationMaxAgeTicks: number;
   private readonly skillLabels: Map<string, string>;
   private readonly actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
+  private readonly healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
+  private readonly semanticMap?: FishNetSemanticMap;
   private readonly activations = new Map<string, ActivationState>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
   private readonly recentDamageSignatures = new Set<string>();
@@ -218,9 +230,11 @@ export class FishNetCombatTracker {
     const semanticMap = options.semanticMap ?? (skillCatalog
       ? tryLoadBundledSemanticMap(buildFingerprint)
       : loadBundledFishNetSemanticMap(buildFingerprint));
+    this.semanticMap = semanticMap;
     this.skillLabels = new Map(skillCatalog?.skills.map(({ id, displayName }) => [id, displayName]) ?? []);
     for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
     this.actorIdentityResolver = options.actorIdentityResolver;
+    this.healingTraitsResolver = options.healingTraitsResolver;
   }
 
   consume(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
@@ -456,6 +470,14 @@ export class FishNetCombatTracker {
   private consumeRecover(packet: DecodedFishNetPacket): FishNetCombatHealEvent {
     const targetId = packet.objectId!;
     const value = requiredNumberField(packet, "amount");
+    const recoveryStyle = classifyFishNetRecoveryStyle(packet, this.semanticMap);
+    if (recoveryStyle === "passive-regeneration") {
+      return this.createSelfRecovery(packet, value, recoveryStyle, "passive-regeneration", "Passive regeneration");
+    }
+    if (recoveryStyle === "drain") {
+      const source = drainRecoverySource(this.healingTraitsResolver?.(targetId));
+      return this.createSelfRecovery(packet, value, recoveryStyle, source.sourceId, source.sourceLabel);
+    }
     const candidates = this.eligibleHealActivations(packet.tick, targetId, HEALING_SKILL_IDS);
 
     let attribution: FishNetHealAttribution;
@@ -502,10 +524,36 @@ export class FishNetCombatTracker {
       sourceId,
       sourceLabel,
       value,
+      recoveryStyle,
       attribution,
       activationId,
       candidateActivationIds,
       actorIdentity: actorId === undefined ? undefined : this.actorIdentityResolver?.(actorId),
+    };
+  }
+
+  private createSelfRecovery(
+    packet: DecodedFishNetPacket,
+    value: number,
+    recoveryStyle: FishNetRecoveryStyle,
+    sourceId: string,
+    sourceLabel: string,
+  ): FishNetCombatHealEvent {
+    const actorId = packet.objectId!;
+    return {
+      kind: "heal",
+      rpc: "Recover_C",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: decodedFieldRecord(packet),
+      targetId: actorId,
+      actorId,
+      sourceId,
+      sourceLabel,
+      value,
+      recoveryStyle,
+      attribution: "inferred",
+      actorIdentity: this.actorIdentityResolver?.(actorId),
     };
   }
 
@@ -603,6 +651,16 @@ export class FishNetCombatTracker {
       .map(({ id }) => id);
     for (const id of expired) this.activations.delete(id);
   }
+}
+
+function drainRecoverySource(traits: FishNetHealingTraits | undefined): { sourceId: string; sourceLabel: string } {
+  if (traits?.hasSiphonHealth && !traits.hasHealthLeech) {
+    return { sourceId: "siphon-health", sourceLabel: "Siphon Health" };
+  }
+  if (traits?.hasHealthLeech && !traits.hasSiphonHealth) {
+    return { sourceId: "health-leech", sourceLabel: "Health Leech" };
+  }
+  return { sourceId: "siphon-health-leech", sourceLabel: "Siphon / Health Leech" };
 }
 
 function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {

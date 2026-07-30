@@ -99,6 +99,11 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
   }
   if (value["kind"] === "heal") {
     if (!isFiniteNumber(value["targetId"]) || !isFiniteNumber(value["value"])) return undefined;
+    if (value["recoveryStyle"] !== undefined
+      && value["recoveryStyle"] !== "standard"
+      && value["recoveryStyle"] !== "passive-regeneration"
+      && value["recoveryStyle"] !== "drain"
+      && value["recoveryStyle"] !== "unknown") return undefined;
     return value as unknown as FishNetCombatEvent;
   }
   if ((value["kind"] !== "damage" && value["kind"] !== "death")

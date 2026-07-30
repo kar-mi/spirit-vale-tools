@@ -21,10 +21,10 @@ describe("combat log sanitizer", () => {
 
   test("keeps heal record fields while dropping raw payload/fields", () => {
     const value = sanitizeCombatData("combat.event", {
-      kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", value: 150,
+      kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", recoveryStyle: "standard", value: 150,
       attribution: "exact", fields: { amount: 150 }, payloadBytes: 4,
     });
-    expect(value).toEqual({ kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", value: 150 });
+    expect(value).toEqual({ kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", recoveryStyle: "standard", value: 150 });
   });
 
   test("keeps an unattributed heal record without a healer", () => {

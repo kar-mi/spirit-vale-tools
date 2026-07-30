@@ -1,6 +1,6 @@
 import { resolveFishNetItem, type FishNetItemEffect } from "@kar-mi/spirit-vale-tools-items";
 import { resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
-import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
+import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterHealingTraits, CharacterSkill, CharacterSnapshot, CharacterStatBreakdown, CharacterSubstat, GearStatTotal } from "./types.ts";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 
 const rounded = Math.round;
@@ -61,6 +61,22 @@ export function materializeSkillStats(skills: readonly CharacterSkill[], resolve
     value: effect.value + (effect.valuePerLevel ?? 0) * skill.level,
     percent: PERCENT_STATS.has(effect.type),
   })));
+}
+
+/** Resolves the healing mechanics visible in a local character snapshot. */
+export function resolveCharacterHealingTraits(
+  snapshot: CharacterSnapshot,
+  resolveItem: ItemResolver = resolveFishNetItem,
+  resolveSkill: SkillResolver = resolveFishNetSkill,
+): CharacterHealingTraits {
+  const stats = [
+    ...materializeGearStats(snapshot.equipment, snapshot.artifacts, resolveItem),
+    ...materializeSkillStats(snapshot.skills, resolveSkill),
+  ];
+  return {
+    hasSiphonHealth: stats.some((stat) => stat.type === 176 && (stat.value ?? 0) > 0),
+    hasHealthLeech: stats.some((stat) => stat.type === 98 && (stat.value ?? 0) > 0),
+  };
 }
 
 /** Mirrors Formula.GetWeightLimit: base capacity, level growth, then flat stat 101 bonuses. */

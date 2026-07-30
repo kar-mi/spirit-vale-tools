@@ -1,7 +1,7 @@
 import type { JsonObject } from "./types.ts";
 
 const IDENTITY_KEYS = new Set(["kind", "operation", "tick", "actorId", "displayName", "archetype", "ownerConnectionId", "uid"]);
-const COMBAT_KEYS = new Set(["kind", "tick", "actorId", "value", "team", "sourceId", "sourceLabel", "hitResult", "duplicatesDamageEvent", "critical", "targetId", "statusId", "level", "action"]);
+const COMBAT_KEYS = new Set(["kind", "tick", "actorId", "value", "team", "sourceId", "sourceLabel", "recoveryStyle", "hitResult", "duplicatesDamageEvent", "critical", "targetId", "statusId", "level", "action"]);
 
 /** Structural allowlist for shareable combat records. Returns undefined for diagnostics/unknown records. */
 export function sanitizeCombatData(type: string, data: JsonObject): JsonObject | undefined {

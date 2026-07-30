@@ -16,6 +16,17 @@ function characterPacket(rpcName?: string): CapturedFishNetPacket {
 }
 
 describe("FishNetCharacterTracker", () => {
+  test("exposes only the current local object id observed from a server RPC", () => {
+    const tracker = new FishNetCharacterTracker();
+    expect(tracker.currentObjectId()).toBeUndefined();
+
+    const packet = characterPacket();
+    packet.packetName = "serverRpc";
+    packet.objectId = 123;
+    expect(tracker.consume(packet)).toBe(false);
+    expect(tracker.currentObjectId()).toBe(123);
+  });
+
   test("accepts a uniquely resolved character RPC without a behaviour type", () => {
     const tracker = new FishNetCharacterTracker();
 

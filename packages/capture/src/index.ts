@@ -15,7 +15,13 @@ export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
 export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
 export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
-export type { FishNetSemanticMap, FishNetSkillLabel } from "./fishnet/semantic-map.ts";
+export type {
+  FishNetRecoveryStyle,
+  FishNetRecoveryStyleDefinition,
+  FishNetSemanticMap,
+  FishNetSkillLabel,
+} from "./fishnet/semantic-map.ts";
+export { classifyFishNetRecoveryStyle } from "./fishnet/recovery-style.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,

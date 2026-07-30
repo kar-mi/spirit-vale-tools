@@ -125,3 +125,8 @@ export interface CharacterViewState {
   status: "waiting" | "cached" | "live" | "unsupported";
   statusDetail: string;
 }
+
+export interface CharacterHealingTraits {
+  hasSiphonHealth: boolean;
+  hasHealthLeech: boolean;
+}

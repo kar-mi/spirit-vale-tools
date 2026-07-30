@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, type ItemResolver, type SkillResolver } from "./formulas.ts";
+import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, resolveCharacterHealingTraits, type ItemResolver, type SkillResolver } from "./formulas.ts";
 import type { CharacterArtifact, CharacterEquipment, CharacterSnapshot, CharacterSubstat } from "./types.ts";
 
 describe("calculateCharacterStats", () => {
@@ -87,6 +87,37 @@ describe("calculateCharacterStats", () => {
       : undefined;
 
     expect(calculateWeightLimit(snapshot, resolveItem, resolveSkill)).toBe(2_540);
+  });
+
+  test("detects Siphon Health and Health Leech without estimating recovery values", () => {
+    const snapshot: CharacterSnapshot = {
+      schemaVersion: 1,
+      buildFingerprint: "synthetic-build",
+      name: "Fictional Healer",
+      archetypes: ["Fictional"],
+      level: 1,
+      experience: 0,
+      jobLevel: 1,
+      jobExperience: 0,
+      attributes: { STR: 1, VIT: 1, AGI: 1, DEX: 1, INT: 1, LUK: 1 },
+      activeLoadout: "Normal",
+      equipment: [{ slot: "Rune", itemId: "Fictional Leech Item", refine: 0, cards: [], substats: [] }],
+      artifacts: [],
+      skills: [{ id: "Fictional Siphon Skill", displayName: "Fictional Siphon Skill", level: 3, effects: [] }],
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: "live",
+    };
+    const resolveItem: ItemResolver = (_itemType, itemId) => itemId === "Fictional Leech Item"
+      ? { itemType: 2, id: itemId, displayName: itemId, weight: 0, effects: [{ type: 98, value: 4 }] }
+      : undefined;
+    const resolveSkill: SkillResolver = (skillId) => skillId === "Fictional Siphon Skill"
+      ? { id: skillId, displayName: skillId, kinds: ["passive"], effects: [{ type: 176, value: 5, valuePerLevel: 10 }] }
+      : undefined;
+
+    expect(resolveCharacterHealingTraits(snapshot, resolveItem, resolveSkill)).toEqual({
+      hasSiphonHealth: true,
+      hasHealthLeech: true,
+    });
   });
 
   test("scales move speed from the verified 7.5 base", () => {

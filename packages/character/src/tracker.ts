@@ -71,6 +71,8 @@ export class FishNetCharacterTracker {
 
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
 
+  currentObjectId(): number | undefined { return this.localObjectId; }
+
   currentArchetypeId(): number | undefined {
     const archetype = this.snapshot?.archetypes.at(-1);
     return archetype === undefined ? undefined : resolveCharacterArchetypeId(archetype);

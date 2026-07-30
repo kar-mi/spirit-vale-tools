@@ -39,5 +39,6 @@ export type {
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
   FishNetHealAttribution,
+  FishNetHealingTraits,
   FishNetHitResult,
 } from "./combat-tracker.ts";
