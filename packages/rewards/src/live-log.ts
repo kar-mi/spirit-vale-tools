@@ -26,13 +26,14 @@ export interface RewardLogBatch {
 }
 
 export interface RewardLogFollowerOptions {
-  onExperience?: (experience: number) => void;
+  /** `recordedAtMs` is the kill's real recorded time (from the log), not wall-clock consume time. */
+  onExperience?: (experience: number, recordedAtMs: number) => void;
 }
 
 export class RewardLogFollower {
   private readonly reader: JsonlTailReader;
   private readonly session = new MobRewardSession();
-  private readonly onExperience?: (experience: number) => void;
+  private readonly onExperience?: (experience: number, recordedAtMs: number) => void;
   private status: RewardLogStatus = "watching";
 
   constructor(path: string, options: RewardLogFollowerOptions = {}) {
@@ -70,7 +71,10 @@ export class RewardLogFollower {
       const event = parseRewardEvent(record.data);
       if (!event) { invalidLines += 1; continue; }
       this.session.consume(event, { recordedAt: record.recordedAt });
-      if (event.kind === "kill" && event.experience > 0) this.onExperience?.(event.experience);
+      if (event.kind === "kill" && event.experience > 0) {
+        const recordedAtMs = Date.parse(record.recordedAt);
+        if (!Number.isNaN(recordedAtMs)) this.onExperience?.(event.experience, recordedAtMs);
+      }
       this.status = "ready";
       changed = true;
     }

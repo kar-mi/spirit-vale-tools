@@ -15,10 +15,19 @@ export interface XpAggregateSnapshot {
 
 export class XpAggregateTracker {
   private total = 0;
+  private watermarkMs = 0;
   private readonly buckets: XpAggregateBucket[] = [];
 
+  /**
+   * `atMs` must be the kill's real recorded time, not wall-clock consume time: a fresh log
+   * follower (e.g. after a window is closed and reopened) re-tails the current session's log
+   * from the start, re-emitting every kill already counted. Anything at or before the watermark
+   * is treated as already accounted for and skipped, so reopening a window (or resetting, which
+   * bumps the watermark to "now") can't re-inflate the total.
+   */
   record(experience: number, atMs: number): void {
-    if (experience <= 0) return;
+    if (experience <= 0 || atMs < this.watermarkMs) return;
+    this.watermarkMs = atMs;
     this.total += experience;
     const second = Math.floor(atMs / 1_000) * 1_000;
     const last = this.buckets.at(-1);
@@ -27,18 +36,25 @@ export class XpAggregateTracker {
     this.prune(atMs);
   }
 
-  reset(): void {
+  /** `atMs` should be "now" — everything up to this moment is treated as already accounted for. */
+  reset(atMs: number): void {
     this.total = 0;
     this.buckets.length = 0;
+    this.watermarkMs = Math.max(this.watermarkMs, atMs);
   }
 
-  /** Seeds the running total from a durable checkpoint without affecting the (in-memory-only) rate/graph buckets. */
-  restoreTotal(total: number): void {
+  /** Seeds the running total and watermark from a durable checkpoint without affecting the (in-memory-only) rate/graph buckets. */
+  restoreCheckpoint(total: number, watermarkMs: number): void {
     this.total = Math.max(0, total);
+    this.watermarkMs = Math.max(0, watermarkMs);
   }
 
   currentTotal(): number {
     return this.total;
+  }
+
+  currentWatermarkMs(): number {
+    return this.watermarkMs;
   }
 
   snapshot(nowMs: number): XpAggregateSnapshot {
