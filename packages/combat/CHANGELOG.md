@@ -1,5 +1,27 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.0.0
+
+### Major Changes
+
+- 32cdaba: Remove support for the legacy game build. The capture package no longer exports
+  `LEGACY_GAME_BUILD_FINGERPRINT`, and bundled RPC and semantic-map loaders now
+  accept only the current game build. The combat tracker likewise no longer loads
+  legacy semantic labels when given the retired build fingerprint.
+
+### Minor Changes
+
+- 32cdaba: Classify build-specific health recovery as standard healing, passive regeneration, or drain healing. Attribute passive regeneration as self-healing and label drain recovery from visible local character traits while retaining a combined Siphon/Leech label for unknown or remote builds. Persist the optional recovery style in sanitized combat logs for replay compatibility.
+
+### Patch Changes
+
+- Updated dependencies [32cdaba]
+- Updated dependencies [32cdaba]
+  - @kar-mi/spirit-vale-tools-capture@1.0.0
+  - @kar-mi/spirit-vale-tools-logging@0.2.3
+  - @kar-mi/spirit-vale-tools-skills@0.1.5
+  - @kar-mi/spirit-vale-tools-statuses@0.2.1
+
 ## 0.2.7
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.2.0
+
+### Minor Changes
+
+- 32cdaba: Classify build-specific health recovery as standard healing, passive regeneration, or drain healing. Attribute passive regeneration as self-healing and label drain recovery from visible local character traits while retaining a combined Siphon/Leech label for unknown or remote builds. Persist the optional recovery style in sanitized combat logs for replay compatibility.
+
+### Patch Changes
+
+- Updated dependencies [32cdaba]
+- Updated dependencies [32cdaba]
+  - @kar-mi/spirit-vale-tools-capture@1.0.0
+  - @kar-mi/spirit-vale-tools-items@0.1.5
+  - @kar-mi/spirit-vale-tools-skills@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes

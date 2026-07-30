@@ -1,5 +1,15 @@
 # @kar-mi/spirit-vale-tools-market
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [32cdaba]
+- Updated dependencies [32cdaba]
+  - @kar-mi/spirit-vale-tools-capture@1.0.0
+  - @kar-mi/spirit-vale-tools-logging@0.2.3
+  - @kar-mi/spirit-vale-tools-items@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes
