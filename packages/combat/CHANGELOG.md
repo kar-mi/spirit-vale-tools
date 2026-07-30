@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.0.1
+
+### Patch Changes
+
+- ff00636: Group identified DPS actors by trimmed, case-insensitive player name before falling back to transport identity fields.
+
 ## 1.0.0
 
 ### Major Changes
