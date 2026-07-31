@@ -112,24 +112,30 @@ export class FishNetStatusTracker {
   }
 
   /**
-   * Refreshes a self-granted status's timer when its granting skill activates again.
+   * Refreshes a status's timer when one of its granting skills activates again.
    * Some skills (e.g. Haste, Axe Quicken) don't resend ApplyEffect_T on recast while
    * already active - the activation event is the only wire-level trace of the recast,
-   * so it's used as a refresh signal. Only self-granting skills (whose id matches an
-   * already-active status of the same actor) are refreshed this way; skills that grant
-   * a differently-named status are left alone since we can't tell whether a given
-   * activation actually re-applied that status without an explicit ApplyEffect_T.
+   * so it's used as a refresh signal. Catalog grant relationships also cover statuses
+   * such as ComboReady, whose qualifying skills have different ids from the status.
    */
   private consumeActivation(event: FishNetCombatActivationEvent, observedAtMs: number): void {
     if (event.phase === "interrupt" || event.phase === "cancel") return;
     if (!event.sourceId) return;
     const statuses = this.active.get(event.actorId);
-    const tracked = statuses?.get(event.sourceId);
-    if (!tracked) return;
-    const definition = this.directory.resolve(event.sourceId);
-    const durationSeconds = statusDurationSeconds(definition, event.level ?? tracked.level);
-    tracked.appliedAtMs = observedAtMs;
-    tracked.expiresAtMs = durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
+    if (!statuses) return;
+    for (const [statusId, tracked] of statuses) {
+      const definition = this.directory.resolve(statusId);
+      const isGranter = statusId === event.sourceId
+        || definition?.effects.some((effect) => effect.id === event.sourceId);
+      if (!isGranter) continue;
+      const sourceEffect = definition?.effects.find((effect) => effect.id === event.sourceId);
+      const durationDefinition = definition && sourceEffect
+        ? { ...definition, effects: [sourceEffect] }
+        : definition;
+      const durationSeconds = statusDurationSeconds(durationDefinition, event.level ?? tracked.level);
+      tracked.appliedAtMs = observedAtMs;
+      tracked.expiresAtMs = durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
+    }
   }
 
   /** Drops statuses whose computed duration has elapsed; servers do not always send an explicit remove. */

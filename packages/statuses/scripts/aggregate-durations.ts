@@ -7,9 +7,11 @@
  * for self-granting "coating" statuses), not on the status itself. This script walks
  * both `skills.json` and `statuses.json`, aggregates every granter of each status,
  * dedupes identical duration/chance/stacks tuples, and orders them by how many
- * granters agree (so `effects[0]` - the only entry `statusDurationSeconds()` reads -
- * is the most commonly-granted value for statuses with conflicting sources, e.g.
- * `Stun` is granted by 15 different skills with durations ranging 1s-3s).
+ * granters agree (so the fallback entry used by `statusDurationSeconds()` is the most
+ * commonly-granted value for statuses with conflicting sources, e.g. `Stun` is granted
+ * by 15 different skills with durations ranging 1s-3s).
+ * Named scalar grants retain every granter because activation-based timer refreshes
+ * need to identify each differently-named skill that grants ComboReady/CastReady.
  *
  * Run: `bun run packages/statuses/scripts/aggregate-durations.ts` from the repo root.
  */
@@ -53,10 +55,10 @@ interface DataMineEntry {
 const NAMED_SCALAR_DURATION_FIELDS = ["ComboReady", "CastReady"];
 
 // Statuses to always leave without duration data, regardless of what the data-mine
-// declares. Might is actively/frequently re-applied and stacked by ShoutMight rather
-// than cast once for a fixed window, so a computed duration is more misleading than
-// having none.
-const NO_DURATION_OVERRIDE_IDS = new Set(["Might"]);
+// declares. Might is actively/frequently re-applied and stacked by ShoutMight, while
+// Fury is a toggle removed explicitly by the server. A computed expiry would clear
+// either one while it can still be active.
+const NO_DURATION_OVERRIDE_IDS = new Set(["Fury", "Might"]);
 
 interface GrantTuple {
   granterId: string;
@@ -73,12 +75,18 @@ function loadJson<T>(fileName: string): T {
   return JSON.parse(readFileSync(path.join(DATA_MINE_JSON_DIR, fileName), "utf8")) as T;
 }
 
-function collectGrantRows(rows: DataMineStatusEffectRow[] | undefined, granterId: string, grants: Map<string, GrantTuple[]>): void {
+function collectGrantRows(
+  rows: DataMineStatusEffectRow[] | undefined,
+  granterId: string,
+  grants: Map<string, GrantTuple[]>,
+  retainGranter = false,
+): void {
   if (!rows || rows.length === 0) return;
   for (const row of rows) {
     const list = grants.get(row.Id) ?? [];
     const existing = list.find(
       (t) =>
+        (!retainGranter || t.granterId === granterId) &&
         t.duration === row.Duration &&
         t.durationPerLevel === row.DurationLv &&
         t.chance === row.Chance &&
@@ -112,6 +120,7 @@ function collectNamedScalarGrants(entry: DataMineEntry, grants: Map<string, Gran
       [{ Id: fieldName, Duration: scalar.Value, DurationLv: scalar.ValueLv, Chance: 0, ChanceLv: 0, Stacks: 0, StacksLv: 0 }],
       entry.id,
       grants,
+      true,
     );
   }
 }

@@ -79,11 +79,12 @@ export function statusDurationSeconds(
   definition: FishNetStatusDefinition | undefined,
   level: number,
 ): number | undefined {
-  const effect = definition?.effects[0];
+  const effect = definition?.effects.find((candidate) => candidate.id === definition.id)
+    ?? definition?.effects[0];
   if (!effect) return undefined;
   if (definition!.fixedDuration) return effect.duration;
   const effectiveLevel = Math.max(1, level);
-  return effect.duration + (effectiveLevel - 1) * effect.durationPerLevel;
+  return effect.duration + effectiveLevel * effect.durationPerLevel;
 }
 
 function cloneDefinition(definition: FishNetStatusDefinition): FishNetStatusDefinition {

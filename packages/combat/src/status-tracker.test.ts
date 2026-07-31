@@ -32,6 +32,17 @@ const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
       // Self-granting: the skill that casts it shares the same id, like Haste/TwohandQuicken.
       effects: [{ id: "SelfBuff", duration: 0, durationPerLevel: 60, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 }],
     },
+    {
+      id: "ComboReady",
+      displayName: "Combo Ready",
+      isDebuff: false,
+      maxLevel: 0,
+      fixedDuration: true,
+      effects: [
+        { id: "AerialShot", duration: 4, durationPerLevel: 0, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 },
+        { id: "VenomStrike", duration: 4, durationPerLevel: 0, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 },
+      ],
+    },
   ],
 };
 
@@ -105,10 +116,10 @@ describe("FishNetStatusTracker", () => {
       isDebuff: true,
       level: 3,
       appliedAtMs: 1_000,
-      expiresAtMs: 6_000, // 3s base + (3-1)*1s = 5s duration
-      remainingMs: 5_000,
+      expiresAtMs: 7_000, // 3s base + 3*1s = 6s duration
+      remainingMs: 6_000,
     });
-    expect(tracker.getActiveStatuses(1, 6_500)).toHaveLength(0);
+    expect(tracker.getActiveStatuses(1, 7_500)).toHaveLength(0);
   });
 
   test("removes a status immediately on RemoveEffect_T", () => {
@@ -163,19 +174,39 @@ describe("FishNetStatusTracker", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
     tracker.consume(statusEvent({ statusId: "SelfBuff", level: 5, action: "applied" }), 0);
     const initial = tracker.getActiveStatuses(1, 0)[0];
-    expect(initial?.expiresAtMs).toBe(240_000); // 0 + (5-1)*60s
+    expect(initial?.expiresAtMs).toBe(300_000); // 0 + 5*60s
 
-    tracker.consume(activationEvent(), 200_000); // recast with 40s left on the clock
+    tracker.consume(activationEvent(), 200_000); // recast with 100s left on the clock
     const refreshed = tracker.getActiveStatuses(1, 200_000)[0];
     expect(refreshed?.appliedAtMs).toBe(200_000);
-    expect(refreshed?.expiresAtMs).toBe(440_000);
-    expect(refreshed?.remainingMs).toBe(240_000);
+    expect(refreshed?.expiresAtMs).toBe(500_000);
+    expect(refreshed?.remainingMs).toBe(300_000);
   });
 
-  test("consume() ignores activations for skills that aren't an already-active status", () => {
+  test("consume() refreshes a differently-named ready status from any cataloged granting skill", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
-    tracker.consume(activationEvent({ sourceId: "SelfBuff" }), 0);
-    expect(tracker.getActiveStatuses(1, 0)).toHaveLength(0);
+    tracker.consume(statusEvent({ statusId: "ComboReady", level: 1 }), 0);
+
+    tracker.consume(activationEvent({ sourceId: "VenomStrike", level: 5 }), 3_000);
+
+    expect(tracker.getActiveStatuses(1, 3_000)[0]).toMatchObject({
+      statusId: "ComboReady",
+      appliedAtMs: 3_000,
+      expiresAtMs: 7_000,
+      remainingMs: 4_000,
+    });
+  });
+
+  test("consume() ignores activations that neither match nor grant an active status", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consume(statusEvent({ statusId: "ComboReady", level: 1 }), 0);
+    tracker.consume(activationEvent({ sourceId: "UnrelatedSkill" }), 2_000);
+    expect(tracker.getActiveStatuses(1, 2_000)[0]).toMatchObject({
+      statusId: "ComboReady",
+      appliedAtMs: 0,
+      expiresAtMs: 4_000,
+      remainingMs: 2_000,
+    });
   });
 
   test("consume() ignores interrupted/cancelled activations", () => {

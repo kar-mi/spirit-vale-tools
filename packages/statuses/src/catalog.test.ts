@@ -66,8 +66,8 @@ describe("FishNetStatusDirectory", () => {
 describe("statusDurationSeconds", () => {
   test("scales duration by level for non-fixed statuses", () => {
     const definition = SYNTHETIC_CATALOG.statuses[0]!;
-    expect(statusDurationSeconds(definition, 1)).toBe(3);
-    expect(statusDurationSeconds(definition, 4)).toBe(6);
+    expect(statusDurationSeconds(definition, 1)).toBe(4);
+    expect(statusDurationSeconds(definition, 4)).toBe(7);
   });
 
   test("ignores level for fixed-duration statuses", () => {
@@ -104,13 +104,25 @@ describe("statusDurationSeconds", () => {
     }
   });
 
-  test("leaves stances/toggles and Might without duration data despite data-mine rows", () => {
-    // Might is actively re-applied/stacked by ShoutMight rather than cast for a fixed
-    // window; Berserk/HighGuard/Elusive are stances/short procs whose data-mine "1s" is
-    // a placeholder, not a real timer (confirmed against session logs: Berserk persisted
-    // 100+ seconds with no expiry). See NO_DURATION_OVERRIDE_IDS / the flat-1s-buff rule
-    // in aggregate-durations.ts.
-    for (const id of ["Might", "Berserk", "HighGuard", "Elusive"]) {
+  test("uses each status's self-granted duration before an unrelated leading effect", () => {
+    expect(statusDurationSeconds(resolveFishNetStatus("EnchantPoison"), 3)).toBe(180);
+    expect(statusDurationSeconds(resolveFishNetStatus("VenomCoating"), 5)).toBe(300);
+    expect(statusDurationSeconds(resolveFishNetStatus("Haste"), 5)).toBe(300);
+  });
+
+  test("retains every differently-named skill that refreshes ready statuses", () => {
+    expect(resolveFishNetStatus("ComboReady")?.effects.map((effect) => effect.id))
+      .toEqual(expect.arrayContaining(["AerialShot", "VenomStrike", "WildCharge"]));
+    expect(resolveFishNetStatus("CastReady")?.effects.map((effect) => effect.id))
+      .toEqual(expect.arrayContaining(["ShadowFeint", "ShadowSeal"]));
+  });
+
+  test("leaves explicit toggles and placeholder-duration buffs without computed timers", () => {
+    // Might is actively re-applied/stacked, Fury is explicitly toggled, and
+    // Berserk/HighGuard/Elusive are stances/short procs whose data-mine "1s" is a
+    // placeholder rather than a real timer. See NO_DURATION_OVERRIDE_IDS and the
+    // flat-1s-buff rule in aggregate-durations.ts.
+    for (const id of ["Might", "Fury", "Berserk", "HighGuard", "Elusive"]) {
       expect(statusDurationSeconds(resolveFishNetStatus(id), 1)).toBeUndefined();
     }
   });
