@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 0.3.0
+
+### Minor Changes
+
+- 9c98e1d: Track party-shared and other standalone XP gains independently of mob-death attribution. Unmatched experience events now preserve their base XP, job XP, and coin deltas; session totals and live aggregate callbacks include their XP while per-mob and coin summaries remain confirmed-kill-only.
+
 ## 0.2.0
 
 ### Minor Changes
