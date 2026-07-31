@@ -18,8 +18,10 @@ export class FishNetCharacterTracker {
   private unsupportedDetail?: string;
   private currentWeight?: number;
   private localObjectId?: number;
+  /** Transport connection that owns {@link localObjectId}; object ids only mean anything within one. */
+  private localConnectionId?: string;
   private records: CharacterRecordValues = {};
-  private pendingRecords = new Map<number, CharacterRecordValues>();
+  private pendingRecords = new Map<string, CharacterRecordValues>();
   private listeners = new Set<(state: CharacterViewState) => void>();
 
   constructor(initial?: CharacterSnapshot) {
@@ -28,32 +30,33 @@ export class FishNetCharacterTracker {
 
   consume(packet: CapturedFishNetPacket): boolean {
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
-      this.clearLiveTracking();
+      // The client holds several server connections at once, so a boundary on a neighbouring one
+      // must not release a pin held on the live connection. If the pinned connection really is
+      // going away, the next serverRpc re-pins and reclaims tracking anyway.
+      if (this.localConnectionId === undefined || packet.connectionId === this.localConnectionId) {
+        this.releaseLocalObject();
+      }
       return false;
     }
     if (packet.packetName === "objectDespawn" && packet.objectId !== undefined) {
-      this.pendingRecords.delete(packet.objectId);
-      if (packet.objectId === this.localObjectId) this.clearLiveTracking();
+      this.pendingRecords.delete(pendingKey(packet.connectionId, packet.objectId));
+      if (this.isLocalObject(packet)) this.releaseLocalObject();
       return false;
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
-      this.pendingRecords.delete(packet.objectId);
-      if (packet.objectId === this.localObjectId) {
-        this.records = {};
-        this.currentWeight = undefined;
-        this.publish();
-      }
+      this.pendingRecords.delete(pendingKey(packet.connectionId, packet.objectId));
     }
     // Only the local player's client emits serverRpc packets, which pins their unit object.
     if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {
-      const objectChanged = this.localObjectId !== packet.objectId;
-      if (this.localObjectId !== undefined && objectChanged) {
-        this.records = {};
-        this.currentWeight = undefined;
-      }
+      const objectChanged = this.localObjectId !== packet.objectId || this.localConnectionId !== packet.connectionId;
       this.localObjectId = packet.objectId;
-      const pending = this.pendingRecords.get(packet.objectId);
+      this.localConnectionId = packet.connectionId;
+      const pending = this.pendingRecords.get(pendingKey(packet.connectionId, packet.objectId));
+      // Records describe one unit object and the sync stream refills them within moments, so a new
+      // object starts from its own values: showing the previous object's health is worse than showing
+      // none. Carried weight has no such stream and is deliberately left alone here.
       if (pending) this.records = pending;
+      else if (objectChanged) this.records = {};
       this.pendingRecords.clear();
       if (objectChanged || pending) this.publish();
       return false;
@@ -80,8 +83,9 @@ export class FishNetCharacterTracker {
     if (packet.objectId === undefined) return false;
     const update = decodeCharacterRecordSync(packet);
     if (!update) return false;
-    if (packet.objectId !== this.localObjectId) {
-      Object.assign(this.pendingRecordsFor(packet.objectId), update, { updatedAt: new Date().toISOString() });
+    if (!this.isLocalObject(packet)) {
+      const key = pendingKey(packet.connectionId, packet.objectId);
+      Object.assign(this.pendingRecordsFor(key), update, { updatedAt: new Date().toISOString() });
       return false;
     }
     Object.assign(this.records, update, { updatedAt: new Date().toISOString() });
@@ -89,29 +93,36 @@ export class FishNetCharacterTracker {
     return true;
   }
 
-  private pendingRecordsFor(objectId: number): CharacterRecordValues {
-    let records = this.pendingRecords.get(objectId);
+  private pendingRecordsFor(key: string): CharacterRecordValues {
+    let records = this.pendingRecords.get(key);
     if (!records) {
       if (this.pendingRecords.size >= MAX_PENDING_RECORD_OBJECTS) {
-        const oldestObjectId = this.pendingRecords.keys().next().value;
-        if (oldestObjectId !== undefined) this.pendingRecords.delete(oldestObjectId);
+        const oldestKey = this.pendingRecords.keys().next().value;
+        if (oldestKey !== undefined) this.pendingRecords.delete(oldestKey);
       }
       records = {};
-      this.pendingRecords.set(objectId, records);
+      this.pendingRecords.set(key, records);
     }
     return records;
   }
 
-  private clearLiveTracking(): void {
-    const changed = this.localObjectId !== undefined
-      || Object.keys(this.records).length > 0
-      || this.pendingRecords.size > 0
-      || this.currentWeight !== undefined;
+  /** True only for the pinned unit object on the connection that pinned it. */
+  private isLocalObject(packet: CapturedFishNetPacket): boolean {
+    return this.localObjectId !== undefined
+      && packet.objectId === this.localObjectId
+      && packet.connectionId === this.localConnectionId;
+  }
+
+  /**
+   * Drops the pinned object and every buffered candidate at a connection boundary. Carried weight is
+   * character-scoped and the snapshot it belongs to survives these boundaries, so it is deliberately
+   * kept: blanking it left the panel weightless until the next complete callback happened to arrive.
+   * Records are kept only for the gap until the next pin, which replaces them.
+   */
+  private releaseLocalObject(): void {
     this.localObjectId = undefined;
-    this.records = {};
+    this.localConnectionId = undefined;
     this.pendingRecords.clear();
-    this.currentWeight = undefined;
-    if (changed) this.publish();
   }
 
   setCached(snapshot: CharacterSnapshot | undefined): void {
@@ -189,6 +200,11 @@ export class FishNetCharacterTracker {
     const state = this.state();
     for (const listener of this.listeners) listener(state);
   }
+}
+
+/** Object ids are only unique within a transport connection, so buffered records key on both. */
+function pendingKey(connectionId: string, objectId: number): string {
+  return `${connectionId} ${objectId}`;
 }
 
 function calculateStats(snapshot: CharacterSnapshot): CharacterViewState["stats"] {

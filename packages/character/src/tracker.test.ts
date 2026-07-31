@@ -124,14 +124,26 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
   });
 
-  test("clears weight when the local player object changes", () => {
+  test("keeps weight when the local player object is re-pinned", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(characterPacket("CharacterCallback_T"));
     tracker.consume(pinPacket(101));
 
+    // Weight belongs to the character, not the unit object, and nothing else can restore it.
     tracker.consume(pinPacket(202));
 
-    expect(tracker.state().weight).toBeUndefined();
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+  });
+
+  test("keeps weight when a late RPC from the outgoing connection re-pins", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(101));
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(resourcePacket(101, "SkillsComponent", 120, 240));
+
+    tracker.consume({ ...pinPacket(101), connectionId: "stale-connection" } as CapturedFishNetPacket);
+
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
   });
 
   test("preserves a complete weight received before the replacement object is pinned", () => {
@@ -214,40 +226,59 @@ describe("FishNetCharacterTracker", () => {
     tracker.consume(pinPacket(101));
     tracker.consume(resourcePacket(101, "HealthComponent", 750, 1_000));
     tracker.consume(resourcePacket(101, "SkillsComponent", 120, 240));
+    tracker.consume(characterPacket("CharacterCallback_T"));
 
-    expect(tracker.state().records).toMatchObject({
-      currentHealth: 750,
-      maxHealth: 1_000,
-      currentMana: 120,
-      maxMana: 240,
-    });
-
+    // A fresh unit object reports its own health; the previous object's is worse than none.
     tracker.consume(pinPacket(202));
 
     expect(tracker.state().records).toBeUndefined();
+    // Weight has no sync stream to refill it, so it is not collateral damage.
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
   });
 
-  test("clears resource tracking at connection boundaries", () => {
+  test("ignores a connection boundary raised on a neighbouring connection", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(resourcePacket(202, "HealthComponent", 750, 1_000));
+
+    // The client keeps several server connections open; only the pinned one ends our tracking.
+    tracker.consume({
+      ...syncPacket(0, "HealthComponent", ""),
+      packetName: "authenticated",
+      connectionId: "other-connection",
+    } as CapturedFishNetPacket);
+
+    expect(tracker.currentObjectId()).toBe(202);
+    expect(tracker.state().records).toMatchObject({ currentHealth: 750, maxHealth: 1_000 });
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+  });
+
+  test("keeps weight across connection boundaries and refreshes records on the next pin", () => {
     for (const packetName of ["authenticated", "disconnect"] as const) {
       const tracker = new FishNetCharacterTracker();
       tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
       tracker.consume(pinPacket(202));
       tracker.consume(characterPacket("CharacterCallback_T"));
-      expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
-      expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+      // A candidate for an object the player has not been pinned to must not survive the boundary.
+      tracker.consume(resourcePacket(303, "HealthComponent", 5, 10));
 
       tracker.consume({ ...syncPacket(0, "HealthComponent", ""), packetName });
 
+      // The snapshot outlives the boundary, so the weight derived from it does too.
       expect(tracker.currentObjectId()).toBeUndefined();
+      expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+      expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
+
+      // The next pin starts that object's records from scratch, and must not promote a candidate
+      // buffered before the boundary.
+      tracker.consume(pinPacket(303));
       expect(tracker.state().records).toBeUndefined();
-      expect(tracker.state().weight).toBeUndefined();
-      // A later pin must not promote a candidate buffered before the boundary.
-      tracker.consume(pinPacket(202));
-      expect(tracker.state().records).toBeUndefined();
+      expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
     }
   });
 
-  test("clears local resources when the player object despawns", () => {
+  test("keeps local resources and weight when the player object despawns", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(resourcePacket(202, "HealthComponent", 750, 1_000));
     tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
@@ -257,8 +288,40 @@ describe("FishNetCharacterTracker", () => {
     tracker.consume({ ...syncPacket(202, "HealthComponent", ""), packetName: "objectDespawn" });
 
     expect(tracker.currentObjectId()).toBeUndefined();
+    expect(tracker.state().records).toMatchObject({ currentHealth: 750, maxHealth: 1_000 });
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+  });
+
+  test("clears resources and weight when the character changes", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
+
+    const other = characterPacket("CharacterCallback_T");
+    other.payload = syntheticCharacter(true, false, "Example Adventurer");
+    tracker.consume(other);
+
+    expect(tracker.current()?.name).toBe("Example Adventurer");
     expect(tracker.state().records).toBeUndefined();
     expect(tracker.state().weight).toBeUndefined();
+  });
+
+  test("ignores lifecycle and sync packets that reuse the local object id on another connection", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
+
+    // Object ids are only unique within a connection; a neighbouring one must not touch local state.
+    const foreign = { connectionId: "other-connection" };
+    tracker.consume({ ...resourcePacket(202, "HealthComponent", 5, 10), ...foreign } as CapturedFishNetPacket);
+    tracker.consume({ ...syncPacket(202, "HealthComponent", ""), ...foreign, packetName: "objectDespawn" } as CapturedFishNetPacket);
+
+    expect(tracker.currentObjectId()).toBe(202);
+    expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
+    expect(tracker.state().records).not.toMatchObject({ currentHealth: 5, maxHealth: 10 });
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
   });
 
   test("does not promote resource candidates belonging to other players", () => {
