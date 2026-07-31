@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.2.4
+
+### Patch Changes
+
+- 977fd5f: Decode authoritative summon calibration snapshots into stack events and surface summon counts and skill-catalog sprites through active statuses, sanitized logs, and replay.
+
 ## 0.2.3
 
 ### Patch Changes

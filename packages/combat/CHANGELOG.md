@@ -1,5 +1,17 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.1.0
+
+### Minor Changes
+
+- 977fd5f: Decode authoritative summon calibration snapshots into stack events and surface summon counts and skill-catalog sprites through active statuses, sanitized logs, and replay.
+
+### Patch Changes
+
+- Updated dependencies [977fd5f]
+  - @kar-mi/spirit-vale-tools-logging@0.2.4
+  - @kar-mi/spirit-vale-tools-skills@0.2.0
+
 ## 1.0.2
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [977fd5f]
+  - @kar-mi/spirit-vale-tools-skills@0.2.0
+
 ## 0.3.0
 
 ### Minor Changes
