@@ -35,9 +35,32 @@ describe("mob reward tracker", () => {
     tracker.consume(death(3, 50));
     tracker.consume(death(3, 51));
     expect(tracker.consume(experience(4, 10, 1, 5, 1, 1n))).toContainEqual({
-      kind: "unmatched", tick: 4, reason: "ambiguous", reward: "experience", drops: [],
+      kind: "unmatched",
+      tick: 4,
+      reason: "ambiguous",
+      reward: "experience",
+      experience: 10,
+      jobExperience: 5,
+      coins: 1n,
+      drops: [],
     });
     expect(tracker.flush().some((event) => event.kind === "kill")).toBe(false);
+  });
+
+  test("preserves XP gains that have no nearby mob death", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(experience(2, 90, 1, 190, 2, 100n));
+
+    expect(tracker.consume(experience(10, 10, 2, 25, 3, 100n))).toContainEqual({
+      kind: "unmatched",
+      tick: 10,
+      reason: "expired",
+      reward: "experience",
+      experience: 20,
+      jobExperience: 35,
+      coins: 0n,
+      drops: [],
+    });
   });
 
   test("preserves item details for a pickup without a correlated death", () => {

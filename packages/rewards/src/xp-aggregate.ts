@@ -1,8 +1,8 @@
 const RETENTION_MS = 60 * 60 * 1_000;
 // xpPerSecond is an exponentially-weighted rate (a "leaky bucket"), not a flat rolling-window
-// average: kills are sparse, discrete events, so a flat window either reads 0 between kills (if
-// short) or barely moves per kill (if long), and always cliff-drops the instant a kill ages past
-// the window edge. EWMA blends each kill in immediately, then lets it fade smoothly — no window
+// average: XP gains are sparse, discrete events, so a flat window either reads 0 between gains (if
+// short) or barely moves per gain (if long), and always cliff-drops the instant a gain ages past
+// the window edge. EWMA blends each gain in immediately, then lets it fade smoothly — no window
 // edge, no discontinuity. RATE_TAU_SECONDS is a decay constant, not a cutoff: contributions never
 // fully vanish, but after ~3x tau they're negligible (about 5% of their original weight).
 const RATE_TAU_SECONDS = 20;
@@ -23,7 +23,7 @@ export interface XpAggregateSnapshot {
 export interface XpAggregateCheckpoint {
   total: number;
   watermarkMs: number;
-  /** How many kills were already counted at exactly `watermarkMs` — disambiguates kills that share a timestamp (e.g. an AoE clearing several mobs at once) from a duplicate replay of the same kill. */
+  /** How many gains were already counted at exactly `watermarkMs` — disambiguates gains that share a timestamp from a duplicate replay of the same gain. */
   watermarkOccurrences: number;
 }
 
@@ -37,11 +37,11 @@ export class XpAggregateTracker {
   private readonly buckets: XpAggregateBucket[] = [];
 
   /**
-   * `atMs` must be the kill's real recorded time, not wall-clock consume time: a fresh log
+   * `atMs` must be the gain's real recorded time, not wall-clock consume time: a fresh log
    * follower (e.g. after a window is closed and reopened) re-tails the current session's log
-   * from the start, re-emitting every kill already counted. Anything strictly before the
-   * watermark is skipped outright; kills sharing the watermark's own timestamp are disambiguated
-   * by position (see `watermarkOccurrences`) so a genuine tie (several kills recorded in the same
+   * from the start, re-emitting every gain already counted. Anything strictly before the
+   * watermark is skipped outright; gains sharing the watermark's own timestamp are disambiguated
+   * by position (see `watermarkOccurrences`) so a genuine tie (several gains recorded in the same
    * millisecond) isn't mistaken for a duplicate replay, and vice versa.
    */
   record(experience: number, atMs: number): void {

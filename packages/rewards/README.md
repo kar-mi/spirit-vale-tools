@@ -31,4 +31,9 @@ console.log(catalogMobs.length);
 Use `loadRewardReplay` to rebuild reward state from a recorded log session and
 `RewardSessionLogFollower` to follow a live session.
 
+The tracker derives XP gains from the character's absolute XP callback. Session
+and aggregate XP totals therefore include party-shared and other standalone
+gains even when no individual mob death can be attributed. Per-mob summaries
+remain limited to confirmed kill correlations.
+
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

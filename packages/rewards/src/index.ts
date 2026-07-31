@@ -14,6 +14,8 @@ export type {
   FishNetMobIdentity,
   FishNetMobRewardEvent,
   FishNetMobRewardTrackerOptions,
+  FishNetUnmatchedExperienceEvent,
+  FishNetUnmatchedPickupEvent,
   FishNetUnmatchedRewardEvent,
 } from "./reward-tracker.ts";
 export { MobRewardSession } from "./session.ts";

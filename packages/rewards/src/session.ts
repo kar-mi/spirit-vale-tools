@@ -39,6 +39,8 @@ export interface MobRewardSessionConsumeContext {
 export class MobRewardSession {
   private readonly kills = new Map<string, RecordedMobRewardKill>();
   private unmatched = 0;
+  private unmatchedExperience = 0;
+  private unmatchedJobExperience = 0;
   private unmatchedDrops: RewardItem[] = [];
   private readonly unmatchedByReason = { ambiguous: 0, expired: 0, unidentified: 0 };
 
@@ -47,6 +49,10 @@ export class MobRewardSession {
       this.unmatched += 1;
       this.unmatchedByReason[event.reason] += 1;
       this.unmatchedDrops = mergeItems(this.unmatchedDrops, event.drops);
+      if (event.reward === "experience") {
+        this.unmatchedExperience += event.experience;
+        this.unmatchedJobExperience += event.jobExperience;
+      }
     }
     else this.kills.set(event.id, cloneKill({ ...event, ...context }));
   }
@@ -54,8 +60,8 @@ export class MobRewardSession {
   snapshot(): MobRewardSessionSnapshot {
     const kills = [...this.kills.values()].sort((left, right) => right.tick - left.tick).map(cloneKill);
     const mobs = new Map<string, MobRewardMobSummary>();
-    let totalExperience = 0;
-    let totalJobExperience = 0;
+    let totalExperience = this.unmatchedExperience;
+    let totalJobExperience = this.unmatchedJobExperience;
     let totalCoins = 0n;
     for (const kill of kills) {
       totalExperience += kill.experience;
@@ -94,6 +100,8 @@ export class MobRewardSession {
   reset(): void {
     this.kills.clear();
     this.unmatched = 0;
+    this.unmatchedExperience = 0;
+    this.unmatchedJobExperience = 0;
     this.unmatchedDrops = [];
     this.unmatchedByReason.ambiguous = 0;
     this.unmatchedByReason.expired = 0;

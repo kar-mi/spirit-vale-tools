@@ -26,13 +26,25 @@ export interface FishNetConfirmedMobKill {
   drops: RewardItem[];
 }
 
-export interface FishNetUnmatchedRewardEvent {
+interface FishNetUnmatchedRewardEventBase {
   kind: "unmatched";
   tick: number;
   reason: "ambiguous" | "expired" | "unidentified";
-  reward: "experience" | "pickup";
   drops: RewardItem[];
 }
+
+export interface FishNetUnmatchedExperienceEvent extends FishNetUnmatchedRewardEventBase {
+  reward: "experience";
+  experience: number;
+  jobExperience: number;
+  coins: bigint;
+}
+
+export interface FishNetUnmatchedPickupEvent extends FishNetUnmatchedRewardEventBase {
+  reward: "pickup";
+}
+
+export type FishNetUnmatchedRewardEvent = FishNetUnmatchedExperienceEvent | FishNetUnmatchedPickupEvent;
 
 export type FishNetMobRewardEvent = FishNetConfirmedMobKill | FishNetUnmatchedRewardEvent;
 
@@ -192,13 +204,25 @@ export class FishNetMobRewardTracker {
     const candidates = this.pending.filter((kill) => tick >= kill.tick && tick - kill.tick <= this.correlationWindowTicks);
     if (candidates.length !== 1) {
       for (const candidate of candidates) candidate.ambiguous = true;
-      this.queuedEvents.push({
-        kind: "unmatched",
-        tick,
-        reason: candidates.length === 0 ? "expired" : "ambiguous",
-        reward,
-        drops: reward === "pickup" ? (value as RewardItem[]).map((item) => ({ ...item })) : [],
-      });
+      const reason = candidates.length === 0 ? "expired" : "ambiguous";
+      if (reward === "experience") {
+        this.queuedEvents.push({
+          kind: "unmatched",
+          tick,
+          reason,
+          reward,
+          ...(value as { experience: number; jobExperience: number; coins: bigint }),
+          drops: [],
+        });
+      } else {
+        this.queuedEvents.push({
+          kind: "unmatched",
+          tick,
+          reason,
+          reward,
+          drops: (value as RewardItem[]).map((item) => ({ ...item })),
+        });
+      }
       return;
     }
     const [candidate] = candidates;
@@ -220,7 +244,9 @@ export class FishNetMobRewardTracker {
           kind: "unmatched",
           tick: kill.tick,
           reason: "unidentified",
-          reward: kill.gain ? "experience" : "pickup",
+          ...(kill.gain
+            ? { reward: "experience" as const, ...kill.gain }
+            : { reward: "pickup" as const }),
           drops: kill.drops.map((item) => ({ ...item })),
         });
       } else if (!kill.gain) {

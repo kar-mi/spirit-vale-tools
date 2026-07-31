@@ -26,7 +26,7 @@ export interface RewardLogBatch {
 }
 
 export interface RewardLogFollowerOptions {
-  /** `recordedAtMs` is the kill's real recorded time (from the log), not wall-clock consume time. */
+  /** `recordedAtMs` is the gain's real recorded time (from the log), not wall-clock consume time. */
   onExperience?: (experience: number, recordedAtMs: number) => void;
 }
 
@@ -71,7 +71,7 @@ export class RewardLogFollower {
       const event = parseRewardEvent(record.data);
       if (!event) { invalidLines += 1; continue; }
       this.session.consume(event, { recordedAt: record.recordedAt });
-      if (event.kind === "kill" && event.experience > 0) {
+      if ((event.kind === "kill" || event.reward === "experience") && event.experience > 0) {
         const recordedAtMs = Date.parse(record.recordedAt);
         if (!Number.isNaN(recordedAtMs)) this.onExperience?.(event.experience, recordedAtMs);
       }
@@ -140,7 +140,24 @@ function parseRewardEvent(value: unknown): FishNetMobRewardEvent | undefined {
     if (rawDrops !== undefined && !Array.isArray(rawDrops)) return undefined;
     const drops = (rawDrops ?? []).map((drop: unknown) => parseDrop(drop));
     if (drops.some((drop: ReturnType<typeof parseDrop>) => drop === undefined)) return undefined;
-    return { kind: "unmatched", tick: value["tick"], reason, reward, drops: drops as NonNullable<(typeof drops)[number]>[] };
+    const parsedDrops = drops as NonNullable<(typeof drops)[number]>[];
+    if (reward === "pickup") return { kind: "unmatched", tick: value["tick"], reason, reward, drops: parsedDrops };
+    const experience: unknown = value["experience"] ?? 0;
+    const jobExperience: unknown = value["jobExperience"] ?? 0;
+    const coins = value["coins"] ?? "0";
+    if (typeof experience !== "number" || !Number.isSafeInteger(experience) || experience < 0
+      || typeof jobExperience !== "number" || !Number.isSafeInteger(jobExperience) || jobExperience < 0
+      || !decimal(coins)) return undefined;
+    return {
+      kind: "unmatched",
+      tick: value["tick"],
+      reason,
+      reward,
+      experience,
+      jobExperience,
+      coins: BigInt(coins),
+      drops: parsedDrops,
+    };
   }
   if (value["kind"] !== "kill" || typeof value["id"] !== "string" || !record(value["mob"])
     || typeof value["experience"] !== "number" || typeof value["jobExperience"] !== "number"
