@@ -97,6 +97,15 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
       || (value["action"] !== "applied" && value["action"] !== "removed")) return undefined;
     return value as unknown as FishNetCombatEvent;
   }
+  if (value["kind"] === "summon") {
+    if (!isFiniteNumber(value["actorId"])
+      || typeof value["skillId"] !== "string"
+      || value["skillId"].length === 0
+      || !isFiniteNumber(value["stacks"])
+      || !Number.isInteger(value["stacks"])
+      || value["stacks"] < 0) return undefined;
+    return value as unknown as FishNetCombatEvent;
+  }
   if (value["kind"] === "heal") {
     if (!isFiniteNumber(value["targetId"]) || !isFiniteNumber(value["value"])) return undefined;
     if (value["recoveryStyle"] !== undefined

@@ -6,6 +6,7 @@ import {
 import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetRecoveryStyle, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import { decodeSummonCalibration } from "./summon-calibration.ts";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";
@@ -128,6 +129,18 @@ export interface FishNetCombatStatusEvent {
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
+export interface FishNetCombatSummonEvent {
+  kind: "summon";
+  rpc: "CalibrateSummons_T";
+  tick: number;
+  payloadBytes: number;
+  fields: Record<string, FishNetDecodedValue>;
+  actorId: number;
+  skillId: string;
+  stacks: number;
+  actorIdentity?: FishNetCombatActorIdentity;
+}
+
 export type FishNetHealAttribution = FishNetDamageAttribution | "unattributed";
 
 export interface FishNetCombatHealEvent {
@@ -156,6 +169,7 @@ export type FishNetCombatEvent =
   | FishNetCombatDamageEvent
   | FishNetCombatDeathEvent
   | FishNetCombatStatusEvent
+  | FishNetCombatSummonEvent
   | FishNetCombatHealEvent;
 
 interface ActivationState {
@@ -209,6 +223,7 @@ export class FishNetCombatTracker {
   private readonly semanticMap?: FishNetSemanticMap;
   private readonly activations = new Map<string, ActivationState>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
+  private readonly summonStacks = new Map<number, Map<string, number>>();
   private readonly recentDamageSignatures = new Set<string>();
   private recentDamageTick: number | undefined;
   private nextActivation = 1;
@@ -277,14 +292,53 @@ export class FishNetCombatTracker {
       if (statusEvent) events.push(statusEvent);
       return events;
     }
+    if (packet.rpcName === "CalibrateSummons_T" && matchesBehaviour(packet, "SummoningComponent")) {
+      events.push(...this.consumeSummonCalibration(packet));
+      return events;
+    }
     return events;
   }
 
   reset(): void {
     this.activations.clear();
     this.activeRegenSources.clear();
+    this.summonStacks.clear();
     this.recentDamageSignatures.clear();
     this.recentDamageTick = undefined;
+  }
+
+  private consumeSummonCalibration(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
+    let entries: ReturnType<typeof decodeSummonCalibration>;
+    try {
+      entries = decodeSummonCalibration(packet.payload);
+    } catch {
+      return [];
+    }
+
+    const actorId = packet.objectId!;
+    const previous = this.summonStacks.get(actorId) ?? new Map<string, number>();
+    const current = new Map<string, number>();
+    for (const { skillId } of entries) current.set(skillId, (current.get(skillId) ?? 0) + 1);
+
+    const changedSkillIds = [
+      ...current.keys(),
+      ...[...previous.keys()].filter((skillId) => !current.has(skillId)),
+    ].filter((skillId) => current.get(skillId) !== previous.get(skillId));
+
+    if (current.size === 0) this.summonStacks.delete(actorId);
+    else this.summonStacks.set(actorId, current);
+
+    return changedSkillIds.map((skillId) => ({
+      kind: "summon",
+      rpc: "CalibrateSummons_T",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: {},
+      actorId,
+      skillId,
+      stacks: current.get(skillId) ?? 0,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    }));
   }
 
   private consumeSkill(packet: DecodedFishNetPacket): FishNetCombatActivationEvent | undefined {

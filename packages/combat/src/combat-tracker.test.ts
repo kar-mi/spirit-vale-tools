@@ -112,7 +112,98 @@ function statusEffect(
   return packet(tick, actorId, "StatusComponent", rpcName, fields);
 }
 
+function summonCalibration(
+  tick: number,
+  actorId: number,
+  skillIds: readonly string[],
+): DecodedFishNetPacket {
+  const result = packet(tick, actorId, "SummoningComponent", "CalibrateSummons_T");
+  result.payload = Buffer.concat([
+    packed(skillIds.length),
+    ...skillIds.map((skillId) => Buffer.concat([packed(Buffer.byteLength(skillId)), Buffer.from(skillId), Buffer.from([1, 0])])),
+  ]);
+  return result;
+}
+
+function packed(value: number): Buffer {
+  let encoded = BigInt(value) << 1n;
+  const bytes: number[] = [];
+  while (encoded >= 0x80n) {
+    bytes.push(Number((encoded & 0x7fn) | 0x80n));
+    encoded >>= 7n;
+  }
+  bytes.push(Number(encoded));
+  return Buffer.from(bytes);
+}
+
 describe("FishNetCombatTracker", () => {
+  test("emits changed summon stack counts from authoritative calibration snapshots", () => {
+    const tracker = new FishNetCombatTracker();
+
+    expect(tracker.consume(summonCalibration(1, 10, ["FictionalClone"]))).toEqual([
+      expect.objectContaining({ kind: "summon", actorId: 10, skillId: "FictionalClone", stacks: 1 }),
+    ]);
+    expect(tracker.consume(summonCalibration(2, 10, ["FictionalClone", "FictionalClone"]))).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 2 }),
+    ]);
+    expect(tracker.consume(summonCalibration(3, 10, ["FictionalClone", "FictionalClone"]))).toEqual([]);
+    expect(tracker.consume(summonCalibration(4, 10, ["FictionalClone", "FictionalPet"]))).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 1 }),
+      expect.objectContaining({ skillId: "FictionalPet", stacks: 1 }),
+    ]);
+    expect(tracker.consume(summonCalibration(5, 10, []))).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 0 }),
+      expect.objectContaining({ skillId: "FictionalPet", stacks: 0 }),
+    ]);
+  });
+
+  test("re-emits a summon snapshot after a connection reset", () => {
+    const tracker = new FishNetCombatTracker();
+    const twoClones = summonCalibration(1, 10, ["FictionalClone", "FictionalClone"]);
+    expect(tracker.consume(twoClones)).toHaveLength(1);
+    expect(tracker.consume({ ...packet(2, 0, "", ""), packetName: "authenticated", rpcName: undefined, objectId: undefined })).toEqual([]);
+    expect(tracker.consume({ ...twoClones, tick: 3 })).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 2 }),
+    ]);
+  });
+
+  test("ignores malformed summon snapshots without losing the last valid count", () => {
+    const tracker = new FishNetCombatTracker();
+    const twoClones = summonCalibration(1, 10, ["FictionalClone", "FictionalClone"]);
+    tracker.consume(twoClones);
+    const malformed = summonCalibration(2, 10, ["FictionalClone"]);
+    malformed.payload = malformed.payload.subarray(0, malformed.payload.length - 1);
+    expect(tracker.consume(malformed)).toEqual([]);
+    expect(tracker.consume({ ...twoClones, tick: 3 })).toEqual([]);
+  });
+
+  test("treats a null summon array as an empty authoritative snapshot", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(summonCalibration(1, 10, ["FictionalClone"]));
+    const nullSnapshot = summonCalibration(2, 10, []);
+    nullSnapshot.payload = Buffer.from([1]);
+    expect(tracker.consume(nullSnapshot)).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 0 }),
+    ]);
+  });
+
+  test("tracks clone death, player death, and manual-despawn calibration sequence", () => {
+    const tracker = new FishNetCombatTracker();
+    const stacks = (tick: number, count: number) => tracker.consume(summonCalibration(
+      tick,
+      10,
+      Array.from({ length: count }, () => "FictionalClone"),
+    ));
+
+    expect(stacks(1, 2)[0]).toMatchObject({ stacks: 2 });
+    expect(stacks(2, 3)[0]).toMatchObject({ stacks: 3 });
+    expect(stacks(3, 2)[0]).toMatchObject({ stacks: 2 });
+    expect(stacks(4, 0)[0]).toMatchObject({ stacks: 0 });
+    expect(stacks(5, 2)[0]).toMatchObject({ stacks: 2 });
+    expect(stacks(6, 1)[0]).toMatchObject({ stacks: 1 });
+    expect(stacks(7, 0)[0]).toMatchObject({ stacks: 0 });
+  });
+
   test("attributes overlapping different skills by attacker and source", () => {
     const tracker = new FishNetCombatTracker();
     const first = tracker.consume(cast(1, 10, "AxeArc"))[0];

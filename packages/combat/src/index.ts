@@ -36,6 +36,7 @@ export type {
   FishNetCombatEvent,
   FishNetCombatHealEvent,
   FishNetCombatStatusEvent,
+  FishNetCombatSummonEvent,
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
   FishNetHealAttribution,

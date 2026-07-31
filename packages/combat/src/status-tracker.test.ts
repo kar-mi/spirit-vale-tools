@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
+import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { FishNetStatusTracker } from "./status-tracker.ts";
-import type { FishNetCombatActivationEvent, FishNetCombatDeathEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
+import type { FishNetCombatActivationEvent, FishNetCombatDeathEvent, FishNetCombatStatusEvent, FishNetCombatSummonEvent } from "./combat-tracker.ts";
 
 const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
   buildFingerprint: "synthetic-build",
@@ -43,6 +44,14 @@ const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
         { id: "VenomStrike", duration: 4, durationPerLevel: 0, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 },
       ],
     },
+  ],
+};
+
+const SYNTHETIC_SKILL_CATALOG: FishNetSkillCatalog = {
+  buildFingerprint: "synthetic-build",
+  skills: [
+    { id: "FictionalClone", displayName: "Fictional Clone", spriteId: "fictional-clone-sprite", kinds: ["active"] },
+    { id: "SelfBuff", displayName: "Self Buff Skill", spriteId: "fictional-self-buff-sprite", kinds: ["active"] },
   ],
 };
 
@@ -104,7 +113,71 @@ function activationEvent(overrides: Partial<FishNetCombatActivationEvent> = {}):
   };
 }
 
+function summonEvent(overrides: Partial<FishNetCombatSummonEvent> = {}): FishNetCombatSummonEvent {
+  return {
+    kind: "summon",
+    rpc: "CalibrateSummons_T",
+    tick: 0,
+    payloadBytes: 0,
+    fields: {},
+    actorId: 1,
+    skillId: "FictionalClone",
+    stacks: 1,
+    ...overrides,
+  };
+}
+
 describe("FishNetStatusTracker", () => {
+  test("surfaces summon stacks as an indefinite skill-labeled buff", () => {
+    const tracker = new FishNetStatusTracker({
+      statusCatalog: SYNTHETIC_CATALOG,
+      skillCatalog: SYNTHETIC_SKILL_CATALOG,
+    });
+    tracker.consume(summonEvent({ stacks: 2 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)).toEqual([
+      expect.objectContaining({
+        statusId: "FictionalClone",
+        displayName: "Fictional Clone",
+        spriteId: "fictional-clone-sprite",
+        isDebuff: false,
+        level: 1,
+        stacks: 2,
+        appliedAtMs: 1_000,
+      }),
+    ]);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]?.expiresAtMs).toBeUndefined();
+  });
+
+  test("updates, clears, and reapplies summon stacks across lifecycle boundaries", () => {
+    const tracker = new FishNetStatusTracker({
+      statusCatalog: SYNTHETIC_CATALOG,
+      skillCatalog: SYNTHETIC_SKILL_CATALOG,
+    });
+    tracker.consume(summonEvent({ stacks: 3 }), 0);
+    tracker.consume(summonEvent({ stacks: 2 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ stacks: 2, appliedAtMs: 1_000 });
+    tracker.consume(summonEvent({ stacks: 0 }), 2_000);
+    expect(tracker.getActiveStatuses(1, 2_000)).toEqual([]);
+
+    tracker.consume(summonEvent({ stacks: 2 }), 3_000);
+    tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 4 });
+    expect(tracker.getActiveStatuses(1, 4_000)).toEqual([]);
+    tracker.consume(summonEvent({ actorId: 2, stacks: 2 }), 5_000);
+    expect(tracker.getActiveStatuses(2, 5_000)[0]).toMatchObject({ stacks: 2, appliedAtMs: 5_000 });
+  });
+
+  test("a clone death only clears statuses belonging to the clone actor", () => {
+    const tracker = new FishNetStatusTracker({
+      statusCatalog: SYNTHETIC_CATALOG,
+      skillCatalog: SYNTHETIC_SKILL_CATALOG,
+    });
+    tracker.consume(summonEvent({ actorId: 1, stacks: 3 }), 0);
+    tracker.consume(deathEvent({ actorId: 99, targetId: 50 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ stacks: 3 });
+    tracker.consume(summonEvent({ actorId: 1, stacks: 2 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ stacks: 2 });
+  });
+
   test("computes an expiry from the catalog's duration-by-level and expires it", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
     tracker.consumeStatus(statusEvent({ level: 3 }), 1_000);
@@ -135,6 +208,19 @@ describe("FishNetStatusTracker", () => {
     const [active] = tracker.getActiveStatuses(1, 1_000_000);
     expect(active).toMatchObject({ statusId: "Aura", isDebuff: false });
     expect(active?.expiresAtMs).toBeUndefined();
+  });
+
+  test("falls back to the matching skill sprite when status metadata has none", () => {
+    const tracker = new FishNetStatusTracker({
+      statusCatalog: SYNTHETIC_CATALOG,
+      skillCatalog: SYNTHETIC_SKILL_CATALOG,
+    });
+    tracker.consumeStatus(statusEvent({ statusId: "SelfBuff", level: 1 }), 0);
+    expect(tracker.getActiveStatuses(1, 0)[0]).toMatchObject({
+      statusId: "SelfBuff",
+      displayName: "Self Buff",
+      spriteId: "fictional-self-buff-sprite",
+    });
   });
 
   test("advance() drops expired statuses even without an explicit remove", () => {

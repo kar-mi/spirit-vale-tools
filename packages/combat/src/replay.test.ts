@@ -50,6 +50,24 @@ describe("loadDpsReplay", () => {
       await file.delete();
     }
   });
+
+  test("accepts valid summon stack events and rejects invalid counts", async () => {
+    const basePath = `${import.meta.dir}/../../../.local/replay-test-${crypto.randomUUID()}`;
+    const file = Bun.file(`${basePath}.jsonl`);
+    const records = [
+      logRecord(1, "combat.event", combatDamage(300, 101, 120)),
+      logRecord(2, "combat.event", { kind: "summon", rpc: "CalibrateSummons_T", tick: 301, actorId: 101, skillId: "FictionalSummon", stacks: 2 }),
+      logRecord(3, "combat.event", { kind: "summon", rpc: "CalibrateSummons_T", tick: 302, actorId: 101, skillId: "FictionalSummon", stacks: -1 }),
+    ];
+    await Bun.write(file, records.map((record) => JSON.stringify(record)).join("\n"));
+    try {
+      const result = await loadDpsReplay(file.name!);
+      expect(result.invalidLines).toBe(1);
+      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+    } finally {
+      await file.delete();
+    }
+  });
 });
 
 function combatStatus(

@@ -19,6 +19,14 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "status", tick: 1, actorId: 2, statusId: "Bleed", level: 3, action: "applied" });
   });
 
+  test("keeps summon stack fields", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "summon", tick: 1, actorId: 2, skillId: "FictionalSummon", stacks: 3,
+      fields: { private: "payload" }, payloadBytes: 12,
+    });
+    expect(value).toEqual({ kind: "summon", tick: 1, actorId: 2, skillId: "FictionalSummon", stacks: 3 });
+  });
+
   test("keeps heal record fields while dropping raw payload/fields", () => {
     const value = sanitizeCombatData("combat.event", {
       kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", recoveryStyle: "standard", value: 150,

@@ -13,6 +13,7 @@ export interface FishNetSkillEffect {
 export interface FishNetSkillDefinition {
   readonly id: string;
   readonly displayName: string;
+  readonly spriteId?: string;
   readonly kinds: readonly FishNetSkillKind[];
   readonly effects?: readonly FishNetSkillEffect[];
 }

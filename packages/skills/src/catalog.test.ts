@@ -10,7 +10,7 @@ import type { FishNetSkillCatalog } from "./catalog.ts";
 
 const SYNTHETIC_CATALOG: FishNetSkillCatalog = {
   buildFingerprint: "synthetic-build",
-  skills: [{ id: "SyntheticFocus", displayName: "Synthetic Focus", kinds: ["passive", "mastery"] }],
+  skills: [{ id: "SyntheticFocus", displayName: "Synthetic Focus", spriteId: "fictional-focus", kinds: ["passive", "mastery"] }],
 };
 
 describe("FishNetSkillDirectory", () => {
@@ -43,6 +43,13 @@ describe("FishNetSkillDirectory", () => {
     expect(resolveFishNetSkill("Multistrike")).toMatchObject({
       displayName: "Multistrike",
       effects: [{ type: 80, value: 0, valuePerLevel: 10 }],
+    });
+  });
+
+  test("includes extracted skill sprites", () => {
+    expect(resolveFishNetSkill("ShadowSeal")).toMatchObject({
+      displayName: "Shadow Seal",
+      spriteId: "Rogue18",
     });
   });
 });

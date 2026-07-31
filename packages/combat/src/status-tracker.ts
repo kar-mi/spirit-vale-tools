@@ -4,8 +4,15 @@ import {
   statusDurationSeconds,
 } from "@kar-mi/spirit-vale-tools-statuses";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
+import { FishNetSkillDirectory, loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import type { FishNetCombatActivationEvent, FishNetCombatEvent, FishNetCombatStatusEvent } from "./combat-tracker.ts";
+import type {
+  FishNetCombatActivationEvent,
+  FishNetCombatEvent,
+  FishNetCombatStatusEvent,
+  FishNetCombatSummonEvent,
+} from "./combat-tracker.ts";
 
 export interface FishNetActiveStatus {
   statusId: string;
@@ -16,22 +23,27 @@ export interface FishNetActiveStatus {
   appliedAtMs: number;
   expiresAtMs?: number;
   remainingMs?: number;
+  stacks?: number;
 }
 
 export interface FishNetStatusTrackerOptions {
   /** Status metadata used to resolve durations by level. Defaults to the bundled catalog. */
   statusCatalog?: FishNetStatusCatalog;
+  /** Skill metadata used to label summon-derived buffs. Defaults to the bundled catalog. */
+  skillCatalog?: FishNetSkillCatalog;
 }
 
 interface TrackedStatus {
   level: number;
   appliedAtMs: number;
   expiresAtMs?: number;
+  stacks?: number;
 }
 
 /** Tracks per-actor active buffs/debuffs from FishNet status apply/remove events. */
 export class FishNetStatusTracker {
   private readonly directory: FishNetStatusDirectory;
+  private readonly skillDirectory: FishNetSkillDirectory;
   private readonly active = new Map<number, Map<string, TrackedStatus>>();
   /** Actor display names, tracked independently of damage so statuses resolve before an actor has hit anything. */
   private readonly identities = new Map<number, string>();
@@ -45,10 +57,12 @@ export class FishNetStatusTracker {
 
   constructor(options: FishNetStatusTrackerOptions = {}) {
     this.directory = new FishNetStatusDirectory(options.statusCatalog ?? loadBundledStatusCatalog());
+    this.skillDirectory = new FishNetSkillDirectory(options.skillCatalog ?? loadBundledSkillCatalog());
   }
 
   consume(event: FishNetCombatEvent, observedAtMs: number): void {
     if (event.kind === "status") this.consumeStatus(event, observedAtMs);
+    else if (event.kind === "summon") this.consumeSummon(event, observedAtMs);
     else if (event.kind === "activation") this.consumeActivation(event, observedAtMs);
     else if (event.kind === "death") this.active.delete(event.targetId);
   }
@@ -111,6 +125,19 @@ export class FishNetStatusTracker {
     this.active.set(event.actorId, statuses);
   }
 
+  consumeSummon(event: FishNetCombatSummonEvent, observedAtMs: number): void {
+    if (event.actorIdentity) this.identities.set(event.actorId, event.actorIdentity.displayName);
+    const statuses = this.active.get(event.actorId) ?? new Map<string, TrackedStatus>();
+    if (event.stacks <= 0) {
+      statuses.delete(event.skillId);
+      if (statuses.size === 0) this.active.delete(event.actorId);
+      else this.active.set(event.actorId, statuses);
+      return;
+    }
+    statuses.set(event.skillId, { level: 1, stacks: event.stacks, appliedAtMs: observedAtMs });
+    this.active.set(event.actorId, statuses);
+  }
+
   /**
    * Refreshes a status's timer when one of its granting skills activates again.
    * Some skills (e.g. Haste, Axe Quicken) don't resend ApplyEffect_T on recast while
@@ -124,6 +151,7 @@ export class FishNetStatusTracker {
     const statuses = this.active.get(event.actorId);
     if (!statuses) return;
     for (const [statusId, tracked] of statuses) {
+      if (tracked.stacks !== undefined) continue;
       const definition = this.directory.resolve(statusId);
       const isGranter = statusId === event.sourceId
         || definition?.effects.some((effect) => effect.id === event.sourceId);
@@ -155,13 +183,16 @@ export class FishNetStatusTracker {
     for (const [statusId, tracked] of statuses) {
       if (tracked.expiresAtMs !== undefined && tracked.expiresAtMs <= nowMs) continue;
       const definition = this.directory.resolve(statusId);
+      const skillDefinition = this.skillDirectory.resolve(statusId);
+      const spriteId = definition?.spriteId ?? skillDefinition?.spriteId;
       result.push({
         statusId,
-        displayName: definition?.displayName ?? statusId,
-        ...(definition?.spriteId === undefined ? {} : { spriteId: definition.spriteId }),
+        displayName: definition?.displayName ?? skillDefinition?.displayName ?? statusId,
+        ...(spriteId === undefined ? {} : { spriteId }),
         isDebuff: definition?.isDebuff ?? false,
         level: tracked.level,
         appliedAtMs: tracked.appliedAtMs,
+        ...(tracked.stacks === undefined ? {} : { stacks: tracked.stacks }),
         ...(tracked.expiresAtMs === undefined
           ? {}
           : { expiresAtMs: tracked.expiresAtMs, remainingMs: Math.max(0, tracked.expiresAtMs - nowMs) }),
