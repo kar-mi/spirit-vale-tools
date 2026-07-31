@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.2.2
+
+### Patch Changes
+
+- abf02e7: Clear stale carried-weight records when the local player object or connection changes while preserving complete weight callbacks received before the replacement object is identified.
+
 ## 0.2.1
 
 ### Patch Changes
