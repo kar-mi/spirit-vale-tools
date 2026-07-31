@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-statuses
 
+## 0.2.2
+
+### Patch Changes
+
+- 13ca9ae: Correct level-scaled status durations, treat Fury as a toggle, and refresh active ready-status timers when any cataloged granting skill activates again.
+
 ## 0.2.1
 
 ### Patch Changes
