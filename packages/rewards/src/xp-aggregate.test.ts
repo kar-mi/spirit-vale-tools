@@ -75,3 +75,38 @@ test("kills sharing the same recorded timestamp within a single live pass are no
 
   expect(tracker.currentTotal()).toBe(20);
 });
+
+test("xpPerSecond jumps immediately when a kill lands", () => {
+  const tracker = new XpAggregateTracker();
+  tracker.record(200, 0);
+
+  // With a 20s time constant, a fresh kill's immediate contribution is experience / tau.
+  expect(tracker.snapshot(0).xpPerSecond).toBeCloseTo(10, 5);
+});
+
+test("xpPerSecond decays smoothly over time with no cliff-edge, instead of dropping to 0 at a window boundary", () => {
+  const tracker = new XpAggregateTracker();
+  tracker.record(200, 0);
+
+  // After one time constant (20s) with no further kills, the rate has decayed to 1/e of its peak.
+  expect(tracker.snapshot(20_000).xpPerSecond).toBeCloseTo(10 / Math.E, 5);
+  // A flat rolling window would already read 0 here; EWMA never cliffs, only fades.
+  expect(tracker.snapshot(20_000).xpPerSecond).toBeGreaterThan(0);
+});
+
+test("xpPerSecond blends a new kill on top of the still-decaying contribution of a previous one", () => {
+  const tracker = new XpAggregateTracker();
+  tracker.record(200, 0);
+  tracker.record(200, 10_000);
+
+  const expected = 10 * Math.exp(-10 / 20) + 10;
+  expect(tracker.snapshot(10_000).xpPerSecond).toBeCloseTo(expected, 5);
+});
+
+test("reset zeroes xpPerSecond immediately", () => {
+  const tracker = new XpAggregateTracker();
+  tracker.record(200, 0);
+  tracker.reset(5_000);
+
+  expect(tracker.snapshot(5_000).xpPerSecond).toBe(0);
+});

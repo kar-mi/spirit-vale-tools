@@ -6,5 +6,5 @@ Add `XpAggregateTracker` for cross-session Character XP tracking: an in-memory, 
 
 Adds `restoreCheckpoint`/`currentCheckpoint` (an `XpAggregateCheckpoint` of `{ total, watermarkMs, watermarkOccurrences }`) so consumers can persist the running total to disk and resume it across app restarts. The watermark prevents a fresh log tail (e.g. after closing and reopening a window, which re-tails the current session's log from the start) from double-counting kills already reflected in the checkpoint, while `watermarkOccurrences` correctly disambiguates several kills sharing the same recorded millisecond (e.g. an AoE clearing multiple mobs at once) from a duplicate replay of the same kill.
 
-The `xpPerSecond` rolling window is now 10s (was 60s) — kills are sparse, discrete events, so a full minute of averaging made a single kill barely move the number.
+`xpPerSecond` is now an exponentially-weighted rate (a "leaky bucket", 20s time constant) instead of a flat rolling-window average. Kills are sparse, discrete events, so any flat window either reads 0 between kills (short) or barely moves per kill (long), and always cliff-drops the instant a kill ages past the window edge. EWMA blends each kill in immediately and lets it fade smoothly instead.
 

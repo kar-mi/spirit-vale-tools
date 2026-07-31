@@ -1,7 +1,11 @@
 const RETENTION_MS = 60 * 60 * 1_000;
-// Short enough to feel immediately responsive to a kill landing (kills are sparse, discrete
-// events, unlike continuous damage ticks, so a 60s window made single kills nearly invisible).
-const RATE_WINDOW_MS = 10 * 1_000;
+// xpPerSecond is an exponentially-weighted rate (a "leaky bucket"), not a flat rolling-window
+// average: kills are sparse, discrete events, so a flat window either reads 0 between kills (if
+// short) or barely moves per kill (if long), and always cliff-drops the instant a kill ages past
+// the window edge. EWMA blends each kill in immediately, then lets it fade smoothly — no window
+// edge, no discontinuity. RATE_TAU_SECONDS is a decay constant, not a cutoff: contributions never
+// fully vanish, but after ~3x tau they're negligible (about 5% of their original weight).
+const RATE_TAU_SECONDS = 20;
 
 export interface XpAggregateBucket {
   atMs: number;
@@ -28,6 +32,8 @@ export class XpAggregateTracker {
   private watermarkMs = 0;
   private watermarkOccurrences = 0;
   private replayedAtWatermark = 0;
+  private ewmaRate = 0;
+  private ewmaUpdatedAtMs = 0;
   private readonly buckets: XpAggregateBucket[] = [];
 
   /**
@@ -49,6 +55,9 @@ export class XpAggregateTracker {
     if (this.replayedAtWatermark <= this.watermarkOccurrences) return;
     this.watermarkOccurrences = this.replayedAtWatermark;
     this.total += experience;
+    const dtSeconds = Math.max(0, atMs - this.ewmaUpdatedAtMs) / 1_000;
+    this.ewmaRate = this.ewmaRate * Math.exp(-dtSeconds / RATE_TAU_SECONDS) + experience / RATE_TAU_SECONDS;
+    this.ewmaUpdatedAtMs = atMs;
     const second = Math.floor(atMs / 1_000) * 1_000;
     const last = this.buckets.at(-1);
     if (last && last.atMs === second) last.experience += experience;
@@ -60,6 +69,8 @@ export class XpAggregateTracker {
   reset(atMs: number): void {
     this.total = 0;
     this.buckets.length = 0;
+    this.ewmaRate = 0;
+    this.ewmaUpdatedAtMs = atMs;
     if (atMs >= this.watermarkMs) {
       this.watermarkMs = atMs;
       this.watermarkOccurrences = 0;
@@ -85,16 +96,12 @@ export class XpAggregateTracker {
 
   snapshot(nowMs: number): XpAggregateSnapshot {
     this.prune(nowMs);
-    const rateWindowStart = nowMs - RATE_WINDOW_MS;
-    let rateWindowSum = 0;
     let hourSum = 0;
-    for (const bucket of this.buckets) {
-      hourSum += bucket.experience;
-      if (bucket.atMs >= rateWindowStart) rateWindowSum += bucket.experience;
-    }
+    for (const bucket of this.buckets) hourSum += bucket.experience;
+    const decaySeconds = Math.max(0, nowMs - this.ewmaUpdatedAtMs) / 1_000;
     return {
       totalExperience: this.total,
-      xpPerSecond: rateWindowSum / (RATE_WINDOW_MS / 1_000),
+      xpPerSecond: this.ewmaRate * Math.exp(-decaySeconds / RATE_TAU_SECONDS),
       xpPerHour: hourSum,
       timeline: this.buckets.map((bucket) => ({ ...bucket })),
     };
