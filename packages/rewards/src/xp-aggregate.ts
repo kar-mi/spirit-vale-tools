@@ -1,5 +1,7 @@
 const RETENTION_MS = 60 * 60 * 1_000;
-const RATE_WINDOW_MS = 60 * 1_000;
+// Short enough to feel immediately responsive to a kill landing (kills are sparse, discrete
+// events, unlike continuous damage ticks, so a 60s window made single kills nearly invisible).
+const RATE_WINDOW_MS = 10 * 1_000;
 
 export interface XpAggregateBucket {
   atMs: number;
