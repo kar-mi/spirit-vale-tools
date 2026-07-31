@@ -124,6 +124,28 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
   });
 
+  test("clears weight when the local player object changes", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(pinPacket(101));
+
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.state().weight).toBeUndefined();
+  });
+
+  test("preserves a complete weight received before the replacement object is pinned", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(pinPacket(101));
+    tracker.consume({ ...syncPacket(0, "HealthComponent", ""), packetName: "authenticated" });
+
+    tracker.consume(characterPacket("CharacterCallback_T"));
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
+  });
+
   test("does not carry weight to another character on a partial callback", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(characterPacket("CharacterCallback_T"));
@@ -210,12 +232,15 @@ describe("FishNetCharacterTracker", () => {
       const tracker = new FishNetCharacterTracker();
       tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
       tracker.consume(pinPacket(202));
+      tracker.consume(characterPacket("CharacterCallback_T"));
       expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
+      expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
 
       tracker.consume({ ...syncPacket(0, "HealthComponent", ""), packetName });
 
       expect(tracker.currentObjectId()).toBeUndefined();
       expect(tracker.state().records).toBeUndefined();
+      expect(tracker.state().weight).toBeUndefined();
       // A later pin must not promote a candidate buffered before the boundary.
       tracker.consume(pinPacket(202));
       expect(tracker.state().records).toBeUndefined();
@@ -227,11 +252,13 @@ describe("FishNetCharacterTracker", () => {
     tracker.consume(resourcePacket(202, "HealthComponent", 750, 1_000));
     tracker.consume(resourcePacket(202, "SkillsComponent", 120, 240));
     tracker.consume(pinPacket(202));
+    tracker.consume(characterPacket("CharacterCallback_T"));
 
     tracker.consume({ ...syncPacket(202, "HealthComponent", ""), packetName: "objectDespawn" });
 
     expect(tracker.currentObjectId()).toBeUndefined();
     expect(tracker.state().records).toBeUndefined();
+    expect(tracker.state().weight).toBeUndefined();
   });
 
   test("does not promote resource candidates belonging to other players", () => {

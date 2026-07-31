@@ -28,25 +28,29 @@ export class FishNetCharacterTracker {
 
   consume(packet: CapturedFishNetPacket): boolean {
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
-      this.clearRecordTracking();
+      this.clearLiveTracking();
       return false;
     }
     if (packet.packetName === "objectDespawn" && packet.objectId !== undefined) {
       this.pendingRecords.delete(packet.objectId);
-      if (packet.objectId === this.localObjectId) this.clearRecordTracking();
+      if (packet.objectId === this.localObjectId) this.clearLiveTracking();
       return false;
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
       this.pendingRecords.delete(packet.objectId);
       if (packet.objectId === this.localObjectId) {
         this.records = {};
+        this.currentWeight = undefined;
         this.publish();
       }
     }
     // Only the local player's client emits serverRpc packets, which pins their unit object.
     if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {
       const objectChanged = this.localObjectId !== packet.objectId;
-      if (this.localObjectId !== undefined && objectChanged) this.records = {};
+      if (this.localObjectId !== undefined && objectChanged) {
+        this.records = {};
+        this.currentWeight = undefined;
+      }
       this.localObjectId = packet.objectId;
       const pending = this.pendingRecords.get(packet.objectId);
       if (pending) this.records = pending;
@@ -98,13 +102,15 @@ export class FishNetCharacterTracker {
     return records;
   }
 
-  private clearRecordTracking(): void {
+  private clearLiveTracking(): void {
     const changed = this.localObjectId !== undefined
       || Object.keys(this.records).length > 0
-      || this.pendingRecords.size > 0;
+      || this.pendingRecords.size > 0
+      || this.currentWeight !== undefined;
     this.localObjectId = undefined;
     this.records = {};
     this.pendingRecords.clear();
+    this.currentWeight = undefined;
     if (changed) this.publish();
   }
 
