@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-sqlite",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Disposable SQLite read-model infrastructure for Spirit Vale session logs.",
   "type": "module",
   "engines": {
@@ -20,6 +20,6 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-logging": "^0.3.0"
+    "@kar-mi/spirit-vale-tools-logging": "^0.4.0"
   }
 }

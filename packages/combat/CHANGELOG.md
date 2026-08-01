@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [029c050]
+  - @kar-mi/spirit-vale-tools-logging@0.4.0
+
 ## 1.1.1
 
 ### Patch Changes
