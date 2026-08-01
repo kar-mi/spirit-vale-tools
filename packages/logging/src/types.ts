@@ -39,6 +39,8 @@ export interface LogSession {
   id: string;
   directory: string;
   logger(stream: LogStream): JsonLinesLogger;
+  /** Resolves once every record logged before this call has reached the disk on every stream. */
+  flush(): Promise<void>;
   close(): Promise<void>;
 }
 

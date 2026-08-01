@@ -1,4 +1,6 @@
-import { appendFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
+import { Buffer } from "node:buffer";
 import path from "node:path";
 
 import { currentStreamPointerPath, defaultLogDirectory, sessionDirectory, sessionStreamPath } from "./paths.ts";
@@ -13,7 +15,20 @@ import type {
 } from "./types.ts";
 import { sanitizeCombatData } from "./combat-sanitizer.ts";
 
-export interface CreateLogSessionOptions {
+const DEFAULT_BATCH_BYTES = 256 * 1024;
+const DEFAULT_FLUSH_INTERVAL_MS = 50;
+const DEFAULT_MAX_BUFFERED_BYTES = 8 * 1024 * 1024;
+
+export interface LoggerTuning {
+  /** Records accumulate until a batch reaches this many bytes. Defaults to 256 KiB. */
+  batchBytes?: number;
+  /** A partial batch is written after this long. Defaults to 50 ms. */
+  flushIntervalMs?: number;
+  /** Hard cap on bytes held in memory (buffered plus queued). Defaults to 8 MiB. */
+  maxBufferedBytes?: number;
+}
+
+export interface CreateLogSessionOptions extends LoggerTuning {
   producer: string;
   streams: readonly LogStream[];
   logDirectory?: string;
@@ -34,17 +49,48 @@ export interface LogWriteFailure {
   error: Error;
 }
 
-interface JsonLinesLoggerOptions {
+export interface JsonLinesLoggerOptions extends LoggerTuning {
   stream: LogStream;
   onWriteError?: (failure: LogWriteFailure) => void;
+  /** Sink override, mainly for tests. Defaults to a lazily opened append-mode file handle. */
   append?: typeof appendFile;
 }
 
+export interface JsonLinesLoggerStats {
+  /** Bytes held in memory: the partial batch plus every batch still queued for the disk. */
+  bufferedBytes: number;
+  queuedBatches: number;
+  /** True once a write has failed; the logger keeps accepting and attempting records. */
+  failed: boolean;
+  /** Records refused because the byte cap was reached, or logged after close(). */
+  droppedRecords: number;
+}
+
+/**
+ * Buffers records into byte-bounded batches and appends them through one file handle per stream.
+ *
+ * Records are never dropped for a write failure: the first error is reported once and rethrown by
+ * {@link flush}/{@link close}, but later batches are still attempted. The only records dropped are
+ * those that would push memory past `maxBufferedBytes`; each such episode is reported once and
+ * counted in {@link stats}, and the logger resumes accepting records as soon as the queue drains.
+ */
 export class JsonLinesLogger {
   private sequence = 0;
-  private pending: Promise<void> = Promise.resolve();
+  private lines: string[] = [];
+  private currentBytes = 0;
+  private bufferedBytes = 0;
+  private queuedBatches = 0;
+  private droppedRecords = 0;
+  private timer?: ReturnType<typeof setTimeout>;
+  private tail: Promise<void> = Promise.resolve();
   private firstFailure?: Error;
-  private readonly append: typeof appendFile;
+  private reportedFailure = false;
+  private overflowing = false;
+  private closed = false;
+  private handle?: Promise<FileHandle>;
+  private readonly batchBytes: number;
+  private readonly flushIntervalMs: number;
+  private readonly maxBufferedBytes: number;
 
   constructor(
     readonly path: string,
@@ -52,12 +98,18 @@ export class JsonLinesLogger {
     private readonly source: string,
     private readonly options: JsonLinesLoggerOptions = { stream: "other" },
   ) {
-    this.append = options.append ?? appendFile;
+    this.batchBytes = options.batchBytes ?? DEFAULT_BATCH_BYTES;
+    this.flushIntervalMs = options.flushIntervalMs ?? DEFAULT_FLUSH_INTERVAL_MS;
+    this.maxBufferedBytes = options.maxBufferedBytes ?? DEFAULT_MAX_BUFFERED_BYTES;
   }
 
   log(type: string, data: JsonObject): void {
     const safeData = this.options.stream === "combat" ? sanitizeCombatData(type, data) : data;
     if (!safeData) return;
+    if (this.closed) {
+      this.droppedRecords += 1;
+      return;
+    }
     const record: LogRecord = {
       schemaVersion: 1,
       sessionId: this.sessionId,
@@ -68,22 +120,110 @@ export class JsonLinesLogger {
       data: safeData,
     };
     const line = `${JSON.stringify(record)}\n`;
-    this.pending = this.pending
-      .then(() => this.append(this.path, line, "utf8"))
-      .catch((error: unknown) => {
-        const failure = toError(error);
-        this.firstFailure ??= failure;
-        try {
-          this.options.onWriteError?.({ stream: this.options.stream, path: this.path, error: failure });
-        } catch {
-          // A reporting callback must not poison the append queue.
-        }
-      });
+    const bytes = Buffer.byteLength(line);
+    if (this.bufferedBytes + bytes > this.maxBufferedBytes) {
+      this.droppedRecords += 1;
+      if (!this.overflowing) {
+        this.overflowing = true;
+        this.notify(new Error(`log buffer exceeded ${this.maxBufferedBytes} bytes; records are being dropped`));
+      }
+      return;
+    }
+    this.overflowing = false;
+    this.lines.push(line);
+    this.currentBytes += bytes;
+    this.bufferedBytes += bytes;
+    if (this.currentBytes >= this.batchBytes) this.enqueueCurrent();
+    else this.scheduleFlush();
+  }
+
+  /** Resolves once every record logged before this call has reached the disk. */
+  async flush(): Promise<void> {
+    this.enqueueCurrent();
+    await this.tail;
+    if (this.firstFailure) throw this.firstFailure;
   }
 
   async close(): Promise<void> {
-    await this.pending;
+    if (this.closed) {
+      await this.tail;
+      if (this.firstFailure) throw this.firstFailure;
+      return;
+    }
+    this.closed = true;
+    this.enqueueCurrent();
+    await this.tail;
+    const handle = this.handle;
+    this.handle = undefined;
+    if (handle) await handle.then((open) => open.close(), () => undefined);
     if (this.firstFailure) throw this.firstFailure;
+  }
+
+  stats(): JsonLinesLoggerStats {
+    return {
+      bufferedBytes: this.bufferedBytes,
+      queuedBatches: this.queuedBatches,
+      failed: this.firstFailure !== undefined,
+      droppedRecords: this.droppedRecords,
+    };
+  }
+
+  private scheduleFlush(): void {
+    if (this.timer) return;
+    this.timer = setTimeout(() => {
+      this.timer = undefined;
+      this.enqueueCurrent();
+    }, this.flushIntervalMs);
+  }
+
+  private enqueueCurrent(): void {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = undefined;
+    if (this.lines.length === 0) return;
+    const text = this.lines.join("");
+    const bytes = this.currentBytes;
+    this.lines = [];
+    this.currentBytes = 0;
+    this.queuedBatches += 1;
+    // The catch keeps the chain resolved so ordering holds and later batches are still attempted.
+    this.tail = this.tail
+      .then(() => this.write(text))
+      .catch((error: unknown) => {
+        const failure = toError(error);
+        this.firstFailure ??= failure;
+        if (!this.reportedFailure) {
+          this.reportedFailure = true;
+          this.notify(failure);
+        }
+      })
+      .finally(() => {
+        this.bufferedBytes = Math.max(0, this.bufferedBytes - bytes);
+        this.queuedBatches = Math.max(0, this.queuedBatches - 1);
+      });
+  }
+
+  private async write(text: string): Promise<void> {
+    if (this.options.append) {
+      await this.options.append(this.path, text, "utf8");
+      return;
+    }
+    this.handle ??= open(this.path, "a");
+    let handle: FileHandle;
+    try {
+      handle = await this.handle;
+    } catch (error) {
+      this.handle = undefined; // Let the next batch retry rather than reusing a rejected promise.
+      throw error;
+    }
+    await handle.appendFile(text, "utf8");
+  }
+
+  private notify(error: Error): void {
+    try {
+      this.options.onWriteError?.({ stream: this.options.stream, path: this.path, error });
+    } catch {
+      // A reporting callback must not poison the write queue.
+    }
   }
 }
 
@@ -108,6 +248,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
     loggers.set(stream, new JsonLinesLogger(streamPath, id, options.producer, {
       stream,
       onWriteError: options.onWriteError,
+      ...tuning(options),
     }));
     if (!override && activate) {
       const pointer: CurrentLogStream = {
@@ -129,8 +270,11 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
       if (!logger) throw new Error(`stream ${stream} is not part of session ${id}`);
       return logger;
     },
+    async flush() {
+      await settleAll([...loggers.values()].map((logger) => logger.flush()));
+    },
     async close() {
-      await Promise.all([...loggers.values()].map((logger) => logger.close()));
+      await settleAll([...loggers.values()].map((logger) => logger.close()));
     },
   };
 }
@@ -146,16 +290,18 @@ export async function writeCurrentLogStreamPointer(
 /**
  * Switches the shared "current stream" pointers for the given streams onto an already-created,
  * not-yet-activated session (see {@link CreateLogSessionOptions.activate}). Callers that need
- * several streams to change over as one logical moment should await this once. Streams are
- * switched one at a time (there is no cross-file transaction), so a caller that must not leave
- * streams split across sessions should capture each stream's prior pointer first and roll back
- * to it if this throws partway through.
+ * several streams to change over as one logical moment should await this once. The session is
+ * flushed first, so a follower that picks up a new pointer immediately sees the records already
+ * written to that session. Streams are switched one at a time (there is no cross-file
+ * transaction), so a caller that must not leave streams split across sessions should capture each
+ * stream's prior pointer first and roll back to it if this throws partway through.
  */
 export async function activateLogSession(
-  session: Pick<LogSession, "id">,
+  session: Pick<LogSession, "id"> & Partial<Pick<LogSession, "flush">>,
   streams: readonly LogStream[],
   logDirectory = defaultLogDirectory(),
 ): Promise<void> {
+  await session.flush?.();
   const startedAt = new Date().toISOString();
   for (const stream of streams) {
     const streamPath = sessionStreamPath(session.id, stream, logDirectory);
@@ -196,6 +342,21 @@ export async function readCurrentLogStream(
   const root = `${path.resolve(logDirectory)}${path.sep}`;
   if (!resolved.startsWith(root)) return undefined;
   return { ...(value as unknown as CurrentLogStream), path: resolved };
+}
+
+function tuning(options: LoggerTuning): LoggerTuning {
+  return {
+    ...(options.batchBytes === undefined ? {} : { batchBytes: options.batchBytes }),
+    ...(options.flushIntervalMs === undefined ? {} : { flushIntervalMs: options.flushIntervalMs }),
+    ...(options.maxBufferedBytes === undefined ? {} : { maxBufferedBytes: options.maxBufferedBytes }),
+  };
+}
+
+/** Awaits every stream even when one rejects, then rethrows the first rejection. */
+async function settleAll(operations: readonly Promise<void>[]): Promise<void> {
+  const results = await Promise.allSettled(operations);
+  const rejected = results.find((result): result is PromiseRejectedResult => result.status === "rejected");
+  if (rejected) throw toError(rejected.reason);
 }
 
 function createSessionId(): string {

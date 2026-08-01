@@ -43,8 +43,23 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "heal", tick: 1, targetId: 20, value: 60 });
   });
 
+  test("keeps the start/stop marker from either lifecycle record type", () => {
+    expect(sanitizeCombatData("combat.lifecycle", { state: "started" })).toEqual({ state: "started" });
+    expect(sanitizeCombatData("capture.lifecycle", { state: "stopped" })).toEqual({ state: "stopped" });
+  });
+
+  test("keeps nothing but the state from a lifecycle record", () => {
+    expect(sanitizeCombatData("capture.lifecycle", {
+      state: "started", processName: "SpiritVale.exe", processIds: [4321], adapter: "\\Device\\NPF_{GUID}",
+    })).toEqual({ state: "started" });
+  });
+
   test("drops diagnostics and unknown records", () => {
     expect(sanitizeCombatData("combat.spawnIdentityMiss", { raw: "payload" })).toBeUndefined();
     expect(sanitizeCombatData("combat.warning", { message: "error" })).toBeUndefined();
+    // Free-text and host details stay out of a shareable combat log.
+    expect(sanitizeCombatData("capture.warning", { message: "adapter busy" })).toBeUndefined();
+    expect(sanitizeCombatData("capture.error", { message: "permission denied" })).toBeUndefined();
+    expect(sanitizeCombatData("capture.targetStatus", { processName: "SpiritVale.exe", processIds: [4321] })).toBeUndefined();
   });
 });

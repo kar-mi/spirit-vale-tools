@@ -5,7 +5,9 @@ const COMBAT_KEYS = new Set(["kind", "tick", "actorId", "value", "team", "source
 
 /** Structural allowlist for shareable combat records. Returns undefined for diagnostics/unknown records. */
 export function sanitizeCombatData(type: string, data: JsonObject): JsonObject | undefined {
-  if (type === "combat.lifecycle") return pick(data, new Set(["state"]));
+  // capture.lifecycle is what the capture CLI emits; both carry only a start/stop marker, and
+  // readers need them to see where a session began and ended.
+  if (type === "combat.lifecycle" || type === "capture.lifecycle") return pick(data, new Set(["state"]));
   if (type === "combat.actorIdentity") return pick(data, IDENTITY_KEYS);
   if (type === "combat.event") return pick(data, COMBAT_KEYS);
   return undefined;

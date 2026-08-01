@@ -6,7 +6,13 @@ export {
   readCurrentLogStream,
   writeCurrentLogStreamPointer,
 } from "./logger.ts";
-export type { CreateLogSessionOptions, LogWriteFailure } from "./logger.ts";
+export type {
+  CreateLogSessionOptions,
+  JsonLinesLoggerOptions,
+  JsonLinesLoggerStats,
+  LoggerTuning,
+  LogWriteFailure,
+} from "./logger.ts";
 export { sanitizeCombatData } from "./combat-sanitizer.ts";
 export {
   defaultLogDirectory,

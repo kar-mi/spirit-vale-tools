@@ -25,7 +25,27 @@ const session = await createLogSession({
 const logger = session.logger("combat");
 logger.log("combat.event", { kind: "damage", amount: 42 });
 
+await session.flush(); // records so far are on disk; the session stays usable
 await session.close();
+```
+
+## Buffering
+
+`log()` is synchronous and buffers records into byte-bounded batches, appended through one file
+handle per stream. Tune with `batchBytes` (default 256 KiB), `flushIntervalMs` (default 50 ms), and
+`maxBufferedBytes` (default 8 MiB) on `createLogSession`, or per logger.
+
+- `session.flush()` / `logger.flush()` resolve once everything logged before the call is on disk.
+  Call it before a process exits by any path other than `close()`.
+- A write failure is reported once through `onWriteError` and rethrown by `flush()`/`close()`, but
+  later batches are still attempted — a transient error does not stop logging.
+- Records are only dropped when they would push memory past `maxBufferedBytes` (a stalled disk).
+  Each such episode is reported once through `onWriteError`, counted in `logger.stats()`, and the
+  logger resumes accepting records as soon as the queue drains. Sequence numbers are assigned before
+  the drop, so a dropped record leaves a gap that readers can detect.
+
+```ts
+logger.stats(); // { bufferedBytes, queuedBatches, failed, droppedRecords }
 ```
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.
