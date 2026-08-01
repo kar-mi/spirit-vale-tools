@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-market
 
+## 0.2.0
+
+### Minor Changes
+
+- eca9381: Add revisioned SQLite market indexing, bounded metadata followers, and cursor-paged listing queries.
+
 ## 0.1.7
 
 ### Patch Changes
