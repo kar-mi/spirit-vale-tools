@@ -26,6 +26,7 @@
       "@kar-mi/spirit-vale-tools-market": ["./packages/market/src/index.ts"],
       "@kar-mi/spirit-vale-tools-rewards": ["./packages/rewards/src/index.ts"],
       "@kar-mi/spirit-vale-tools-skills": ["./packages/skills/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-sqlite": ["./packages/sqlite/src/index.ts"],
       "@kar-mi/spirit-vale-tools-statuses": ["./packages/statuses/src/index.ts"]
     }
   },

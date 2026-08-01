@@ -51,8 +51,8 @@ bun add @kar-mi/spirit-vale-tools-rewards
 
 The package manager installs the packages' declared dependencies. You do not
 need to add those separately. Internal support packages such as
-`@kar-mi/spirit-vale-tools-logging` are installed automatically this way; they
-are not a supported public API.
+`@kar-mi/spirit-vale-tools-logging` and `@kar-mi/spirit-vale-tools-sqlite` are
+installed automatically this way; they are not a supported public API.
 
 | Package | Use it for |
 | --- | --- |
