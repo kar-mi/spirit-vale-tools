@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-sqlite
 
+## 0.1.1
+
+### Patch Changes
+
+- a4327d3: Add bounded live reward aggregation and SQLite-backed reward history APIs.
+
 ## 0.1.0
 
 ### Minor Changes
