@@ -70,7 +70,10 @@ so it is cheap to call repeatedly and resumes across process restarts.
   `version` rebuilds only that domain.
 - Use `model.bigintStatement(...)` for 64-bit values such as market prices and
   reward coins. A plain read rounds anything past `Number.MAX_SAFE_INTEGER`.
-- Domains should prepare statements with `database.query()` (cached and released
-  with the connection) rather than `database.prepare()`, which leaks them.
+- Prefer `model.statement(...)` / `model.bigintStatement(...)` for your own reads.
+  They are cached for the model's lifetime and finalized by `close()`. Statements
+  prepared directly with `database.query()` or `database.prepare()` are not, and
+  on Windows an outstanding one keeps the database file open after `close()`,
+  which blocks deleting the cache directory.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

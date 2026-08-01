@@ -7,6 +7,17 @@ export { loadDpsReplay, parseDpsLogRecord } from "./replay.ts";
 export type { DpsReplayResult } from "./replay.ts";
 export { formatCombatReplaySummary, inspectCombatReplaySummary, readCombatReplaySummary } from "./replay-summary.ts";
 export type { CombatReplayInspection, CombatReplaySummary } from "./replay-summary.ts";
+export { COMBAT_DOMAIN_NAME, COMBAT_DOMAIN_VERSION, createCombatDomain } from "./history/domain.ts";
+export { indexCombatStream } from "./history/importer.ts";
+export type { IndexCombatStreamOptions } from "./history/importer.ts";
+export { CombatHistoryStore } from "./history/store.ts";
+export type { CombatEncounterSummary, ListEncountersQuery, Page } from "./history/store.ts";
+export { DamageReducer } from "./reducers/damage.ts";
+export type { ActorAggregate, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";
+export { renderEncounter } from "./reducers/rows.ts";
+export type { RenderOptions } from "./reducers/rows.ts";
+export { ANALYSIS_BUCKET_MS } from "./reducers/timeline.ts";
+export type { BucketSeries, TimelinePoint } from "./reducers/timeline.ts";
 export { DpsLogFollower, DpsSessionLogFollower } from "./live-log.ts";
 export type { DpsLogBatch, TimedDpsLogEvent } from "./live-log.ts";
 export type {
