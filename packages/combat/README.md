@@ -30,4 +30,8 @@ Feed the tracker every decoded FishNet packet from live capture or replay. Use
 `FishNetActorDirectory` to resolve actor identities and `loadDpsReplay` /
 `DpsSessionLogFollower` to rebuild encounters from recorded log sessions.
 
+For bounded live UI state, use `LiveCombatService`. It exposes the current and
+latest finished encounter with DPS, incoming damage-per-second (TPS), and
+healing-per-second (HPS) rows without retaining the full session history.
+
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

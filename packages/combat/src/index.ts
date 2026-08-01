@@ -11,9 +11,27 @@ export { COMBAT_DOMAIN_NAME, COMBAT_DOMAIN_VERSION, createCombatDomain } from ".
 export { indexCombatStream } from "./history/importer.ts";
 export type { IndexCombatStreamOptions } from "./history/importer.ts";
 export { CombatHistoryStore } from "./history/store.ts";
-export type { CombatEncounterSummary, ListEncountersQuery, Page } from "./history/store.ts";
+export type {
+  CombatDeathHit,
+  CombatDeathRecord,
+  CombatEncounterSummary,
+  CombatEnemyBreakdown,
+  CombatEnemyOption,
+  CombatEnemySkillRow,
+  DeathLogQuery,
+  ListEncountersQuery,
+  Page,
+} from "./history/store.ts";
 export { DamageReducer } from "./reducers/damage.ts";
 export type { ActorAggregate, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";
+export { LiveCombatService } from "./live-combat.ts";
+export type {
+  CombatEncounterRecord,
+  LiveCombatOptions,
+  LiveCombatState,
+  MeterEncounterSnapshot,
+  MeterRow,
+} from "./live-combat.ts";
 export { renderEncounter } from "./reducers/rows.ts";
 export type { RenderOptions } from "./reducers/rows.ts";
 export { ANALYSIS_BUCKET_MS } from "./reducers/timeline.ts";

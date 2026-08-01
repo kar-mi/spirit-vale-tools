@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 1;
+export const COMBAT_DOMAIN_VERSION = 2;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -13,6 +13,10 @@ create table if not exists combat_encounters (
   last_damage_at_ms integer not null,
   ended_at_ms integer,
   total_damage integer not null default 0,
+  -- Reducer state that cannot be recomputed from the stored aggregates: the death-log lookback
+  -- buffer and the monster names seen so far. Both are bounded and only matter while open.
+  recent_hits_json text not null default '{}',
+  mob_identities_json text not null default '{}',
   primary key (session_id, encounter_id)
 );
 create index if not exists combat_encounters_by_start on combat_encounters (session_id, started_at_ms, encounter_id);
@@ -78,6 +82,57 @@ create table if not exists combat_timeline_buckets (
   damage integer not null default 0,
   primary key (session_id, encounter_id, actor_index, origin, bucket_index)
 );
+
+-- Per attacker, per enemy, per skill. Counts every positive hit, so it includes incoming damage the
+-- DPS tables exclude.
+create table if not exists combat_enemy_skills (
+  session_id text not null,
+  encounter_id text not null,
+  attacker_actor_id integer not null,
+  target_id integer not null,
+  source_id text not null,
+  source_label text not null,
+  damage integer not null default 0,
+  hits integer not null default 0,
+  critical_hits integer not null default 0,
+  primary key (session_id, encounter_id, attacker_actor_id, target_id, source_id)
+);
+
+create table if not exists combat_enemies (
+  session_id text not null,
+  encounter_id text not null,
+  target_id integer not null,
+  display_name text,
+  first_seen_at_ms integer not null,
+  primary key (session_id, encounter_id, target_id)
+);
+
+create table if not exists combat_deaths (
+  session_id text not null,
+  encounter_id text not null,
+  death_index integer not null,
+  victim_name text not null,
+  target_id integer not null,
+  died_at_ms integer not null,
+  total_damage integer not null default 0,
+  primary key (session_id, encounter_id, death_index)
+);
+create index if not exists combat_deaths_by_time on combat_deaths (session_id, died_at_ms, death_index);
+
+create table if not exists combat_death_hits (
+  session_id text not null,
+  encounter_id text not null,
+  death_index integer not null,
+  hit_index integer not null,
+  before_death_ms integer not null,
+  attacker_actor_id integer not null,
+  attacker_label text not null,
+  attacker_is_monster integer not null default 0,
+  source_label text not null,
+  damage integer not null default 0,
+  critical integer not null default 0,
+  primary key (session_id, encounter_id, death_index, hit_index)
+);
 `;
 
 export function createCombatDomain(): ReadModelDomain {
@@ -89,6 +144,10 @@ export function createCombatDomain(): ReadModelDomain {
     },
     dropSchema(database: Database) {
       for (const table of [
+        "combat_death_hits",
+        "combat_deaths",
+        "combat_enemies",
+        "combat_enemy_skills",
         "combat_timeline_buckets",
         "combat_targets",
         "combat_skills",

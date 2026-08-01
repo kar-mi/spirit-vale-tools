@@ -28,6 +28,73 @@ export interface ListEncountersQuery {
   limit?: number;
 }
 
+export interface DeathLogQuery {
+  sessionId: string;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface CombatEnemyOption {
+  targetId: number;
+  label: string;
+}
+
+export interface CombatEnemySkillRow {
+  attackerActorId: number;
+  targetId: number;
+  sourceId: string;
+  sourceLabel: string;
+  damage: number;
+  hits: number;
+  criticalHits: number;
+}
+
+export interface CombatEnemyBreakdown {
+  encounterId: string;
+  enemies: CombatEnemyOption[];
+  skills: CombatEnemySkillRow[];
+}
+
+export interface CombatDeathHit {
+  /** Milliseconds before the death; zero is the lethal hit. */
+  beforeDeathMs: number;
+  attackerActorId: number;
+  attackerLabel: string;
+  attackerIsMonster: boolean;
+  sourceLabel: string;
+  damage: number;
+  critical: boolean;
+}
+
+export interface CombatDeathRecord {
+  encounterId: string;
+  deathIndex: number;
+  victimName: string;
+  targetId: number;
+  diedAtMs: number;
+  totalDamage: number;
+  hits: CombatDeathHit[];
+}
+
+interface DeathRow {
+  encounter_id: string;
+  death_index: number;
+  victim_name: string;
+  target_id: number;
+  died_at_ms: number;
+  total_damage: number;
+}
+
+interface DeathHitRow {
+  before_death_ms: number;
+  attacker_actor_id: number;
+  attacker_label: string;
+  attacker_is_monster: number;
+  source_label: string;
+  damage: number;
+  critical: number;
+}
+
 const DEFAULT_LIMIT = 50;
 
 /**
@@ -67,6 +134,97 @@ export class CombatHistoryStore {
     };
   }
 
+  /**
+   * Per-attacker, per-enemy, per-skill damage for one encounter, with the enemy picker ordered by
+   * first sighting and duplicate monster names disambiguated.
+   */
+  getEnemyBreakdown(sessionId: string, encounterId: string): CombatEnemyBreakdown {
+    const enemies = this.model.database
+      .query<{ target_id: number; display_name: string | null; first_seen_at_ms: number }, [string, string]>(
+        "select target_id, display_name, first_seen_at_ms from combat_enemies where session_id = ? and encounter_id = ? order by first_seen_at_ms, target_id",
+      )
+      .all(sessionId, encounterId);
+
+    const counts = new Map<string, number>();
+    for (const enemy of enemies) {
+      const name = enemy.display_name ?? `Enemy ${enemy.target_id}`;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    const nextIndex = new Map<string, number>();
+    const options = enemies.map((enemy) => {
+      const name = enemy.display_name ?? `Enemy ${enemy.target_id}`;
+      if ((counts.get(name) ?? 0) <= 1) return { targetId: enemy.target_id, label: name };
+      const index = (nextIndex.get(name) ?? 0) + 1;
+      nextIndex.set(name, index);
+      return { targetId: enemy.target_id, label: `${name} (${index})` };
+    });
+
+    const skills = this.model.database
+      .query<{ attacker_actor_id: number; target_id: number; source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string]>(
+        "select * from combat_enemy_skills where session_id = ? and encounter_id = ? order by damage desc",
+      )
+      .all(sessionId, encounterId)
+      .map((row) => ({
+        attackerActorId: row.attacker_actor_id,
+        targetId: row.target_id,
+        sourceId: row.source_id,
+        sourceLabel: row.source_label,
+        damage: row.damage,
+        hits: row.hits,
+        criticalHits: row.critical_hits,
+      }));
+    return { encounterId, enemies: options, skills };
+  }
+
+  /** Player deaths, newest first, paged so a long session never loads at once. */
+  getDeathLog(query: DeathLogQuery): Page<CombatDeathRecord> {
+    const limit = Math.max(1, query.limit ?? DEFAULT_LIMIT);
+    const cursor = decodeCursor(query.cursor);
+    const rows = cursor
+      ? this.model.database
+        .query<DeathRow, [string, number, number, string, number]>(
+          `select * from combat_deaths
+           where session_id = ? and (died_at_ms < ? or (died_at_ms = ? and encounter_id || ':' || death_index < ?))
+           order by died_at_ms desc, encounter_id desc, death_index desc limit ?`,
+        )
+        .all(query.sessionId, cursor.startedAtMs, cursor.startedAtMs, cursor.encounterId, limit + 1)
+      : this.model.database
+        .query<DeathRow, [string, number]>(
+          "select * from combat_deaths where session_id = ? order by died_at_ms desc, encounter_id desc, death_index desc limit ?",
+        )
+        .all(query.sessionId, limit + 1);
+
+    const page = rows.slice(0, limit);
+    const last = page.at(-1);
+    return {
+      items: page.map((row) => ({
+        encounterId: row.encounter_id,
+        deathIndex: row.death_index,
+        victimName: row.victim_name,
+        targetId: row.target_id,
+        diedAtMs: row.died_at_ms,
+        totalDamage: row.total_damage,
+        hits: this.model.database
+          .query<DeathHitRow, [string, string, number]>(
+            "select * from combat_death_hits where session_id = ? and encounter_id = ? and death_index = ? order by hit_index",
+          )
+          .all(query.sessionId, row.encounter_id, row.death_index)
+          .map((hit) => ({
+            beforeDeathMs: hit.before_death_ms,
+            attackerActorId: hit.attacker_actor_id,
+            attackerLabel: hit.attacker_label,
+            attackerIsMonster: hit.attacker_is_monster === 1,
+            sourceLabel: hit.source_label,
+            damage: hit.damage,
+            critical: hit.critical === 1,
+          })),
+      })),
+      ...(rows.length > limit && last
+        ? { nextCursor: encodeCursor({ startedAtMs: last.died_at_ms, encounterId: `${last.encounter_id}:${last.death_index}` }) }
+        : {}),
+    };
+  }
+
   /** Renders one encounter in the same shape the legacy meter produces. */
   getEncounter(
     sessionId: string,
@@ -94,6 +252,11 @@ export class CombatHistoryStore {
       ...(row.ended_at_ms === null ? {} : { endedAtMs: row.ended_at_ms }),
       actors: [],
       activeActors: new Map(),
+      // Rendering an encounter snapshot needs only the actor aggregates; enemies and deaths are
+      // served by their own queries rather than loaded here.
+      enemies: new Map(),
+      enemyFirstSeenAtMs: new Map(),
+      deaths: [],
     };
 
     for (const actorRow of database

@@ -207,6 +207,51 @@ describe("combat read model", () => {
     }
   });
 
+  test("records the death log and enemy breakdown from the same pass", async () => {
+    const context = await fixture();
+    try {
+      const incoming = (actorId: number, targetId: number, value: number, atMs: number, kind = "damage"): string =>
+        record(atMs, {
+          kind, tick: atMs, actorId, targetId, team: 1, value,
+          sourceId: "skill:maul", sourceLabel: "Maul", hitResult: "normal",
+          ...(kind === "death" ? { duplicatesDamageEvent: false } : {}),
+        });
+
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        // A monster publishes its name through an activation record.
+        record(500, { kind: "activation", tick: 500, actorId: 500, sourceId: "__spiritvaleMobIdentity:boss", sourceLabel: "Cave Warden" }),
+        damage(1, 90, 100, 1_000),
+        damage(1, 90, 50, 2_000, "skill:ember"),
+        damage(1, 91, 70, 3_000),
+        incoming(500, 1, 40, 4_000),
+        incoming(500, 1, 60, 5_000),
+        incoming(500, 1, 25, 6_000, "death"),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+
+      const deaths = store.getDeathLog({ sessionId: SESSION });
+      expect(deaths.items).toHaveLength(1);
+      const death = deaths.items[0]!;
+      expect(death).toMatchObject({ victimName: "Aurora", targetId: 1, totalDamage: 125 });
+      // All three incoming hits fall inside the ten-second lookback, newest last.
+      expect(death.hits.map((hit) => hit.damage)).toEqual([40, 60, 25]);
+      expect(death.hits.every((hit) => hit.attackerIsMonster && hit.attackerLabel === "Cave Warden")).toBe(true);
+
+      const breakdown = store.getEnemyBreakdown(SESSION, encounterId);
+      // Aurora's outgoing targets plus the monster's target, since every positive hit is counted.
+      expect(breakdown.enemies.map((enemy) => enemy.targetId).sort()).toEqual([1, 90, 91]);
+      const auroraOnNinety = breakdown.skills.filter((row) => row.attackerActorId === 1 && row.targetId === 90);
+      expect(auroraOnNinety.map((row) => [row.sourceId, row.damage]).sort()).toEqual([["skill:ember", 50], ["skill:strike", 100]]);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
   test("pages encounters with a cursor, returning each exactly once", async () => {
     const context = await fixture();
     try {

@@ -19,4 +19,10 @@ onto the first record it consumes. Pass `finalize: true` when indexing a log tha
 will not grow; while a session is live the trailing encounter stays open so the
 next pass continues it.
 
+The same pass also builds the enemy breakdown (per attacker, per enemy, per skill)
+and the player death log with its ten-second hit lookback, replacing two of the
+separate full-file replays those views needed. Both count every positive hit,
+including incoming damage the DPS tables exclude, and `getEnemyBreakdown` /
+`getDeathLog` read them back.
+
 `FishNetDpsMeter`, `loadDpsReplay` and the replay-summary helpers are unchanged.
