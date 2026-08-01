@@ -28,3 +28,8 @@ Use `replayMarketCapture` to rebuild tracker state from a recorded log session
 and `MarketSessionLogFollower` to follow a live session.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.
+
+For bounded live applications, register `createMarketDomain()` with the shared read model, call
+`indexMarketStream()`, and query listings through `MarketHistoryStore`. Pass the revision returned
+by the first page as `expectedRevision` on later pages; a revision-mismatch result means the caller
+must restart from page one. The legacy in-memory tracker and log followers remain available.

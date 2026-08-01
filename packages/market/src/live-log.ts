@@ -92,7 +92,7 @@ export class MarketLogFollower {
         continue;
       }
       if (record.type !== "market.snapshot") continue;
-      const listings = parseListings(record.data["listings"]);
+      const listings = parseMarketSnapshotListings(record.data["listings"]);
       if (!listings) {
         invalidLines += 1;
         continue;
@@ -145,7 +145,7 @@ export class MarketSessionLogFollower {
   }
 }
 
-function parseListings(value: unknown): FishNetMarketListingView[] | undefined {
+export function parseMarketSnapshotListings(value: unknown): FishNetMarketListingView[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const listings: FishNetMarketListingView[] = [];
   for (const candidate of value) {

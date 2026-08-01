@@ -264,7 +264,7 @@ export class FishNetMarketTracker {
 
   private upsert(listing: FishNetMarketListing | null, searchText: string | null): void {
     if (!listing) return;
-    const key = listing.id ?? `${listing.sellerId ?? ""}|${listing.itemId ?? ""}|${listing.price}`;
+    const key = marketListingKey(listing);
     const previous = this.listings.get(key);
     this.listings.set(key, {
       listing,
@@ -276,6 +276,11 @@ export class FishNetMarketTracker {
   private upsertStall(stall: FishNetMarketStall): void {
     if (stall.accountId !== null) this.stalls.set(stall.accountId, stall);
   }
+}
+
+/** Stable identity shared by the in-memory tracker and SQLite read model. */
+export function marketListingKey(listing: Pick<FishNetMarketListing, "id" | "sellerId" | "itemId" | "price">): string {
+  return listing.id ?? `${listing.sellerId ?? ""}|${listing.itemId ?? ""}|${listing.price}`;
 }
 
 export function queryFishNetMarketListings(
