@@ -26,7 +26,16 @@ export type {
   RecordedMobRewardKill,
 } from "./session.ts";
 export { emptySnapshot, loadRewardReplay, RewardLogFollower, RewardSessionLogFollower } from "./live-log.ts";
-export type { RewardLogBatch, RewardLogFollowerOptions, RewardLogStatus } from "./live-log.ts";
+export { BoundedRewardLogFollower, BoundedRewardSessionLogFollower, LiveRewardLogFollower, LiveRewardSessionLogFollower } from "./live-log.ts";
+export type { LiveRewardLogBatch, RewardLogBatch, RewardLogFollowerOptions, RewardLogStatus } from "./live-log.ts";
+export { LiveRewardService } from "./live-rewards.ts";
+export type { LiveRewardOptions, LiveRewardConsumeContext, RewardAggregateSnapshot, RewardChartBucket } from "./live-rewards.ts";
+export { parseRewardLogRecord } from "./live-log.ts";
+export { REWARDS_DOMAIN_NAME, REWARDS_DOMAIN_VERSION, createRewardsDomain } from "./history/domain.ts";
+export { indexRewardStream } from "./history/importer.ts";
+export type { IndexRewardStreamOptions } from "./history/importer.ts";
+export { RewardHistoryStore } from "./history/store.ts";
+export type { Page, ListRewardKillsQuery, RewardChartMetric, RewardChartPoint, RewardSummaryOptions, RewardAggregateSummary } from "./history/store.ts";
 export { formatRewardsReplaySummary, inspectRewardsReplaySummary, readRewardsReplaySummary } from "./replay-summary.ts";
 export type { RewardsReplayInspection, RewardsReplaySummary } from "./replay-summary.ts";
 export { bigintRatio, buildCumulativeTrend, buildRateTrend, trendExtent } from "./trend.ts";

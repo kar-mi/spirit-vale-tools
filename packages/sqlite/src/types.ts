@@ -54,7 +54,7 @@ export interface IndexStreamRequest {
    * Applies one batch of records. Runs inside the same transaction that advances the recorded byte
    * offset, so rows and progress commit or roll back together.
    */
-  apply: (records: readonly LogRecord[], database: Database) => void;
+  apply: (records: readonly LogRecord[], database: Database) => void | number;
   /** Removes this domain's rows for one session/stream, so a rebuild starts from empty. */
   clear: (scope: { sessionId: string; stream: LogStream }, database: Database) => void;
   /**

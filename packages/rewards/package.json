@@ -20,6 +20,7 @@
     "@kar-mi/spirit-vale-tools-combat": "^1.1.2",
     "@kar-mi/spirit-vale-tools-capture": "^1.0.0",
     "@kar-mi/spirit-vale-tools-items": "^0.1.5",
-    "@kar-mi/spirit-vale-tools-logging": "^0.4.0"
+    "@kar-mi/spirit-vale-tools-logging": "^0.4.0",
+    "@kar-mi/spirit-vale-tools-sqlite": "^0.1.0"
   }
 }

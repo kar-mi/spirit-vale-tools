@@ -138,7 +138,7 @@ async function indexFrom(
 
     const position = { byteOffset: reader.offset, lastSequence };
     transaction(() => {
-      if (batch.length > 0) request.apply(batch, database);
+      if (batch.length > 0) invalidLines += request.apply(batch, database) ?? 0;
       writeProgress(database, request, position, source);
     });
     recordsIndexed += batch.length;

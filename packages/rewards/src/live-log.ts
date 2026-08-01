@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { createInterface } from "node:readline";
 
 import {
   decimal,
@@ -11,6 +12,8 @@ import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
 import { MobRewardSession } from "./session.ts";
 import type { MobRewardSessionSnapshot } from "./session.ts";
+import { LiveRewardService } from "./live-rewards.ts";
+import type { LiveRewardOptions, RewardAggregateSnapshot } from "./live-rewards.ts";
 
 export type RewardLogStatus = LiveLogStatus;
 
@@ -68,7 +71,7 @@ export class RewardLogFollower {
       }
       if (record.type === "rewards.error") { this.status = "error"; changed = true; continue; }
       if (record.type !== "rewards.kill" && record.type !== "rewards.unmatched") continue;
-      const event = parseRewardEvent(record.data);
+      const event = parseRewardLogRecord(record.type, record.data);
       if (!event) { invalidLines += 1; continue; }
       this.session.consume(event, { recordedAt: record.recordedAt });
       if ((event.kind === "kill" || event.reward === "experience") && event.experience > 0) {
@@ -113,24 +116,81 @@ export class RewardSessionLogFollower {
   }
 }
 
+export interface LiveRewardLogBatch {
+  snapshot: RewardAggregateSnapshot;
+  invalidLines: number;
+  missing: boolean;
+  reset: boolean;
+  changed: boolean;
+  status: RewardLogStatus;
+  path?: string;
+  sessionId?: string;
+}
+
+/** Bounded follower for dashboards; the legacy RewardLogFollower remains full-history. */
+export class LiveRewardLogFollower {
+  private readonly reader: JsonlTailReader;
+  private readonly service: LiveRewardService;
+  private readonly sourcePath: string;
+  private status: RewardLogStatus = "watching";
+  constructor(path: string, options: LiveRewardOptions = {}) { this.sourcePath = path; this.reader = new JsonlTailReader(path); this.service = new LiveRewardService(options); }
+  async poll(): Promise<LiveRewardLogBatch> {
+    const { missing, reset, lines } = await this.reader.read();
+    if (missing) return this.batch(true, false, false, 0);
+    if (reset) { this.service.reset(); this.status = "watching"; }
+    let invalidLines = 0; let changed = false;
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let value: unknown; try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
+      const record = parseLogRecord(value); if (!record) { invalidLines += 1; continue; }
+      if (record.type === "rewards.lifecycle") { const state = record.data["state"]; if (state === "started") this.status = "ready"; else if (state === "stopped") this.status = "stopped"; else invalidLines += 1; changed = true; continue; }
+      if (record.type === "rewards.error") { this.status = "error"; changed = true; continue; }
+      const event = parseRewardLogRecord(record.type, record.data); if (!event) { if (record.type === "rewards.kill" || record.type === "rewards.unmatched") invalidLines += 1; continue; }
+      this.service.consume(event, { recordedAt: record.recordedAt }); this.status = "ready"; changed = true;
+    }
+    return this.batch(false, reset, changed, invalidLines);
+  }
+  private batch(missing: boolean, reset: boolean, changed: boolean, invalidLines: number): LiveRewardLogBatch { return { snapshot: this.service.snapshot(), invalidLines, missing, reset, changed, status: missing ? "waiting" : this.status, path: this.sourcePath }; }
+}
+
+export { LiveRewardLogFollower as BoundedRewardLogFollower };
+
+export class LiveRewardSessionLogFollower {
+  private readonly inner: LiveLogSessionFollower<LiveRewardLogFollower, LiveRewardLogBatch>;
+  constructor(logDirectory?: string, options: LiveRewardOptions = {}) {
+    this.inner = new LiveLogSessionFollower({
+      stream: "rewards",
+      logDirectory,
+      createFollower: (path) => new LiveRewardLogFollower(path, options),
+      mergeSessionChange: (batch, changedSession) => ({ ...batch, reset: batch.reset || changedSession, changed: batch.changed || changedSession }),
+      noStreamBatch: (reset) => ({ snapshot: new LiveRewardService(options).snapshot(), invalidLines: 0, missing: true, reset, changed: reset, status: "waiting" }),
+    });
+  }
+  poll(): Promise<LiveRewardLogBatch> { return this.inner.poll(); }
+}
+
+export { LiveRewardSessionLogFollower as BoundedRewardSessionLogFollower };
+
 export async function loadRewardReplay(path: string): Promise<{ snapshot: MobRewardSessionSnapshot; invalidLines: number }> {
-  const content = await readFile(path, "utf8");
   const session = new MobRewardSession();
   let invalidLines = 0;
-  for (const line of content.split(/\r?\n/)) {
+  const input = createInterface({ input: createReadStream(path, { encoding: "utf8" }), crlfDelay: Infinity });
+  for await (const line of input) {
     if (!line.trim()) continue;
     let value: unknown;
     try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
     const record = parseLogRecord(value);
     if (!record || (record.type !== "rewards.kill" && record.type !== "rewards.unmatched")) continue;
-    const event = parseRewardEvent(record.data);
+    const event = parseRewardLogRecord(record.type, record.data);
     if (!event) invalidLines += 1;
     else session.consume(event, { recordedAt: record.recordedAt });
   }
   return { snapshot: session.snapshot(), invalidLines };
 }
 
-function parseRewardEvent(value: unknown): FishNetMobRewardEvent | undefined {
+/** Validates and decodes the reward payload shared by replay, live followers, and history. */
+export function parseRewardLogRecord(type: string, value: unknown): FishNetMobRewardEvent | undefined {
+  if (type !== "rewards.kill" && type !== "rewards.unmatched") return undefined;
   if (!record(value) || typeof value["tick"] !== "number" || !Number.isSafeInteger(value["tick"])) return undefined;
   if (value["kind"] === "unmatched") {
     const reason = value["reason"];
