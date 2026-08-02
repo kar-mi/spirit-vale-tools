@@ -49,6 +49,13 @@ function incoming(actorId: number, targetId: number, value: number, atMs: number
   });
 }
 
+function mobIdentity(actorId: number, displayName: string, atMs: number): string {
+  return record(atMs, {
+    kind: "activation", tick: atMs, actorId,
+    sourceId: "__spiritvaleMobIdentity:mob", sourceLabel: displayName, level: 10,
+  });
+}
+
 /**
  * A player death. Real logs carry no damage on the death record itself — the lethal blow is a
  * separate damage event — so the value defaults to zero.
@@ -408,6 +415,50 @@ describe("death log", () => {
       // not a positive hit and so contributes nothing to the enemy breakdown.
       expect(deaths[0]!.hits.map((hit) => hit.damage)).toEqual([40, 60]);
       expect(deaths[0]!.totalDamage).toBe(100);
+    } finally {
+      await context.cleanup();
+    }
+  });
+});
+
+describe("incremental indexing", () => {
+  /**
+   * The live path calls indexCombatStream repeatedly over a growing log, with a fresh reducer each
+   * time. Identities, monster names and the death lookback span encounters, so they have to survive
+   * a pass boundary that has no encounter open — which is the normal state between fights, and
+   * always the state before the first one.
+   */
+  test("keeps identities and monster names across a pass with no open encounter", async () => {
+    const context = await fixture();
+    try {
+      const model = await context.open();
+
+      // Pass one: identities only, so nothing is open when it ends.
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        mobIdentity(90, "Shark Buccaneer", 500),
+      ].join(""));
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+
+      // Pass two: the fight those identities belong to.
+      await appendFile(context.logPath, [
+        damage(1, 90, 100, 60_000),
+        incoming(90, 1, 40, 60_500),
+        playerDeath(90, 1, 61_000),
+      ].join(""));
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+
+      const store = new CombatHistoryStore(model);
+      const deaths = store.getDeathLog({ sessionId: SESSION }).items;
+      expect(deaths).toHaveLength(1);
+      expect(deaths[0]!.victimName).toBe("Aurora");
+      expect(deaths[0]!.hits.map((hit) => [hit.attackerLabel, hit.attackerIsMonster]))
+        .toEqual([["Shark Buccaneer", true]]);
+
+      // The tanked meter reads the same identity map, so it names the victim too.
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+      expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.actors.map((a) => a.displayName))
+        .toEqual(["Aurora"]);
     } finally {
       await context.cleanup();
     }

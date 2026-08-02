@@ -73,7 +73,10 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
     },
   });
 
-  const open = loadOpenEncounter(model, sessionId, reducer);
+  // Session-scoped reducer state first: an incremental pass often has no encounter open at the
+  // boundary, and identities, monster names and the death lookback all outlive any one encounter.
+  loadStreamState(model, sessionId, reducer);
+  const open = loadOpenEncounter(model, sessionId);
   if (open) {
     reducer.resume(open);
     // Restore the meters' open aggregates too, or a resumed pass would restart their totals at zero
@@ -107,12 +110,17 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
         captureMeters(reducer.current.id);
         writeEncounter(model, sessionId, reducer.current, reducer, meterAggregates.get(reducer.current.id));
       } else if (previouslyOpen) clearEncounter(model, sessionId, previouslyOpen, { keepFinished: true });
+      // Written in the same transaction as the rows above, so progress and reducer state commit together.
+      writeStreamState(model, sessionId, reducer);
     },
     clear(scope, database) {
       for (const table of TABLES) {
         database.query(`delete from ${table} where session_id = $sessionId`).run({ sessionId: scope.sessionId });
       }
       reducer.current = undefined;
+      reducer.identities.clear();
+      reducer.mobIdentities.clear();
+      reducer.recentHits.clear();
       for (const entry of meters) entry.reducer.reset();
       meterAggregates.clear();
       finished.length = 0;
@@ -136,6 +144,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
 }
 
 const TABLES = [
+  "combat_stream_state",
   "combat_death_hits",
   "combat_deaths",
   "combat_enemies",
@@ -204,14 +213,12 @@ function writeEncounter(
   meterAggregates?: ReadonlyMap<StoredMeter, EncounterAggregate>,
 ): void {
   const database = statements(model);
-  const mobIdentities = reducer.mobIdentities;
-  writeEnemiesAndDeaths(model, sessionId, encounter, mobIdentities);
+  writeEnemiesAndDeaths(model, sessionId, encounter, reducer.mobIdentities);
   const totalDamage = encounter.actors.reduce((sum, actor) => sum + actor.damage, 0);
-  const open = encounter.endedAtMs === undefined;
   database
     .query(`insert or replace into combat_encounters
-      (session_id, encounter_id, started_at_ms, last_damage_at_ms, ended_at_ms, total_damage, recent_hits_json, mob_identities_json, identities_json)
-      values ($sessionId, $encounterId, $startedAtMs, $lastDamageAtMs, $endedAtMs, $totalDamage, $recentHitsJson, $mobIdentitiesJson, $identitiesJson)`)
+      (session_id, encounter_id, started_at_ms, last_damage_at_ms, ended_at_ms, total_damage)
+      values ($sessionId, $encounterId, $startedAtMs, $lastDamageAtMs, $endedAtMs, $totalDamage)`)
     .run({
       sessionId,
       encounterId: encounter.id,
@@ -219,10 +226,6 @@ function writeEncounter(
       lastDamageAtMs: encounter.lastDamageAtMs,
       endedAtMs: encounter.endedAtMs ?? null,
       totalDamage,
-      // Only an open encounter can be resumed, so a finished one need not carry the buffers.
-      recentHitsJson: open ? JSON.stringify([...reducer.recentHits]) : "{}",
-      mobIdentitiesJson: open ? JSON.stringify([...mobIdentities]) : "{}",
-      identitiesJson: open ? JSON.stringify([...reducer.identities]) : "{}",
     });
 
   writeActors(model, sessionId, encounter, "dps");
@@ -425,9 +428,42 @@ interface EncounterRow {
   started_at_ms: number;
   last_damage_at_ms: number;
   ended_at_ms: number | null;
-  recent_hits_json: string;
-  mob_identities_json: string;
+}
+
+interface StreamStateRow {
   identities_json: string;
+  mob_identities_json: string;
+  recent_hits_json: string;
+}
+
+/** Restores the reducer state that spans encounters, so an incremental pass continues where it left off. */
+function loadStreamState(model: ReadModel, sessionId: string, reducer: DamageReducer): void {
+  const row = statements(model)
+    .query("select identities_json, mob_identities_json, recent_hits_json from combat_stream_state where session_id = $sessionId")
+    .get({ sessionId }) as StreamStateRow | null;
+  if (!row) return;
+  for (const [actorId, identity] of JSON.parse(row.identities_json) as [number, CombatIdentity][]) {
+    reducer.identities.set(actorId, identity);
+  }
+  for (const [actorId, name] of JSON.parse(row.mob_identities_json) as [number, string][]) {
+    reducer.mobIdentities.set(actorId, name);
+  }
+  for (const [targetId, hits] of JSON.parse(row.recent_hits_json) as [number, { atMs: number; hit: DeathHitRecord }[]][]) {
+    reducer.recentHits.set(targetId, hits);
+  }
+}
+
+function writeStreamState(model: ReadModel, sessionId: string, reducer: DamageReducer): void {
+  statements(model)
+    .query(`insert or replace into combat_stream_state
+      (session_id, identities_json, mob_identities_json, recent_hits_json)
+      values ($sessionId, $identitiesJson, $mobIdentitiesJson, $recentHitsJson)`)
+    .run({
+      sessionId,
+      identitiesJson: JSON.stringify([...reducer.identities]),
+      mobIdentitiesJson: JSON.stringify([...reducer.mobIdentities]),
+      recentHitsJson: JSON.stringify([...reducer.recentHits]),
+    });
 }
 
 function loadEnemies(
@@ -507,26 +543,12 @@ interface ActorRow {
  * deleting the cache directory — and a long-lived model that re-indexes a live session resumes here
  * on every pass.
  */
-function loadOpenEncounter(
-  model: ReadModel,
-  sessionId: string,
-  reducer: DamageReducer,
-): EncounterAggregate | undefined {
+function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggregate | undefined {
   const database = statements(model);
   const row = database
-    .query("select encounter_id, started_at_ms, last_damage_at_ms, ended_at_ms, recent_hits_json, mob_identities_json, identities_json from combat_encounters where session_id = $sessionId and ended_at_ms is null")
+    .query("select encounter_id, started_at_ms, last_damage_at_ms, ended_at_ms from combat_encounters where session_id = $sessionId and ended_at_ms is null")
     .get({ sessionId }) as EncounterRow | null;
   if (!row) return undefined;
-
-  for (const [actorId, name] of JSON.parse(row.mob_identities_json) as [number, string][]) {
-    reducer.mobIdentities.set(actorId, name);
-  }
-  for (const [actorId, identity] of JSON.parse(row.identities_json) as [number, CombatIdentity][]) {
-    reducer.identities.set(actorId, identity);
-  }
-  for (const [targetId, hits] of JSON.parse(row.recent_hits_json) as [number, { atMs: number; hit: DeathHitRecord }[]][]) {
-    reducer.recentHits.set(targetId, hits);
-  }
 
   const encounter: EncounterAggregate = {
     id: row.encounter_id,

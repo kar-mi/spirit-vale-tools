@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 3;
+export const COMBAT_DOMAIN_VERSION = 4;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -13,16 +13,20 @@ create table if not exists combat_encounters (
   last_damage_at_ms integer not null,
   ended_at_ms integer,
   total_damage integer not null default 0,
-  -- Reducer state that cannot be recomputed from the stored aggregates: the death-log lookback
-  -- buffer, the monster names seen so far, and the actor identity map. All bounded, and all only
-  -- meaningful while the encounter is open. Identities matter because healing attribution and
-  -- mob-target detection consult them for events that arrive after a resume.
-  recent_hits_json text not null default '{}',
-  mob_identities_json text not null default '{}',
-  identities_json text not null default '{}',
   primary key (session_id, encounter_id)
 );
 create index if not exists combat_encounters_by_start on combat_encounters (session_id, started_at_ms, encounter_id);
+
+-- Reducer state scoped to the whole stream, not to one encounter: the actor identity map, the
+-- monster names seen so far, and the death-log lookback buffer. All bounded. This is kept per
+-- session because an incremental pass creates a fresh reducer each time and there is frequently no
+-- encounter open at the boundary — between fights, and always before the first one.
+create table if not exists combat_stream_state (
+  session_id text not null primary key,
+  identities_json text not null default '[]',
+  mob_identities_json text not null default '[]',
+  recent_hits_json text not null default '[]'
+);
 create index if not exists combat_encounters_open on combat_encounters (session_id) where ended_at_ms is null;
 
 -- One row set per meter: "dps" is outgoing party damage, "tanked" is incoming damage grouped by the
@@ -154,6 +158,7 @@ export function createCombatDomain(): ReadModelDomain {
     },
     dropSchema(database: Database) {
       for (const table of [
+        "combat_stream_state",
         "combat_death_hits",
         "combat_deaths",
         "combat_enemies",
