@@ -287,6 +287,7 @@ export class CombatHistoryStore {
       // served by their own queries rather than loaded here.
       enemies: new Map(),
       enemyFirstSeenAtMs: new Map(),
+      enemyNames: new Map(),
       deaths: [],
     };
 

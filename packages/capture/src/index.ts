@@ -21,6 +21,12 @@ export type {
   FishNetSkillLabel,
 } from "./fishnet/semantic-map.ts";
 export { classifyFishNetRecoveryStyle } from "./fishnet/recovery-style.ts";
+export {
+  FishNetMonsterDirectory,
+  decodeMonsterSpawn,
+  decodeMonsterSync,
+} from "./fishnet/monster-directory.ts";
+export type { FishNetMonsterLevels, FishNetMonsterSpawn } from "./fishnet/monster-directory.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,

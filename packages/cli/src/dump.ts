@@ -6,6 +6,7 @@ import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
 import { FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
 import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
+import { mobDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
 import {
   domainEventData,
   fishNetPacketData,
@@ -43,7 +44,13 @@ const semanticMap = combatOnly && combatFingerprint
   ? loadBundledFishNetSemanticMap(combatFingerprint)
   : undefined;
 const combatTracker = combatOnly
-  ? new FishNetCombatTracker({ buildFingerprint: fishNetBuildFingerprint, semanticMap })
+  ? new FishNetCombatTracker({
+      buildFingerprint: fishNetBuildFingerprint,
+      semanticMap,
+      // Names each hit's target from its spawn packet. The combat log carries no spawn packets, so
+      // a name not stamped on the event here cannot be recovered when the log is replayed.
+      monsterCatalog: mobDefinitionsById(),
+    })
   : undefined;
 const actorDirectory = combatOnly ? new FishNetActorDirectory() : undefined;
 const stream = combatOnly ? "combat" as const : "capture" as const;

@@ -351,11 +351,18 @@ function writeEnemiesAndDeaths(
   }
 
   for (const [targetId, firstSeenAtMs] of encounter.enemyFirstSeenAtMs) {
+    // The name is whatever was captured when the hit landed; `mobIdentities` is only a fallback for
+    // rows carried over from before the aggregate recorded names.
     database
       .query(`insert or replace into combat_enemies
         (session_id, encounter_id, target_id, display_name, first_seen_at_ms)
         values ($sessionId, $encounterId, $targetId, $displayName, $firstSeenAtMs)`)
-      .run({ ...scope, targetId, displayName: mobIdentities.get(targetId) ?? null, firstSeenAtMs });
+      .run({
+        ...scope,
+        targetId,
+        displayName: encounter.enemyNames.get(targetId) ?? mobIdentities.get(targetId) ?? null,
+        firstSeenAtMs,
+      });
   }
 
   for (const [deathIndex, death] of encounter.deaths.entries()) {
@@ -477,6 +484,27 @@ function writeStreamState(model: ReadModel, sessionId: string, reducer: DamageRe
     });
 }
 
+/**
+ * Restores the stored first-sighting and display name for an encounter being resumed. The name
+ * matters: an open encounter's rows are deleted and rewritten on every pass, so without carrying it
+ * back the next pass would replace a name learned earlier with null.
+ */
+function loadEnemyIdentity(
+  database: { query: (sql: string) => Statement },
+  sessionId: string,
+  encounterId: string,
+): Pick<EncounterAggregate, "enemyFirstSeenAtMs" | "enemyNames"> {
+  const rows = database
+    .query("select target_id, display_name, first_seen_at_ms from combat_enemies where session_id = ? and encounter_id = ?")
+    .all(sessionId, encounterId) as { target_id: number; display_name: string | null; first_seen_at_ms: number }[];
+  return {
+    enemyFirstSeenAtMs: new Map(rows.map((enemy) => [enemy.target_id, enemy.first_seen_at_ms] as const)),
+    enemyNames: new Map(rows
+      .filter((enemy): enemy is typeof enemy & { display_name: string } => enemy.display_name !== null)
+      .map((enemy) => [enemy.target_id, enemy.display_name] as const)),
+  };
+}
+
 function loadEnemies(
   database: { query: (sql: string) => Statement },
   sessionId: string,
@@ -568,10 +596,7 @@ function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggreg
     actors: [],
     activeActors: new Map(),
     enemies: loadEnemies(database, sessionId, row.encounter_id),
-    enemyFirstSeenAtMs: new Map((database
-      .query("select target_id, first_seen_at_ms from combat_enemies where session_id = ? and encounter_id = ?")
-      .all(sessionId, row.encounter_id) as { target_id: number; first_seen_at_ms: number }[])
-      .map((enemy) => [enemy.target_id, enemy.first_seen_at_ms] as const)),
+    ...loadEnemyIdentity(database, sessionId, row.encounter_id),
     deaths: loadDeaths(database, sessionId, row.encounter_id),
   };
 
@@ -649,6 +674,7 @@ function loadMeterAggregate(
     activeActors: new Map(),
     enemies: new Map(),
     enemyFirstSeenAtMs: new Map(),
+    enemyNames: new Map(),
     deaths: [],
   };
   for (const actorRow of database

@@ -50,6 +50,7 @@ export class MeterReducer {
       activeActors: new Map(),
       enemies: new Map(),
       enemyFirstSeenAtMs: new Map(),
+      enemyNames: new Map(),
       deaths: [],
     };
     return this.current;

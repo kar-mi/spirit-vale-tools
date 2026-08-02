@@ -251,6 +251,7 @@ function emptyAggregate(encounter: EncounterAggregate): EncounterAggregate {
     activeActors: new Map(),
     enemies: new Map(),
     enemyFirstSeenAtMs: new Map(),
+    enemyNames: new Map(),
     deaths: [],
     ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
   };

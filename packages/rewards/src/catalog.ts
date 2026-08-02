@@ -43,6 +43,16 @@ export function loadBundledMobRewardCatalog(buildFingerprint = CURRENT_GAME_BUIL
   return cloneCatalog(BUNDLED_CATALOG);
 }
 
+/**
+ * The catalog keyed by mob id. Satisfies the combat tracker's `FishNetMonsterCatalog`, which is how
+ * combat names the monsters it sees spawn without depending on this package.
+ */
+export function mobDefinitionsById(
+  catalog: MobRewardCatalog = loadBundledMobRewardCatalog(),
+): Map<string, MobRewardDefinition> {
+  return new Map(catalog.mobs.map((mob) => [mob.id, mob]));
+}
+
 export function queryMobRewardCatalog(
   catalog: MobRewardCatalog,
   query: MobRewardCatalogQuery = {},

@@ -90,6 +90,12 @@ export interface EncounterAggregate {
   enemies: Map<number, Map<number, Map<string, EnemySkillStats>>>;
   /** First time each enemy was hit, which orders the enemy picker. */
   enemyFirstSeenAtMs: Map<number, number>;
+  /**
+   * Enemy display names, captured when the hit lands rather than looked up when the encounter is
+   * written. A monster is named by its spawn packet, which the log does not carry, so resolving
+   * later would lose the name entirely for anything that died without acting.
+   */
+  enemyNames: Map<number, string>;
   deaths: DeathRecord[];
 }
 
@@ -238,6 +244,7 @@ export class DamageReducer {
         activeActors: new Map(actors.map((actor) => [actor.actorId, actor])),
         enemies: new Map(),
         enemyFirstSeenAtMs: new Map(),
+        enemyNames: new Map(),
         deaths: [],
       };
     }
@@ -390,6 +397,12 @@ export class DamageReducer {
       if (!this.current.enemyFirstSeenAtMs.has(event.targetId)) {
         this.current.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
       }
+      // Captured now, while the name is still known. `mobIdentities` is capped and evicts, and the
+      // spawn-derived name on the event is not recoverable from the log afterwards.
+      const targetName = event.targetIdentity?.displayName
+        ?? this.identities.get(event.targetId)?.displayName
+        ?? this.mobIdentities.get(event.targetId);
+      if (targetName !== undefined) this.current.enemyNames.set(event.targetId, targetName);
     }
 
     // Team 0 is the party's outgoing damage, so a non-zero-team death is an incoming player death.

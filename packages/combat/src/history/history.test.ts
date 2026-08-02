@@ -41,6 +41,20 @@ function damage(actorId: number, targetId: number, value: number, atMs: number, 
   });
 }
 
+/** Outgoing damage whose target the capture named from its spawn packet. */
+function namedDamage(
+  actorId: number,
+  targetId: number,
+  value: number,
+  atMs: number,
+  targetIdentity: { mobId: string; displayName: string },
+): string {
+  return record(atMs, {
+    kind: "damage", tick: atMs, actorId, targetId, team: 0, value,
+    sourceId: "skill:strike", sourceLabel: "skill:strike", hitResult: "normal", targetIdentity,
+  });
+}
+
 /** Incoming damage: a non-zero team is what makes it count toward the tanked meter. */
 function incoming(actorId: number, targetId: number, value: number, atMs: number, sourceId = "skill:bite"): string {
   return record(atMs, {
@@ -387,6 +401,61 @@ describe("indexed meters", () => {
       const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
       expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.totalDamage).toBe(100);
       expect(store.getEncounter(SESSION, encounterId, { meter: "healing" })!.totalDamage).toBe(25);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  /**
+   * A monster is named by its spawn packet, which the combat log does not carry, so the name has to
+   * ride along on the hit. Nothing else in the stream can name a monster that dies without acting.
+   */
+  test("names an enemy that never acted, from the identity on the hit", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        namedDamage(1, 90, 100, 1_000, { mobId: "fictional_mob", displayName: "Fictional Mob" }),
+        damage(1, 91, 100, 1_500),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+
+      const enemies = store.getEnemyBreakdown(SESSION, encounterId).enemies;
+      expect(enemies.find((enemy) => enemy.targetId === 90)?.label).toBe("Fictional Mob");
+      // Unnamed targets still fall back to the id, rather than borrowing another enemy's name.
+      expect(enemies.find((enemy) => enemy.targetId === 91)?.label).toBe("Enemy 91");
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  /**
+   * An open encounter's enemy rows are deleted and rewritten on every pass, so a name learned in an
+   * earlier pass has to be carried back on resume or the rewrite replaces it with the id.
+   */
+  test("keeps an enemy name across an incremental pass that does not re-see it", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        namedDamage(1, 90, 100, 1_000, { mobId: "fictional_mob", displayName: "Fictional Mob" }),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+
+      // A later hit on the same still-open encounter, this time with no identity on the event.
+      await appendFile(context.logPath, [damage(1, 90, 50, 2_000)].join(""));
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+      expect(store.getEnemyBreakdown(SESSION, encounterId).enemies
+        .find((enemy) => enemy.targetId === 90)?.label).toBe("Fictional Mob");
     } finally {
       await context.cleanup();
     }
