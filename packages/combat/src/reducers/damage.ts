@@ -314,26 +314,30 @@ export class DamageReducer {
     this.recentHits.set(event.targetId, hits);
   }
 
-  /** Attributes a positive hit to the open encounter's enemy breakdown and, on death, its log. */
+  /** Attributes a hit to the open encounter's enemy breakdown and, on death, its log. */
   private recordEncounterHit(event: FishNetCombatEvent, observedAtMs: number): void {
     if (event.kind !== "damage" && event.kind !== "death") return;
-    if (!isPositiveHit(event) || !this.current) return;
+    if (!this.current) return;
 
-    const byTarget = this.current.enemies.get(event.actorId) ?? new Map<number, Map<string, EnemySkillStats>>();
-    this.current.enemies.set(event.actorId, byTarget);
-    const bySkill = byTarget.get(event.targetId) ?? new Map<string, EnemySkillStats>();
-    byTarget.set(event.targetId, bySkill);
-    const stats = bySkill.get(event.sourceId)
-      ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-    stats.damage += event.value;
-    stats.hits += 1;
-    if (event.hitResult === "critical") stats.criticalHits += 1;
-    bySkill.set(event.sourceId, stats);
-    if (!this.current.enemyFirstSeenAtMs.has(event.targetId)) {
-      this.current.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
+    if (isPositiveHit(event)) {
+      const byTarget = this.current.enemies.get(event.actorId) ?? new Map<number, Map<string, EnemySkillStats>>();
+      this.current.enemies.set(event.actorId, byTarget);
+      const bySkill = byTarget.get(event.targetId) ?? new Map<string, EnemySkillStats>();
+      byTarget.set(event.targetId, bySkill);
+      const stats = bySkill.get(event.sourceId)
+        ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
+      stats.damage += event.value;
+      stats.hits += 1;
+      if (event.hitResult === "critical") stats.criticalHits += 1;
+      bySkill.set(event.sourceId, stats);
+      if (!this.current.enemyFirstSeenAtMs.has(event.targetId)) {
+        this.current.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
+      }
     }
 
     // Team 0 is the party's outgoing damage, so a non-zero-team death is an incoming player death.
+    // The death event itself usually carries no damage — the lethal blow is a separate damage event
+    // — so it is recorded regardless of whether it qualifies as a positive hit of its own.
     if (event.kind !== "death" || event.team === 0) return;
     const windowStartMs = observedAtMs - DEATH_LOOKBACK_MS;
     const victimHits = (this.recentHits.get(event.targetId) ?? [])

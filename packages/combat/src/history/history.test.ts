@@ -49,6 +49,18 @@ function incoming(actorId: number, targetId: number, value: number, atMs: number
   });
 }
 
+/**
+ * A player death. Real logs carry no damage on the death record itself — the lethal blow is a
+ * separate damage event — so the value defaults to zero.
+ */
+function playerDeath(actorId: number, targetId: number, atMs: number, value = 0): string {
+  return record(atMs, {
+    kind: "death", tick: atMs, actorId, targetId, team: 1, value,
+    sourceId: "skill:bite", sourceLabel: "skill:bite", hitResult: "normal",
+    duplicatesDamageEvent: false,
+  });
+}
+
 function heal(actorId: number, targetId: number, value: number, atMs: number, sourceId = "skill:mend"): string {
   return record(atMs, {
     kind: "heal", tick: atMs, actorId, targetId, value,
@@ -368,6 +380,34 @@ describe("indexed meters", () => {
       const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
       expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.totalDamage).toBe(100);
       expect(store.getEncounter(SESSION, encounterId, { meter: "healing" })!.totalDamage).toBe(25);
+    } finally {
+      await context.cleanup();
+    }
+  });
+});
+
+describe("death log", () => {
+  test("records a death that carries no damage of its own", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        damage(1, 90, 100, 1_000),
+        incoming(90, 1, 40, 2_000),
+        incoming(90, 1, 60, 2_500),
+        playerDeath(90, 1, 3_000),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      const deaths = new CombatHistoryStore(model).getDeathLog({ sessionId: SESSION }).items;
+
+      expect(deaths).toHaveLength(1);
+      expect(deaths[0]!.victimName).toBe("Aurora");
+      // The ten-second lookback carries the hits that led to it, even though the death itself is
+      // not a positive hit and so contributes nothing to the enemy breakdown.
+      expect(deaths[0]!.hits.map((hit) => hit.damage)).toEqual([40, 60]);
+      expect(deaths[0]!.totalDamage).toBe(100);
     } finally {
       await context.cleanup();
     }
