@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.2.1
+
+### Patch Changes
+
+- f95e0e3: Expand live combat tanked and healing meters with detailed encounter snapshots and personal-player resolution.
+
 ## 1.2.0
 
 ### Minor Changes
