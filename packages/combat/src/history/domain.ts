@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 4;
+export const COMBAT_DOMAIN_VERSION = 5;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -25,7 +25,10 @@ create table if not exists combat_stream_state (
   session_id text not null primary key,
   identities_json text not null default '[]',
   mob_identities_json text not null default '[]',
-  recent_hits_json text not null default '[]'
+  recent_hits_json text not null default '[]',
+  -- Lines that were not a valid log record, accumulated across passes so the figure covers the whole
+  -- stream rather than whichever slice the last incremental pass happened to read.
+  invalid_lines integer not null default 0
 );
 create index if not exists combat_encounters_open on combat_encounters (session_id) where ended_at_ms is null;
 

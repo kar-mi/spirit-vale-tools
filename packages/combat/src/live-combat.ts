@@ -113,18 +113,14 @@ export class LiveCombatService {
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
-    // An incoming hit or heal arriving while an encounter is open belongs to that encounter, even
-    // though it cannot open one. Record it before the reducer runs, so a hit that lands exactly on
-    // an idle-gap boundary is counted against the encounter it actually occurred in.
-    const recordsBeforeReducer = isMeterOnlyEvent(event)
-      && this.reducer.current !== undefined
-      && this.meterId === this.reducer.current.id;
-    if (recordsBeforeReducer) this.recordMeterEvent(event, observedAtMs);
+    // The reducer owns encounter boundaries, so it runs first: it may close an encounter that has
+    // gone idle, and an incoming hit or heal arriving after that cutoff belongs to no encounter at
+    // all rather than to the one that just ended.
     this.reducer.consumeCombat(event, observedAtMs);
     const encounter = this.reducer.current;
     if (encounter) {
       this.ensureMeter(encounter);
-      if (!recordsBeforeReducer) this.recordMeterEvent(event, observedAtMs);
+      this.recordMeterEvent(event, observedAtMs);
     }
     this.revision += 1;
   }
@@ -258,11 +254,6 @@ function emptyAggregate(encounter: EncounterAggregate): EncounterAggregate {
     deaths: [],
     ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
   };
-}
-
-function isMeterOnlyEvent(event: FishNetCombatEvent): boolean {
-  if (event.kind === "heal") return true;
-  return (event.kind === "damage" || event.kind === "death") && event.team !== 0;
 }
 
 interface FinishedEncounter {

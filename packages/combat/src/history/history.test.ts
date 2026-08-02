@@ -464,3 +464,92 @@ describe("incremental indexing", () => {
     }
   });
 });
+
+describe("encounter boundaries", () => {
+  /**
+   * Incoming damage and healing cannot open an encounter, so nothing else would close one that has
+   * gone idle before they are attributed. They must not be folded into the encounter that already
+   * ended — that would corrupt the tanked and healing meters, the enemy breakdown and the death log.
+   */
+  test("does not attribute post-idle incoming damage to the expired encounter", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        damage(1, 90, 100, 0),
+        // The encounter goes idle 1s after its last damage; these land well past that.
+        incoming(90, 1, 40, 5_000),
+        heal(1, 1, 25, 5_500),
+        playerDeath(90, 1, 6_000),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, {
+        sessionId: SESSION, sourcePath: context.logPath, idleGapMs: 1_000, finalize: true,
+      });
+      const store = new CombatHistoryStore(model);
+      const encounters = store.listEncounters({ sessionId: SESSION }).items;
+
+      // Only the outgoing damage defines an encounter.
+      expect(encounters).toHaveLength(1);
+      const encounterId = encounters[0]!.encounterId;
+      expect(store.getEncounter(SESSION, encounterId)!.totalDamage).toBe(100);
+      expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.totalDamage).toBe(0);
+      expect(store.getEncounter(SESSION, encounterId, { meter: "healing" })!.totalDamage).toBe(0);
+      // The enemy breakdown and the death log are fed from the same path.
+      expect(store.getEnemyBreakdown(SESSION, encounterId).skills.filter((row) => row.targetId === 1)).toEqual([]);
+      expect(store.getDeathLog({ sessionId: SESSION }).items).toEqual([]);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  test("still attributes incoming damage inside an active encounter", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        damage(1, 90, 100, 0),
+        incoming(90, 1, 40, 500),
+        heal(1, 1, 25, 600),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, {
+        sessionId: SESSION, sourcePath: context.logPath, idleGapMs: 1_000, finalize: true,
+      });
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+
+      expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.totalDamage).toBe(40);
+      expect(store.getEncounter(SESSION, encounterId, { meter: "healing" })!.totalDamage).toBe(25);
+    } finally {
+      await context.cleanup();
+    }
+  });
+});
+
+describe("malformed records", () => {
+  test("accumulates unparseable lines across incremental passes", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        "this is not json\n",
+        damage(1, 90, 100, 1_000),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+      const store = new CombatHistoryStore(model);
+      expect(store.invalidLines(SESSION)).toBe(1);
+
+      // A later pass adds its own, rather than reporting only what it read.
+      await appendFile(context.logPath, ['{"broken": true}\n', damage(1, 90, 50, 2_000)].join(""));
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      expect(store.invalidLines(SESSION)).toBe(2);
+    } finally {
+      await context.cleanup();
+    }
+  });
+});

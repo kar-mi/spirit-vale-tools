@@ -115,6 +115,30 @@ describe("LiveCombatService", () => {
     expect(named?.tps.detail.personal?.damage).toBe(5);
   });
 
+  test("does not credit an expired encounter with incoming damage that arrives after its idle cutoff", () => {
+    const service = new LiveCombatService({ idleGapMs: 1_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 0, 0), 0);
+    // The encounter goes idle at 1_000ms; this lands well after that.
+    service.consumeCombat(damage(90, 1, 40, 2_000, 1), 2_000);
+
+    const state = service.getState(2_000);
+    // Incoming damage cannot open an encounter, so there is nothing current...
+    expect(state.current).toBeUndefined();
+    // ...and it must not have been folded into the one that already ended.
+    expect(state.latestFinished?.dps.totalDamage).toBe(100);
+    expect(state.latestFinished?.tps.total).toBe(0);
+  });
+
+  test("credits incoming damage to an encounter that is still active", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 0, 0), 0);
+    service.consumeCombat(damage(90, 1, 40, 2_000, 1), 2_000);
+
+    expect(service.getState(2_000).current?.tps.total).toBe(40);
+  });
+
   test("retains only the latest finished encounter and increments revisions", () => {
     const finished: unknown[] = [];
     const service = new LiveCombatService({

@@ -110,7 +110,9 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
         captureMeters(reducer.current.id);
         writeEncounter(model, sessionId, reducer.current, reducer, meterAggregates.get(reducer.current.id));
       } else if (previouslyOpen) clearEncounter(model, sessionId, previouslyOpen, { keepFinished: true });
-      // Written in the same transaction as the rows above, so progress and reducer state commit together.
+      // Written in the same transaction as the rows above, so progress and reducer state commit
+      // together. Pruned first so the persisted lookback is exactly the window that gets read back.
+      reducer.pruneRecentHits(lastObservedAtMs);
       writeStreamState(model, sessionId, reducer);
     },
     clear(scope, database) {
@@ -128,6 +130,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
   };
 
   const result = await model.indexStream(request);
+  recordInvalidLines(model, sessionId, result.invalidLines, result.rebuilt);
 
   if (options.finalize && reducer.current) {
     // The byte offset is already committed; this only stamps ended_at_ms on the encounter row, so
@@ -177,27 +180,15 @@ function consume(
     for (const entry of meters) entry.reducer.consumeIdentity(event);
     return;
   }
-  // An incoming hit or heal belongs to the encounter that is open when it arrives, so it is recorded
-  // before the damage reducer gets a chance to close that encounter on an idle gap.
-  const openId = reducer.current?.id;
-  const recordFirst = openId !== undefined && isMeterOnlyEvent(event);
-  if (recordFirst) {
-    for (const entry of meters) entry.reducer.consumeCombat(event, observedAtMs, reducer.identities);
-  }
+  // The reducer owns encounter boundaries, so it runs first: it may close an encounter that has gone
+  // idle, and an incoming hit or heal arriving after that cutoff belongs to no encounter at all.
   reducer.consumeCombat(event, observedAtMs);
   const encounter = reducer.current;
   if (!encounter) return;
   for (const entry of meters) {
     if (entry.reducer.current?.id !== encounter.id) entry.reducer.begin(encounter.id, encounter.startedAtMs);
+    entry.reducer.consumeCombat(event, observedAtMs, reducer.identities);
   }
-  if (!recordFirst) {
-    for (const entry of meters) entry.reducer.consumeCombat(event, observedAtMs, reducer.identities);
-  }
-}
-
-function isMeterOnlyEvent(event: { kind: string; team?: number }): boolean {
-  if (event.kind === "heal") return true;
-  return (event.kind === "damage" || event.kind === "death") && event.team !== 0;
 }
 
 /**
@@ -436,6 +427,21 @@ interface StreamStateRow {
   recent_hits_json: string;
 }
 
+/**
+ * Accumulates the count of unparseable lines for the stream. A rebuild re-reads from byte zero, so
+ * its count replaces the running total instead of adding to it.
+ */
+function recordInvalidLines(model: ReadModel, sessionId: string, invalidLines: number, rebuilt: boolean): void {
+  if (invalidLines === 0 && !rebuilt) return;
+  model.transaction(() => {
+    statements(model)
+      .query(`insert into combat_stream_state (session_id, invalid_lines) values ($sessionId, $invalidLines)
+        on conflict(session_id) do update set
+          invalid_lines = case when $rebuilt = 1 then $invalidLines else combat_stream_state.invalid_lines + $invalidLines end`)
+      .run({ sessionId, invalidLines, rebuilt: rebuilt ? 1 : 0 });
+  });
+}
+
 /** Restores the reducer state that spans encounters, so an incremental pass continues where it left off. */
 function loadStreamState(model: ReadModel, sessionId: string, reducer: DamageReducer): void {
   const row = statements(model)
@@ -454,10 +460,15 @@ function loadStreamState(model: ReadModel, sessionId: string, reducer: DamageRed
 }
 
 function writeStreamState(model: ReadModel, sessionId: string, reducer: DamageReducer): void {
+  // Upsert rather than replace: invalid_lines accumulates separately and must survive this write.
   statements(model)
-    .query(`insert or replace into combat_stream_state
+    .query(`insert into combat_stream_state
       (session_id, identities_json, mob_identities_json, recent_hits_json)
-      values ($sessionId, $identitiesJson, $mobIdentitiesJson, $recentHitsJson)`)
+      values ($sessionId, $identitiesJson, $mobIdentitiesJson, $recentHitsJson)
+      on conflict(session_id) do update set
+        identities_json = excluded.identities_json,
+        mob_identities_json = excluded.mob_identities_json,
+        recent_hits_json = excluded.recent_hits_json`)
     .run({
       sessionId,
       identitiesJson: JSON.stringify([...reducer.identities]),

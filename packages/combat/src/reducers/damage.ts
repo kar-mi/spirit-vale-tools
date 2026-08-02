@@ -108,6 +108,12 @@ export interface DamageReducerOptions {
 export const MOB_IDENTITY_PREFIX = "__spiritvaleMobIdentity:";
 
 const DEATH_LOOKBACK_MS = 10_000;
+/**
+ * Monster display names retained at once. Names are only needed to label recent hits and the current
+ * encounter's enemies, but a long session sees a great many distinct monsters, so the map is capped
+ * and evicts the least recently seen rather than growing for the whole session.
+ */
+const MAX_MOB_IDENTITIES = 4_096;
 
 export class DamageReducer {
   readonly identities = new Map<number, CombatIdentity>();
@@ -116,8 +122,13 @@ export class DamageReducer {
   /**
    * Recent positive hits per target, trimmed to the death lookback. Exposed so an indexing pass can
    * carry it across a resume; without it a death just after the boundary would lose its hit list.
+   *
+   * Bounded by {@link sweepRecentHits} to the targets hit within the lookback, not by how many
+   * targets the session has seen: an incremental pass serialises this map on every batch, so letting
+   * it accumulate would cost far more in repeated writes than in memory.
    */
   readonly recentHits = new Map<number, { atMs: number; hit: DeathHitRecord }[]>();
+  private lastSweepAtMs?: number;
   private readonly idleGapMs: number;
   private readonly currentWindowMs: number;
   private readonly maxTimelineBuckets: number;
@@ -191,7 +202,7 @@ export class DamageReducer {
       });
     }
     if (event.kind === "activation" && event.sourceId?.startsWith(MOB_IDENTITY_PREFIX) && event.sourceLabel) {
-      this.mobIdentities.set(event.actorId, event.sourceLabel);
+      this.rememberMobIdentity(event.actorId, event.sourceLabel);
       return;
     }
     // The death lookback spans encounter boundaries, so it is tracked even with nothing open.
@@ -199,8 +210,13 @@ export class DamageReducer {
 
     const countedDamage = isCountedDamage(event);
     const countedKill = isCountedKill(event);
-    // Incoming damage never opens an encounter, but it does belong to one already in progress.
+    // Incoming damage never opens an encounter, but it does belong to one already in progress —
+    // provided that encounter has not already gone idle. Without this check a hit or heal arriving
+    // long after the fight ended is still counted against it.
     if (!countedDamage && !countedKill) {
+      if (this.current && observedAtMs - this.current.lastDamageAtMs >= this.idleGapMs) {
+        this.finish(this.current.lastDamageAtMs + this.idleGapMs);
+      }
       if (this.current) this.recordEncounterHit(event, observedAtMs);
       return;
     }
@@ -311,7 +327,48 @@ export class DamageReducer {
     });
     const cutoffMs = observedAtMs - DEATH_LOOKBACK_MS;
     while (hits.length > 0 && hits[0]!.atMs < cutoffMs) hits.shift();
-    this.recentHits.set(event.targetId, hits);
+    if (hits.length === 0) this.recentHits.delete(event.targetId);
+    else this.recentHits.set(event.targetId, hits);
+    this.sweepRecentHits(observedAtMs);
+  }
+
+  /**
+   * Trims every target to the lookback immediately, regardless of when the last sweep ran.
+   *
+   * Used before persisting the map: the periodic sweep leaves up to two windows in memory, but only
+   * one is ever read back, and the persisted copy is rewritten on every batch.
+   */
+  pruneRecentHits(observedAtMs: number): void {
+    this.sweepRecentHits(observedAtMs, true);
+  }
+
+  /**
+   * Drops targets whose hits have all aged out.
+   *
+   * {@link trackRecentHit} only trims the target it is currently touching, so a target hit once and
+   * never again would otherwise be retained for the rest of the session. Runs at most once per
+   * lookback window of log time, which makes it a rare pass over a map that stays small.
+   */
+  private sweepRecentHits(observedAtMs: number, force = false): void {
+    if (!force && this.lastSweepAtMs !== undefined && observedAtMs - this.lastSweepAtMs < DEATH_LOOKBACK_MS) return;
+    this.lastSweepAtMs = observedAtMs;
+    const cutoffMs = observedAtMs - DEATH_LOOKBACK_MS;
+    for (const [targetId, hits] of this.recentHits) {
+      while (hits.length > 0 && hits[0]!.atMs < cutoffMs) hits.shift();
+      if (hits.length === 0) this.recentHits.delete(targetId);
+    }
+  }
+
+  /** Records a monster's display name, evicting the least recently seen once the cap is reached. */
+  private rememberMobIdentity(actorId: number, displayName: string): void {
+    // Re-inserting moves the entry to the end, so iteration order is least-recently-seen first.
+    this.mobIdentities.delete(actorId);
+    this.mobIdentities.set(actorId, displayName);
+    while (this.mobIdentities.size > MAX_MOB_IDENTITIES) {
+      const oldest = this.mobIdentities.keys().next();
+      if (oldest.done) break;
+      this.mobIdentities.delete(oldest.value);
+    }
   }
 
   /** Attributes a hit to the open encounter's enemy breakdown and, on death, its log. */

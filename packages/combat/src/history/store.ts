@@ -116,6 +116,14 @@ const DEFAULT_LIMIT = 50;
 export class CombatHistoryStore {
   constructor(private readonly model: ReadModel) {}
 
+  /** Lines of this session's combat log that were not a valid record, across every indexing pass. */
+  invalidLines(sessionId: string): number {
+    const row = this.model
+      .statement("select invalid_lines from combat_stream_state where session_id = $sessionId")
+      .get({ sessionId }) as { invalid_lines: number } | null;
+    return row?.invalid_lines ?? 0;
+  }
+
   listEncounters(query: ListEncountersQuery): Page<CombatEncounterSummary> {
     const limit = Math.max(1, query.limit ?? DEFAULT_LIMIT);
     const cursor = decodeCursor(query.cursor);
