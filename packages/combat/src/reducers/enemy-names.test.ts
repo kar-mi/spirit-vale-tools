@@ -7,15 +7,20 @@ function damage(
   actorId: number,
   targetId: number,
   atMs: number,
-  targetIdentity?: { mobId: string; displayName: string },
 ): FishNetCombatEvent {
   return {
     kind: "damage", rpc: "ApplyDamage_C", tick: atMs, payloadBytes: 0, fields: {},
     actorId, targetId, sourceId: "skill:strike", sourceLabel: "Strike", value: 10,
     hitResult: "normal", wireHits: 1, damageType: 0, team: 0, element: 0, weaponType: 0,
     range: 0, isClone: false, isSummon: false, position: [], origin: [], attribution: "exact",
-    ...(targetIdentity ? { targetIdentity } : {}),
   } as FishNetCombatEvent;
+}
+
+function spawnIdentity(actorId: number, displayName: string, atMs: number): FishNetCombatEvent {
+  return {
+    kind: "monsterIdentity", operation: "upsert", tick: atMs, actorId,
+    mobId: "fictional_mob", displayName,
+  };
 }
 
 function mobIdentity(actorId: number, displayName: string, atMs: number): FishNetCombatEvent {
@@ -30,10 +35,11 @@ describe("enemy names", () => {
    * The case the spawn-derived identity exists for: a monster killed without ever acting produces
    * no mob-identity activation, so nothing else in the stream can name it.
    */
-  test("names a target that never acted, from the identity on the hit", () => {
+  test("names a target that never acted, from its spawn identity", () => {
     const reducer = new DamageReducer();
 
-    reducer.consumeCombat(damage(90, 500, 0, { mobId: "fictional_mob", displayName: "Fictional Mob" }), 0);
+    reducer.consumeCombat(spawnIdentity(500, "Fictional Mob", 0), 0);
+    reducer.consumeCombat(damage(90, 500, 1), 1);
 
     expect(reducer.current?.enemyNames.get(500)).toBe("Fictional Mob");
   });
@@ -42,6 +48,18 @@ describe("enemy names", () => {
     const reducer = new DamageReducer();
 
     reducer.consumeCombat(damage(90, 500, 0), 0);
+
+    expect(reducer.current?.enemyNames.has(500)).toBe(false);
+  });
+
+  test.each(["remove", "reset"] as const)("drops stale spawn identity on %s", (operation) => {
+    const reducer = new DamageReducer();
+
+    reducer.consumeCombat(spawnIdentity(500, "Fictional Mob", 0), 0);
+    reducer.consumeCombat(operation === "remove"
+      ? { kind: "monsterIdentity", operation, tick: 1, actorId: 500 }
+      : { kind: "monsterIdentity", operation, tick: 1 }, 1);
+    reducer.consumeCombat(damage(90, 500, 2), 2);
 
     expect(reducer.current?.enemyNames.has(500)).toBe(false);
   });
@@ -62,7 +80,8 @@ describe("enemy names", () => {
   test("keeps a captured name after the identity map evicts it", () => {
     const reducer = new DamageReducer();
 
-    reducer.consumeCombat(damage(90, 500, 0, { mobId: "fictional_mob", displayName: "Fictional Mob" }), 0);
+    reducer.consumeCombat(spawnIdentity(500, "Fictional Mob", 0), 0);
+    reducer.consumeCombat(damage(90, 500, 1), 1);
     reducer.mobIdentities.clear();
 
     expect(reducer.current?.enemyNames.get(500)).toBe("Fictional Mob");

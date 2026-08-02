@@ -4,6 +4,7 @@ import path from "node:path";
 import { describe, expect, test } from "bun:test";
 import { openReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
+import { sanitizeCombatData } from "@kar-mi/spirit-vale-tools-logging";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { loadDpsReplay } from "../replay.ts";
@@ -41,18 +42,14 @@ function damage(actorId: number, targetId: number, value: number, atMs: number, 
   });
 }
 
-/** Outgoing damage whose target the capture named from its spawn packet. */
-function namedDamage(
-  actorId: number,
-  targetId: number,
-  value: number,
-  atMs: number,
-  targetIdentity: { mobId: string; displayName: string },
-): string {
-  return record(atMs, {
-    kind: "damage", tick: atMs, actorId, targetId, team: 0, value,
-    sourceId: "skill:strike", sourceLabel: "skill:strike", hitResult: "normal", targetIdentity,
+/** Flat lifecycle record emitted when capture identifies a monster from its spawn packet. */
+function spawnIdentity(actorId: number, displayName: string, atMs: number): string {
+  const data = sanitizeCombatData("combat.event", {
+    kind: "monsterIdentity", operation: "upsert", tick: atMs, actorId,
+    mobId: "fictional_mob", displayName,
   });
+  if (!data) throw new Error("monster identity was rejected by the combat sanitizer");
+  return record(atMs, data);
 }
 
 /** Incoming damage: a non-zero team is what makes it count toward the tanked meter. */
@@ -410,12 +407,13 @@ describe("indexed meters", () => {
    * A monster is named by its spawn packet, which the combat log does not carry, so the name has to
    * ride along on the hit. Nothing else in the stream can name a monster that dies without acting.
    */
-  test("names an enemy that never acted, from the identity on the hit", async () => {
+  test("names an enemy that never acted, from its sanitized spawn identity", async () => {
     const context = await fixture();
     try {
       await appendFile(context.logPath, [
         identity(1, "Aurora", 0),
-        namedDamage(1, 90, 100, 1_000, { mobId: "fictional_mob", displayName: "Fictional Mob" }),
+        spawnIdentity(90, "Fictional Mob", 900),
+        damage(1, 90, 100, 1_000),
         damage(1, 91, 100, 1_500),
       ].join(""));
 
@@ -442,7 +440,8 @@ describe("indexed meters", () => {
     try {
       await appendFile(context.logPath, [
         identity(1, "Aurora", 0),
-        namedDamage(1, 90, 100, 1_000, { mobId: "fictional_mob", displayName: "Fictional Mob" }),
+        spawnIdentity(90, "Fictional Mob", 900),
+        damage(1, 90, 100, 1_000),
       ].join(""));
 
       const model = await context.open();

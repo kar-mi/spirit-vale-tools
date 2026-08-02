@@ -7,6 +7,8 @@ export interface MobRewardMobSummary {
   level: number;
   boss: boolean;
   kills: number;
+  /** Kills a reward could be pinned to. The rest still count, but contribute no experience or loot. */
+  attributedKills: number;
   experience: number;
   jobExperience: number;
   coins: bigint;
@@ -73,12 +75,14 @@ export class MobRewardSession {
         level: kill.mob.level,
         boss: kill.mob.boss,
         kills: 0,
+        attributedKills: 0,
         experience: 0,
         jobExperience: 0,
         coins: 0n,
         drops: [],
       };
       current.kills += 1;
+      if (kill.attributed) current.attributedKills += 1;
       current.experience += kill.experience;
       current.jobExperience += kill.jobExperience;
       current.coins += kill.coins;

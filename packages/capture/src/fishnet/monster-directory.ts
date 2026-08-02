@@ -16,6 +16,11 @@ export interface FishNetMonsterSpawn {
   rank?: number;
 }
 
+export type FishNetMonsterDirectoryChange =
+  | { operation: "upsert"; objectId: number; spawn: FishNetMonsterSpawn }
+  | { operation: "remove"; objectId: number }
+  | { operation: "reset" };
+
 /**
  * The spawn payload is scanned at arbitrary offsets, so a known mob's catalog level is what
  * disambiguates a real match from a coincidental one. Supplying a lookup keeps the catalog itself
@@ -30,22 +35,25 @@ export class FishNetMonsterDirectory {
 
   constructor(private readonly levels: FishNetMonsterLevels) {}
 
-  /** Returns the object this packet identified, if it identified one. */
-  consume(packet: DecodedFishNetPacket): { objectId: number; spawn: FishNetMonsterSpawn } | undefined {
+  /** Returns the identity change caused by this packet, suppressing repeated identical syncs. */
+  consume(packet: DecodedFishNetPacket): FishNetMonsterDirectoryChange | undefined {
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
       this.objects.clear();
-      return undefined;
+      return { operation: "reset" };
     }
     if (packet.packetName === "objectDespawn" && packet.objectId !== undefined) {
-      this.objects.delete(packet.objectId);
-      return undefined;
+      return this.objects.delete(packet.objectId)
+        ? { operation: "remove", objectId: packet.objectId }
+        : undefined;
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
-      this.objects.delete(packet.objectId);
+      const removed = this.objects.delete(packet.objectId);
       const spawned = packet.spawnSyncPayload
         ? decodeMonsterSpawn(packet.spawnSyncPayload, this.levels)
         : undefined;
-      return spawned ? this.set(packet.objectId, spawned) : undefined;
+      return spawned
+        ? this.set(packet.objectId, spawned)
+        : removed ? { operation: "remove", objectId: packet.objectId } : undefined;
     }
     if (packet.packetName !== "syncType" || packet.objectId === undefined
       || (packet.networkBehaviourType !== undefined && packet.networkBehaviourType !== "MonsterController")) {
@@ -54,7 +62,7 @@ export class FishNetMonsterDirectory {
     const raw = decodeMonsterSync(packet.payload);
     const mobId = stringField(packet, ["Data.Id", "Monster.Id", "Id"]) ?? raw?.mobId;
     const level = numberField(packet, ["Data.Level", "Monster.Level", "Level"]) ?? raw?.level;
-    if (!mobId || level === undefined) return undefined;
+    if (!mobId || level === undefined || !this.levels.get(mobId)) return undefined;
     const rank = numberField(packet, ["Data.Rank", "Monster.Rank", "Rank"]) ?? raw?.rank;
     return this.set(packet.objectId, { mobId, level, ...(rank === undefined ? {} : { rank }) });
   }
@@ -68,9 +76,13 @@ export class FishNetMonsterDirectory {
     this.objects.clear();
   }
 
-  private set(objectId: number, spawn: FishNetMonsterSpawn): { objectId: number; spawn: FishNetMonsterSpawn } {
+  private set(objectId: number, spawn: FishNetMonsterSpawn): FishNetMonsterDirectoryChange | undefined {
+    const previous = this.objects.get(objectId);
     this.objects.set(objectId, spawn);
-    return { objectId, spawn: { ...spawn } };
+    if (previous?.mobId === spawn.mobId && previous.level === spawn.level && previous.rank === spawn.rank) {
+      return undefined;
+    }
+    return { operation: "upsert", objectId, spawn: { ...spawn } };
   }
 }
 

@@ -10,6 +10,7 @@ describe("FishNetMonsterDirectory", () => {
     const directory = new FishNetMonsterDirectory(LEVELS);
 
     expect(directory.consume(monsterSync(1, 52))).toMatchObject({
+      operation: "upsert",
       objectId: 52,
       spawn: { mobId: "training-mob", level: 2 },
     });
@@ -22,6 +23,13 @@ describe("FishNetMonsterDirectory", () => {
     directory.consume(monsterSpawn(1, 53));
 
     expect(directory.get(53)).toMatchObject({ mobId: "training-mob", level: 2 });
+  });
+
+  test("does not report an unchanged identity twice", () => {
+    const directory = new FishNetMonsterDirectory(LEVELS);
+
+    expect(directory.consume(monsterSync(1, 52))).toMatchObject({ operation: "upsert", objectId: 52 });
+    expect(directory.consume(monsterSync(2, 52))).toBeUndefined();
   });
 
   test("ignores objects that are not monsters", () => {
@@ -40,10 +48,10 @@ describe("FishNetMonsterDirectory", () => {
     const directory = new FishNetMonsterDirectory(LEVELS);
     directory.consume(monsterSync(1, 52));
 
-    directory.consume({
+    expect(directory.consume({
       tick: 2, packetId: 3, packetName: "objectDespawn",
       raw: Buffer.alloc(0), payload: Buffer.alloc(0), objectId: 52,
-    });
+    })).toEqual({ operation: "remove", objectId: 52 });
 
     expect(directory.get(52)).toBeUndefined();
   });
@@ -52,9 +60,9 @@ describe("FishNetMonsterDirectory", () => {
     const directory = new FishNetMonsterDirectory(LEVELS);
     directory.consume(monsterSync(1, 52));
 
-    directory.consume({
+    expect(directory.consume({
       tick: 2, packetId: 0, packetName: "authenticated", raw: Buffer.alloc(0), payload: Buffer.alloc(0),
-    });
+    })).toEqual({ operation: "reset" });
 
     expect(directory.get(52)).toBeUndefined();
   });

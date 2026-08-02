@@ -12,6 +12,7 @@ test("mob reward session preserves optional log timestamps on confirmed kills", 
     jobExperience: 4,
     coins: 7n,
     drops: [],
+    attributed: true,
   }, { recordedAt: "2026-01-01T00:00:05.000Z" });
 
   expect(session.snapshot().kills[0]?.recordedAt).toBe("2026-01-01T00:00:05.000Z");

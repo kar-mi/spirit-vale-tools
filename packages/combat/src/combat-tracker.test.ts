@@ -137,6 +137,25 @@ function packed(value: number): Buffer {
 }
 
 describe("FishNetCombatTracker", () => {
+  test("emits one flat monster identity event instead of repeating identity on hits", () => {
+    const tracker = new FishNetCombatTracker({
+      monsterCatalog: new Map([["fictional_mob", { level: 2, displayName: "Fictional Mob" }]]),
+    });
+    const sync = {
+      tick: 1, packetId: 1, packetName: "syncType", objectId: 52,
+      networkBehaviourType: "MonsterController", raw: Buffer.alloc(0), payload: Buffer.alloc(0),
+      decodedFields: [field("Data.Id", "fictional_mob"), field("Data.Level", 2), field("Data.Rank", 0)],
+    } satisfies DecodedFishNetPacket;
+
+    expect(tracker.consume(sync)).toEqual([{
+      kind: "monsterIdentity", operation: "upsert", tick: 1, actorId: 52,
+      mobId: "fictional_mob", displayName: "Fictional Mob",
+    }]);
+    expect(tracker.consume({ ...sync, tick: 2 })).toEqual([]);
+
+    const [hit] = tracker.consume(damage(3, 52, 10, "skill:strike", 100));
+    expect(hit).not.toHaveProperty("targetIdentity");
+  });
   test("emits changed summon stack counts from authoritative calibration snapshots", () => {
     const tracker = new FishNetCombatTracker();
 

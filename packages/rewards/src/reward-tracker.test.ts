@@ -27,7 +27,60 @@ describe("mob reward tracker", () => {
     })]);
   });
 
-  test("keeps simultaneous deaths out of confirmed totals", () => {
+  test("reports a kill that dropped nothing and earned nothing", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1, 50));
+    tracker.consume(death(3, 50));
+
+    const kills = tracker.flush().filter((event) => event.kind === "kill");
+    expect(kills).toHaveLength(1);
+    expect(kills[0]).toMatchObject({
+      mob: expect.objectContaining({ displayName: "Training Mob" }),
+      experience: 0, jobExperience: 0, coins: 0n, drops: [], attributed: false,
+    });
+  });
+
+  /**
+   * Experience alone cannot decide whose kill a death was: at max level a real kill pays nothing,
+   * so a mob dying nearby is told apart from one of ours by whether we damaged it.
+   */
+  test("ignores a mob that died without our damage and without paying out", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1, 50));
+    // Team 1 is incoming damage, i.e. this death was not credited to our side.
+    tracker.consume(death(3, 50, 1));
+
+    expect(tracker.flush().filter((event) => event.kind === "kill")).toEqual([]);
+  });
+
+  test("reports a kill we damaged even when it pays nothing, as at max level", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1, 50));
+    tracker.consume(damage(2, 50));
+    tracker.consume(death(3, 50, 1));
+
+    const kills = tracker.flush().filter((event) => event.kind === "kill");
+    expect(kills).toHaveLength(1);
+    expect(kills[0]).toMatchObject({ experience: 0, coins: 0n, attributed: false });
+  });
+
+  test("marks a kill attributed once a reward lands on it", () => {
+    const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
+    tracker.consume(monsterSync(1, 50));
+    tracker.consume(experience(2, 90, 1, 90, 1, 100n));
+    tracker.consume(death(3, 50));
+    tracker.consume(experience(4, 10, 2, 20, 2, 106n));
+
+    const kills = tracker.flush().filter((event) => event.kind === "kill");
+    expect(kills.map((kill) => kill.attributed)).toEqual([true]);
+  });
+
+  /**
+   * Rewards arrive as coalesced state updates, so simultaneous deaths cannot each claim one. Both
+   * kills are still real and are reported as such; the reward stays on its own unmatched event so
+   * it is counted once rather than split or duplicated.
+   */
+  test("reports simultaneous deaths as unattributed kills, keeping their reward unmatched", () => {
     const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
     tracker.consume(monsterSync(1, 50));
     tracker.consume(monsterSync(1, 51));
@@ -44,7 +97,11 @@ describe("mob reward tracker", () => {
       coins: 1n,
       drops: [],
     });
-    expect(tracker.flush().some((event) => event.kind === "kill")).toBe(false);
+    const kills = tracker.flush().filter((event) => event.kind === "kill");
+    expect(kills).toHaveLength(2);
+    expect(kills.every((kill) => !kill.attributed)).toBe(true);
+    expect(kills.every((kill) => kill.experience === 0 && kill.jobExperience === 0 && kill.coins === 0n)).toBe(true);
+    expect(kills.every((kill) => kill.drops.length === 0)).toBe(true);
   });
 
   test("preserves XP gains that have no nearby mob death", () => {
@@ -169,9 +226,22 @@ function experience(tick: number, xp: number, level: number, jobXp: number, jobL
   return { tick, packetId: 4, packetName: "targetRpc", raw: payload, payload, rpcName: "ExpCoinsChanged_T" };
 }
 
-function death(tick: number, objectId: number): DecodedFishNetPacket {
+/** Outgoing damage our side dealt to a mob, which is what makes its death ours to report. */
+function damage(tick: number, objectId: number): DecodedFishNetPacket {
   const fields: FishNetDecodedField[] = [
-    field("dmg.Team", 1), field("dmg.Value", 10), field("dmg.Type", 0), field("dmg.Hit", 0), field("dmg.Hits", 1),
+    field("dmg.Team", 0), field("dmg.Value", 10), field("dmg.Type", 0), field("dmg.Hit", 0), field("dmg.Hits", 1),
+    { name: "dmg.DamageSourceId", codec: "stringUtf8Packed", value: "training-hit" }, field("dmg.AttackerId", 7),
+    { name: "dmg.IsClone", codec: "boolean", value: false }, { name: "dmg.IsSummon", codec: "boolean", value: false },
+    field("dmg.Element", 0), field("dmg.WeaponType", 0), field("dmg.Range", 1),
+    { name: "position", codec: "vector3", value: [0, 0, 0] }, { name: "origin", codec: "vector3", value: [0, 0, 0] },
+  ];
+  return { tick, packetId: 2, packetName: "observersRpc", raw: Buffer.alloc(0), payload: Buffer.alloc(0), objectId, networkBehaviourType: "HealthComponent", rpcName: "ApplyDamage_C", decodedFields: fields };
+}
+
+/** Team 0 is our side's outgoing damage, which is what a mob we killed reports. */
+function death(tick: number, objectId: number, team = 0): DecodedFishNetPacket {
+  const fields: FishNetDecodedField[] = [
+    field("dmg.Team", team), field("dmg.Value", 10), field("dmg.Type", 0), field("dmg.Hit", 0), field("dmg.Hits", 1),
     { name: "dmg.DamageSourceId", codec: "stringUtf8Packed", value: "training-hit" }, field("dmg.AttackerId", 7),
     { name: "dmg.IsClone", codec: "boolean", value: false }, { name: "dmg.IsSummon", codec: "boolean", value: false },
     field("dmg.Element", 0), field("dmg.WeaponType", 0), field("dmg.Range", 1),

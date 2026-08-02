@@ -26,7 +26,11 @@ export {
   decodeMonsterSpawn,
   decodeMonsterSync,
 } from "./fishnet/monster-directory.ts";
-export type { FishNetMonsterLevels, FishNetMonsterSpawn } from "./fishnet/monster-directory.ts";
+export type {
+  FishNetMonsterDirectoryChange,
+  FishNetMonsterLevels,
+  FishNetMonsterSpawn,
+} from "./fishnet/monster-directory.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,

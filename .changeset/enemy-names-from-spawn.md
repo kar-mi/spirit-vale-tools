@@ -23,13 +23,14 @@ sides already depend on, along with `decodeMonsterSpawn` and `decodeMonsterSync`
 thin naming layer over it and behaves as before.
 
 **Combat.** `FishNetCombatTracker` accepts an optional `monsterCatalog`, and when given one it
-tracks spawns and stamps `targetIdentity` onto damage and death events. The catalog is injected
-rather than imported because rewards already depends on combat; `mobDefinitionsById()` from the
-rewards package is the intended argument. Without the option the tracker behaves exactly as before.
+tracks spawns and emits flat `monsterIdentity` lifecycle events. The catalog is injected rather than
+imported because rewards already depends on combat; `mobDefinitionsById()` from the rewards package
+is the intended argument. Emitting identity once per object avoids repeating the same catalog data
+on every damage and death record. Without the option the tracker behaves exactly as before.
 
 **Persisting it.** `EncounterAggregate` gains `enemyNames`, captured when the hit lands rather than
-looked up when the encounter is written. This matters twice over: the combat log carries no spawn
-packets, so a name not stamped on the event cannot be recovered on replay; and an open encounter's
+looked up when the encounter is written. This matters twice over: the combat log carries identity
+events rather than raw spawn packets; and an open encounter's
 enemy rows are deleted and rewritten on every indexing pass, which previously let an eviction from
 the capped `mobIdentities` map replace an already-stored name with null. Resuming an open encounter
 now restores the stored names for the same reason.

@@ -18,10 +18,10 @@ function writeRecord(model: ReadModel, _database: Database, sessionId: string, r
   const event = parseRewardLogRecord(record.type, record.data); if (!event) return record.type === "rewards.kill" || record.type === "rewards.unmatched" ? 1 : 0;
   const atMs = Date.parse(record.recordedAt); if (!Number.isFinite(atMs)) return 1;
   if (event.kind === "kill") {
-    const inserted = model.statement(REWARD_SQL.insertKill).run({ sessionId, killId: event.id, sequence: record.sequence, atMs, tick: event.tick, mobId: event.mob.mobId, displayName: event.mob.displayName, level: event.mob.level, rank: event.mob.rank ?? null, boss: event.mob.boss ? 1 : 0, objectId: event.mob.objectId, experience: event.experience, jobExperience: event.jobExperience, coins: event.coins });
+    const inserted = model.statement(REWARD_SQL.insertKill).run({ sessionId, killId: event.id, sequence: record.sequence, atMs, tick: event.tick, mobId: event.mob.mobId, displayName: event.mob.displayName, level: event.mob.level, rank: event.mob.rank ?? null, boss: event.mob.boss ? 1 : 0, objectId: event.mob.objectId, experience: event.experience, jobExperience: event.jobExperience, coins: event.coins, attributed: event.attributed ? 1 : 0 });
     if (inserted.changes === 0) return 0;
     for (const drop of event.drops) model.statement(REWARD_SQL.insertKillDrop).run({ sessionId, killId: event.id, category: drop.category, itemId: drop.itemId, count: drop.count });
-    model.statement(REWARD_SQL.upsertMob).run({ sessionId, mobId: event.mob.mobId, displayName: event.mob.displayName, level: event.mob.level, boss: event.mob.boss ? 1 : 0, experience: event.experience, jobExperience: event.jobExperience, coins: event.coins });
+    model.statement(REWARD_SQL.upsertMob).run({ sessionId, mobId: event.mob.mobId, displayName: event.mob.displayName, level: event.mob.level, boss: event.mob.boss ? 1 : 0, attributed: event.attributed ? 1 : 0, experience: event.experience, jobExperience: event.jobExperience, coins: event.coins });
     for (const drop of event.drops) model.statement(REWARD_SQL.upsertMobDrop).run({ sessionId, mobId: event.mob.mobId, category: drop.category, itemId: drop.itemId, count: drop.count });
   } else {
     const inserted = model.statement(REWARD_SQL.insertUnmatched).run({ sessionId, sequence: record.sequence, atMs, reason: event.reason, reward: event.reward, experience: event.reward === "experience" ? event.experience : 0, jobExperience: event.reward === "experience" ? event.jobExperience : 0 });

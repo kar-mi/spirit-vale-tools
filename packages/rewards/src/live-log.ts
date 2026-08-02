@@ -265,6 +265,8 @@ export function parseRewardLogRecord(type: string, value: unknown): FishNetMobRe
     jobExperience: value["jobExperience"],
     coins: BigInt(value["coins"]),
     drops: drops as NonNullable<(typeof drops)[number]>[],
+    // Records written before kills were reported without a reward always had one attached.
+    attributed: typeof value["attributed"] === "boolean" ? value["attributed"] : true,
   };
 }
 

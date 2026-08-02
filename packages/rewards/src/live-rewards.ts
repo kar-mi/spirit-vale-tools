@@ -65,8 +65,8 @@ export class LiveRewardService {
       const kill = { ...event, ...(context.recordedAt === undefined ? {} : { recordedAt: new Date(timestamp).toISOString() }), mob: { ...event.mob }, drops: event.drops.map((drop) => ({ ...drop })) };
       this.recent.unshift(kill);
       this.recent.length = Math.min(this.recent.length, this.recentKillLimit);
-      const mob = this.mobsById.get(event.mob.mobId) ?? { ...event.mob, kills: 0, experience: 0, jobExperience: 0, coins: 0n, drops: [] };
-      mob.kills += 1; mob.experience += event.experience; mob.jobExperience += event.jobExperience; mob.coins += event.coins;
+      const mob = this.mobsById.get(event.mob.mobId) ?? { ...event.mob, kills: 0, attributedKills: 0, experience: 0, jobExperience: 0, coins: 0n, drops: [] };
+      mob.kills += 1; if (event.attributed) mob.attributedKills += 1; mob.experience += event.experience; mob.jobExperience += event.jobExperience; mob.coins += event.coins;
       mob.drops = mergeItems(mob.drops, event.drops); this.mobsById.set(event.mob.mobId, mob);
       this.addChart(timestamp, event.experience, event.jobExperience, event.coins);
     } else {

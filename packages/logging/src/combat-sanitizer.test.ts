@@ -27,6 +27,17 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "summon", tick: 1, actorId: 2, skillId: "FictionalSummon", stacks: 3 });
   });
 
+  test("keeps monster identity fields as a flat lifecycle record", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "monsterIdentity", operation: "upsert", tick: 1, actorId: 52,
+      mobId: "fictional_mob", displayName: "Fictional Mob", fields: { private: "payload" },
+    });
+    expect(value).toEqual({
+      kind: "monsterIdentity", operation: "upsert", tick: 1, actorId: 52,
+      mobId: "fictional_mob", displayName: "Fictional Mob",
+    });
+  });
+
   test("keeps heal record fields while dropping raw payload/fields", () => {
     const value = sanitizeCombatData("combat.event", {
       kind: "heal", tick: 1, targetId: 20, actorId: 10, sourceId: "Heal", sourceLabel: "Heal", recoveryStyle: "standard", value: 150,

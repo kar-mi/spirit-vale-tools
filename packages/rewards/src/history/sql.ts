@@ -1,15 +1,16 @@
 /** All rewards SQL lives here so schema, importer, and store changes are reviewable together. */
 export const REWARD_SQL = {
   insertKill: `insert or ignore into reward_kills
-    (session_id, kill_id, sequence, recorded_at_ms, tick, mob_id, display_name, mob_level, mob_rank, boss, object_id, experience, job_experience, coins)
-    values ($sessionId, $killId, $sequence, $atMs, $tick, $mobId, $displayName, $level, $rank, $boss, $objectId, $experience, $jobExperience, $coins)`,
+    (session_id, kill_id, sequence, recorded_at_ms, tick, mob_id, display_name, mob_level, mob_rank, boss, object_id, experience, job_experience, coins, attributed)
+    values ($sessionId, $killId, $sequence, $atMs, $tick, $mobId, $displayName, $level, $rank, $boss, $objectId, $experience, $jobExperience, $coins, $attributed)`,
   insertKillDrop: `insert or replace into reward_drops
     (session_id, kill_id, category, item_id, count) values ($sessionId, $killId, $category, $itemId, $count)`,
   upsertMob: `insert into reward_mob_totals
-    (session_id, mob_id, display_name, mob_level, boss, kills, experience, job_experience, coins)
-    values ($sessionId, $mobId, $displayName, $level, $boss, 1, $experience, $jobExperience, $coins)
+    (session_id, mob_id, display_name, mob_level, boss, kills, attributed_kills, experience, job_experience, coins)
+    values ($sessionId, $mobId, $displayName, $level, $boss, 1, $attributed, $experience, $jobExperience, $coins)
     on conflict(session_id, mob_id) do update set
-      kills = kills + 1, experience = experience + excluded.experience,
+      kills = kills + 1, attributed_kills = attributed_kills + excluded.attributed_kills,
+      experience = experience + excluded.experience,
       job_experience = job_experience + excluded.job_experience, coins = coins + excluded.coins`,
   upsertMobDrop: `insert into reward_mob_drops
     (session_id, mob_id, category, item_id, count) values ($sessionId, $mobId, $category, $itemId, $count)

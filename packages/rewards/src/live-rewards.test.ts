@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { LiveRewardService } from "./live-rewards.ts";
 import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
 
-function kill(index: number): FishNetMobRewardEvent { return { kind: "kill", id: `kill-${index}`, tick: index, mob: { objectId: 1, mobId: "mob.synthetic", displayName: "Synthetic Mob", level: 1, boss: false }, experience: 10, jobExperience: 2, coins: 3n, drops: [] }; }
+function kill(index: number): FishNetMobRewardEvent { return { kind: "kill", id: `kill-${index}`, tick: index, mob: { objectId: 1, mobId: "mob.synthetic", displayName: "Synthetic Mob", level: 1, boss: false }, experience: 10, jobExperience: 2, coins: 3n, drops: [], attributed: true }; }
 
 describe("live reward aggregation", () => {
   test("keeps bounded state, exact totals, immutable snapshots, and reset revisions", () => {

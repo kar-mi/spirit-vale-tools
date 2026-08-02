@@ -194,6 +194,12 @@ export class DamageReducer {
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
+    if (event.kind === "monsterIdentity") {
+      if (event.operation === "reset") this.mobIdentities.clear();
+      else if (event.operation === "remove") this.mobIdentities.delete(event.actorId);
+      else this.rememberMobIdentity(event.actorId, event.displayName);
+      return;
+    }
     const actorId = event.actorId;
     if (event.actorIdentity && actorId !== undefined) {
       const previousIdentity = this.identities.get(actorId);
@@ -397,10 +403,9 @@ export class DamageReducer {
       if (!this.current.enemyFirstSeenAtMs.has(event.targetId)) {
         this.current.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
       }
-      // Captured now, while the name is still known. `mobIdentities` is capped and evicts, and the
-      // spawn-derived name on the event is not recoverable from the log afterwards.
-      const targetName = event.targetIdentity?.displayName
-        ?? this.identities.get(event.targetId)?.displayName
+      // Captured now, while the identity lifecycle state is still known. The session-scoped map is
+      // capped and may later evict this object, but the encounter must retain its historical label.
+      const targetName = this.identities.get(event.targetId)?.displayName
         ?? this.mobIdentities.get(event.targetId);
       if (targetName !== undefined) this.current.enemyNames.set(event.targetId, targetName);
     }

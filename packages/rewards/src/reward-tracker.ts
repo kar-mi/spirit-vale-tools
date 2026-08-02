@@ -24,6 +24,13 @@ export interface FishNetConfirmedMobKill {
   jobExperience: number;
   coins: bigint;
   drops: RewardItem[];
+  /**
+   * Whether a reward was pinned to this kill. Rewards arrive as coalesced state updates, so when
+   * several mobs die inside one correlation window none of them can claim it — the kill is still
+   * real and still counted, but its experience, coins and drops are zero and the reward is reported
+   * separately as an unmatched event.
+   */
+  attributed: boolean;
 }
 
 interface FishNetUnmatchedRewardEventBase {
@@ -60,7 +67,16 @@ interface PendingKill {
   gain?: { experience: number; jobExperience: number; coins: bigint };
   drops: RewardItem[];
   ambiguous: boolean;
+  /** Whether our side dealt damage to this target, which is what makes the death ours to report. */
+  damaged: boolean;
 }
+
+/**
+ * Targets our side has damaged, retained only until they die. Bounded because a session sees far
+ * more damaged targets than it kills — anything we damaged but never finished off would otherwise
+ * accumulate for the whole session.
+ */
+const MAX_DAMAGED_TARGETS = 4_096;
 
 /** Names the monsters {@link FishNetMonsterDirectory} identifies, using the bundled reward catalog. */
 export class FishNetMobDirectory {
@@ -99,6 +115,7 @@ export class FishNetMobRewardTracker {
   private readonly combat: FishNetCombatTracker;
   private readonly mobs: FishNetMobDirectory;
   private readonly pending: PendingKill[] = [];
+  private readonly damagedTargets = new Set<number>();
   private readonly queuedEvents: FishNetUnmatchedRewardEvent[] = [];
   private baseline?: ExperienceCoinsState;
   private nextKill = 1;
@@ -121,13 +138,22 @@ export class FishNetMobRewardTracker {
     const events = this.finalizeBefore(packet.tick - this.correlationWindowTicks);
     this.mobs.consume(packet);
     for (const event of this.combat.consume(packet)) {
+      // Team 0 is our side's outgoing damage. A mob dying nearby that we never hit is someone
+      // else's kill, and at max level no experience arrives to tell the two apart.
+      if (event.kind === "damage" && event.team === 0 && event.value > 0) {
+        this.rememberDamagedTarget(event.targetId);
+        continue;
+      }
       if (event.kind !== "death") continue;
+      // A mob killed outright may only ever produce the death event, so that counts as our damage.
+      const damaged = this.damagedTargets.delete(event.targetId) || (event.team === 0 && event.value > 0);
       this.pending.push({
         id: `kill-${this.nextKill++}`,
         tick: event.tick,
         mob: this.mobs.get(event.targetId),
         drops: [],
         ambiguous: false,
+        damaged,
       });
     }
     const reward = decodeFishNetRewardPacket(packet);
@@ -158,6 +184,18 @@ export class FishNetMobRewardTracker {
     this.baseline = undefined;
     this.combat.reset();
     this.mobs.reset();
+    this.damagedTargets.clear();
+  }
+
+  /** Re-inserting moves the entry to the end, so iteration order is least-recently-damaged first. */
+  private rememberDamagedTarget(targetId: number): void {
+    this.damagedTargets.delete(targetId);
+    this.damagedTargets.add(targetId);
+    while (this.damagedTargets.size > MAX_DAMAGED_TARGETS) {
+      const oldest = this.damagedTargets.values().next();
+      if (oldest.done) break;
+      this.damagedTargets.delete(oldest.value);
+    }
   }
 
   private consumeExperience(tick: number, next: ExperienceCoinsState): void {
@@ -212,9 +250,8 @@ export class FishNetMobRewardTracker {
       const kill = this.pending[index];
       if (!kill || kill.tick > maximumTick) continue;
       this.pending.splice(index, 1);
-      if (kill.ambiguous) {
-        continue;
-      } else if (!kill.mob) {
+      if (!kill.mob) {
+        // Nothing to show without an identity, so anything attached is reported on its own.
         if (kill.gain || kill.drops.length > 0) events.push({
           kind: "unmatched",
           tick: kill.tick,
@@ -224,17 +261,25 @@ export class FishNetMobRewardTracker {
             : { reward: "pickup" as const }),
           drops: kill.drops.map((item) => ({ ...item })),
         });
-      } else if (!kill.gain) {
-        if (kill.drops.length > 0) events.push({
-          kind: "unmatched",
-          tick: kill.tick,
-          reason: "expired",
-          reward: "pickup",
-          drops: kill.drops.map((item) => ({ ...item })),
-        });
-      } else {
-        events.push({ kind: "kill", id: kill.id, tick: kill.tick, mob: kill.mob, ...kill.gain, drops: kill.drops });
+        continue;
       }
+      // A mob that died without us hitting it and without paying out is someone else's kill.
+      // Experience alone cannot decide this: at max level a real kill pays nothing.
+      if (!kill.damaged && !kill.gain && kill.drops.length === 0) continue;
+      // Otherwise the kill is reported whether or not a reward could be pinned to it. An ambiguous
+      // reward was already emitted as an unmatched event when it arrived, so leaving this kill's
+      // totals at zero reports it once rather than twice.
+      events.push({
+        kind: "kill",
+        id: kill.id,
+        tick: kill.tick,
+        mob: kill.mob,
+        experience: kill.gain?.experience ?? 0,
+        jobExperience: kill.gain?.jobExperience ?? 0,
+        coins: kill.gain?.coins ?? 0n,
+        drops: kill.drops.map((item) => ({ ...item })),
+        attributed: kill.gain !== undefined || kill.drops.length > 0,
+      });
     }
     return events.sort((left, right) => left.tick - right.tick);
   }

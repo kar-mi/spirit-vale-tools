@@ -89,6 +89,17 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
     }
     return undefined;
   }
+  if (value["kind"] === "monsterIdentity") {
+    if (value["operation"] === "reset") return value as unknown as FishNetCombatEvent;
+    if (!isFiniteNumber(value["actorId"])) return undefined;
+    if (value["operation"] === "remove") return value as unknown as FishNetCombatEvent;
+    if (value["operation"] === "upsert"
+      && typeof value["mobId"] === "string" && value["mobId"].length > 0
+      && typeof value["displayName"] === "string" && value["displayName"].length > 0) {
+      return value as unknown as FishNetCombatEvent;
+    }
+    return undefined;
+  }
   if (value["kind"] === "activation") return value as unknown as FishNetCombatEvent;
   if (value["kind"] === "status") {
     if (!isFiniteNumber(value["actorId"])
