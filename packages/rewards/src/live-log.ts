@@ -1,6 +1,3 @@
-import { createReadStream } from "node:fs";
-import { createInterface } from "node:readline";
-
 import {
   decimal,
   isRecord as record,
@@ -171,11 +168,36 @@ export class LiveRewardSessionLogFollower {
 
 export { LiveRewardSessionLogFollower as BoundedRewardSessionLogFollower };
 
+/**
+ * Splits a byte stream into lines without a Node builtin.
+ *
+ * `node:readline` would pull a Node module into this package's bundle, and the package is imported
+ * by browser bundles for its pure trend helpers — a builtin there fails the build outright.
+ */
+async function* readLines(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pending += decoder.decode(value, { stream: true });
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() ?? "";
+      yield* lines;
+    }
+    pending += decoder.decode();
+    if (pending) yield pending;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export async function loadRewardReplay(path: string): Promise<{ snapshot: MobRewardSessionSnapshot; invalidLines: number }> {
   const session = new MobRewardSession();
   let invalidLines = 0;
-  const input = createInterface({ input: createReadStream(path, { encoding: "utf8" }), crlfDelay: Infinity });
-  for await (const line of input) {
+  for await (const line of readLines(Bun.file(path).stream())) {
     if (!line.trim()) continue;
     let value: unknown;
     try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
