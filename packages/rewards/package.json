@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-rewards",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Spirit Vale reward tracking and replay utilities.",
   "type": "module",
   "files": [
@@ -17,8 +17,8 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-combat": "^1.1.2",
-    "@kar-mi/spirit-vale-tools-capture": "^1.0.0",
+    "@kar-mi/spirit-vale-tools-combat": "^1.3.0",
+    "@kar-mi/spirit-vale-tools-capture": "^1.1.0",
     "@kar-mi/spirit-vale-tools-items": "^0.1.5",
     "@kar-mi/spirit-vale-tools-logging": "^0.4.0",
     "@kar-mi/spirit-vale-tools-sqlite": "^0.1.1"

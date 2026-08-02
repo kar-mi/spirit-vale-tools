@@ -1,5 +1,80 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 0.5.0
+
+### Minor Changes
+
+- 32c4896: Report mob kills that no reward could be pinned to, instead of discarding them.
+
+  A kill was only emitted when it had both an identified mob and a correlated reward. Everything else
+  was dropped silently: an ambiguous kill returned early, and a kill with no gain and no drops fell
+  through to nothing. Experience arrives as a coalesced `ExpCoinsChanged_T` state update, so a kill is
+  only attributable when exactly one death sits inside the correlation window — which farming almost
+  never satisfies. Measured on a real session, 233 mobs died and produced 2 `rewards.kill` records;
+  the other kills existed nowhere, even though every one of them was identified. Experience totals
+  looked correct the whole time because they come from the state delta rather than from attribution.
+
+  An identified mob death is now reported whenever our side damaged it or a reward landed on it.
+  Experience cannot decide this on its own — at max level a real kill pays nothing — so the tracker
+  remembers which targets took our outgoing damage and clears each on death. A mob that died nearby
+  without us touching it, and paid nothing, is someone else's kill and is still ignored: on a measured
+  session that excluded 26 of 224 identified deaths, leaving 198.
+
+  `FishNetConfirmedMobKill` gains `attributed`, false when no reward could be pinned to it, in which
+  case its experience, coins and drops are zero and the reward continues to be reported on its own
+  unmatched event — counted once, not split or duplicated. Kills whose mob was never identified still
+  produce an `unmatched` event rather than a kill, since there is nothing to show.
+
+  `MobRewardMobSummary` gains `attributedKills` alongside `kills`, so a consumer can show a true kill
+  count without implying every kill's rewards are known. The read model stores both
+  (`reward_kills.attributed`, `reward_mob_totals.attributed_kills`) and `REWARDS_DOMAIN_VERSION` moves
+  to 3 so the cache rebuilds. Kill records logged before this change parse as `attributed: true`, which
+  is what they were.
+
+  Kills are correlated while capturing, so this only affects newly captured sessions; existing reward
+  logs contain only the kills that were attributable at the time.
+
+### Patch Changes
+
+- 32c4896: Name enemies from their spawn packets, so the DPS enemy breakdown stops labelling them `Enemy <id>`.
+
+  **The gap.** A monster's name was only ever learned from an activation record carrying
+  `MOB_IDENTITY_PREFIX` — that is, from the monster _doing_ something. The death log labels the
+  attacker, which by definition acted, so it showed names. The enemy breakdown labels the _target_,
+  and `FishNetCombatDamageEvent` carries the attacker's identity but nothing about the target, so a
+  monster killed before it cast anything was never named at all. Whole encounters of farmed mobs came
+  out as `Enemy 90`, `Enemy 91`.
+
+  The name was in the stream the whole time: the reward tracker resolves it from `objectSpawn` and
+  `MonsterController` sync packets against the bundled mob catalog, keyed by the same object id that
+  combat calls `targetId`.
+
+  **Sharing the identification.** `FishNetMonsterDirectory` moves into the capture package, which both
+  sides already depend on, along with `decodeMonsterSpawn` and `decodeMonsterSync`. It resolves a
+  `mobId` and nothing else; naming stays with whoever owns a catalog. `FishNetMobDirectory` is now a
+  thin naming layer over it and behaves as before.
+
+  **Combat.** `FishNetCombatTracker` accepts an optional `monsterCatalog`, and when given one it
+  tracks spawns and emits flat `monsterIdentity` lifecycle events. The catalog is injected rather than
+  imported because rewards already depends on combat; `mobDefinitionsById()` from the rewards package
+  is the intended argument. Emitting identity once per object avoids repeating the same catalog data
+  on every damage and death record. Without the option the tracker behaves exactly as before.
+
+  **Persisting it.** `EncounterAggregate` gains `enemyNames`, captured when the hit lands rather than
+  looked up when the encounter is written. This matters twice over: the combat log carries identity
+  events rather than raw spawn packets; and an open encounter's
+  enemy rows are deleted and rewritten on every indexing pass, which previously let an eviction from
+  the capped `mobIdentities` map replace an already-stored name with null. Resuming an open encounter
+  now restores the stored names for the same reason.
+
+  Enemies that are absent from the bundled catalog, or that spawned before capture started, still fall
+  back to the activation-derived name and then to `Enemy <id>`. Because the name has to be recorded at
+  capture time, existing logs and read models are unaffected — only newly captured sessions carry it.
+
+- Updated dependencies [32c4896]
+  - @kar-mi/spirit-vale-tools-capture@1.1.0
+  - @kar-mi/spirit-vale-tools-combat@1.3.0
+
 ## 0.4.1
 
 ### Patch Changes
