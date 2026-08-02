@@ -55,6 +55,11 @@ export class MeterReducer {
     return this.current;
   }
 
+  /** Adopts an aggregate left open by an earlier indexing pass. */
+  resume(encounter: EncounterAggregate): void {
+    this.current = encounter;
+  }
+
   finish(endedAtMs: number): EncounterAggregate | undefined {
     const encounter = this.current;
     if (!encounter) return undefined;

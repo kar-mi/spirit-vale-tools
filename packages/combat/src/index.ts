@@ -19,8 +19,10 @@ export type {
   CombatEnemyOption,
   CombatEnemySkillRow,
   DeathLogQuery,
+  GetEncounterOptions,
   ListEncountersQuery,
   Page,
+  StoredMeter,
 } from "./history/store.ts";
 export { DamageReducer } from "./reducers/damage.ts";
 export type { ActorAggregate, CombatIdentity, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";

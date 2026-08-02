@@ -41,6 +41,21 @@ function damage(actorId: number, targetId: number, value: number, atMs: number, 
   });
 }
 
+/** Incoming damage: a non-zero team is what makes it count toward the tanked meter. */
+function incoming(actorId: number, targetId: number, value: number, atMs: number, sourceId = "skill:bite"): string {
+  return record(atMs, {
+    kind: "damage", tick: atMs, actorId, targetId, team: 1, value,
+    sourceId, sourceLabel: sourceId, hitResult: "normal",
+  });
+}
+
+function heal(actorId: number, targetId: number, value: number, atMs: number, sourceId = "skill:mend"): string {
+  return record(atMs, {
+    kind: "heal", tick: atMs, actorId, targetId, value,
+    sourceId, sourceLabel: sourceId, attribution: "exact",
+  });
+}
+
 interface Fixture {
   root: string;
   logPath: string;
@@ -274,6 +289,85 @@ describe("combat read model", () => {
 
       expect(seen).toHaveLength(7);
       expect(new Set(seen).size).toBe(7);
+    } finally {
+      await context.cleanup();
+    }
+  });
+});
+
+describe("indexed meters", () => {
+  test("indexes tanked and healing beside damage and reads them back", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        identity(2, "Bramble", 0),
+        damage(1, 90, 100, 1_000),
+        incoming(90, 1, 40, 2_000),
+        incoming(90, 1, 60, 2_500),
+        incoming(90, 2, 10, 2_600),
+        heal(2, 1, 25, 3_000),
+        heal(2, 1, 15, 3_200),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      const store = new CombatHistoryStore(model);
+      const [summary] = store.listEncounters({ sessionId: SESSION }).items;
+      const encounterId = summary!.encounterId;
+
+      const dps = store.getEncounter(SESSION, encounterId)!;
+      expect(dps.totalDamage).toBe(100);
+      expect(dps.actors.map((actor) => actor.displayName)).toEqual(["Aurora"]);
+
+      const tanked = store.getEncounter(SESSION, encounterId, { meter: "tanked" })!;
+      expect(tanked.totalDamage).toBe(110);
+      // Grouped by the party member taking the hit, not the attacker.
+      expect(tanked.actors.map((actor) => [actor.displayName, actor.damage, actor.hits]))
+        .toEqual([["Aurora", 100, 2], ["Bramble", 10, 1]]);
+      expect(tanked.actors[0]!.skills.map((skill) => skill.sourceLabel)).toEqual(["skill:bite"]);
+      expect(tanked.actors[0]!.timeline.length).toBeGreaterThan(0);
+
+      const healing = store.getEncounter(SESSION, encounterId, { meter: "healing" })!;
+      expect(healing.totalDamage).toBe(40);
+      expect(healing.actors.map((actor) => [actor.displayName, actor.damage, actor.hits]))
+        .toEqual([["Bramble", 40, 2]]);
+
+      // Every meter divides by the encounter's own duration, so the rates stay comparable.
+      expect(tanked.durationMs).toBe(dps.durationMs);
+      expect(healing.durationMs).toBe(dps.durationMs);
+
+      // The personal row resolves on each meter independently.
+      expect(store.getEncounter(SESSION, encounterId, { meter: "tanked", personalName: "Aurora" })!.personal?.damage)
+        .toBe(100);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  test("resumes meter totals across an interrupted pass", async () => {
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, [
+        identity(1, "Aurora", 0),
+        damage(1, 90, 100, 1_000),
+        incoming(90, 1, 40, 2_000),
+      ].join(""));
+
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+
+      // The encounter is still open; a second pass must continue its meters rather than restart them.
+      await appendFile(context.logPath, [
+        incoming(90, 1, 60, 3_000),
+        heal(1, 1, 25, 3_500),
+      ].join(""));
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+      expect(store.getEncounter(SESSION, encounterId, { meter: "tanked" })!.totalDamage).toBe(100);
+      expect(store.getEncounter(SESSION, encounterId, { meter: "healing" })!.totalDamage).toBe(25);
     } finally {
       await context.cleanup();
     }

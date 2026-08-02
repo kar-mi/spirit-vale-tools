@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 2;
+export const COMBAT_DOMAIN_VERSION = 3;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -14,17 +14,24 @@ create table if not exists combat_encounters (
   ended_at_ms integer,
   total_damage integer not null default 0,
   -- Reducer state that cannot be recomputed from the stored aggregates: the death-log lookback
-  -- buffer and the monster names seen so far. Both are bounded and only matter while open.
+  -- buffer, the monster names seen so far, and the actor identity map. All bounded, and all only
+  -- meaningful while the encounter is open. Identities matter because healing attribution and
+  -- mob-target detection consult them for events that arrive after a resume.
   recent_hits_json text not null default '{}',
   mob_identities_json text not null default '{}',
+  identities_json text not null default '{}',
   primary key (session_id, encounter_id)
 );
 create index if not exists combat_encounters_by_start on combat_encounters (session_id, started_at_ms, encounter_id);
 create index if not exists combat_encounters_open on combat_encounters (session_id) where ended_at_ms is null;
 
+-- One row set per meter: "dps" is outgoing party damage, "tanked" is incoming damage grouped by the
+-- party member taking it, and "healing" is restored health grouped by the healer. All three share
+-- these tables because they accumulate identically and render through the same code.
 create table if not exists combat_actors (
   session_id text not null,
   encounter_id text not null,
+  meter text not null default 'dps',
   -- Position within the encounter's actor list. An actor id can appear more than once when an
   -- identity is removed and the id is reused, and those aggregates must stay distinct.
   actor_index integer not null,
@@ -45,33 +52,36 @@ create table if not exists combat_actors (
   -- The trailing current-DPS window as JSON. Bounded by time (a few seconds of hits), and needed so
   -- a pass that resumes mid-encounter reports the same currentDps as one that never stopped.
   window_json text not null default '[]',
-  primary key (session_id, encounter_id, actor_index)
+  primary key (session_id, encounter_id, meter, actor_index)
 );
 
 create table if not exists combat_skills (
   session_id text not null,
   encounter_id text not null,
+  meter text not null default 'dps',
   actor_index integer not null,
   source_id text not null,
   source_label text not null,
   damage integer not null default 0,
   hits integer not null default 0,
   critical_hits integer not null default 0,
-  primary key (session_id, encounter_id, actor_index, source_id)
+  primary key (session_id, encounter_id, meter, actor_index, source_id)
 );
 
 create table if not exists combat_targets (
   session_id text not null,
   encounter_id text not null,
+  meter text not null default 'dps',
   actor_index integer not null,
   target_id integer not null,
   damage integer not null default 0,
-  primary key (session_id, encounter_id, actor_index, target_id)
+  primary key (session_id, encounter_id, meter, actor_index, target_id)
 );
 
 create table if not exists combat_timeline_buckets (
   session_id text not null,
   encounter_id text not null,
+  meter text not null default 'dps',
   actor_index integer not null,
   -- "encounter" buckets start at the encounter; "actor" buckets start at that actor's first damage,
   -- which is the alignment the personal row uses.
@@ -80,7 +90,7 @@ create table if not exists combat_timeline_buckets (
   width_ms integer not null,
   bucket_index integer not null,
   damage integer not null default 0,
-  primary key (session_id, encounter_id, actor_index, origin, bucket_index)
+  primary key (session_id, encounter_id, meter, actor_index, origin, bucket_index)
 );
 
 -- Per attacker, per enemy, per skill. Counts every positive hit, so it includes incoming damage the

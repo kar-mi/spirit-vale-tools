@@ -12,6 +12,17 @@ export interface Page<T> {
   nextCursor?: string;
 }
 
+/**
+ * Which meter to read an encounter as: outgoing party damage, incoming damage grouped by the party
+ * member taking it, or restored health grouped by the healer. All three render identically.
+ */
+export type StoredMeter = "dps" | "tanked" | "healing";
+
+export interface GetEncounterOptions extends RenderOptions {
+  /** Defaults to `"dps"`. */
+  meter?: StoredMeter;
+}
+
 export interface CombatEncounterSummary {
   sessionId: string;
   encounterId: string;
@@ -225,18 +236,28 @@ export class CombatHistoryStore {
     };
   }
 
-  /** Renders one encounter in the same shape the legacy meter produces. */
+  /**
+   * Renders one encounter in the same shape the legacy meter produces.
+   *
+   * Tanked and healing rates divide by the encounter's own duration, taken from the encounter row,
+   * so they stay comparable with the damage figure even when incoming hits span a shorter window.
+   */
   getEncounter(
     sessionId: string,
     encounterId: string,
-    options: RenderOptions = {},
+    options: GetEncounterOptions = {},
   ): FishNetDpsEncounterSnapshot | undefined {
-    const encounter = this.loadEncounter(sessionId, encounterId);
+    const { meter = "dps", ...renderOptions } = options;
+    const encounter = this.loadEncounter(sessionId, encounterId, meter);
     if (!encounter) return undefined;
-    return renderEncounter(encounter, { nowMs: encounter.lastDamageAtMs, ...options });
+    return renderEncounter(encounter, { nowMs: encounter.lastDamageAtMs, ...renderOptions });
   }
 
-  private loadEncounter(sessionId: string, encounterId: string): EncounterAggregate | undefined {
+  private loadEncounter(
+    sessionId: string,
+    encounterId: string,
+    meter: StoredMeter,
+  ): EncounterAggregate | undefined {
     const database = this.model.database;
     const row = database
       .query<EncounterRow, [string, string]>(
@@ -248,6 +269,8 @@ export class CombatHistoryStore {
     const encounter: EncounterAggregate = {
       id: row.encounter_id,
       startedAtMs: row.started_at_ms,
+      // The encounter's own span, not the meter's: a tanked or healing rate must divide by the
+      // duration of the fight it belongs to.
       lastDamageAtMs: row.last_damage_at_ms,
       ...(row.ended_at_ms === null ? {} : { endedAtMs: row.ended_at_ms }),
       actors: [],
@@ -260,11 +283,11 @@ export class CombatHistoryStore {
     };
 
     for (const actorRow of database
-      .query<ActorRow, [string, string]>(
-        "select * from combat_actors where session_id = ? and encounter_id = ? order by actor_index",
+      .query<ActorRow, [string, string, string]>(
+        "select * from combat_actors where session_id = ? and encounter_id = ? and meter = ? order by actor_index",
       )
-      .all(sessionId, encounterId)) {
-      encounter.actors.push(hydrateActor(database, sessionId, encounterId, actorRow, encounter.startedAtMs));
+      .all(sessionId, encounterId, meter)) {
+      encounter.actors.push(hydrateActor(database, sessionId, encounterId, meter, actorRow, encounter.startedAtMs));
     }
     return encounter;
   }
@@ -301,6 +324,7 @@ function hydrateActor(
   database: Database,
   sessionId: string,
   encounterId: string,
+  meter: StoredMeter,
   row: ActorRow,
   encounterStartedAtMs: number,
 ): ActorAggregate {
@@ -319,10 +343,10 @@ function hydrateActor(
   actor.window = JSON.parse(row.window_json) as ActorAggregate["window"];
 
   for (const skill of database
-    .query<{ source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, number]>(
-      "select source_id, source_label, damage, hits, critical_hits from combat_skills where session_id = ? and encounter_id = ? and actor_index = ?",
+    .query<{ source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, string, number]>(
+      "select source_id, source_label, damage, hits, critical_hits from combat_skills where session_id = ? and encounter_id = ? and meter = ? and actor_index = ?",
     )
-    .all(sessionId, encounterId, row.actor_index)) {
+    .all(sessionId, encounterId, meter, row.actor_index)) {
     actor.skills.set(skill.source_id, {
       sourceId: skill.source_id,
       sourceLabel: skill.source_label,
@@ -333,19 +357,19 @@ function hydrateActor(
   }
 
   for (const target of database
-    .query<{ target_id: number; damage: number }, [string, string, number]>(
-      "select target_id, damage from combat_targets where session_id = ? and encounter_id = ? and actor_index = ?",
+    .query<{ target_id: number; damage: number }, [string, string, string, number]>(
+      "select target_id, damage from combat_targets where session_id = ? and encounter_id = ? and meter = ? and actor_index = ?",
     )
-    .all(sessionId, encounterId, row.actor_index)) {
+    .all(sessionId, encounterId, meter, row.actor_index)) {
     actor.targetIds.add(target.target_id);
     actor.targetDamage.set(target.target_id, target.damage);
   }
 
   for (const bucket of database
-    .query<{ origin: string; origin_ms: number; width_ms: number; bucket_index: number; damage: number }, [string, string, number]>(
-      "select origin, origin_ms, width_ms, bucket_index, damage from combat_timeline_buckets where session_id = ? and encounter_id = ? and actor_index = ? order by bucket_index",
+    .query<{ origin: string; origin_ms: number; width_ms: number; bucket_index: number; damage: number }, [string, string, string, number]>(
+      "select origin, origin_ms, width_ms, bucket_index, damage from combat_timeline_buckets where session_id = ? and encounter_id = ? and meter = ? and actor_index = ? order by bucket_index",
     )
-    .all(sessionId, encounterId, row.actor_index)) {
+    .all(sessionId, encounterId, meter, row.actor_index)) {
     const series = bucket.origin === "actor" ? actor.actorSeries : actor.encounterSeries;
     series.originMs = bucket.origin_ms;
     series.widthMs = bucket.width_ms;
