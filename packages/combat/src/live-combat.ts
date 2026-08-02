@@ -1,7 +1,8 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
-import { DamageReducer, isPositiveHit } from "./reducers/damage.ts";
+import { DamageReducer } from "./reducers/damage.ts";
 import type { EncounterAggregate } from "./reducers/damage.ts";
+import { MeterReducer } from "./reducers/meter.ts";
 import { renderEncounter } from "./reducers/rows.ts";
 import type { FishNetDpsEncounterSnapshot } from "./dps-meter.ts";
 
@@ -24,6 +25,12 @@ export interface MeterEncounterSnapshot {
   total: number;
   rate: number;
   rows: MeterRow[];
+  /**
+   * The same encounter rendered with the detail the DPS snapshot carries: per-skill rows, timeline
+   * buckets, crit rates, contribution shares and the personal row. {@link rows} is a flat projection
+   * of `detail.actors`, not a second copy of the underlying data.
+   */
+  detail: FishNetDpsEncounterSnapshot;
 }
 
 export interface CombatEncounterRecord {
@@ -38,6 +45,10 @@ export interface LiveCombatOptions {
   retainedFinishedEncounters?: number;
   idleGapMs?: number;
   minimumDurationMs?: number;
+  /** Names the local player, so every meter can resolve its `personal` row. */
+  personalName?: string;
+  /** Selects the local player by actor id, overriding {@link personalName} when set. */
+  personalActorId?: number;
   onEncounterFinished?: (encounter: CombatEncounterRecord) => void | Promise<void>;
 }
 
@@ -45,22 +56,6 @@ export interface LiveCombatState {
   revision: number;
   current?: CombatEncounterRecord;
   latestFinished?: CombatEncounterRecord;
-}
-
-interface MeterAggregate {
-  amount: number;
-  hits: number;
-  firstAtMs?: number;
-  lastAtMs?: number;
-  actorIds: Set<number>;
-}
-
-interface MeterState {
-  id: string;
-  startedAtMs: number;
-  lastEventAtMs: number;
-  tps: Map<string, MeterAggregate>;
-  hps: Map<string, MeterAggregate>;
 }
 
 /**
@@ -75,8 +70,18 @@ export class LiveCombatService {
   private readonly minimumDurationMs: number;
   private readonly retainedFinishedEncounters: number;
   private readonly onEncounterFinished?: LiveCombatOptions["onEncounterFinished"];
-  private meter?: MeterState;
-  private latestFinished?: CombatEncounterRecord;
+  private readonly tanked: MeterReducer;
+  private readonly healing: MeterReducer;
+  private meterId?: string;
+  private lastEventAtMs?: number;
+  /**
+   * The finished encounter is retained as aggregates rather than a rendered record, so changing the
+   * personal actor re-renders it too. Those aggregates are the same bounded state the live encounter
+   * holds - bucket series and per-skill totals, never individual hits.
+   */
+  private latestFinished?: FinishedEncounter;
+  private personalName: string;
+  private personalActorId?: number;
   private revision = 0;
 
   constructor(options: LiveCombatOptions = {}) {
@@ -87,6 +92,8 @@ export class LiveCombatService {
       "retainedFinishedEncounters",
     );
     const timelinePoints = positiveInteger(options.timelinePoints ?? 720, "timelinePoints");
+    this.personalName = options.personalName ?? "";
+    this.personalActorId = options.personalActorId;
     this.onEncounterFinished = options.onEncounterFinished;
     this.reducer = new DamageReducer({
       idleGapMs: options.idleGapMs,
@@ -94,15 +101,24 @@ export class LiveCombatService {
       maxTimelineBuckets: timelinePoints,
       onEncounterFinished: (encounter) => this.finishMeter(encounter),
     });
+    this.tanked = new MeterReducer({ kind: "tanked", currentWindowMs: this.currentWindowMs, maxTimelineBuckets: timelinePoints });
+    this.healing = new MeterReducer({ kind: "healing", currentWindowMs: this.currentWindowMs, maxTimelineBuckets: timelinePoints });
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
     this.reducer.consumeIdentity(event, observedAtMs);
+    this.tanked.consumeIdentity(event);
+    this.healing.consumeIdentity(event);
     this.revision += 1;
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
-    const recordsBeforeReducer = isMeterOnlyEvent(event) && this.reducer.current !== undefined && this.meter !== undefined;
+    // An incoming hit or heal arriving while an encounter is open belongs to that encounter, even
+    // though it cannot open one. Record it before the reducer runs, so a hit that lands exactly on
+    // an idle-gap boundary is counted against the encounter it actually occurred in.
+    const recordsBeforeReducer = isMeterOnlyEvent(event)
+      && this.reducer.current !== undefined
+      && this.meterId === this.reducer.current.id;
     if (recordsBeforeReducer) this.recordMeterEvent(event, observedAtMs);
     this.reducer.consumeCombat(event, observedAtMs);
     const encounter = this.reducer.current;
@@ -111,6 +127,22 @@ export class LiveCombatService {
       if (!recordsBeforeReducer) this.recordMeterEvent(event, observedAtMs);
     }
     this.revision += 1;
+  }
+
+  setPersonalName(personalName: string): void {
+    if (this.personalName === personalName) return;
+    this.personalName = personalName;
+    this.revision += 1;
+  }
+
+  setPersonalActorId(personalActorId: number | undefined): void {
+    if (this.personalActorId === personalActorId) return;
+    this.personalActorId = personalActorId;
+    this.revision += 1;
+  }
+
+  getPersonalActorId(): number | undefined {
+    return this.personalActorId;
   }
 
   advance(observedAtMs: number): void {
@@ -124,86 +156,108 @@ export class LiveCombatService {
   }
 
   getState(nowMs?: number): LiveCombatState {
-    const current = this.reducer.current && this.meter
-      ? this.renderRecord(this.reducer.current, this.meter, nowMs)
+    const current = this.reducer.current && this.meterId === this.reducer.current.id
+      ? this.renderRecord(this.reducer.current, nowMs)
+      : undefined;
+    const latestFinished = this.latestFinished
+      ? this.renderRecord(this.latestFinished.encounter, this.latestFinished.endedAtMs, this.latestFinished)
       : undefined;
     return {
       revision: this.revision,
       ...(current ? { current } : {}),
-      ...(this.latestFinished ? { latestFinished: this.latestFinished } : {}),
+      ...(latestFinished ? { latestFinished } : {}),
     };
   }
 
-  private ensureMeter(encounter: EncounterAggregate): MeterState {
-    if (this.meter?.id === encounter.id) return this.meter;
-    this.meter = {
-      id: encounter.id,
-      startedAtMs: encounter.startedAtMs,
-      lastEventAtMs: encounter.startedAtMs,
-      tps: new Map(),
-      hps: new Map(),
-    };
-    return this.meter;
+  private ensureMeter(encounter: EncounterAggregate): void {
+    if (this.meterId === encounter.id) return;
+    this.meterId = encounter.id;
+    this.lastEventAtMs = encounter.startedAtMs;
+    this.tanked.begin(encounter.id, encounter.startedAtMs);
+    this.healing.begin(encounter.id, encounter.startedAtMs);
   }
 
   private recordMeterEvent(event: FishNetCombatEvent, observedAtMs: number): void {
-    const meter = this.meter;
-    if (!meter) return;
-    if (event.kind === "damage" || event.kind === "death") {
-      if (!isPositiveHit(event)) return;
-      // Team zero is outgoing party damage; all other positive hits are incoming damage.
-      if (event.team !== 0 && event.actorId !== event.targetId) {
-        const identity = this.reducer.identities.get(event.targetId);
-        this.add(meter.tps, identity?.displayName ?? "Unidentified", event.value, observedAtMs, event.targetId);
-        meter.lastEventAtMs = observedAtMs;
-      }
-      return;
-    }
-    if (event.kind !== "heal" || event.value <= 0 || !Number.isFinite(event.value)) return;
-    const actorId = event.actorId;
-    const identity = actorId === undefined ? undefined : this.reducer.identities.get(actorId);
-    this.add(meter.hps, identity?.displayName ?? "Unattributed", event.value, observedAtMs, actorId);
-    meter.lastEventAtMs = observedAtMs;
-  }
-
-  private add(map: Map<string, MeterAggregate>, name: string, amount: number, atMs: number, actorId?: number): void {
-    const row = map.get(name) ?? { amount: 0, hits: 0, actorIds: new Set<number>() };
-    row.amount += amount;
-    row.hits += 1;
-    row.firstAtMs = row.firstAtMs === undefined ? atMs : Math.min(row.firstAtMs, atMs);
-    row.lastAtMs = row.lastAtMs === undefined ? atMs : Math.max(row.lastAtMs, atMs);
-    if (actorId !== undefined) row.actorIds.add(actorId);
-    map.set(name, row);
+    if (this.meterId === undefined) return;
+    const identities = this.reducer.identities;
+    this.tanked.consumeCombat(event, observedAtMs, identities);
+    this.healing.consumeCombat(event, observedAtMs, identities);
+    this.lastEventAtMs = Math.max(this.lastEventAtMs ?? observedAtMs, observedAtMs);
   }
 
   private finishMeter(encounter: EncounterAggregate): void {
-    const meter = this.meter ?? {
-      id: encounter.id,
-      startedAtMs: encounter.startedAtMs,
-      lastEventAtMs: encounter.lastDamageAtMs,
-      tps: new Map(),
-      hps: new Map(),
+    this.ensureMeter(encounter);
+    const endedAtMs = encounter.endedAtMs ?? encounter.lastDamageAtMs;
+    const finished: FinishedEncounter = {
+      encounter,
+      endedAtMs,
+      lastEventAtMs: this.lastEventAtMs ?? encounter.lastDamageAtMs,
+      ...(this.tanked.current === undefined ? {} : { tanked: this.tanked.current }),
+      ...(this.healing.current === undefined ? {} : { healing: this.healing.current }),
     };
-    const record = this.renderRecord(encounter, meter, encounter.endedAtMs);
-    this.meter = undefined;
-    if (this.retainedFinishedEncounters > 0) this.latestFinished = record;
+    const record = this.renderRecord(encounter, endedAtMs, finished);
+    this.tanked.finish(endedAtMs);
+    this.healing.finish(endedAtMs);
+    this.meterId = undefined;
+    this.lastEventAtMs = undefined;
+    this.latestFinished = this.retainedFinishedEncounters > 0 ? finished : undefined;
     this.revision += 1;
     const callback = this.onEncounterFinished;
     if (callback) void Promise.resolve(callback(record));
   }
 
-  private renderRecord(encounter: EncounterAggregate, meter: MeterState, nowMs?: number): CombatEncounterRecord {
-    const atMs = Math.max(nowMs ?? meter.lastEventAtMs, encounter.lastDamageAtMs);
+  private renderRecord(
+    encounter: EncounterAggregate,
+    nowMs?: number,
+    finished?: FinishedEncounter,
+  ): CombatEncounterRecord {
+    const atMs = Math.max(
+      nowMs ?? finished?.lastEventAtMs ?? this.lastEventAtMs ?? encounter.lastDamageAtMs,
+      encounter.lastDamageAtMs,
+    );
+    const personal = {
+      personalName: this.personalName,
+      ...(this.personalActorId === undefined ? {} : { personalActorId: this.personalActorId }),
+    };
+    const render = (aggregate: EncounterAggregate | undefined): MeterEncounterSnapshot => renderMeter(
+      aggregate ?? emptyAggregate(encounter),
+      {
+        nowMs: atMs,
+        // Tanked and healing rates are per second *of the encounter*, not per second of the span
+        // that happened to contain incoming hits, so they stay comparable with the DPS figure.
+        windowEndMs: encounter.endedAtMs ?? atMs,
+        lastEventAtMs: finished?.lastEventAtMs ?? this.lastEventAtMs ?? encounter.lastDamageAtMs,
+        currentWindowMs: this.currentWindowMs,
+        minimumDurationMs: this.minimumDurationMs,
+        ...personal,
+        ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
+      },
+    );
     return {
       dps: renderEncounter(encounter, {
         nowMs: atMs,
         currentWindowMs: this.currentWindowMs,
         minimumDurationMs: this.minimumDurationMs,
+        ...personal,
       }),
-      tps: renderMeter(meter, meter.tps, atMs, this.minimumDurationMs, encounter.endedAtMs),
-      hps: renderMeter(meter, meter.hps, atMs, this.minimumDurationMs, encounter.endedAtMs),
+      tps: render(finished ? finished.tanked : this.tanked.current),
+      hps: render(finished ? finished.healing : this.healing.current),
     };
   }
+}
+
+function emptyAggregate(encounter: EncounterAggregate): EncounterAggregate {
+  return {
+    id: encounter.id,
+    startedAtMs: encounter.startedAtMs,
+    lastDamageAtMs: encounter.startedAtMs,
+    actors: [],
+    activeActors: new Map(),
+    enemies: new Map(),
+    enemyFirstSeenAtMs: new Map(),
+    deaths: [],
+    ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
+  };
 }
 
 function isMeterOnlyEvent(event: FishNetCombatEvent): boolean {
@@ -211,41 +265,76 @@ function isMeterOnlyEvent(event: FishNetCombatEvent): boolean {
   return (event.kind === "damage" || event.kind === "death") && event.team !== 0;
 }
 
-function renderMeter(
-  meter: MeterState,
-  values: Map<string, MeterAggregate>,
-  nowMs: number,
-  minimumDurationMs: number,
-  endedAtMs?: number,
-): MeterEncounterSnapshot {
-  const end = endedAtMs ?? nowMs;
-  const durationMs = Math.max(minimumDurationMs, end - meter.startedAtMs);
-  const rows = [...values.entries()]
-    .map(([displayName, value]): MeterRow => ({
-      displayName,
-      actorIds: [...value.actorIds],
-      amount: value.amount,
-      rate: perSecond(value.amount, durationMs),
-      hits: value.hits,
-      ...(value.firstAtMs === undefined ? {} : { firstAtMs: value.firstAtMs }),
-      ...(value.lastAtMs === undefined ? {} : { lastAtMs: value.lastAtMs }),
-    }))
-    .sort((left, right) => right.amount - left.amount || left.displayName.localeCompare(right.displayName));
-  const total = rows.reduce((sum, row) => sum + row.amount, 0);
-  return {
-    id: meter.id,
-    startedAtMs: meter.startedAtMs,
-    lastEventAtMs: meter.lastEventAtMs,
-    ...(endedAtMs === undefined ? {} : { endedAtMs }),
-    durationMs,
-    total,
-    rate: perSecond(total, durationMs),
-    rows,
-  };
+interface FinishedEncounter {
+  encounter: EncounterAggregate;
+  tanked?: EncounterAggregate;
+  healing?: EncounterAggregate;
+  endedAtMs: number;
+  lastEventAtMs: number;
 }
 
-function perSecond(amount: number, durationMs: number): number {
-  return durationMs <= 0 ? 0 : amount / (durationMs / 1_000);
+interface RenderMeterOptions {
+  nowMs: number;
+  windowEndMs: number;
+  lastEventAtMs: number;
+  currentWindowMs: number;
+  minimumDurationMs: number;
+  personalName?: string;
+  personalActorId?: number;
+  endedAtMs?: number;
+}
+
+/**
+ * Renders a meter aggregate once, then exposes it two ways: `detail` is the full snapshot, and
+ * `rows` is the flat per-actor projection of it that a compact meter needs.
+ */
+function renderMeter(aggregate: EncounterAggregate, options: RenderMeterOptions): MeterEncounterSnapshot {
+  // Widening the aggregate's last-damage time to the encounter window is what makes every rate in
+  // the snapshot — party and per actor — divide by the encounter's duration.
+  const windowed: EncounterAggregate = {
+    ...aggregate,
+    lastDamageAtMs: Math.max(aggregate.lastDamageAtMs, options.windowEndMs),
+  };
+  const detail = renderEncounter(windowed, {
+    nowMs: options.nowMs,
+    currentWindowMs: options.currentWindowMs,
+    minimumDurationMs: options.minimumDurationMs,
+    ...(options.personalName === undefined ? {} : { personalName: options.personalName }),
+    ...(options.personalActorId === undefined ? {} : { personalActorId: options.personalActorId }),
+  });
+  // Rendered rows merge actors by identity, so a row's first event is the earliest across the
+  // aggregates it merged.
+  const firstByActorId = new Map<number, number>();
+  for (const actor of aggregate.actors) {
+    if (actor.firstDamageAtMs !== undefined) firstByActorId.set(actor.actorId, actor.firstDamageAtMs);
+  }
+  const rows = detail.actors.map((actor): MeterRow => {
+    const firstAtMs = actor.actorIds.reduce<number | undefined>((earliest, actorId) => {
+      const candidate = firstByActorId.get(actorId);
+      if (candidate === undefined) return earliest;
+      return earliest === undefined ? candidate : Math.min(earliest, candidate);
+    }, undefined);
+    return {
+      displayName: actor.displayName,
+      actorIds: [...actor.actorIds],
+      amount: actor.damage,
+      rate: actor.dps,
+      hits: actor.hits,
+      ...(firstAtMs === undefined ? {} : { firstAtMs }),
+      ...(actor.lastDamageAtMs === undefined ? {} : { lastAtMs: actor.lastDamageAtMs }),
+    };
+  });
+  return {
+    id: aggregate.id,
+    startedAtMs: aggregate.startedAtMs,
+    lastEventAtMs: options.lastEventAtMs,
+    ...(options.endedAtMs === undefined ? {} : { endedAtMs: options.endedAtMs }),
+    durationMs: detail.durationMs,
+    total: detail.totalDamage,
+    rate: detail.partyDps,
+    rows,
+    detail,
+  };
 }
 
 function positive(value: number, name: string): number {

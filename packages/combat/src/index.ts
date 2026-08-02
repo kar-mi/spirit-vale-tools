@@ -23,7 +23,9 @@ export type {
   Page,
 } from "./history/store.ts";
 export { DamageReducer } from "./reducers/damage.ts";
-export type { ActorAggregate, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";
+export type { ActorAggregate, CombatIdentity, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";
+export { MeterReducer } from "./reducers/meter.ts";
+export type { MeterKind, MeterReducerOptions } from "./reducers/meter.ts";
 export { LiveCombatService } from "./live-combat.ts";
 export type {
   CombatEncounterRecord,

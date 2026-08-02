@@ -42,6 +42,79 @@ describe("LiveCombatService", () => {
     ]);
   });
 
+  test("gives TPS and HPS the same detail the DPS snapshot carries", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeIdentity(identity(2, "Bramble", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 1_000, 0), 1_000);
+    service.consumeCombat(damage(90, 1, 40, 2_000, 1), 2_000);
+    service.consumeCombat(damage(90, 1, 60, 2_500, 1), 2_500);
+    service.consumeCombat(heal(2, 1, 25, 3_000), 3_000);
+
+    const state = service.getState(4_000);
+    const tanked = state.current?.tps.detail;
+    expect(tanked?.totalDamage).toBe(100);
+    // Grouped by the party member taking the hit, not the attacker.
+    expect(tanked?.actors.map((actor) => actor.displayName)).toEqual(["Aurora"]);
+    const victim = tanked?.actors[0];
+    expect(victim?.hits).toBe(2);
+    expect(victim?.contribution).toBe(1);
+    expect(victim?.skills.map((skill) => skill.sourceLabel)).toEqual(["Hit"]);
+    expect(victim?.skills[0]?.damage).toBe(100);
+    expect(victim?.timeline.length).toBeGreaterThan(0);
+    // One distinct attacker.
+    expect(victim?.mobsHit).toBe(1);
+
+    const healing = state.current?.hps.detail;
+    expect(healing?.actors.map((actor) => actor.displayName)).toEqual(["Bramble"]);
+    expect(healing?.actors[0]?.skills[0]?.damage).toBe(25);
+    expect(healing?.actors[0]?.timeline.length).toBeGreaterThan(0);
+
+    // The flat rows stay a projection of that same detail.
+    expect(state.current?.tps.rows[0]).toMatchObject({ displayName: "Aurora", amount: 100, hits: 2 });
+    expect(state.current?.tps.total).toBe(tanked?.totalDamage);
+  });
+
+  test("resolves the personal row on the tanked and healing meters", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000, personalName: "Aurora" });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 1_000, 0), 1_000);
+    service.consumeCombat(damage(90, 1, 40, 2_000, 1), 2_000);
+    service.consumeCombat(heal(1, 1, 25, 2_500), 2_500);
+
+    const state = service.getState(3_000);
+    expect(state.current?.dps.personalMatch).toBe("matched");
+    expect(state.current?.tps.detail.personalMatch).toBe("matched");
+    expect(state.current?.tps.detail.personal?.damage).toBe(40);
+    expect(state.current?.hps.detail.personalMatch).toBe("matched");
+    expect(state.current?.hps.detail.personal?.damage).toBe(25);
+  });
+
+  test("excludes healing whose credited actor has no known identity", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 1_000, 0), 1_000);
+    // A monster healing itself: no identity for actor 90.
+    service.consumeCombat(heal(90, 90, 500, 1_500), 1_500);
+
+    expect(service.getState(2_000).current?.hps.total).toBe(0);
+  });
+
+  test("re-renders the retained finished encounter when the personal actor changes", () => {
+    const service = new LiveCombatService({ idleGapMs: 1_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 10, 0, 0), 0);
+    service.consumeCombat(damage(90, 1, 5, 100, 1), 100);
+    service.advance(2_000);
+
+    expect(service.getState().latestFinished?.dps.personalMatch).toBe("unconfigured");
+
+    service.setPersonalName("Aurora");
+    const named = service.getState().latestFinished;
+    expect(named?.dps.personalMatch).toBe("matched");
+    expect(named?.tps.detail.personal?.damage).toBe(5);
+  });
+
   test("retains only the latest finished encounter and increments revisions", () => {
     const finished: unknown[] = [];
     const service = new LiveCombatService({
