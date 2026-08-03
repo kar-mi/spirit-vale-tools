@@ -196,6 +196,31 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume({ ...twoClones, tick: 3 })).toEqual([]);
   });
 
+  describe("full heals", () => {
+    test("emits a fullHeal for an empty FullHeal_C", () => {
+      const tracker = new FishNetCombatTracker();
+      expect(tracker.consume(packet(1, 44387, "PlayerController", "FullHeal_C"))).toEqual([
+        expect.objectContaining({ kind: "fullHeal", rpc: "FullHeal_C", targetId: 44387 }),
+      ]);
+    });
+
+    test("credits no actor, so no meter can attribute it", () => {
+      const tracker = new FishNetCombatTracker();
+      const [event] = tracker.consume(packet(1, 44387, "PlayerController", "FullHeal_C"));
+      expect(event).not.toHaveProperty("actorId");
+      expect(event).not.toHaveProperty("value");
+    });
+
+    test("ignores a FullHeal_C carrying a payload", () => {
+      // FullHeal_C declares no arguments, so bytes mean the wire hash was misread - historically
+      // 122 of 123 such packets in one capture were a 16-bit hash whose low byte collided with it.
+      const tracker = new FishNetCombatTracker();
+      const misread = packet(1, 25321, "PlayerController", "FullHeal_C");
+      misread.payload = Buffer.from([0x66]);
+      expect(tracker.consume(misread)).toEqual([]);
+    });
+  });
+
   describe("recovering unnamed summon calibrations", () => {
     // Both payloads are real, captured from logs/sessions/20260802T171554310Z-bbab64b7 at
     // 17:19:56 on rpcLink 37187 — a link whose registration never arrived because the player

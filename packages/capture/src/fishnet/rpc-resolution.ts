@@ -140,7 +140,34 @@ export function eliminateByPayloadShape(
   return fitting.size === 1 ? [...fitting][0] : undefined;
 }
 
+/**
+ * Rejects a match that cannot possibly be the packet in hand.
+ *
+ * `lookupRpc` accepts a hit on either the 8-bit or the 16-bit reading of the wire hash, and does not
+ * check that the method it found could have produced these bytes. When a behaviour with many RPCs
+ * uses a 16-bit hash whose low byte collides with another behaviour's 8-bit hash, the wrong method
+ * wins and looks fully verified — `PlayerController.FullHeal_C` claimed 122 packets in one capture
+ * that were really hash 26142 elsewhere, the stray byte being the hash's high half.
+ *
+ * Only the airtight case is rejected: a method that declares *no arguments* cannot explain a
+ * non-empty payload. A method whose parameters merely fail to decode is left alone, because the map
+ * models several payloads only partially and a stricter rule would discard real traffic.
+ */
+function signatureAdmitsPayload(lookup: RpcLookup, payload: Buffer): boolean {
+  if (lookup.parameters !== undefined && lookup.parameters.length > 0) return true;
+  return payload.length === 0;
+}
+
+/** True when `applyRpcLookup` refused a match it was handed. Callers must not learn bindings from it. */
+export function rejectedByPayload(packet: DecodedFishNetPacket, lookup: RpcLookup): boolean {
+  return lookup.resolution === "verified" && !signatureAdmitsPayload(lookup, packet.payload);
+}
+
 export function applyRpcLookup(packet: DecodedFishNetPacket, lookup: RpcLookup): void {
+  if (rejectedByPayload(packet, lookup)) {
+    packet.rpcResolution = "unresolved";
+    return;
+  }
   packet.rpcResolution = lookup.resolution;
   if (lookup.resolution !== "verified") return;
   packet.rpcName = lookup.methodName;

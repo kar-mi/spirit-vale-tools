@@ -17,6 +17,7 @@ import {
   findSyncType,
   inferBehaviourType,
   lookupRpc,
+  rejectedByPayload,
 } from "./rpc-resolution.ts";
 import type { RpcLookup } from "./rpc-resolution.ts";
 import { parseObjectSpawn } from "./spawn-parser.ts";
@@ -349,8 +350,13 @@ function parseFixedRpc(
     const wireHash = lookup.wireHash;
     if (wireHash !== undefined) packet.rpcHash = wireHash;
     packet.payload = buffer.subarray(rpcStart + (wireHash !== undefined && wireHash > 0xff ? 2 : 1), end);
+    // A rejected match took us here on a false hash reading, so the behaviour it implied is wrong
+    // too. Undo the inference rather than teaching the connection a binding that will mis-resolve
+    // every later packet on this component.
+    const rejected = rejectedByPayload(packet, lookup);
+    if (rejected && inferredType !== undefined) packet.networkBehaviourType = undefined;
     applyRpcLookup(packet, lookup);
-    const boundType = inferredType ?? eliminatedType;
+    const boundType = rejected ? undefined : inferredType ?? eliminatedType;
     return {
       packet,
       end,

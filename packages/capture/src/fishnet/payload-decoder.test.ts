@@ -14,6 +14,9 @@ describe("decodeFishNetPayload", () => {
           methodName: "RpcSyntheticAction",
           wireHash: 5,
           packetKind: "serverRpc",
+          // A parameterless entry means the method really takes no arguments, and a match claiming
+          // one is refused when the packet carries bytes — so this fixture declares what it sends.
+          parameters: [{ name: "value", typeName: "System.UInt16", codec: "uint16" as const }],
         }],
       }],
     };

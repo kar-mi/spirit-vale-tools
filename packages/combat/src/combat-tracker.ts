@@ -196,6 +196,28 @@ export interface FishNetCombatSummonEvent {
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
+/**
+ * A `PlayerController.FullHeal_C`, which restores an actor outright.
+ *
+ * Kept off the `heal` kind on purpose. The wire carries no amount — the RPC declares no arguments at
+ * all — and the in-game source is a town NPC service rather than combat healing, so folding it into
+ * HPS would spike the meter by a full health bar for something no one healed. `reducers/meter.ts`
+ * only counts `kind: "heal"`, so a separate kind keeps it out structurally instead of by a flag
+ * somebody has to remember.
+ */
+export interface FishNetCombatFullHealEvent {
+  kind: "fullHeal";
+  rpc: "FullHeal_C";
+  tick: number;
+  payloadBytes: number;
+  fields: Record<string, FishNetDecodedValue>;
+  /** The restored actor: the RPC's own object. There is no healer on the wire. */
+  targetId: number;
+  /** No one performed this heal, so no actor may be credited for it. */
+  actorId?: never;
+  actorIdentity?: FishNetCombatActorIdentity;
+}
+
 export type FishNetHealAttribution = FishNetDamageAttribution | "unattributed";
 
 export interface FishNetCombatHealEvent {
@@ -226,7 +248,8 @@ export type FishNetCombatEvent =
   | FishNetCombatDeathEvent
   | FishNetCombatStatusEvent
   | FishNetCombatSummonEvent
-  | FishNetCombatHealEvent;
+  | FishNetCombatHealEvent
+  | FishNetCombatFullHealEvent;
 
 interface ActivationState {
   id: string;
@@ -367,6 +390,22 @@ export class FishNetCombatTracker {
     }
     if (packet.rpcName === "ApplyEffectDisplays_O" && matchesBehaviour(packet, "StatusComponent")) {
       events.push(...this.consumeEffectDisplays(packet));
+      return events;
+    }
+    if (packet.rpcName === "FullHeal_C" && matchesBehaviour(packet, "PlayerController")) {
+      // Declares no arguments, so anything on the wire means the hash was misread - the decoder
+      // refuses those, and this is a second belt for a packet arriving pre-resolved.
+      if (packet.payload.length === 0) {
+        events.push({
+          kind: "fullHeal",
+          rpc: "FullHeal_C",
+          tick: packet.tick,
+          payloadBytes: 0,
+          fields: {},
+          targetId: packet.objectId,
+          actorIdentity: this.actorIdentityResolver?.(packet.objectId),
+        });
+      }
       return events;
     }
     if (packet.rpcName === "CalibrateSummons_T" && matchesBehaviour(packet, "SummoningComponent")) {

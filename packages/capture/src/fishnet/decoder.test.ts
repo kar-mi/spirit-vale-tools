@@ -178,6 +178,9 @@ describe("FishNet bundles and sessions", () => {
           methodName: "RpcSyntheticNotice",
           wireHash: 0x1234,
           packetKind: "observersRpc",
+          // The generator records parameters even for types it cannot break down, so an entry with
+          // none genuinely takes none — and a match claiming one is refused when bytes are present.
+          parameters: [{ name: "value", typeName: "System.UInt16", codec: "uint16" as const }],
         }],
       }],
     };
@@ -569,6 +572,62 @@ describe("FishNet bundles and sessions", () => {
       const { decoder } = decoderWithLink("quarantine-isolation");
       const other = decoder.decode(tick(2, linked(900, source)), { reliable: true, connectionId: "different-socket" });
       expect(other[0]).toMatchObject({ linkResolved: false });
+    });
+  });
+
+  describe("refusing a match the payload contradicts", () => {
+    test("does not claim a parameterless method for a packet carrying bytes", () => {
+      // Captured from logs/abtest_players.jsonl, object 25321. The real RPC is 16-bit hash 26142;
+      // its low byte is 30, which PlayerController happens to use for the parameterless FullHeal_C,
+      // so the whole thing resolved as a full heal that never happened - 122 of them in one capture.
+      const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+      const [packet] = decoder.decode(
+        Buffer.concat([Buffer.alloc(4), Buffer.from("0900d28b030101041e66", "hex")]),
+        { reliable: true, connectionId: "hash-collision" },
+      );
+      expect(packet).toMatchObject({ rpcHash16Candidate: 26142, rpcResolution: "unresolved" });
+      expect(packet?.rpcName).toBeUndefined();
+    });
+
+    test("still accepts a parameterless method when the packet is empty", () => {
+      // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
+      const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+      const [packet] = decoder.decode(
+        tick(1, observersRpc(25321, 0, 30)),
+        { reliable: true, connectionId: "hash-collision-genuine" },
+      );
+      expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });
+    });
+
+    test("does not teach the connection a binding from a refused match", () => {
+      const map: FishNetRpcMap = {
+        buildFingerprint: "synthetic-refusal",
+        metadataVersion: 31,
+        behaviours: [
+          { typeName: "SyntheticEmotes", rpcs: [{ wireHash: 9, packetKind: "serverRpc", methodName: "SyntheticStopEmote" }] },
+          {
+            typeName: "SyntheticHealth",
+            rpcs: [{
+              wireHash: 40,
+              packetKind: "serverRpc",
+              methodName: "SyntheticApplyDamage",
+              parameters: [{ name: "value", typeName: "System.Int32", codec: "packedInt32" as const }],
+            }],
+          },
+        ],
+      };
+      const decoder = new FishNetSessionDecoder(map);
+      const context = { reliable: true, connectionId: "refusal-binding" };
+      // Hash 9 matches the parameterless SyntheticStopEmote, but bytes are present, so the match is
+      // refused - and index 4 must NOT be remembered as SyntheticEmotes.
+      const [refused] = decoder.decode(tick(1, fixedServerRpc(90, 4, 9, Buffer.from("aabb", "hex"))), context);
+      expect(refused?.rpcResolution).toBe("unresolved");
+      expect(refused?.networkBehaviourType).toBeUndefined();
+
+      // The same component later carries a hash only SyntheticHealth declares; a poisoned binding
+      // would have prevented this from resolving.
+      const [later] = decoder.decode(tick(2, fixedServerRpc(90, 4, 40, Buffer.from([14]))), context);
+      expect(later).toMatchObject({ networkBehaviourType: "SyntheticHealth", rpcName: "SyntheticApplyDamage" });
     });
   });
 
