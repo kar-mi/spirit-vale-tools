@@ -1,4 +1,4 @@
-import { applyDecodedFields } from "./field-decoder.ts";
+import { applyDecodedFields, tryDecodeFields } from "./field-decoder.ts";
 import { componentKey } from "./protocol.ts";
 import type { RpcLinkRegistrationState } from "./protocol.ts";
 import type {
@@ -101,6 +101,43 @@ export function eliminateBoundBehaviourTypes(
   }
   const remaining = candidates.filter((typeName) => !boundElsewhere.has(typeName));
   return remaining.length === 1 ? remaining[0] : undefined;
+}
+
+/**
+ * Narrows an ambiguous behaviour-type match by testing the payload against each candidate's
+ * signature. This complements `eliminateBoundBehaviourTypes`, which can only narrow once *something*
+ * else on the object is already bound: an object whose spawn was never captured has no bindings at
+ * all, so a shared hash (e.g. observersRpc 0, claimed by both `CombatComponent.Attack_C` and
+ * `HealthComponent.ApplyDamage_C`) stays ambiguous for that object's entire life and every packet on
+ * it is dropped.
+ *
+ * A candidate survives only when its parameters consume the payload *exactly* - both a short read
+ * and leftover bytes disqualify it. Candidates whose signature this decoder cannot evaluate (array
+ * or opaque parameters) are indeterminate rather than misfits, and their presence blocks the whole
+ * pass: eliminating one because it could not be checked is how a confident wrong answer gets made.
+ */
+export function eliminateByPayloadShape(
+  map: FishNetRpcMap | undefined,
+  candidates: readonly string[],
+  packetName: FishNetRpcPacketName,
+  hash8: number,
+  hash16: number | undefined,
+  payload: Buffer,
+): string | undefined {
+  if (!map || candidates.length < 2) return undefined;
+  const hashes = new Set([hash8, ...(hash16 === undefined ? [] : [hash16])]);
+  const fitting = new Set<string>();
+  for (const typeName of candidates) {
+    const behaviour = map.behaviours.find((entry) => entry.typeName === typeName);
+    if (!behaviour) continue;
+    for (const rpc of behaviour.rpcs) {
+      if (rpc.packetKind !== packetName || !hashes.has(rpc.wireHash)) continue;
+      const fit = tryDecodeFields(payload, rpc.parameters);
+      if (fit.undecodable) return undefined;
+      if (fit.complete && fit.consumed === payload.length) fitting.add(typeName);
+    }
+  }
+  return fitting.size === 1 ? [...fitting][0] : undefined;
 }
 
 export function applyRpcLookup(packet: DecodedFishNetPacket, lookup: RpcLookup): void {

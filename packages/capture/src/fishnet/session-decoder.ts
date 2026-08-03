@@ -1,7 +1,6 @@
 import { parseMessage } from "./message-parser.ts";
 import type { ConnectionState } from "./message-parser.ts";
 import { FishNetProtocolError, opaquePacket } from "./protocol.ts";
-import type { RpcLinkRegistrationState } from "./protocol.ts";
 import { readSignedPackedWhole } from "./wire-reader.ts";
 import type { DecodedFishNetPacket, FishNetDecodeOptions, FishNetRpcMap } from "./types.ts";
 
@@ -59,7 +58,7 @@ export class FishNetSessionDecoder {
   private getConnection(key: string): ConnectionState {
     let state = this.connections.get(key);
     if (!state) {
-      state = { links: new Map(), components: new Map() };
+      state = { links: new Map(), components: new Map(), staleLinks: new Map(), staleComponents: new Map() };
       this.connections.set(key, state);
     }
     return state;
@@ -148,26 +147,31 @@ export class FishNetSessionDecoder {
       packets.push(parsed.packet);
 
       if (parsed.packet.packetName === "authenticated") {
-        state.links.clear();
-        state.components.clear();
+        quarantineConnectionState(state);
       }
       if (parsed.packet.packetName === "objectSpawn" && parsed.packet.objectId !== undefined) {
-        removeObjectLinks(state.links, parsed.packet.objectId);
-        removeObjectComponents(state.components, parsed.packet.objectId);
+        removeObjectLinks(state, parsed.packet.objectId);
+        removeObjectComponents(state, parsed.packet.objectId);
       }
+      // Freshly registered data always wins over a quarantined guess for the same key.
       if (parsed.componentBindings) {
-        for (const [key, typeName] of parsed.componentBindings) state.components.set(key, typeName);
+        for (const [key, typeName] of parsed.componentBindings) {
+          state.components.set(key, typeName);
+          state.staleComponents.delete(key);
+        }
       }
       if (parsed.registrations) {
-        for (const [linkId, registration] of parsed.registrations) state.links.set(linkId, registration);
+        for (const [linkId, registration] of parsed.registrations) {
+          state.links.set(linkId, registration);
+          state.staleLinks.delete(linkId);
+        }
       }
       if (parsed.packet.packetName === "objectDespawn" && parsed.packet.objectId !== undefined) {
-        removeObjectLinks(state.links, parsed.packet.objectId);
-        removeObjectComponents(state.components, parsed.packet.objectId);
+        removeObjectLinks(state, parsed.packet.objectId);
+        removeObjectComponents(state, parsed.packet.objectId);
       }
       if (parsed.packet.packetName === "disconnect") {
-        state.links.clear();
-        state.components.clear();
+        quarantineConnectionState(state);
       }
 
       if (parsed.stop || parsed.end <= offset) break;
@@ -193,15 +197,36 @@ function orderedChunks(chunks: { sequence?: number; chunk: Buffer }[]): Buffer[]
     .map(({ chunk }) => chunk);
 }
 
-function removeObjectLinks(links: Map<number, RpcLinkRegistrationState>, objectId: number): void {
-  for (const [linkId, registration] of links) {
-    if (registration.objectId === objectId) links.delete(linkId);
+/**
+ * Retires the current link/component tables into quarantine instead of dropping them.
+ *
+ * `ConnectionState` is keyed by connection id, so a genuinely new connection already starts with
+ * empty tables — which means clearing here could only ever destroy state belonging to the *same*
+ * socket. This game re-authenticates on the same socket during a channel switch without re-spawning
+ * objects that are already spawned, so clearing left every rpcLink on those objects dead until the
+ * next real map change. Only one generation is retained: a second re-authentication discards the
+ * older suspects rather than accumulating them.
+ */
+function quarantineConnectionState(state: ConnectionState): void {
+  state.staleLinks = state.links;
+  state.staleComponents = state.components;
+  state.links = new Map();
+  state.components = new Map();
+}
+
+function removeObjectLinks(state: ConnectionState, objectId: number): void {
+  for (const links of [state.links, state.staleLinks]) {
+    for (const [linkId, registration] of links) {
+      if (registration.objectId === objectId) links.delete(linkId);
+    }
   }
 }
 
-function removeObjectComponents(components: Map<string, string>, objectId: number): void {
+function removeObjectComponents(state: ConnectionState, objectId: number): void {
   const prefix = `${objectId}:`;
-  for (const key of components.keys()) {
-    if (key.startsWith(prefix)) components.delete(key);
+  for (const components of [state.components, state.staleComponents]) {
+    for (const key of components.keys()) {
+      if (key.startsWith(prefix)) components.delete(key);
+    }
   }
 }

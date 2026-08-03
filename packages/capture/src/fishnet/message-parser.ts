@@ -1,4 +1,4 @@
-import { applyDecodedFields } from "./field-decoder.ts";
+import { applyDecodedFields, tryDecodeFields } from "./field-decoder.ts";
 import {
   basePacket,
   classifyPacket,
@@ -12,11 +12,13 @@ import type { RpcLinkRegistrationState } from "./protocol.ts";
 import {
   applyRpcLookup,
   eliminateBoundBehaviourTypes,
+  eliminateByPayloadShape,
   findBroadcast,
   findSyncType,
   inferBehaviourType,
   lookupRpc,
 } from "./rpc-resolution.ts";
+import type { RpcLookup } from "./rpc-resolution.ts";
 import { parseObjectSpawn } from "./spawn-parser.ts";
 import {
   checkedEnd,
@@ -35,6 +37,16 @@ import type {
 export interface ConnectionState {
   links: Map<number, RpcLinkRegistrationState>;
   components: Map<string, string>;
+  /**
+   * The link and component tables as they stood before the last `authenticated`/`disconnect`, kept
+   * because this game re-authenticates on the same socket during a channel switch *without*
+   * re-spawning objects that are already spawned. Registrations are only ever learned from an
+   * `objectSpawn`, so dropping them outright leaves every rpcLink on those objects unresolvable
+   * until something forces a real respawn. Entries here are suspects, not facts: they are only
+   * believed after `corroborateStaleLink` agrees, and any fresh registration or despawn evicts them.
+   */
+  staleLinks: Map<number, RpcLinkRegistrationState>;
+  staleComponents: Map<string, string>;
 }
 
 export interface ParsedMessage {
@@ -206,25 +218,67 @@ function parseRpcLink(
     }
   }
 
-  const registration = state.links.get(packetId);
   const packet = basePacket(buffer, start, end, tick, bundleIndex, packetId, "rpcLink");
   packet.linkId = packetId;
-  packet.linkResolved = registration !== undefined;
   packet.payload = buffer.subarray(payloadStart, end);
-  if (registration) {
-    packet.linkedPacketName = registration.packetName;
-    packet.registeredObjectId = registration.objectId;
-    packet.registeredComponentIndex = registration.componentIndex;
-    packet.registeredRpcHash = registration.rpcHash;
-    packet.objectId = registration.objectId;
-    packet.networkBehaviourIndex = registration.componentIndex;
-    packet.rpcHash = registration.rpcHash;
-    packet.networkBehaviourType = registration.networkBehaviourType
-      ?? state.components.get(componentKey(registration.objectId, registration.componentIndex));
-    const lookup = lookupRpc(options.rpcMap, packet.networkBehaviourType, registration.packetName, registration.rpcHash, undefined);
-    applyRpcLookup(packet, lookup);
+
+  const registration = state.links.get(packetId);
+  const stale = registration === undefined ? state.staleLinks.get(packetId) : undefined;
+  const resolved = registration ?? stale;
+  packet.linkResolved = resolved !== undefined;
+  if (!resolved) return { packet, end, stop };
+
+  const behaviourType = resolved.networkBehaviourType
+    ?? state.components.get(componentKey(resolved.objectId, resolved.componentIndex))
+    ?? state.staleComponents.get(componentKey(resolved.objectId, resolved.componentIndex));
+  const lookup = lookupRpc(options.rpcMap, behaviourType, resolved.packetName, resolved.rpcHash, undefined);
+  // A quarantined registration is only a suspect: believing it blindly would misattribute traffic
+  // outright if the server had reallocated link ids on this socket, which is worse than the gap it
+  // is meant to close.
+  if (stale && !corroborateStaleLink(lookup, packet.payload, state, resolved)) {
+    packet.linkResolved = false;
+    return { packet, end, stop };
   }
-  return { packet, end, stop };
+
+  packet.linkedPacketName = resolved.packetName;
+  packet.registeredObjectId = resolved.objectId;
+  packet.registeredComponentIndex = resolved.componentIndex;
+  packet.registeredRpcHash = resolved.rpcHash;
+  packet.objectId = resolved.objectId;
+  packet.networkBehaviourIndex = resolved.componentIndex;
+  packet.rpcHash = resolved.rpcHash;
+  packet.networkBehaviourType = behaviourType;
+  applyRpcLookup(packet, lookup);
+  if (!stale) return { packet, end, stop };
+
+  // Corroborated once is enough: promote it so later packets on this link cost a plain map hit, and
+  // report the weaker provenance.
+  if (packet.rpcResolution === "verified") packet.rpcResolution = "recovered";
+  return { packet, end, stop, registrations: [[packetId, resolved]] };
+}
+
+/**
+ * Decides whether a quarantined link registration is trustworthy for this payload.
+ *
+ * The signature check is the strong one — an exact-length decode against the resolved method's
+ * parameters. A reallocated link id would almost certainly resolve to a method whose parameters do
+ * not consume these bytes exactly; the same discriminator found zero false positives across 385,742
+ * captured payloads. Signatures this decoder cannot evaluate (array parameters, most notably
+ * `CalibrateSummons_T`) fall back to liveness: the registration's object must still be demonstrably
+ * present, since a reallocation implies the old object is gone.
+ */
+function corroborateStaleLink(
+  lookup: RpcLookup,
+  payload: Buffer,
+  state: ConnectionState,
+  registration: RpcLinkRegistrationState,
+): boolean {
+  if (lookup.resolution !== "verified") return false;
+  const fit = tryDecodeFields(payload, lookup.parameters);
+  if (!fit.undecodable) return fit.complete && fit.consumed === payload.length;
+  const prefix = `${registration.objectId}:`;
+  for (const key of state.components.keys()) if (key.startsWith(prefix)) return true;
+  return false;
 }
 
 function parseFixedRpc(
@@ -276,6 +330,17 @@ function parseFixedRpc(
     let eliminatedType: string | undefined;
     if (lookup.resolution === "ambiguous" && lookup.ambiguousBehaviourTypes) {
       eliminatedType = eliminateBoundBehaviourTypes(state.components, header.objectId, header.componentIndex, lookup.ambiguousBehaviourTypes);
+      // With nothing bound on this object there is nothing to eliminate against - the norm for an
+      // object whose spawn was never captured - so fall back to asking which candidate signature
+      // the payload actually fits.
+      eliminatedType ??= eliminateByPayloadShape(
+        options.rpcMap,
+        lookup.ambiguousBehaviourTypes,
+        packetName as FishNetRpcPacketName,
+        hash8,
+        hash16,
+        buffer.subarray(rpcStart + (lookup.wireHash !== undefined && lookup.wireHash > 0xff ? 2 : 1), end),
+      );
       if (eliminatedType !== undefined) {
         packet.networkBehaviourType = eliminatedType;
         lookup = lookupRpc(options.rpcMap, eliminatedType, packetName as FishNetRpcPacketName, hash8, hash16);

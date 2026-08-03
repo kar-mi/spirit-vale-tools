@@ -279,4 +279,29 @@ describe("shared JSON logger", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  test("accepts an outputPaths override with no directory component", async () => {
+    // `--output abtest.jsonl` makes path.dirname() return ".", and Bun on Windows rejects
+    // mkdir(".", { recursive: true }) with EEXIST despite the flag - "./" fails as ENOENT.
+    const root = `${import.meta.dir}/../../../.local/logger-test-${crypto.randomUUID()}`;
+    await mkdir(root, { recursive: true });
+    const previousCwd = process.cwd();
+    try {
+      process.chdir(root);
+      for (const target of ["bare-output.jsonl", "./dot-slash-output.jsonl"]) {
+        const session = await createLogSession({
+          producer: "synthetic-test",
+          streams: ["capture"],
+          logDirectory: root,
+          outputPaths: { capture: target },
+        });
+        session.logger("capture").log("capture.lifecycle", { state: "started" });
+        await session.close();
+        expect(JSON.parse((await Bun.file(target).text()).trimEnd())).toMatchObject({ type: "capture.lifecycle" });
+      }
+    } finally {
+      process.chdir(previousCwd);
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

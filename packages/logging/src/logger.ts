@@ -1,4 +1,4 @@
-import { appendFile, mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, open, readFile, rename, stat, writeFile } from "node:fs/promises";
 import type { FileHandle } from "node:fs/promises";
 import { Buffer } from "node:buffer";
 import path from "node:path";
@@ -227,6 +227,27 @@ export class JsonLinesLogger {
   }
 }
 
+/**
+ * Creates a directory, tolerating one that is already there.
+ *
+ * `fs.mkdir` with `recursive: true` is specified not to fail on an existing directory, but Bun on
+ * Windows breaks that for exactly the relative forms a bare `--output name.jsonl` produces: `"."`
+ * raises EEXIST and `"./"` raises ENOENT. Probing first keeps those paths working; EEXIST is still
+ * swallowed afterwards so a directory created concurrently is not treated as a failure.
+ */
+async function ensureDirectory(directory: string): Promise<void> {
+  try {
+    if ((await stat(directory)).isDirectory()) return;
+  } catch {
+    // Nothing there yet (or unreadable) - fall through and let mkdir report the real problem.
+  }
+  try {
+    await mkdir(directory, { recursive: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+  }
+}
+
 export async function createLogSession(options: CreateLogSessionOptions): Promise<LogSession> {
   const logDirectory = options.logDirectory ?? defaultLogDirectory();
   const id = createSessionId();
@@ -234,7 +255,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
   const createdAt = new Date().toISOString();
   const streams = [...new Set(options.streams)];
   if (streams.length === 0) throw new Error("a log session requires at least one stream");
-  await mkdir(directory, { recursive: true });
+  await ensureDirectory(directory);
   const metadata: LogSessionMetadata = { schemaVersion: 1, sessionId: id, producer: options.producer, createdAt, streams };
   await writeFile(path.join(directory, "session.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
 
@@ -243,7 +264,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
   for (const stream of streams) {
     const override = options.outputPaths?.[stream];
     const streamPath = override ?? sessionStreamPath(id, stream, logDirectory);
-    await mkdir(path.dirname(streamPath), { recursive: true });
+    await ensureDirectory(path.dirname(streamPath));
     await writeFile(streamPath, "", override ? undefined : { flag: "wx" });
     loggers.set(stream, new JsonLinesLogger(streamPath, id, options.producer, {
       stream,
@@ -365,7 +386,7 @@ function createSessionId(): string {
 }
 
 async function writeAtomicJson(target: string, value: unknown): Promise<void> {
-  await mkdir(path.dirname(target), { recursive: true });
+  await ensureDirectory(path.dirname(target));
   const temporary = `${target}.${crypto.randomUUID()}.tmp`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
   await rename(temporary, target);

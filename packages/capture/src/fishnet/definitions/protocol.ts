@@ -28,7 +28,12 @@ export type FishNetPacketName =
   | "unknown";
 
 export type FishNetRpcPacketName = "serverRpc" | "observersRpc" | "targetRpc" | "reconcile";
-export type FishNetRpcResolution = "verified" | "ambiguous" | "unresolved";
+/**
+ * `recovered` is as actionable as `verified` — the method and behaviour are known — but the
+ * registration came from a quarantined pre-re-authentication table and was corroborated rather than
+ * read from a fresh spawn. It is distinguished so the promotion rate stays measurable.
+ */
+export type FishNetRpcResolution = "verified" | "recovered" | "ambiguous" | "unresolved";
 
 export interface FishNetDecodeOptions {
   reliable: boolean;
