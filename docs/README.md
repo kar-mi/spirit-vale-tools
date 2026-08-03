@@ -11,6 +11,8 @@ implementation, and contributor references.
   Packages.
 - [Character stat formula comparison](stats/character_stat_formula_comparison.md)
   — notes on calculated character stats.
+- [Combat packets](combat/combat-packets.md) — which RPCs become combat events,
+  what each carries on the wire, and which feeds are not consumed yet.
 - [Healing attribution](combat/healing-attribution.md) — why heal-to-healer
   attribution is best-effort, and its known limitations.
 
