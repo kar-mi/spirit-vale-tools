@@ -127,6 +127,71 @@ function summonEvent(overrides: Partial<FishNetCombatSummonEvent> = {}): FishNet
   };
 }
 
+describe("FishNetStatusTracker with the observers-facing display feed", () => {
+  function display(overrides: Partial<FishNetCombatStatusEvent> = {}): FishNetCombatStatusEvent {
+    return {
+      kind: "status",
+      rpc: "ApplyEffectDisplays_O",
+      tick: 0,
+      payloadBytes: 0,
+      fields: {},
+      actorId: 1,
+      statusId: "Burn",
+      action: "applied",
+      ...overrides,
+    };
+  }
+
+  test("prefers the server's remaining time over the catalog's nominal duration", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    // Burn at level 1 nominally lasts 3s; the server says 9 are left, and it would know.
+    tracker.consumeStatus(display({ remainingSeconds: 9 }), 1_000);
+    const [status] = tracker.getActiveStatuses(1, 1_000);
+    expect(status?.remainingMs).toBe(9_000);
+  });
+
+  test("leaves a status without an expiry when the feed reports none", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn" }), 1_000);
+    const [status] = tracker.getActiveStatuses(1, 1_000);
+    // No remainingSeconds on the event means no expiry, not "expire per the catalog".
+    expect(status?.remainingMs).toBeUndefined();
+    expect(tracker.getActiveStatuses(1, 100_000)).toHaveLength(1);
+  });
+
+  test("keeps the level the owner-only feed established", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(statusEvent({ statusId: "Burn", level: 4 }), 1_000);
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 2, stacks: 3 }), 1_500);
+    const [status] = tracker.getActiveStatuses(1, 1_500);
+    expect(status).toMatchObject({ level: 4, stacks: 3, remainingMs: 2_000 });
+  });
+
+  test("does not treat a periodic refresh as a fresh application", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ remainingSeconds: 10 }), 1_000);
+    // The feed repeats while a status is merely still active; appliedAtMs must not creep forward.
+    tracker.consumeStatus(display({ remainingSeconds: 8 }), 3_000);
+    tracker.consumeStatus(display({ remainingSeconds: 6 }), 5_000);
+    const [status] = tracker.getActiveStatuses(1, 5_000);
+    expect(status).toMatchObject({ appliedAtMs: 1_000, remainingMs: 6_000 });
+  });
+
+  test("surfaces stack counts from the feed", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 10, stacks: 72 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ statusId: "Burn", stacks: 72 });
+  });
+
+  test("removes a status the feed lists as removed", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ remainingSeconds: 30 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(1);
+    tracker.consumeStatus(display({ action: "removed" }), 2_000);
+    expect(tracker.getActiveStatuses(1, 2_000)).toHaveLength(0);
+  });
+});
+
 describe("FishNetStatusTracker", () => {
   test("surfaces summon stacks as an indefinite skill-labeled buff", () => {
     const tracker = new FishNetStatusTracker({

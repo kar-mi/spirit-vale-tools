@@ -7,6 +7,7 @@ import {
 import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import { decodeEffectDisplays } from "./effect-display.ts";
 import { decodeSummonCalibration } from "./summon-calibration.ts";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
@@ -162,14 +163,22 @@ export interface FishNetCombatDeathEvent {
 
 export interface FishNetCombatStatusEvent {
   kind: "status";
-  rpc: "ApplyEffect_T" | "RemoveEffect_T";
+  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
   actorId: number;
   statusId: string;
-  level: number;
+  /** Absent on `ApplyEffectDisplays_O`, which carries no level; consumers keep the last known one. */
+  level?: number;
   action: "applied" | "removed";
+  /**
+   * Server-reported time left, from `ApplyEffectDisplays_O` only. Authoritative where present:
+   * the catalog's nominal duration is a guess at what the server is already telling us here.
+   * Absent for a status with no expiry.
+   */
+  remainingSeconds?: number;
+  stacks?: number;
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
@@ -356,6 +365,10 @@ export class FishNetCombatTracker {
       if (statusEvent) events.push(statusEvent);
       return events;
     }
+    if (packet.rpcName === "ApplyEffectDisplays_O" && matchesBehaviour(packet, "StatusComponent")) {
+      events.push(...this.consumeEffectDisplays(packet));
+      return events;
+    }
     if (packet.rpcName === "CalibrateSummons_T" && matchesBehaviour(packet, "SummoningComponent")) {
       events.push(...this.consumeSummonCalibration(packet));
       return events;
@@ -390,6 +403,45 @@ export class FishNetCombatTracker {
       mobId: change.spawn.mobId,
       displayName: definition.displayName,
     } : undefined;
+  }
+
+  /**
+   * Turns the observers-facing status broadcast into the same status events as the owner-only
+   * `ApplyEffect_T`/`RemoveEffect_T` pair.
+   *
+   * This feed reports every actor in range rather than just the local player, and it repeats
+   * periodically instead of only on change, so it both widens coverage and self-heals after a
+   * dropped packet. It reports real remaining time, which the owner-only path can only approximate
+   * from the catalog. It carries no level, so the events omit one and consumers keep whatever the
+   * owner-only feed last reported.
+   */
+  private consumeEffectDisplays(packet: DecodedFishNetPacket): FishNetCombatStatusEvent[] {
+    let batch: ReturnType<typeof decodeEffectDisplays>;
+    try {
+      batch = decodeEffectDisplays(packet.payload);
+    } catch {
+      return [];
+    }
+    const actorId = packet.objectId!;
+    const base = {
+      kind: "status",
+      rpc: "ApplyEffectDisplays_O",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: {},
+      actorId,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    } as const;
+    return [
+      ...batch.applies.map((display): FishNetCombatStatusEvent => ({
+        ...base,
+        statusId: display.statusId,
+        action: "applied",
+        ...(display.remainingSeconds === undefined ? {} : { remainingSeconds: display.remainingSeconds }),
+        stacks: display.stacks,
+      })),
+      ...batch.removes.map((statusId): FishNetCombatStatusEvent => ({ ...base, statusId, action: "removed" })),
+    ];
   }
 
   /**

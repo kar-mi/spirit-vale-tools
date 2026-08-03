@@ -115,14 +115,41 @@ export class FishNetStatusTracker {
       else this.active.set(event.actorId, statuses);
       return;
     }
-    const definition = this.directory.resolve(event.statusId);
-    const durationSeconds = statusDurationSeconds(definition, event.level);
+    const previous = statuses.get(event.statusId);
+    // The display feed reports no level, so keep whatever the owner-only feed last established
+    // rather than resetting to 1 and mis-deriving every level-scaled duration from then on.
+    const level = event.level ?? previous?.level ?? 1;
+    const expiresAtMs = this.resolveExpiry(event, level, observedAtMs);
     statuses.set(event.statusId, {
-      level: event.level,
-      appliedAtMs: observedAtMs,
-      ...(durationSeconds === undefined ? {} : { expiresAtMs: observedAtMs + durationSeconds * 1_000 }),
+      level,
+      // The display feed repeats while a status is merely still active, so treating every packet as
+      // a fresh application would make "applied at" drift forward for the whole duration.
+      appliedAtMs: event.rpc === "ApplyEffectDisplays_O" ? previous?.appliedAtMs ?? observedAtMs : observedAtMs,
+      ...(expiresAtMs === undefined ? {} : { expiresAtMs }),
+      ...(event.stacks === undefined ? {} : { stacks: event.stacks }),
     });
     this.active.set(event.actorId, statuses);
+  }
+
+  /**
+   * Picks the expiry to trust.
+   *
+   * A server-reported remaining time always wins - the catalog's nominal duration is only ever an
+   * estimate of the number the server is already sending. The subtlety is what *absence* means: on
+   * the display feed the server states remaining time for every status it reports, so nothing there
+   * means the status genuinely has no expiry, and falling back to the catalog would expire a
+   * permanent buff on a timer it never had. On the owner-only feed absence just means the wire never
+   * carried a duration, and the catalog is the best available answer.
+   */
+  private resolveExpiry(
+    event: FishNetCombatStatusEvent,
+    level: number,
+    observedAtMs: number,
+  ): number | undefined {
+    if (event.remainingSeconds !== undefined) return observedAtMs + event.remainingSeconds * 1_000;
+    if (event.rpc === "ApplyEffectDisplays_O") return undefined;
+    const durationSeconds = statusDurationSeconds(this.directory.resolve(event.statusId), level);
+    return durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
   }
 
   consumeSummon(event: FishNetCombatSummonEvent, observedAtMs: number): void {
@@ -230,3 +257,4 @@ export class FishNetStatusTracker {
     this.actorIdByUid.clear();
   }
 }
+
