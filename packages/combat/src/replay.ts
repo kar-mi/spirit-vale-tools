@@ -102,9 +102,12 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
   }
   if (value["kind"] === "activation") return value as unknown as FishNetCombatEvent;
   if (value["kind"] === "status") {
+    // Level is optional: the observer-facing display feed carries none, so demanding one discarded
+    // every status it produced - which is the overwhelming majority of them.
     if (!isFiniteNumber(value["actorId"])
       || typeof value["statusId"] !== "string"
-      || !isFiniteNumber(value["level"])
+      || (value["level"] !== undefined && !isFiniteNumber(value["level"]))
+      || (value["remainingSeconds"] !== undefined && !isFiniteNumber(value["remainingSeconds"]))
       || (value["action"] !== "applied" && value["action"] !== "removed")) return undefined;
     return value as unknown as FishNetCombatEvent;
   }

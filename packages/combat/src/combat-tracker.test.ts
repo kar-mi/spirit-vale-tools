@@ -241,112 +241,129 @@ describe("FishNetCombatTracker", () => {
   describe("full heals", () => {
     test("emits a fullHeal for an empty FullHeal_C", () => {
       const tracker = new FishNetCombatTracker();
-      expect(tracker.consume(packet(1, 44387, "PlayerController", "FullHeal_C"))).toEqual([
-        expect.objectContaining({ kind: "fullHeal", rpc: "FullHeal_C", targetId: 44387 }),
+      expect(tracker.consume(packet(1, 8100, "PlayerController", "FullHeal_C"))).toEqual([
+        expect.objectContaining({ kind: "fullHeal", rpc: "FullHeal_C", targetId: 8100 }),
       ]);
     });
 
     test("credits no actor, so no meter can attribute it", () => {
       const tracker = new FishNetCombatTracker();
-      const [event] = tracker.consume(packet(1, 44387, "PlayerController", "FullHeal_C"));
+      const [event] = tracker.consume(packet(1, 8100, "PlayerController", "FullHeal_C"));
       expect(event).not.toHaveProperty("actorId");
       expect(event).not.toHaveProperty("value");
     });
 
     test("ignores a FullHeal_C carrying a payload", () => {
-      // FullHeal_C declares no arguments, so bytes mean the wire hash was misread - historically
-      // 122 of 123 such packets in one capture were a 16-bit hash whose low byte collided with it.
+      // FullHeal_C declares no arguments, so bytes on the wire mean the hash was misread: the low
+      // byte of a 16-bit hash can collide with it.
       const tracker = new FishNetCombatTracker();
-      const misread = packet(1, 25321, "PlayerController", "FullHeal_C");
+      const misread = packet(1, 8101, "PlayerController", "FullHeal_C");
       misread.payload = Buffer.from([0x66]);
       expect(tracker.consume(misread)).toEqual([]);
     });
   });
 
   describe("recovering unnamed summon calibrations", () => {
-    // Both payloads are real, captured from logs/sessions/20260802T171554310Z-bbab64b7 at
-    // 17:19:56 on rpcLink 37187 — a link whose registration never arrived because the player
-    // object's spawn was missed, leaving it unresolved for the connection's whole life.
-    const ONE_CLONE = "0214536861646f775365616c0100";
-    const TWO_CLONES = "0414536861646f775365616c010014536861646f775365616c0100";
+    const SUMMON_CATALOG: FishNetSkillCatalog = {
+      buildFingerprint: "synthetic-build",
+      skills: [{ id: "SyntheticClone", displayName: "Synthetic Clone", kinds: ["active"] }],
+    };
+    const LOCAL_ACTOR = 8200;
 
-    function orphanLink(tick: number, hex: string): DecodedFishNetPacket {
+    function calibrationPayload(...skillIds: readonly string[]): Buffer {
+      return Buffer.concat([
+        packed(skillIds.length),
+        ...skillIds.map((id) => Buffer.concat([packed(Buffer.byteLength(id)), Buffer.from(id), Buffer.from([1, 0])])),
+      ]);
+    }
+
+    /** An rpcLink whose registration never arrived: no object id, no hash, no name - just bytes. */
+    function orphanLink(tick: number, payload: Buffer): DecodedFishNetPacket {
       return {
         tick,
-        packetId: 37187,
+        packetId: 4100,
         packetName: "rpcLink",
-        linkId: 37187,
+        linkId: 4100,
         linkResolved: false,
         raw: Buffer.alloc(0),
-        payload: Buffer.from(hex, "hex"),
+        payload,
       };
     }
 
+    // `null` means the tracker is given no local actor at all; passing `undefined` would re-apply
+    // the default parameter instead.
+    function recoveringTracker(localActorId: number | null = LOCAL_ACTOR): FishNetCombatTracker {
+      return new FishNetCombatTracker({
+        skillCatalog: SUMMON_CATALOG,
+        buildFingerprint: "synthetic-build",
+        ...(localActorId === null ? {} : { localActorIdResolver: () => localActorId }),
+      });
+    }
+
     test("recovers a calibration from an rpcLink whose registration never arrived", () => {
-      const tracker = new FishNetCombatTracker({ localActorIdResolver: () => 35540 });
-      expect(tracker.consume(orphanLink(121803, ONE_CLONE))).toEqual([
-        expect.objectContaining({ kind: "summon", actorId: 35540, skillId: "ShadowSeal", stacks: 1, recovered: true }),
+      const tracker = recoveringTracker();
+      expect(tracker.consume(orphanLink(1, calibrationPayload("SyntheticClone")))).toEqual([
+        expect.objectContaining({ kind: "summon", actorId: LOCAL_ACTOR, skillId: "SyntheticClone", stacks: 1, recovered: true }),
       ]);
-      expect(tracker.consume(orphanLink(121819, TWO_CLONES))).toEqual([
-        expect.objectContaining({ skillId: "ShadowSeal", stacks: 2, recovered: true }),
+      expect(tracker.consume(orphanLink(2, calibrationPayload("SyntheticClone", "SyntheticClone")))).toEqual([
+        expect.objectContaining({ skillId: "SyntheticClone", stacks: 2, recovered: true }),
       ]);
     });
 
     test("recovers an ambiguous targetRpc and attributes it to the packet's own object", () => {
-      // logs/sessions/20260802T172530823Z-68270d94, object 15003 at tick 250978: resolved far
-      // enough to carry an object id, but hash 0 is shared and nothing on the object was bound.
-      const tracker = new FishNetCombatTracker({ localActorIdResolver: () => 999 });
+      // Resolved far enough to carry an object id, but the wire hash is shared and nothing on the
+      // object was bound, so it arrived unnamed.
+      const tracker = recoveringTracker(9999);
       expect(tracker.consume({
-        tick: 250978,
+        tick: 3,
         packetId: 10,
         packetName: "targetRpc",
-        objectId: 15003,
+        objectId: 8201,
         networkBehaviourIndex: 6,
         rpcHash: 0,
         rpcResolution: "ambiguous",
         raw: Buffer.alloc(0),
-        payload: Buffer.from(TWO_CLONES, "hex"),
+        payload: calibrationPayload("SyntheticClone", "SyntheticClone"),
       })).toEqual([
-        expect.objectContaining({ actorId: 15003, skillId: "ShadowSeal", stacks: 2, recovered: true }),
+        expect.objectContaining({ actorId: 8201, skillId: "SyntheticClone", stacks: 2, recovered: true }),
       ]);
     });
 
     test("shares stack state with named calibrations rather than double counting", () => {
-      const tracker = new FishNetCombatTracker({ localActorIdResolver: () => 35540 });
-      tracker.consume(orphanLink(1, TWO_CLONES));
+      const tracker = recoveringTracker();
+      tracker.consume(orphanLink(1, calibrationPayload("SyntheticClone", "SyntheticClone")));
       // The same snapshot arriving named once links recover is not a change, so it emits nothing.
-      expect(tracker.consume(summonCalibration(2, 35540, ["ShadowSeal", "ShadowSeal"]))).toEqual([]);
-      expect(tracker.consume(summonCalibration(3, 35540, ["ShadowSeal"]))).toEqual([
-        expect.objectContaining({ skillId: "ShadowSeal", stacks: 1 }),
+      expect(tracker.consume(summonCalibration(2, LOCAL_ACTOR, ["SyntheticClone", "SyntheticClone"]))).toEqual([]);
+      expect(tracker.consume(summonCalibration(3, LOCAL_ACTOR, ["SyntheticClone"]))).toEqual([
+        expect.objectContaining({ skillId: "SyntheticClone", stacks: 1 }),
       ]);
     });
 
     test("declines payloads it cannot vouch for", () => {
-      const tracker = new FishNetCombatTracker({ localActorIdResolver: () => 35540 });
-      // The head of a character/inventory dump, which also travels on unresolved links.
-      expect(tracker.consume(orphanLink(1, "0400483134393531393836ba2c0101107368696e6f72616b0002"))).toEqual([]);
-      // An empty snapshot: one 0x0000001 byte carries no signature worth trusting.
-      expect(tracker.consume(orphanLink(2, "01"))).toEqual([]);
+      const tracker = recoveringTracker();
+      // Bulk character/inventory data, which also travels on unresolved links.
+      expect(tracker.consume(orphanLink(1, Buffer.alloc(64, 0x41)))).toEqual([]);
+      // An empty snapshot: one byte carries no signature worth trusting.
+      expect(tracker.consume(orphanLink(2, Buffer.from([0x01])))).toEqual([]);
       // Well-formed, but naming a skill no catalog knows.
-      expect(tracker.consume(orphanLink(3, "02144e6f74415265616c536b696c6c0100"))).toEqual([]);
+      expect(tracker.consume(orphanLink(3, calibrationPayload("SyntheticUnknown")))).toEqual([]);
       // Trailing bytes the summon grammar does not account for.
-      expect(tracker.consume(orphanLink(4, `${ONE_CLONE}ff`))).toEqual([]);
+      expect(tracker.consume(orphanLink(4, Buffer.concat([calibrationPayload("SyntheticClone"), Buffer.from([0xff])])))).toEqual([]);
     });
 
     test("skips recovery when the local actor is unknown", () => {
-      const tracker = new FishNetCombatTracker();
-      expect(tracker.consume(orphanLink(1, ONE_CLONE))).toEqual([]);
+      const tracker = recoveringTracker(null);
+      expect(tracker.consume(orphanLink(1, calibrationPayload("SyntheticClone")))).toEqual([]);
     });
 
     test("leaves named packets to the normal path", () => {
-      const tracker = new FishNetCombatTracker({ localActorIdResolver: () => 35540 });
-      const verified: DecodedFishNetPacket = {
-        ...orphanLink(1, ONE_CLONE),
+      const tracker = recoveringTracker();
+      expect(tracker.consume({
+        ...orphanLink(1, calibrationPayload("SyntheticClone")),
         rpcName: "SomeOtherRpc",
         rpcResolution: "verified",
-        objectId: 35540,
-      };
-      expect(tracker.consume(verified)).toEqual([]);
+        objectId: LOCAL_ACTOR,
+      })).toEqual([]);
     });
   });
 

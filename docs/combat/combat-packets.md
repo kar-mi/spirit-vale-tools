@@ -22,6 +22,8 @@ the owning behaviour, and returns zero or more events per packet:
 | `Recover_C` | `HealthComponent` | `heal` |
 | `ApplyEffect_T`, `RemoveEffect_T` | `StatusComponent` | `status` |
 | `ApplyEffectDisplays_O` | `StatusComponent` | `status` (one per entry) |
+| `ApplySkillDisplay_O`, `RemoveSkillDisplay_O` | `StatusComponent` | `status` |
+| `ToggleBegin_C` | `SkillsComponent` | `activation` |
 | `CalibrateSummons_T` | `SummoningComponent` | `summon` (one per changed skill) |
 | `FullHeal_C` | `PlayerController` | `fullHeal` |
 
@@ -123,10 +125,19 @@ live remaining time, not the nominal duration, so a valid `Haste` entry reads
 `advance()` drops statuses whose expiry has passed, because the server does not
 always send an explicit removal.
 
-### Related status RPCs
+### `ApplySkillDisplay_O` / `RemoveSkillDisplay_O` — the icon feed
 
-`ApplySkillDisplay_O(id, lv)` and `RemoveSkillDisplay_O(id)` are the skill-icon
-equivalents of the effect display feed. Neither is consumed today.
+```
+hash 1  observersRpc  ApplySkillDisplay_O(id: string, lv: packedInt32)
+hash 2  observersRpc  RemoveSkillDisplay_O(id: string)
+```
+
+A third, much smaller feed announcing a *skill* shown on an actor — stances and
+auras the effect feed never reports. Its ids partly overlap the effect feed, and
+it carries no timing at all, so it must never answer the expiry question: doing so
+would silently turn a timed buff permanent. `resolveExpiry` keeps a known expiry
+when an event from this feed brings none, and its repeats do not restart
+`appliedAtMs`.
 
 ## Damage and death
 
@@ -178,8 +189,8 @@ correlates a hit against recent activations by source id within `hitGraceTicks`
 (default 30), and stale activations are pruned after `activationMaxAgeTicks`
 (default 900).
 
-`ToggleBegin_C` is **not** in `SKILL_RPC_NAMES`, so toggled skills currently
-produce no activation.
+`ToggleBegin_C` is in `SKILL_RPC_NAMES` and yields an activation; it names its skill
+in a bare `id` rather than in a `SkillStateDto`.
 
 ## Summons
 
@@ -200,17 +211,20 @@ signal, a missed one leaves the count stale until the next snapshot —
 `recoverSummons` exists to claw back calibrations the capture layer could not
 name, gated on an exact-fit decode with catalog-known skill ids.
 
-`CloneEffect_C` and `ApplyRecall_T` are not consumed.
+`CloneEffect_C` and `ApplyRecall_T` are not consumed. `CloneEffect_C` fires on the
+*clone's* own object rather than the summoner's, carries no count, and lands only
+some tens of milliseconds before the calibration that follows it — so it cannot
+update a stack count on its own and buys no useful head start.
 
 ## Feeds not consumed
 
-Measured over one ~7 minute capture:
 
-| Packet | Volume | Why it matters |
-| --- | --- | --- |
-| `SkillsComponent.ToggleBegin_C` | 27 | Toggled skills emit no activation. |
-| `SummoningComponent.CloneEffect_C` | 36 | Would let clone tracking react immediately instead of waiting for the next calibration. |
-| `StatusComponent.ApplySkillDisplay_O` / `RemoveSkillDisplay_O` | 43 | Skill-icon display feed. |
+
+| Packet | Why it is left alone |
+| --- | --- |
+| `SummoningComponent.CloneEffect_C`, `ApplyRecall_T` | No count on the wire, and no useful head start over the calibration. |
+| Unidentified 16-bit-hash RPCs | Real traffic the map has no entry for; now correctly unresolved rather than wrongly named. |
+
 `PlayerController.FullHeal_C` *is* consumed, as its own `fullHeal` kind rather than
 a `heal`. It restores an actor outright, but the RPC declares no arguments so the
 wire carries no amount, and in game it is a town NPC service rather than combat
@@ -218,14 +232,14 @@ healing. `reducers/meter.ts` only counts `kind: "heal"`, so the separate kind ke
 a full health bar out of HPS structurally instead of via a flag someone has to
 remember. It fired **once** in a ~7 minute capture.
 
-Health and mana sync are *not* in this list: `HealthComponent` syncvars 0/1 (current/max
-HP), `SkillsComponent` 0/1 (current/max mana) and `MoveComponent` move speed are
-already decoded by `packages/character/src/record-decoder.ts`, which parses
-syncvar indexes directly rather than going through the RPC map's sync metadata.
-That path is scoped to the **local** character, so per-actor health for other
-players and mobs is still unavailable to the combat side. The RPC map itself
-declares sync metadata for only one behaviour (`PlayerController.VisualData`), so
-`syncName` stays unresolved on everything else — cosmetic, not a data gap.
+Health and mana sync are *not* in this list: `HealthComponent` syncvars 0/1
+(current/max HP), `SkillsComponent` 0/1 (current/max mana) and `MoveComponent`
+move speed are decoded by `packages/character/src/record-decoder.ts`, which reads
+syncvar indexes positionally. The RPC map now also names those four positions, so `syncName` and a decoded field appear on
+health and mana updates. Indexes whose meaning is not established stay unnamed
+rather than guessed. That path is scoped to the **local** character either way, so
+per-actor health for other players and mobs is still unavailable to the combat
+side.
 
 ## A resolved name is not proof
 
@@ -271,20 +285,3 @@ A softer version of the same check is still useful when investigating: decode a
 payload against its resolved signature and see whether it is consumed exactly.
 About 3% of resolved packets do not fit, and most of that residue is modelling
 gaps rather than misresolution — treat it as "look here", not "this is wrong".
-
-## Investigating an unknown packet
-
-The method that worked for `QueuedEffectDisplay`, in order:
-
-1. **Collect every instance** of the payload from a full `capture:dump` stream
-   (`bun run capture:dump --protocols udp --decode-fishnet --output <path>`, no
-   `--combat-only`, which logs every packet with `rawHex`).
-2. **Fix the framing** by proposing candidate layouts and requiring an exact-length
-   fit across *all* payloads. This eliminates wrong field counts quickly.
-3. **Separate same-width fields by behaviour**, not by inspection — a per-actor
-   time series distinguishes a countdown from a counter where byte widths cannot.
-4. **Do not trust catalog agreement** as confirmation. The server sends live
-   values; the catalog holds nominal ones, and they legitimately disagree.
-5. **Leave unexplained fields unnamed.** A field validated and discarded is
-   honest; a field named on a 38%-correlated hunch is a bug waiting to be built
-   on.

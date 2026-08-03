@@ -67,7 +67,7 @@ function fixedRpc(
   objectId: number,
   componentIndex: number,
   hash: number,
-  payload: Buffer,
+  payload: Uint8Array,
 ): Buffer {
   const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
   return message(messageId, Buffer.concat([
@@ -79,15 +79,15 @@ function fixedRpc(
   ]));
 }
 
-function fixedServerRpc(objectId: number, componentIndex: number, hash: number, payload = Buffer.alloc(0)): Buffer {
+function fixedServerRpc(objectId: number, componentIndex: number, hash: number, payload: Uint8Array = Buffer.alloc(0)): Buffer {
   return fixedRpc(8, objectId, componentIndex, hash, payload);
 }
 
-function observersRpc(objectId: number, componentIndex: number, hash: number, payload = Buffer.alloc(0)): Buffer {
+function observersRpc(objectId: number, componentIndex: number, hash: number, payload: Uint8Array = Buffer.alloc(0)): Buffer {
   return fixedRpc(9, objectId, componentIndex, hash, payload);
 }
 
-function targetRpc(objectId: number, componentIndex: number, hash: number, payload = Buffer.alloc(0)): Buffer {
+function targetRpc(objectId: number, componentIndex: number, hash: number, payload: Uint8Array = Buffer.alloc(0)): Buffer {
   return fixedRpc(10, objectId, componentIndex, hash, payload);
 }
 
@@ -627,16 +627,18 @@ describe("FishNet bundles and sessions", () => {
   });
 
   describe("refusing a match the payload contradicts", () => {
+    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 30. A behaviour with
+    // many RPCs can use a 16-bit hash whose low byte is also 30 - here 0x661e - and the 8-bit
+    // reading then claims a full heal that never happened.
+    const COLLIDING_HASH_TAIL = Buffer.from([0x66]);
+
     test("does not claim a parameterless method for a packet carrying bytes", () => {
-      // Captured from logs/abtest_players.jsonl, object 25321. The real RPC is 16-bit hash 26142;
-      // its low byte is 30, which PlayerController happens to use for the parameterless FullHeal_C,
-      // so the whole thing resolved as a full heal that never happened - 122 of them in one capture.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        Buffer.concat([Buffer.alloc(4), Buffer.from("0900d28b030101041e66", "hex")]),
+        tick(1, observersRpc(4801, 1, 30, COLLIDING_HASH_TAIL)),
         { reliable: true, connectionId: "hash-collision" },
       );
-      expect(packet).toMatchObject({ rpcHash16Candidate: 26142, rpcResolution: "unresolved" });
+      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661e, rpcResolution: "unresolved" });
       expect(packet?.rpcName).toBeUndefined();
     });
 
@@ -644,7 +646,7 @@ describe("FishNet bundles and sessions", () => {
       // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(25321, 0, 30)),
+        tick(1, observersRpc(4801, 0, 30)),
         { reliable: true, connectionId: "hash-collision-genuine" },
       );
       expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });
@@ -774,33 +776,43 @@ describe("FishNet bundles and sessions", () => {
       expect(packet).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
     });
 
-    test("resolves real unbound-object damage and death traffic against the bundled map", () => {
-      // Captured from logs/sessions/20260802T174306207Z-64bc5a86, object 40982 at tick 280086: an
-      // ApplyDamage_C/Death_C pair on an object whose spawn was never seen. Both used to stay
+    /** HealthComponent's `Damage` struct, which is what tells ApplyDamage_C apart from Attack_C. */
+    function damageStruct(sourceId: string): Buffer {
+      return Buffer.concat([
+        packed(0), packed(1440), packed(0), packed(0), packed(1),      // Team, Value, Type, Hit, Hits
+        packed(Buffer.byteLength(sourceId)), Buffer.from(sourceId),     // DamageSourceId
+        packed(4802), Buffer.from([0, 0]),                              // AttackerId, IsClone, IsSummon
+        packed(0), packed(0), packed(1),                                // Element, WeaponType, Range
+      ]);
+    }
+
+    test("resolves damage and death on an unbound object against the bundled map", () => {
+      // An ApplyDamage_C/Death_C pair on an object whose spawn was never seen. Both used to stay
       // ambiguous, and every domain tracker then dropped them.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const context = { reliable: true, connectionId: "bundled-shape" };
-      const [damage] = decoder.decode(tick(280086, observersRpc(40982, 3, 0, Buffer.from(
-        "00d2b701020002104963655368617264a2830200000a031a239fefc2291310413cd58444e1fa03c39a9909418fbe8644",
-        "hex",
-      ))), context);
+      const struct = damageStruct("SyntheticBolt");
+      const vector3 = Buffer.concat([f32(1), f32(2), f32(3)]);
+
+      const [damage] = decoder.decode(
+        tick(1, observersRpc(4803, 3, 0, Buffer.concat([struct, vector3, vector3]))),
+        context,
+      );
       expect(damage).toMatchObject({ networkBehaviourType: "HealthComponent", rpcName: "ApplyDamage_C" });
 
-      const [death] = decoder.decode(tick(280086, observersRpc(40982, 3, 2, Buffer.from(
-        "00d2b701020002104963655368617264a2830200000a031a",
-        "hex",
-      ))), context);
+      const [death] = decoder.decode(tick(2, observersRpc(4803, 3, 2, struct)), context);
       expect(death).toMatchObject({ networkBehaviourType: "HealthComponent", rpcName: "Death_C" });
     });
 
-    test("leaves a real CalibrateSummons_T ambiguous - its array parameter is unevaluable", () => {
-      // Captured from logs/sessions/20260802T172530823Z-68270d94, object 15003 at tick 250978.
+    test("leaves CalibrateSummons_T ambiguous - its array parameter is unevaluable", () => {
       // Shape elimination cannot claim this one; FishNetCombatTracker recovers it instead.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
-      const [packet] = decoder.decode(tick(250978, targetRpc(15003, 6, 0, Buffer.from(
-        "0414536861646f775365616c010014536861646f775365616c0100",
-        "hex",
-      ))), { reliable: true, connectionId: "bundled-summons" });
+      const summons = Buffer.concat([
+        packed(2),
+        ...["SyntheticClone", "SyntheticClone"].map((id) =>
+          Buffer.concat([packed(Buffer.byteLength(id)), Buffer.from(id), Buffer.from([1, 0])])),
+      ]);
+      const [packet] = decoder.decode(tick(3, targetRpc(4804, 6, 0, summons)), { reliable: true, connectionId: "bundled-summons" });
       expect(packet).toMatchObject({ rpcResolution: "ambiguous" });
       expect(packet?.rpcName).toBeUndefined();
     });

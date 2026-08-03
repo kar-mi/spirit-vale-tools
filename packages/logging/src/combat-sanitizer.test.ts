@@ -19,6 +19,20 @@ describe("combat log sanitizer", () => {
     expect(value).toEqual({ kind: "status", tick: 1, actorId: 2, statusId: "Bleed", level: 3, action: "applied" });
   });
 
+  test("keeps the feed name and server timer an observer status needs to replay", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "status", rpc: "ApplyEffectDisplays_O", tick: 1, actorId: 2, statusId: "Bleed",
+      action: "applied", remainingSeconds: 12.5, stacks: 3,
+      fields: { statusId: "Bleed" }, payloadBytes: 4,
+    });
+    // Both are protocol values, not user data. Without them a replayed status has no expiry and no
+    // way to tell which feed produced it.
+    expect(value).toEqual({
+      kind: "status", rpc: "ApplyEffectDisplays_O", tick: 1, actorId: 2, statusId: "Bleed",
+      action: "applied", remainingSeconds: 12.5, stacks: 3,
+    });
+  });
+
   test("keeps summon stack fields", () => {
     const value = sanitizeCombatData("combat.event", {
       kind: "summon", tick: 1, actorId: 2, skillId: "FictionalSummon", stacks: 3,

@@ -281,8 +281,9 @@ describe("shared JSON logger", () => {
   });
 
   test("accepts an outputPaths override with no directory component", async () => {
-    // `--output abtest.jsonl` makes path.dirname() return ".", and Bun on Windows rejects
-    // mkdir(".", { recursive: true }) with EEXIST despite the flag - "./" fails as ENOENT.
+    // An output path with no directory component makes path.dirname() return ".", and Bun on
+    // Windows rejects mkdir(".", { recursive: true }) with EEXIST despite the flag - "./" fails
+    // as ENOENT.
     const root = `${import.meta.dir}/../../../.local/logger-test-${crypto.randomUUID()}`;
     await mkdir(root, { recursive: true });
     const previousCwd = process.cwd();

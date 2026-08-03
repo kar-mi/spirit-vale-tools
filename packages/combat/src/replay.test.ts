@@ -68,6 +68,33 @@ describe("loadDpsReplay", () => {
       await file.delete();
     }
   });
+
+  test("keeps observer status events, which carry a timer instead of a level", async () => {
+    const basePath = `${import.meta.dir}/../../../.local/replay-test-${crypto.randomUUID()}`;
+    const file = Bun.file(`${basePath}.jsonl`);
+    const records = [
+      logRecord(1, "combat.event", combatDamage(300, 101, 120)),
+      // The observer feed reports remaining time and stacks but never a level; demanding one here
+      // used to discard the whole feed on replay.
+      logRecord(2, "combat.event", {
+        kind: "status", rpc: "ApplyEffectDisplays_O", tick: 301, actorId: 101,
+        statusId: "FictionalBuff", action: "applied", remainingSeconds: 12.5, stacks: 3,
+      }),
+      // A non-numeric timer is still malformed.
+      logRecord(3, "combat.event", {
+        kind: "status", rpc: "ApplyEffectDisplays_O", tick: 302, actorId: 101,
+        statusId: "FictionalBuff", action: "applied", remainingSeconds: "soon",
+      }),
+    ];
+    await Bun.write(file, records.map((record) => JSON.stringify(record)).join("\n"));
+    try {
+      const result = await loadDpsReplay(file.name!);
+      expect(result.invalidLines).toBe(1);
+      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+    } finally {
+      await file.delete();
+    }
+  });
 });
 
 function combatStatus(
