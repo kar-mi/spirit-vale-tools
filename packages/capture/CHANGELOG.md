@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.2.0
+
+### Minor Changes
+
+- f343310: Improve FishNet packet recovery across reauthentication and unresolved traffic, add observer status, summon, and full-heal combat handling, and make JSONL output paths reliable on Windows.
+
 ## 1.1.0
 
 ### Minor Changes

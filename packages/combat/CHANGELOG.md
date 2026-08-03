@@ -1,5 +1,17 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 1.4.0
+
+### Minor Changes
+
+- f343310: Improve FishNet packet recovery across reauthentication and unresolved traffic, add observer status, summon, and full-heal combat handling, and make JSONL output paths reliable on Windows.
+
+### Patch Changes
+
+- Updated dependencies [f343310]
+  - @kar-mi/spirit-vale-tools-capture@1.2.0
+  - @kar-mi/spirit-vale-tools-logging@0.4.1
+
 ## 1.3.0
 
 ### Minor Changes
