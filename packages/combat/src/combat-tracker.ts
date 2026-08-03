@@ -163,7 +163,7 @@ export interface FishNetCombatDeathEvent {
 
 export interface FishNetCombatStatusEvent {
   kind: "status";
-  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O";
+  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O" | "ApplySkillDisplay_O" | "RemoveSkillDisplay_O";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
@@ -283,7 +283,7 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
   3: "blocked",
   4: "dodged",
 };
-const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
+const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 /**
  * Upper bound on a payload `recoverSummons` will even attempt. A calibration is 13 bytes per summon
  * and no build fields more than a handful, so this only exists to keep the heuristic away from the
@@ -392,6 +392,12 @@ export class FishNetCombatTracker {
       events.push(...this.consumeEffectDisplays(packet));
       return events;
     }
+    if ((packet.rpcName === "ApplySkillDisplay_O" || packet.rpcName === "RemoveSkillDisplay_O")
+      && matchesBehaviour(packet, "StatusComponent")) {
+      const skillDisplay = this.consumeSkillDisplay(packet);
+      if (skillDisplay) events.push(skillDisplay);
+      return events;
+    }
     if (packet.rpcName === "FullHeal_C" && matchesBehaviour(packet, "PlayerController")) {
       // Declares no arguments, so anything on the wire means the hash was misread - the decoder
       // refuses those, and this is a second belt for a packet arriving pre-resolved.
@@ -484,6 +490,34 @@ export class FishNetCombatTracker {
   }
 
   /**
+   * Turns the skill-icon display feed into status events.
+   *
+   * `ApplySkillDisplay_O`/`RemoveSkillDisplay_O` announce a *skill* shown on an actor - stances and
+   * auras such as `SilentEdge` that the effect feed does not report. Ids do overlap it in places
+   * (`FlowState`, `AngelicBlessing` appear on both), and this feed carries no timing at all, so it
+   * must never overwrite an expiry the effect feed established. `consumeStatus` enforces that by
+   * keeping a known expiry when an event brings none.
+   */
+  private consumeSkillDisplay(packet: DecodedFishNetPacket): FishNetCombatStatusEvent | undefined {
+    const statusId = stringField(packet, "id");
+    if (!statusId) return undefined;
+    const actorId = packet.objectId!;
+    const level = numberField(packet, "lv");
+    return {
+      kind: "status",
+      rpc: packet.rpcName as "ApplySkillDisplay_O" | "RemoveSkillDisplay_O",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: decodedFieldRecord(packet),
+      actorId,
+      statusId,
+      action: packet.rpcName === "ApplySkillDisplay_O" ? "applied" : "removed",
+      ...(level === undefined ? {} : { level }),
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    };
+  }
+
+  /**
    * Last-resort recovery for a `CalibrateSummons_T` the capture layer could not name. Two paths lose
    * it. An rpcLink whose registration never arrived carries no object id, no hash and no name at all
    * - links are only ever learned from an `objectSpawn`, so if the player object's spawn is missed on
@@ -564,8 +598,9 @@ export class FishNetCombatTracker {
     const actorId = packet.objectId!;
     const rpcName = packet.rpcName;
     if (!rpcName) return undefined;
-    if (rpcName === "CastBegin_C" || rpcName === "AutoCast_C") {
-      const sourceId = stringField(packet, "dto.Id");
+    if (rpcName === "CastBegin_C" || rpcName === "AutoCast_C" || rpcName === "ToggleBegin_C") {
+      // A toggle names its skill in a bare `id`; a cast carries the whole SkillStateDto.
+      const sourceId = rpcName === "ToggleBegin_C" ? stringField(packet, "id") : stringField(packet, "dto.Id");
       if (!sourceId) return undefined;
       const activation = this.createActivation(actorId, "skill", packet.tick, sourceId, false);
       activation.targetId = numberField(packet, "targetId");

@@ -575,6 +575,57 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
+  describe("decoding parameters the scraper left uncoded", () => {
+    test("falls back to the codec implied by a BCL type name", () => {
+      const map: FishNetRpcMap = {
+        buildFingerprint: "synthetic-fallback",
+        metadataVersion: 31,
+        behaviours: [{
+          typeName: "SyntheticToggles",
+          rpcs: [{
+            wireHash: 3,
+            packetKind: "serverRpc",
+            methodName: "SyntheticToggleBegin",
+            // No codec, exactly as the scraper emits for 130 string parameters. Without the
+            // fallback the decode stops here and every later field is lost with it.
+            parameters: [
+              { name: "id", typeName: "System.String" },
+              { name: "level", typeName: "System.Int32" },
+            ],
+          }],
+        }],
+      };
+      const decoder = new FishNetSessionDecoder(map);
+      const payload = Buffer.concat([packed(6), Buffer.from("Stance"), packed(4)]);
+      const [packet] = decoder.decode(
+        tick(1, fixedServerRpc(70, 1, 3, payload)),
+        { reliable: true, connectionId: "codec-fallback" },
+      );
+      expect(packet?.decodedFields).toEqual([
+        { name: "id", typeName: "System.String", codec: "stringUtf8Packed", value: "Stance" },
+        { name: "level", typeName: "System.Int32", codec: "packedInt32", value: 4 },
+      ]);
+    });
+
+    test("leaves a game struct unresolved rather than guessing", () => {
+      const map: FishNetRpcMap = {
+        buildFingerprint: "synthetic-opaque",
+        metadataVersion: 31,
+        behaviours: [{
+          typeName: "SyntheticOpaque",
+          rpcs: [{ wireHash: 3, packetKind: "serverRpc", methodName: "SyntheticOpaqueCall", parameters: [{ name: "data", typeName: "SomeGameStruct" }] }],
+        }],
+      };
+      const decoder = new FishNetSessionDecoder(map);
+      const [packet] = decoder.decode(
+        tick(1, fixedServerRpc(71, 1, 3, Buffer.from("aabb", "hex"))),
+        { reliable: true, connectionId: "opaque" },
+      );
+      expect(packet?.decodedFields).toBeUndefined();
+      expect(packet?.undecodedPayload).toEqual(Buffer.from("aabb", "hex"));
+    });
+  });
+
   describe("refusing a match the payload contradicts", () => {
     test("does not claim a parameterless method for a packet carrying bytes", () => {
       // Captured from logs/abtest_players.jsonl, object 25321. The real RPC is 16-bit hash 26142;

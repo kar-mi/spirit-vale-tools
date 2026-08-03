@@ -196,6 +196,48 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume({ ...twoClones, tick: 3 })).toEqual([]);
   });
 
+  describe("toggled skills", () => {
+    test("emits an activation naming the toggled skill", () => {
+      const tracker = new FishNetCombatTracker();
+      // A toggle names its skill in a bare `id`, not in the SkillStateDto a cast carries.
+      const events = tracker.consume(packet(1, 50, "SkillsComponent", "ToggleBegin_C", [field("id", "SilentEdge")]));
+      expect(events).toEqual([
+        expect.objectContaining({ kind: "activation", rpc: "ToggleBegin_C", actorId: 50, sourceId: "SilentEdge", phase: "begin" }),
+      ]);
+    });
+
+    test("ignores a toggle whose skill id did not decode", () => {
+      const tracker = new FishNetCombatTracker();
+      expect(tracker.consume(packet(1, 50, "SkillsComponent", "ToggleBegin_C"))).toEqual([]);
+    });
+  });
+
+  describe("skill display feed", () => {
+    test("maps applies and removes onto status events", () => {
+      const tracker = new FishNetCombatTracker();
+      expect(tracker.consume(packet(1, 60, "StatusComponent", "ApplySkillDisplay_O", [
+        field("id", "SilentEdge"),
+        field("lv", 3),
+      ]))).toEqual([
+        expect.objectContaining({ kind: "status", rpc: "ApplySkillDisplay_O", actorId: 60, statusId: "SilentEdge", level: 3, action: "applied" }),
+      ]);
+      expect(tracker.consume(packet(2, 60, "StatusComponent", "RemoveSkillDisplay_O", [field("id", "SilentEdge")]))).toEqual([
+        expect.objectContaining({ kind: "status", rpc: "RemoveSkillDisplay_O", statusId: "SilentEdge", action: "removed" }),
+      ]);
+    });
+
+    test("carries no timing, so no remainingSeconds is invented", () => {
+      const tracker = new FishNetCombatTracker();
+      const [event] = tracker.consume(packet(1, 60, "StatusComponent", "ApplySkillDisplay_O", [field("id", "FlowState")]));
+      expect(event).not.toHaveProperty("remainingSeconds");
+    });
+
+    test("skips an entry whose id did not decode", () => {
+      const tracker = new FishNetCombatTracker();
+      expect(tracker.consume(packet(1, 60, "StatusComponent", "ApplySkillDisplay_O"))).toEqual([]);
+    });
+  });
+
   describe("full heals", () => {
     test("emits a fullHeal for an empty FullHeal_C", () => {
       const tracker = new FishNetCombatTracker();

@@ -40,6 +40,12 @@ interface TrackedStatus {
   stacks?: number;
 }
 
+/**
+ * Feeds that repeat while a status is merely still active, rather than firing once when it starts.
+ * Their repeats must not restart `appliedAtMs`, or it would creep forward for the whole duration.
+ */
+const REFRESHING_FEEDS = new Set<FishNetCombatStatusEvent["rpc"]>(["ApplyEffectDisplays_O", "ApplySkillDisplay_O"]);
+
 /** Tracks per-actor active buffs/debuffs from FishNet status apply/remove events. */
 export class FishNetStatusTracker {
   private readonly directory: FishNetStatusDirectory;
@@ -119,12 +125,12 @@ export class FishNetStatusTracker {
     // The display feed reports no level, so keep whatever the owner-only feed last established
     // rather than resetting to 1 and mis-deriving every level-scaled duration from then on.
     const level = event.level ?? previous?.level ?? 1;
-    const expiresAtMs = this.resolveExpiry(event, level, observedAtMs);
+    const expiresAtMs = this.resolveExpiry(event, level, observedAtMs, previous);
     statuses.set(event.statusId, {
       level,
       // The display feed repeats while a status is merely still active, so treating every packet as
       // a fresh application would make "applied at" drift forward for the whole duration.
-      appliedAtMs: event.rpc === "ApplyEffectDisplays_O" ? previous?.appliedAtMs ?? observedAtMs : observedAtMs,
+      appliedAtMs: REFRESHING_FEEDS.has(event.rpc) ? previous?.appliedAtMs ?? observedAtMs : observedAtMs,
       ...(expiresAtMs === undefined ? {} : { expiresAtMs }),
       ...(event.stacks === undefined ? {} : { stacks: event.stacks }),
     });
@@ -145,9 +151,14 @@ export class FishNetStatusTracker {
     event: FishNetCombatStatusEvent,
     level: number,
     observedAtMs: number,
+    previous: TrackedStatus | undefined,
   ): number | undefined {
     if (event.remainingSeconds !== undefined) return observedAtMs + event.remainingSeconds * 1_000;
     if (event.rpc === "ApplyEffectDisplays_O") return undefined;
+    // The skill-icon feed carries no timing whatsoever, so it can only ever confirm that something
+    // is still on. Letting it answer here would erase a countdown the effect feed already reported
+    // for the same id - they overlap on statuses like FlowState.
+    if (event.rpc === "ApplySkillDisplay_O") return previous?.expiresAtMs;
     const durationSeconds = statusDurationSeconds(this.directory.resolve(event.statusId), level);
     return durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
   }

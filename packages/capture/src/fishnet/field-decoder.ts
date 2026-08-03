@@ -15,7 +15,7 @@ export function applyDecodedFields(
 ): void {
   if (!parameters || parameters.length === 0) return;
   const fields: FishNetDecodedField[] = [];
-  const decoded = decodeParameters(packet.payload, startOffset, parameters, "", fields, declaredCodec);
+  const decoded = decodeParameters(packet.payload, startOffset, parameters, "", fields);
   if (fields.length > 0) packet.decodedFields = fields;
   if (decoded.offset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(decoded.offset);
 }
@@ -38,11 +38,6 @@ export interface FieldDecodeFit {
  * `undecodedPayload` - which is right for display but useless for telling two candidate signatures
  * apart, so shape-based elimination needs the consumed length and the undecodable flag instead.
  *
- * Unlike `applyDecodedFields` this also falls back to the codec implied by a parameter's BCL type
- * name when the map assigned none. That gap is common - 130 `System.String` parameters carry no
- * codec - and treating those signatures as unevaluable would block elimination far more often than
- * the ambiguity it is meant to resolve. The fallback stays scoped to this fit check so it cannot
- * change which fields get attached to a decoded packet.
  */
 export function tryDecodeFields(
   payload: Buffer,
@@ -53,7 +48,7 @@ export function tryDecodeFields(
     return { consumed: startOffset, complete: true, undecodable: false };
   }
   if (!isDecodable(parameters)) return { consumed: startOffset, complete: false, undecodable: true };
-  const decoded = decodeParameters(payload, startOffset, parameters, "", [], inferredCodec);
+  const decoded = decodeParameters(payload, startOffset, parameters, "", []);
   return { consumed: decoded.offset, complete: decoded.complete, undecodable: false };
 }
 
@@ -65,14 +60,13 @@ function isDecodable(parameters: readonly FishNetRpcParameter[]): boolean {
   });
 }
 
-type CodecResolver = (parameter: FishNetRpcParameter) => FishNetWireCodec | undefined;
-
-const declaredCodec: CodecResolver = (parameter) => parameter.codec;
-
 /**
- * Wire codecs for the BCL types the map leaves uncoded. Deliberately limited to types whose
- * encoding is unambiguous - game structs, enums and arrays stay unresolved so a caller can tell
- * "does not match" apart from "cannot be checked".
+ * Wire codecs for the BCL types the map leaves uncoded. The scraper records a parameter's type name
+ * even when it assigns no codec, and 130 `System.String` parameters arrive that way - without this
+ * table a single uncoded parameter stops the decode dead and every field after it is lost too.
+ *
+ * Deliberately limited to types whose encoding is unambiguous: game structs, enums and arrays stay
+ * unresolved so a caller can still tell "does not match" apart from "cannot be checked".
  */
 const PRIMITIVE_CODECS: Readonly<Record<string, FishNetWireCodec>> = {
   "System.Boolean": "boolean",
@@ -89,9 +83,9 @@ const PRIMITIVE_CODECS: Readonly<Record<string, FishNetWireCodec>> = {
   "UnityEngine.Quaternion": "quaternion",
 };
 
-const inferredCodec: CodecResolver = (parameter) => {
+function inferredCodec(parameter: FishNetRpcParameter): FishNetWireCodec | undefined {
   return parameter.codec ?? (parameter.typeName === undefined ? undefined : PRIMITIVE_CODECS[parameter.typeName]);
-};
+}
 
 function decodeParameters(
   buffer: Buffer,
@@ -99,12 +93,11 @@ function decodeParameters(
   parameters: readonly FishNetRpcParameter[],
   prefix: string,
   fields: FishNetDecodedField[],
-  resolveCodec: CodecResolver,
 ): { offset: number; complete: boolean } {
   let offset = start;
   for (const parameter of parameters) {
     const name = prefix.length === 0 ? parameter.name : `${prefix}.${parameter.name}`;
-    const codec = resolveCodec(parameter);
+    const codec = inferredCodec(parameter);
     if (codec) {
       try {
         const decoded = decodeField(buffer, offset, codec);
@@ -116,7 +109,7 @@ function decodeParameters(
       continue;
     }
     if (!parameter.fields || parameter.fields.length === 0) return { offset, complete: false };
-    const nested = decodeParameters(buffer, offset, parameter.fields, name, fields, resolveCodec);
+    const nested = decodeParameters(buffer, offset, parameter.fields, name, fields);
     offset = nested.offset;
     if (!nested.complete) return { offset, complete: false };
   }

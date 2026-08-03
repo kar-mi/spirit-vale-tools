@@ -183,6 +183,24 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
     expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ statusId: "Burn", stacks: 72 });
   });
 
+  test("the skill-icon feed never erases a countdown the effect feed reported", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 1_000);
+    // Both feeds report some ids (FlowState, AngelicBlessing in real captures). The icon feed knows
+    // only that something is on, so answering "no expiry" here would silently make a timed buff
+    // permanent.
+    tracker.consumeStatus(display({ statusId: "Burn", rpc: "ApplySkillDisplay_O", level: 2 }), 2_000);
+    const [status] = tracker.getActiveStatuses(1, 2_000);
+    expect(status).toMatchObject({ level: 2, remainingMs: 29_000 });
+  });
+
+  test("a repeated skill-icon apply does not restart the timer", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", rpc: "ApplySkillDisplay_O" }), 1_000);
+    tracker.consumeStatus(display({ statusId: "Burn", rpc: "ApplySkillDisplay_O" }), 4_000);
+    expect(tracker.getActiveStatuses(1, 4_000)[0]).toMatchObject({ appliedAtMs: 1_000 });
+  });
+
   test("removes a status the feed lists as removed", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ remainingSeconds: 30 }), 1_000);
