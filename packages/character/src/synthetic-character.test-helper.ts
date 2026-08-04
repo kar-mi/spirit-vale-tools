@@ -13,6 +13,10 @@ export interface SyntheticCharacterOptions {
   loadouts?: Array<Array<{ slot: number; itemId: string }>>;
   /** Equipped grimoires in wire order; `null` writes an empty slot. */
   grimoires?: Array<string | null>;
+  /** `SkillSystemData.Skills` — the skill-tree allocation. */
+  skills?: Array<{ id: string; level: number }>;
+  /** `SkillSystemData.Assigned` — the action bar. Must never reach `snapshot.skills`. */
+  assigned?: Array<{ id: string; level: number }>;
 }
 
 export function syntheticCharacter(
@@ -27,6 +31,8 @@ export function syntheticCharacter(
     cards = ["Example Card"],
     loadouts = [[], [], []],
     grimoires = [],
+    skills = [{ id: "Example Skill", level: 3 }],
+    assigned = [],
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
@@ -66,11 +72,11 @@ export function syntheticCharacter(
     string(out, "example-artifact-instance"); packed(out, 3); string(out, "Example Rune"); bool(out, false);
   });
   if (!includeHistory) return Buffer.from(out);
-  bool(out, false);
-  list(out, [undefined], () => { bool(out, false); string(out, "Example Skill"); packed(out, 3); });
-  list(out, [], () => undefined);
-  bool(out, true);
-  list(out, [], () => undefined); // Assigned skills.
+  bool(out, false); // SkillSystemData.
+  list(out, skills, (value) => { bool(out, false); string(out, value.id); packed(out, value.level); }); // Skills.
+  list(out, assigned, (value) => { bool(out, false); string(out, value.id); packed(out, value.level); }); // Assigned.
+  bool(out, true); // SkillCopy.
+  list(out, [], () => undefined); // Reanimations.
   list(out, grimoires, (value) => grimoire(out, value)); // Grimoires.
   bool(out, false); // InventoryData.
   dictionary(out, "fictional-bag-equipment", () => equipment(out, "Fictional Bag Sword"));

@@ -24,7 +24,14 @@ export interface CharacterSnapshot {
   activeLoadout: "Normal" | "Secondary" | "Heavy";
   equipment: CharacterEquipment[];
   artifacts: CharacterArtifact[];
+  /** The skill-TREE allocation: what the player actually spent points on. */
   skills: CharacterSkill[];
+  /**
+   * The action bar (`SkillSystemData.Assigned`, 40 slots). These restate learned skills at levels
+   * that do not match the allocation, so they are reported separately and must never be merged
+   * into `skills` — doing so invents points the character never spent.
+   */
+  assignedSkills?: CharacterSkill[];
   /**
    * The three stored weapon loadouts (Normal, Secondary, Heavy) in wire order, when the payload
    * carried them. `equipment` stays the active set; this is additive and may be absent.

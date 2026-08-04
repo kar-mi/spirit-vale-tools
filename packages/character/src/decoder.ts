@@ -145,12 +145,13 @@ function readCharacterHistory(
   artifacts: readonly CharacterArtifact[],
 ): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & {
   skills: CharacterSkill[];
+  assignedSkills?: CharacterSkill[];
   grimoires?: CharacterEquipment[];
   currentWeight?: number;
 } {
   const equippedWeight = equipped.reduce((total, item) => total + equipmentWeight(item.itemId), 0) + artifacts.length * 10;
   try {
-    const skills = readSkillSystem(reader);
+    const { skills, assigned } = readSkillSystem(reader);
     // Equipped grimoires. Read positionally, then labelled by slot so filtering empties cannot
     // silently promote the second book into the first slot.
     const grimoires = reader.list(() => readEquipmentData(reader, -1))
@@ -179,29 +180,50 @@ function readCharacterHistory(
     const monsterKills = reader.packed();
     const bossKills = reader.packed();
     const deaths = reader.packed();
-    return { skills, grimoires, currentWeight: equippedWeight + inventoryWeight, playtimeSeconds, monsterKills, bossKills, deaths };
+    return {
+      skills,
+      ...(assigned.length ? { assignedSkills: assigned } : {}),
+      grimoires,
+      currentWeight: equippedWeight + inventoryWeight,
+      playtimeSeconds,
+      monsterKills,
+      bossKills,
+      deaths,
+    };
   } catch {
     // A partial callback may end after build data. The already-decoded snapshot remains useful.
     return { skills: [] };
   }
 }
 
-function readSkillSystem(reader: CharacterReader): CharacterSkill[] {
-  if (!reader.object()) return [];
-  const skills = [
-    ...reader.list(() => readSkill(reader)),
-    ...reader.list(() => readSkill(reader)),
-  ];
-  const selected = readSkill(reader);
-  if (selected) skills.push(selected);
-  reader.list(() => reader.string(256));
+/**
+ * `SkillSystemData { Skills, Assigned, SkillCopy, Reanimations }`.
+ *
+ * `Skills` is the skill-TREE allocation. `Assigned` is the 40-slot action bar, which restates
+ * skills at levels that do not match the allocation. Merging the two (as this did until the
+ * positional-fields change) inflates levels and invents skills the player never spent a point on:
+ * on a recorded level-121 job-70 Gunslinger the merge produced 146 points against a legal budget
+ * of 120 (50 base + 70 job), adding Force Shot, Piercing Shot and Sniper Shot at full level and
+ * doubling Panic Burst. They are kept apart, and only `SkillCopy` — which legitimately restates a
+ * learned skill — is folded into the allocation.
+ */
+function readSkillSystem(reader: CharacterReader): { skills: CharacterSkill[]; assigned: CharacterSkill[] } {
+  if (!reader.object()) return { skills: [], assigned: [] };
+  const allocated = reader.list(() => readSkill(reader));
+  const assigned = reader.list(() => readSkill(reader));
+  const copy = readSkill(reader);
+  if (copy) allocated.push(copy);
+  reader.list(() => reader.string(256)); // Reanimations.
   const unique = new Map<string, CharacterSkill>();
-  for (const skill of skills) {
+  for (const skill of allocated) {
     if (!skill) continue;
     const existing = unique.get(skill.id);
     if (!existing || skill.level > existing.level) unique.set(skill.id, skill);
   }
-  return [...unique.values()].sort((left, right) => left.displayName.localeCompare(right.displayName));
+  return {
+    skills: [...unique.values()].sort((left, right) => left.displayName.localeCompare(right.displayName)),
+    assigned: assigned.filter((skill): skill is CharacterSkill => skill !== undefined),
+  };
 }
 function readSkill(reader: CharacterReader): CharacterSkill | undefined {
   if (!reader.object()) return undefined;

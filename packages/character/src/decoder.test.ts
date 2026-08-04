@@ -119,4 +119,25 @@ describe("positional and chaos character fields", () => {
     expect(after.index).toBe(1);
     expect(after.qualifier).toBe("Fireball");
   });
+
+  test("keeps the action bar out of the skill-tree allocation", () => {
+    // Recorded characters carry Assigned entries that restate a learned skill at a different
+    // level, and entries for skills granted by grimoires rather than spent points. Merging them
+    // into the allocation inflates levels and invents skills.
+    const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", {
+      skills: [{ id: "PanicBurst", level: 5 }, { id: "AerialShot", level: 1 }],
+      assigned: [{ id: "PanicBurst", level: 10 }, { id: "SniperShot", level: 10 }],
+    }), true);
+
+    expect(decoded.snapshot.skills.map((skill) => [skill.id, skill.level])).toEqual([
+      ["AerialShot", 1], ["PanicBurst", 5],
+    ]);
+    expect(decoded.snapshot.assignedSkills?.map((skill) => [skill.id, skill.level])).toEqual([
+      ["PanicBurst", 10], ["SniperShot", 10],
+    ]);
+  });
+
+  test("omits the action bar when the character has assigned nothing", () => {
+    expect(decodeCharacterRpcPayload(syntheticCharacter(true), true).snapshot.assignedSkills).toBeUndefined();
+  });
 });
