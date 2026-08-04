@@ -61,7 +61,7 @@ describe("bundled FishNet maps", () => {
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.behaviours).toHaveLength(13);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(316);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(319);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -77,7 +77,7 @@ describe("bundled FishNet maps", () => {
   test("contains collision-free component layouts for verified instantiated prefabs", () => {
     const map = loadBundledFishNetRpcMap();
     const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
-    expect(map.prefabs).toHaveLength(4);
+    expect(map.prefabs).toHaveLength(2);
 
     const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
     expect(new Set(prefabKeys).size).toBe(prefabKeys.length);
@@ -92,9 +92,9 @@ describe("bundled FishNet maps", () => {
     const component = (prefabId: number, index: number) => map.prefabs
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
-    expect(component(1, 5)).toBe("StatusComponent");
-    expect(component(4, 5)).toBe("StatusComponent");
-    expect(component(5, 6)).toBe("StatusComponent");
+    expect(component(0, 5)).toBe("StatusComponent");
+    expect(component(4, 3)).toBe("HealthComponent");
+    expect(component(4, 4)).toBe("CombatComponent");
   });
 
   test("decodes the verified Damage writer layout from the committed map", () => {
@@ -163,6 +163,21 @@ describe("bundled FishNet maps", () => {
       { name: "attackTime", typeName: "System.Single", codec: "float32" },
       { name: "attackIndex", typeName: "System.Int32", codec: "packedInt32" },
     ]);
+  });
+
+  test("contains client-writer-only ServerRPC registrations", () => {
+    const map = loadBundledFishNetRpcMap();
+    const serverMethods = (typeName: string) => map.behaviours
+      .find((behaviour) => behaviour.typeName === typeName)?.rpcs
+      .filter((rpc) => rpc.packetKind === "serverRpc")
+      .map((rpc) => [rpc.wireHash, rpc.methodName]);
+    expect(serverMethods("FishNet.Component.Animating.NetworkAnimator")).toContainEqual([1, "ServerAnimatorUpdated"]);
+    expect(serverMethods("FishNet.Component.Ownership.PredictedOwner")).toContainEqual([0, "ServerTakeOwnership"]);
+    expect(serverMethods("FishNet.Component.Transforming.NetworkTransform")).toEqual(expect.arrayContaining([
+      [1, "ServerSetInterval"],
+      [5, "ServerUpdateTransform"],
+      [6, "ServerSetSynchronizedProperties"],
+    ]));
   });
 
   test("contains the mapped public player identity SyncType prefix", () => {

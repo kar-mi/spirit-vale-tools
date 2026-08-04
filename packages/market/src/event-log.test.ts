@@ -18,15 +18,19 @@ describe("market event log codec", () => {
       expiresAt: 4102444800n,
     };
     const stall = {
+      stallId: "stall-example",
       accountId: "seller-example",
       characterId: "character-example",
       mapId: "map-example",
-      stallIndex: 3,
+      slotId: "slot-example",
       expiresAt: 4102444800n,
+      hiredAt: 4102441200n,
       shopName: "Example Shop",
       characterName: "Merchant Example",
       archetype: 1,
-      rotationY: 1.5,
+      status: 1,
+      version: 2n,
+      visualSnapshotJson: "{\"Archetype\":1}",
     };
     const events: FishNetMarketEvent[] = [
       { kind: "catalog", tick: 1, items: [{ sellerId: "seller-example", searchText: "Example Sword", sellerName: "Merchant Example", listing }] },

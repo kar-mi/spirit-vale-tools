@@ -28,7 +28,7 @@ describe("market read model", () => {
     const initial = [listing("a", 10n), listing("b", 10n), listing("c", 9_007_199_254_740_993n, "seller-b", 3)];
     await writeFile(logPath, [
       record("market.lifecycle", { state: "started" }),
-      event({ kind: "stalls", tick: 1, stalls: [{ accountId: "seller-a", characterId: "character-a", mapId: "map-example", stallIndex: 1, expiresAt: 4_102_444_800n, shopName: "Example Shop", characterName: "Merchant A", archetype: 1, rotationY: 0 }] }),
+      event({ kind: "stalls", tick: 1, stalls: [{ stallId: "stall-a", accountId: "seller-a", characterId: "character-a", mapId: "map-example", slotId: "slot-a", expiresAt: 4_102_444_800n, hiredAt: 4_102_441_200n, shopName: "Example Shop", characterName: "Merchant A", archetype: 1, status: 1, version: 1n, visualSnapshotJson: "{\"Archetype\":1}" }] }),
       event({ kind: "catalog", tick: 2, items: initial.map((value) => ({ sellerId: value.sellerId, sellerName: value.sellerName, searchText: `Search ${value.id}`, listing: value })) }),
     ].join(""));
     const model = await openReadModel({ path: path.join(root, "model.sqlite"), domains: [createMarketDomain()] });

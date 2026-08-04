@@ -9,6 +9,7 @@ export type FishNetWireCodec =
   | "float32"
   | "float64"
   | "packedInt32"
+  | "packedInt64"
   | "packedUInt64"
   | "stringUtf8Packed"
   | "vector3IntPacked"

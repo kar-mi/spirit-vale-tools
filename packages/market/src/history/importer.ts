@@ -90,11 +90,11 @@ function writeListing(model: ReadModel, sessionId: string, listing: FishNetMarke
 }
 
 function writeStall(model: ReadModel, sessionId: string, stall: FishNetMarketStall): void {
-  if (stall.accountId === null) return;
+  if (stall.stallId === null) return;
   model.statement(`insert or replace into market_stalls
-    (session_id, account_id, character_id, map_id, stall_index, expires_at, shop_name, character_name, archetype, rotation_y, normalized_text)
-    values ($sessionId, $accountId, $characterId, $mapId, $stallIndex, $expiresAt, $shopName, $characterName, $archetype, $rotationY, $normalizedText)`)
-    .run({ sessionId, accountId: stall.accountId, characterId: stall.characterId, mapId: stall.mapId, stallIndex: stall.stallIndex, expiresAt: stall.expiresAt, shopName: stall.shopName, characterName: stall.characterName, archetype: stall.archetype, rotationY: stall.rotationY, normalizedText: normalize([stall.shopName, stall.characterName, stall.mapId]) });
+    (session_id, stall_id, account_id, character_id, map_id, slot_id, expires_at, hired_at, shop_name, character_name, archetype, status, version, visual_snapshot_json, normalized_text)
+    values ($sessionId, $stallId, $accountId, $characterId, $mapId, $slotId, $expiresAt, $hiredAt, $shopName, $characterName, $archetype, $status, $version, $visualSnapshotJson, $normalizedText)`)
+    .run({ sessionId, stallId: stall.stallId, accountId: stall.accountId, characterId: stall.characterId, mapId: stall.mapId, slotId: stall.slotId, expiresAt: stall.expiresAt, hiredAt: stall.hiredAt, shopName: stall.shopName, characterName: stall.characterName, archetype: stall.archetype, status: stall.status, version: stall.version, visualSnapshotJson: stall.visualSnapshotJson, normalizedText: normalize([stall.shopName, stall.characterName, stall.mapId, stall.slotId]) });
 }
 
 function ensureState(model: ReadModel, sessionId: string): void { model.statement("insert or ignore into market_session_state (session_id) values ($sessionId)").run({ sessionId }); }

@@ -753,7 +753,7 @@ describe("FishNet bundles and sessions", () => {
       // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 0, 30)),
+        tick(1, observersRpc(4801, 0, 29)),
         { reliable: true, connectionId: "hash-collision-genuine" },
       );
       expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });
@@ -911,6 +911,20 @@ describe("FishNet bundles and sessions", () => {
       expect(death).toMatchObject({ networkBehaviourType: "HealthComponent", rpcName: "Death_C" });
     });
 
+    test("uses the current monster prefab layout for component-three damage", () => {
+      const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+      const context = { reliable: true, connectionId: "current-monster-prefab" };
+      decoder.decode(tick(1, spawnWithoutLinks(4900, 4, 0)), context);
+      const struct = damageStruct("SyntheticStrike");
+      const vector3 = Buffer.concat([f32(1), f32(2), f32(3)]);
+      const [damage] = decoder.decode(
+        tick(2, observersRpc(4900, 3, 0, Buffer.concat([struct, vector3, vector3]))),
+        context,
+      );
+      expect(damage).toMatchObject({ networkBehaviourType: "HealthComponent", rpcName: "ApplyDamage_C" });
+      expect(damage?.rpcName).not.toBe("Attack_C");
+    });
+
     test("leaves CalibrateSummons_T ambiguous - its array parameter is unevaluable", () => {
       // Shape elimination cannot claim this one; FishNetCombatTracker recovers it instead.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
@@ -972,12 +986,8 @@ describe("FishNet bundles and sessions", () => {
       tick(33, fixedServerRpc(42, 0, 70, truncatedPayload)),
       { reliable: true, connectionId: "structured-truncated" },
     )[0];
-    expect(truncated?.decodedFields?.map(({ name }) => name)).toEqual([
-      "Inputs.Move",
-      "Inputs.Click",
-      "Inputs.ClickSkillIndex",
-    ]);
-    expect(truncated?.undecodedPayload).toEqual(Buffer.from([0x80, 0x80, 0x80, 0x80, 0x80, 0x80]));
+    expect(truncated).toMatchObject({ rpcResolution: "unresolved" });
+    expect(truncated?.decodedFields).toBeUndefined();
   });
 
   test("decodes a synthetic structured skill state and its trailing parameters", () => {

@@ -60,16 +60,15 @@ describe("FishNet market decoding", () => {
     expect(tracker.query({ offset: 1, limit: 1 })[0]?.id).toBe("listing-b");
   });
 
-  test("tracks account balance changes without guessing collection values", () => {
+  test("tracks overview balance changes", () => {
     const tracker = new FishNetMarketTracker();
-    const first = tracker.consume(packet("RequestAHAccount_T", account(2_500n)))[0];
-    tracker.consume(packet("VendingCollectResult_T", Buffer.from([1])));
-    const second = tracker.consume(packet("RequestAHAccount_T", account(1_250n)))[0];
+    const first = tracker.consume(packet("RequestVendingOverview_T", account(2_500n)))[0];
+    const second = tracker.consume(packet("RequestVendingOverview_T", account(1_250n)))[0];
 
     expect(first).toMatchObject({ kind: "account" });
-    expect(second).toMatchObject({ kind: "account", balanceDelta: -1_250n, collectedAmount: 1_250n });
+    expect(second).toMatchObject({ kind: "account", balanceDelta: -1_250n });
     expect(tracker.snapshot().lastBalanceDelta).toBe(-1_250n);
-    expect(tracker.snapshot().lastCollectedAmount).toBe(1_250n);
+    expect(tracker.snapshot().lastCollectedAmount).toBeUndefined();
   });
 
   test("decodes stall metadata and enriches catalog results", () => {
@@ -190,16 +189,23 @@ describe("FishNet market decoding", () => {
     ]);
   });
 
-  test("rejects truncated and trailing market payloads", () => {
-    const payload = list([catalogItem("Example", listing("listing-d", "item-d", 1, 5n, "Merchant Delta"))]);
-    expect(() => decodeFishNetMarketPacket(packet("RequestVendorItemList_T", payload.subarray(0, -1))))
+  test("rejects malformed market JSON", () => {
+    expect(() => decodeFishNetMarketPacket(packetJson("RequestVendorItemList_T", "[")))
       .toThrow(FishNetProtocolError);
-    expect(() => decodeFishNetMarketPacket(packet("RequestVendorItemList_T", Buffer.concat([payload, Buffer.from([0])]))))
-      .toThrow("left 1 undecoded bytes");
+    expect(() => decodeFishNetMarketPacket(packet("RequestVendorItemList_T", {})))
+      .toThrow("root is not an array");
   });
 });
 
-function packet(rpcName: string, payload: Buffer): DecodedFishNetPacket {
+function packet(rpcName: string, value: unknown): DecodedFishNetPacket {
+  return packetJson(rpcName, JSON.stringify(value));
+}
+
+function packetJson(rpcName: string, json: string): DecodedFishNetPacket {
+  const fieldName = rpcName === "RequestVendorItemList_T" || rpcName === "RequestVendingStallListings_T"
+    ? "listingsJson"
+    : rpcName === "RequestVendingOverview_T" ? "responseJson"
+      : rpcName === "LoadVendingStalls_T" ? "stallsJson" : "dataJson";
   return {
     tick: 42,
     packetId: 100,
@@ -207,17 +213,18 @@ function packet(rpcName: string, payload: Buffer): DecodedFishNetPacket {
     rpcName,
     rpcResolution: "verified",
     networkBehaviourType: "PlayerController",
-    raw: payload,
-    payload,
+    decodedFields: [{ name: fieldName, value: json, codec: "stringUtf8Packed" }],
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
   };
 }
 
-function account(balance: bigint): Buffer {
-  return reference(Buffer.concat([signed(balance), list([]), list([]), list([])]));
+function account(balance: bigint): unknown {
+  return { PendingCoins: balance.toString(), MailboxItems: [], Transactions: [], OwnListings: [] };
 }
 
-function catalogItem(searchText: string, value: Buffer): Buffer {
-  return Buffer.concat([string("seller-example"), string(searchText), string("Merchant Example"), value]);
+function catalogItem(searchText: string, value: Record<string, unknown>): Record<string, unknown> {
+  return { ...value, ItemDisplayName: searchText };
 }
 
 function listing(
@@ -228,19 +235,18 @@ function listing(
   sellerName: string,
   sellerId = "seller-example",
   json = "{}",
-): Buffer {
-  return reference(Buffer.concat([
-    string(id),
-    string(sellerId),
-    string(sellerName),
-    string(itemId),
-    signed(BigInt(itemType)),
-    signed(10n),
-    signed(2n),
-    signed(price),
-    string(json),
-    signed(4_102_444_800n),
-  ]));
+): Record<string, unknown> {
+  return {
+    ListingId: id,
+    SellerAccountId: sellerId,
+    SellerDisplayName: sellerName,
+    ItemDisplayName: itemId,
+    Item: { ItemId: itemId, Type: itemType, Quantity: 10, PayloadJson: json },
+    AvailableQuantity: 10,
+    SoldQuantity: 2,
+    UnitPrice: price.toString(),
+    ExpiresAt: "2100-01-01T00:00:00Z",
+  };
 }
 
 function gearJson(stats: Array<[number, number, string | null]>): string {
@@ -267,54 +273,23 @@ function parseStats(id: string, stats: Array<[number, number, string | null]>) {
   return tracker.query()[0]?.stats;
 }
 
-function stall(accountId: string, shopName: string, mapId: string): Buffer {
-  const appearance = reference(Buffer.concat(Array.from({ length: 10 }, () => signed(0n))));
-  const body = Buffer.concat([
-    string(accountId),
-    string("character-example"),
-    string(mapId),
-    signed(3n),
-    signed(4_102_444_800n),
-    string(shopName),
-    string("Merchant Example"),
-    signed(2n),
-    appearance,
-    Buffer.from([1]),
-    list([]),
-    list([]),
-    float32(90),
-  ]);
-  return reference(body);
+function stall(accountId: string, shopName: string, mapId: string): Record<string, unknown> {
+  return {
+    StallId: "stall-example",
+    AccountId: accountId,
+    CharacterId: "character-example",
+    MapId: mapId,
+    SlotId: "slot-example",
+    ShopName: shopName,
+    CharacterDisplayName: "Merchant Example",
+    VisualSnapshotJson: "{\"Archetype\":2}",
+    Status: 1,
+    Version: 1,
+    HiredAt: "2099-12-31T23:00:00Z",
+    ExpiresAt: "2100-01-01T00:00:00Z",
+  };
 }
 
-function list(values: Buffer[]): Buffer {
-  return Buffer.concat([signed(BigInt(values.length)), ...values]);
-}
-
-function reference(value: Buffer): Buffer {
-  return Buffer.concat([Buffer.from([0]), value]);
-}
-
-function string(value: string | null): Buffer {
-  if (value === null) return signed(-1n);
-  const bytes = Buffer.from(value, "utf8");
-  return Buffer.concat([signed(BigInt(bytes.length)), bytes]);
-}
-
-function signed(value: bigint): Buffer {
-  let unsigned = value >= 0n ? value << 1n : ((-value) << 1n) - 1n;
-  const bytes: number[] = [];
-  do {
-    let byte = Number(unsigned & 0x7fn);
-    unsigned >>= 7n;
-    if (unsigned !== 0n) byte |= 0x80;
-    bytes.push(byte);
-  } while (unsigned !== 0n);
-  return Buffer.from(bytes);
-}
-
-function float32(value: number): Buffer {
-  const result = Buffer.alloc(4);
-  result.writeFloatLE(value);
-  return result;
+function list<T>(values: T[]): T[] {
+  return values;
 }

@@ -1,7 +1,7 @@
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 export const MARKET_DOMAIN_NAME = "market";
-export const MARKET_DOMAIN_VERSION = 1;
+export const MARKET_DOMAIN_VERSION = 2;
 
 const SCHEMA = `
 create table if not exists market_listings (
@@ -23,10 +23,12 @@ create table if not exists market_listing_stats (
 create index if not exists market_stats_filter on market_listing_stats (session_id, stat_type, value, listing_key);
 
 create table if not exists market_stalls (
-  session_id text not null, account_id text not null, character_id text, map_id text, stall_index integer not null,
-  expires_at integer not null, shop_name text, character_name text, archetype integer not null, rotation_y real not null,
-  normalized_text text not null, primary key (session_id, account_id)
+  session_id text not null, stall_id text not null, account_id text, character_id text, map_id text, slot_id text,
+  expires_at integer not null, hired_at integer not null, shop_name text, character_name text, archetype integer not null,
+  status integer not null, version integer not null, visual_snapshot_json text,
+  normalized_text text not null, primary key (session_id, stall_id)
 );
+create index if not exists market_stalls_account on market_stalls (session_id, account_id);
 create index if not exists market_stalls_text on market_stalls (session_id, normalized_text);
 
 create table if not exists market_session_state (

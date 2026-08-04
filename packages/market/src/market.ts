@@ -1,5 +1,4 @@
 import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
-import { checkedEnd, readUnsignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { isRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { fishNetMarketStatName, resolveFishNetMarketStat } from "./market-stats.ts";
 import type { FishNetMarketStatName } from "./market-stats.ts";
@@ -53,15 +52,19 @@ export interface FishNetMarketAccount {
 }
 
 export interface FishNetMarketStall {
+  stallId: string | null;
   accountId: string | null;
   characterId: string | null;
   mapId: string | null;
-  stallIndex: number;
+  slotId: string | null;
   expiresAt: bigint;
+  hiredAt: bigint;
   shopName: string | null;
   characterName: string | null;
   archetype: number;
-  rotationY: number;
+  status: number;
+  version: bigint;
+  visualSnapshotJson: string | null;
 }
 
 export type FishNetMarketEvent =
@@ -129,35 +132,136 @@ export interface FishNetMarketTrackerOptions {
 }
 
 export function decodeFishNetMarketPacket(packet: DecodedFishNetPacket): FishNetMarketEvent[] {
-  const reader = new MarketReader(packet.payload);
-  let event: FishNetMarketEvent | undefined;
   switch (packet.rpcName) {
-    case "RequestVendorItemList_T":
-      event = { kind: "catalog", tick: packet.tick, items: reader.list(() => reader.catalogItem()) };
-      break;
-    case "RequestAHAccount_T":
-      event = { kind: "account", tick: packet.tick, account: reader.reference(() => reader.account()) };
-      break;
+    case "RequestVendorItemList_T": {
+      const listings = parseJsonArray(decodedString(packet, "listingsJson"), parseListingDto);
+      return [{ kind: "catalog", tick: packet.tick, items: listings.map((listing) => ({
+        sellerId: listing.sellerId,
+        searchText: listing.searchText,
+        sellerName: listing.sellerName,
+        listing,
+      })) }];
+    }
+    case "RequestVendingOverview_T":
+      return [{ kind: "account", tick: packet.tick, account: parseOverview(decodedJson(packet, "responseJson")) }];
     case "LoadVendingStalls_T":
-      event = { kind: "stalls", tick: packet.tick, stalls: reader.list(() => reader.stall()) };
-      break;
+      return [{ kind: "stalls", tick: packet.tick, stalls: parseJsonArray(decodedString(packet, "stallsJson"), parseStallDto) }];
     case "SpawnVendingStall_C":
-      event = { kind: "stallUpsert", tick: packet.tick, stall: reader.reference(() => reader.stallBody()) };
-      break;
+    case "SpawnVendingStall_T":
+      return [{ kind: "stallUpsert", tick: packet.tick, stall: parseStallDto(decodedJson(packet, "dataJson")) }];
     case "DespawnVendingStall_C":
-      event = { kind: "stallRemove", tick: packet.tick, accountId: reader.string() };
-      break;
+    case "DespawnVendingStall_T":
+      return [{ kind: "stallRemove", tick: packet.tick, accountId: decodedString(packet, "accountId") }];
     case "RequestVendingStallListings_T":
-      event = { kind: "listings", tick: packet.tick, listings: reader.list(() => reader.listing()) };
-      break;
-    case "VendingCollectResult_T":
-      event = { kind: "collectResult", tick: packet.tick, success: reader.boolean() };
-      break;
+      return [{ kind: "listings", tick: packet.tick, listings: parseJsonArray(decodedString(packet, "listingsJson"), parseListingDto) }];
     default:
       return [];
   }
-  reader.finish(packet.rpcName);
-  return [event];
+}
+function decodedString(packet: DecodedFishNetPacket, name: string): string {
+  const value = packet.decodedFields?.find((field) => field.name === name)?.value;
+  if (typeof value !== "string") throw new FishNetProtocolError(`${packet.rpcName ?? "market RPC"} has no decoded ${name}`);
+  return value;
+}
+
+function decodedJson(packet: DecodedFishNetPacket, name: string): unknown {
+  try { return JSON.parse(decodedString(packet, name)) as unknown; }
+  catch { throw new FishNetProtocolError(`${packet.rpcName ?? "market RPC"} contains invalid JSON`); }
+}
+
+function parseJsonArray<T>(json: string, parse: (value: unknown) => T): T[] {
+  let value: unknown;
+  try { value = JSON.parse(json) as unknown; }
+  catch { throw new FishNetProtocolError("market RPC contains invalid JSON"); }
+  if (!Array.isArray(value)) throw new FishNetProtocolError("market JSON root is not an array");
+  return value.map(parse);
+}
+
+function parseListingDto(value: unknown): FishNetMarketListing & { searchText: string | null } {
+  if (!isRecord(value) || !isRecord(value["Item"])) throw new FishNetProtocolError("invalid vending listing JSON");
+  const item = value["Item"];
+  return {
+    id: nullableJsonString(value["ListingId"]),
+    sellerId: nullableJsonString(value["SellerAccountId"]),
+    sellerName: nullableJsonString(value["SellerDisplayName"]),
+    itemId: nullableJsonString(item["ItemId"]),
+    itemType: jsonInteger(item["Type"], "listing item type"),
+    count: jsonInteger(value["AvailableQuantity"], "available quantity"),
+    countTraded: jsonInteger(value["SoldQuantity"], "sold quantity"),
+    price: jsonBigInt(value["UnitPrice"], "unit price"),
+    json: nullableJsonString(item["PayloadJson"]),
+    expiresAt: jsonTimestamp(value["ExpiresAt"], "listing expiry"),
+    searchText: nullableJsonString(value["ItemDisplayName"]),
+  };
+}
+
+function parseOverview(value: unknown): FishNetMarketAccount {
+  if (!isRecord(value)) throw new FishNetProtocolError("invalid vending overview JSON");
+  return {
+    balance: jsonBigInt(value["PendingCoins"], "pending coins"),
+    collectables: jsonArray(value["MailboxItems"], parseMailboxDto),
+    saleHistory: jsonArray(value["Transactions"], parseTransactionDto),
+    ownListings: jsonArray(value["OwnListings"], parseListingDto),
+  };
+}
+
+function parseMailboxDto(value: unknown): FishNetMarketCollectable {
+  if (!isRecord(value) || !isRecord(value["Item"])) throw new FishNetProtocolError("invalid vending mailbox JSON");
+  const item = value["Item"];
+  return { id: nullableJsonString(value["EntryId"]), itemType: jsonInteger(item["Type"], "mailbox item type"), count: jsonInteger(item["Quantity"], "mailbox quantity"), json: nullableJsonString(item["PayloadJson"]) };
+}
+
+function parseTransactionDto(value: unknown): FishNetMarketSale {
+  if (!isRecord(value)) throw new FishNetProtocolError("invalid vending transaction JSON");
+  const itemDisplayName = nullableJsonString(value["ItemDisplayName"]);
+  return { itemDisplayName, itemName: itemDisplayName, count: jsonInteger(value["Quantity"], "transaction quantity"), price: jsonBigInt(value["SellerProceeds"], "seller proceeds"), buyerName: nullableJsonString(value["BuyerDisplayName"]), at: jsonTimestamp(value["CompletedAt"], "transaction time") };
+}
+
+function parseStallDto(value: unknown): FishNetMarketStall {
+  if (!isRecord(value)) throw new FishNetProtocolError("invalid vending stall JSON");
+  const visualSnapshotJson = nullableJsonString(value["VisualSnapshotJson"]);
+  let archetype = 0;
+  if (visualSnapshotJson !== null) {
+    try { const visual: unknown = JSON.parse(visualSnapshotJson); if (isRecord(visual) && Number.isSafeInteger(visual["Archetype"])) archetype = visual["Archetype"] as number; } catch { /* Snapshot is retained even when its optional display metadata is malformed. */ }
+  }
+  return {
+    stallId: nullableJsonString(value["StallId"]), accountId: nullableJsonString(value["AccountId"]),
+    characterId: nullableJsonString(value["CharacterId"]), mapId: nullableJsonString(value["MapId"]),
+    slotId: nullableJsonString(value["SlotId"]), expiresAt: jsonTimestamp(value["ExpiresAt"], "stall expiry"),
+    hiredAt: jsonTimestamp(value["HiredAt"], "stall hire time"), shopName: nullableJsonString(value["ShopName"]),
+    characterName: nullableJsonString(value["CharacterDisplayName"]), archetype,
+    status: jsonInteger(value["Status"], "stall status"), version: jsonBigInt(value["Version"], "stall version"),
+    visualSnapshotJson,
+  };
+}
+
+function jsonArray<T>(value: unknown, parse: (entry: unknown) => T): T[] | null {
+  if (value === null) return null;
+  if (!Array.isArray(value)) throw new FishNetProtocolError("invalid vending JSON array");
+  return value.map(parse);
+}
+
+function nullableJsonString(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "string") throw new FishNetProtocolError("invalid vending JSON string");
+  return value;
+}
+
+function jsonInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value)) throw new FishNetProtocolError(`invalid ${label}`);
+  return value as number;
+}
+
+function jsonBigInt(value: unknown, label: string): bigint {
+  if ((typeof value !== "number" || !Number.isSafeInteger(value)) && (typeof value !== "string" || !/^-?\d+$/.test(value))) throw new FishNetProtocolError(`invalid ${label}`);
+  return BigInt(value);
+}
+
+function jsonTimestamp(value: unknown, label: string): bigint {
+  if (typeof value !== "string") throw new FishNetProtocolError(`invalid ${label}`);
+  const milliseconds = Date.parse(value);
+  if (!Number.isFinite(milliseconds)) throw new FishNetProtocolError(`invalid ${label}`);
+  return BigInt(Math.trunc(milliseconds / 1000));
 }
 
 export class FishNetMarketTracker {
@@ -409,206 +513,4 @@ function normalizeStatFilters(
     byType.set(resolved.type, { minValue, maxValue });
   }
   return [...byType].map(([type, bounds]) => ({ type, ...bounds }));
-}
-
-class MarketReader {
-  private offset = 0;
-
-  constructor(private readonly buffer: Buffer) {}
-
-  finish(name: string | undefined): void {
-    if (this.offset !== this.buffer.length) {
-      throw new FishNetProtocolError(
-        `${name ?? "market RPC"} left ${this.buffer.length - this.offset} undecoded bytes at byte ${this.offset}`,
-      );
-    }
-  }
-
-  boolean(): boolean {
-    requireBytes(this.buffer, this.offset, 1, "market boolean");
-    const value = this.buffer[this.offset] ?? 0;
-    this.offset += 1;
-    if (value !== 0 && value !== 1) throw new FishNetProtocolError(`invalid market boolean ${value}`);
-    return value === 1;
-  }
-
-  int32(): number {
-    const value = this.signedPacked();
-    const number = Number(value);
-    if (!Number.isSafeInteger(number) || number < -0x8000_0000 || number > 0x7fff_ffff) {
-      throw new FishNetProtocolError("market int32 exceeds its wire range");
-    }
-    return number;
-  }
-
-  int64(): bigint {
-    return this.signedPacked();
-  }
-
-  float32(): number {
-    requireBytes(this.buffer, this.offset, 4, "market float32");
-    const value = this.buffer.readFloatLE(this.offset);
-    this.offset += 4;
-    return value;
-  }
-
-  string(): string | null {
-    const length = this.int32();
-    if (length === -1) return null;
-    if (length < -1) throw new FishNetProtocolError(`invalid market string length ${length}`);
-    const end = checkedEnd(this.buffer, this.offset, length);
-    const value = this.buffer.toString("utf8", this.offset, end);
-    this.offset = end;
-    return value;
-  }
-
-  reference<T>(read: () => T): T | null {
-    return this.boolean() ? null : read();
-  }
-
-  list<T>(read: () => T): T[] | null {
-    const count = this.int64();
-    if (count === -1n) return null;
-    if (count < -1n || count > 1_000_000n) throw new FishNetProtocolError(`invalid market list count ${count}`);
-    return Array.from({ length: Number(count) }, read);
-  }
-
-  listing(): FishNetMarketListing | null {
-    return this.reference(() => this.listingBody());
-  }
-
-  listingBody(): FishNetMarketListing {
-    return {
-      id: this.string(),
-      sellerId: this.string(),
-      sellerName: this.string(),
-      itemId: this.string(),
-      itemType: this.int32(),
-      count: this.int32(),
-      countTraded: this.int32(),
-      price: this.int64(),
-      json: this.string(),
-      expiresAt: this.int64(),
-    };
-  }
-
-  catalogItem(): FishNetMarketCatalogItem {
-    return {
-      sellerId: this.string(),
-      searchText: this.string(),
-      sellerName: this.string(),
-      listing: this.listing(),
-    };
-  }
-
-  account(): FishNetMarketAccount {
-    return {
-      balance: this.int64(),
-      collectables: this.list(() => this.collectable()),
-      saleHistory: this.list(() => this.sale()),
-      ownListings: this.list(() => this.listing()),
-    };
-  }
-
-  collectable(): FishNetMarketCollectable | null {
-    return this.reference(() => ({
-      id: this.string(),
-      itemType: this.int32(),
-      count: this.int32(),
-      json: this.string(),
-    }));
-  }
-
-  sale(): FishNetMarketSale | null {
-    return this.reference(() => ({
-      itemDisplayName: this.string(),
-      itemName: this.string(),
-      count: this.int32(),
-      price: this.int64(),
-      buyerName: this.string(),
-      at: this.int64(),
-    }));
-  }
-
-  stall(): FishNetMarketStall | null {
-    return this.reference(() => this.stallBody());
-  }
-
-  stallBody(): FishNetMarketStall {
-    const stall: FishNetMarketStall = {
-      accountId: this.string(),
-      characterId: this.string(),
-      mapId: this.string(),
-      stallIndex: this.int32(),
-      expiresAt: this.int64(),
-      shopName: this.string(),
-      characterName: this.string(),
-      archetype: this.int32(),
-      rotationY: 0,
-    };
-    this.characterAppearance();
-    this.equipAppearance();
-    this.list(() => this.cosmeticSlot());
-    this.list(() => this.equipSlot());
-    stall.rotationY = this.float32();
-    return stall;
-  }
-
-  private characterAppearance(): void {
-    this.reference(() => {
-      for (let index = 0; index < 10; index += 1) this.int32();
-    });
-  }
-
-  private equipAppearance(): void {
-    this.reference(() => this.array(() => this.boolean()));
-  }
-
-  private cosmeticSlot(): void {
-    this.reference(() => {
-      this.int32();
-      this.string();
-      this.int32();
-      this.boolean();
-    });
-  }
-
-  private equipSlot(): void {
-    this.reference(() => {
-      this.int32();
-      this.equipData();
-    });
-  }
-
-  private equipData(): void {
-    this.reference(() => {
-      this.list(() => this.statData());
-      this.list(() => this.string());
-      this.int32();
-      this.int32();
-      this.int32();
-      this.string();
-      this.int32();
-      this.string();
-      this.boolean();
-    });
-  }
-
-  private statData(): void {
-    this.reference(() => {
-      this.int32();
-      this.int32();
-      this.string();
-    });
-  }
-
-  private array<T>(read: () => T): T[] | null {
-    return this.list(read);
-  }
-
-  private signedPacked(): bigint {
-    const decoded = readUnsignedPackedWhole(this.buffer, this.offset);
-    this.offset = decoded.nextOffset;
-    return (decoded.value >> 1n) ^ -(decoded.value & 1n);
-  }
 }

@@ -1,23 +1,9 @@
-import type { FishNetBehaviourDefinition, FishNetRpcDefinition, FishNetSyncTypeDefinition } from "../../../definitions/rpc-map.ts";
-import { playerControllerTraversalSessionRpcs } from "./traversal-session.ts";
-import { playerControllerChatPresenceRpcs } from "./chat-presence.ts";
-import { playerControllerPartyRpcs } from "./party.ts";
-import { playerControllerTradeMarketRpcs } from "./trade-market.ts";
-import { playerControllerEndgamePvpRpcs } from "./endgame-pvp.ts";
-import { playerControllerGuildRpcs } from "./guild.ts";
+import type { FishNetSyncTypeDefinition } from "../../../definitions/rpc-map.ts";
 
 export class PlayerControllerRpcDefinition {
   private constructor() {}
 
   static readonly typeName = "PlayerController";
-  static readonly rpcs = [
-    ...playerControllerTraversalSessionRpcs,
-    ...playerControllerChatPresenceRpcs,
-    ...playerControllerPartyRpcs,
-    ...playerControllerTradeMarketRpcs,
-    ...playerControllerEndgamePvpRpcs,
-    ...playerControllerGuildRpcs,
-  ] as const satisfies readonly FishNetRpcDefinition[];
   static readonly syncTypes = [
     {
       "index": 5,
@@ -43,8 +29,4 @@ export class PlayerControllerRpcDefinition {
       ]
     }
   ] as const satisfies readonly FishNetSyncTypeDefinition[];
-  static readonly definition = {
-    typeName: this.typeName,
-    rpcs: this.rpcs, syncTypes: this.syncTypes,
-  } as const satisfies FishNetBehaviourDefinition;
 }

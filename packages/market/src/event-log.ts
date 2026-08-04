@@ -130,21 +130,26 @@ function parseSale(value: unknown): FishNetMarketSale | undefined {
 }
 
 function parseStall(value: unknown): FishNetMarketStall | undefined {
-  if (!isRecord(value) || !nullableString(value["accountId"]) || !nullableString(value["characterId"])
-    || !nullableString(value["mapId"]) || !Number.isSafeInteger(value["stallIndex"])
-    || !decimal(value["expiresAt"]) || !nullableString(value["shopName"])
-    || !nullableString(value["characterName"]) || !Number.isSafeInteger(value["archetype"])
-    || typeof value["rotationY"] !== "number" || !Number.isFinite(value["rotationY"])) return undefined;
+  if (!isRecord(value) || !nullableString(value["stallId"]) || !nullableString(value["accountId"])
+    || !nullableString(value["characterId"]) || !nullableString(value["mapId"])
+    || !nullableString(value["slotId"]) || !decimal(value["expiresAt"]) || !decimal(value["hiredAt"])
+    || !nullableString(value["shopName"]) || !nullableString(value["characterName"])
+    || !Number.isSafeInteger(value["archetype"]) || !Number.isSafeInteger(value["status"])
+    || !decimal(value["version"]) || !nullableString(value["visualSnapshotJson"])) return undefined;
   return {
+    stallId: value["stallId"] as string | null,
     accountId: value["accountId"] as string | null,
     characterId: value["characterId"] as string | null,
     mapId: value["mapId"] as string | null,
-    stallIndex: value["stallIndex"] as number,
+    slotId: value["slotId"] as string | null,
     expiresAt: BigInt(value["expiresAt"]),
+    hiredAt: BigInt(value["hiredAt"]),
     shopName: value["shopName"] as string | null,
     characterName: value["characterName"] as string | null,
     archetype: value["archetype"] as number,
-    rotationY: value["rotationY"],
+    status: value["status"] as number,
+    version: BigInt(value["version"]),
+    visualSnapshotJson: value["visualSnapshotJson"] as string | null,
   };
 }
 

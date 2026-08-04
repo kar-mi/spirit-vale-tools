@@ -195,8 +195,8 @@ export function eliminateByPayloadShape(
  * models several payloads only partially and a stricter rule would discard real traffic.
  */
 function signatureAdmitsPayload(lookup: RpcLookup, payload: Buffer): boolean {
-  if (lookup.parameters !== undefined && lookup.parameters.length > 0) return true;
-  return payload.length === 0;
+  const fit = tryDecodeFields(payload, lookup.parameters);
+  return fit.undecodable || (fit.complete && fit.consumed === payload.length);
 }
 
 /** True when `applyRpcLookup` refused a match it was handed. Callers must not learn bindings from it. */

@@ -74,7 +74,7 @@ const PRIMITIVE_CODECS: Readonly<Record<string, FishNetWireCodec>> = {
   "System.Int16": "int16",
   "System.UInt16": "uint16",
   "System.Int32": "packedInt32",
-  "System.Int64": "packedUInt64",
+  "System.Int64": "packedInt64",
   "System.Single": "float32",
   "System.Double": "float64",
   "System.String": "stringUtf8Packed",
@@ -141,6 +141,11 @@ function decodeField(
     case "float32": return { value: buffer.readFloatLE(offset), nextOffset: fixed(4) };
     case "float64": return { value: buffer.readDoubleLE(offset), nextOffset: fixed(8) };
     case "packedInt32": return readSignedPackedWhole(buffer, offset);
+    case "packedInt64": {
+      const decoded = readUnsignedPackedWhole(buffer, offset);
+      const signed = (decoded.value >> 1n) ^ -(decoded.value & 1n);
+      return { value: signed.toString(), nextOffset: decoded.nextOffset };
+    }
     case "packedUInt64": {
       const decoded = readUnsignedPackedWhole(buffer, offset);
       return { value: `0x${decoded.value.toString(16)}`, nextOffset: decoded.nextOffset };
