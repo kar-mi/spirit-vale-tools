@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { decodeCharacterRpcPayload } from "./decoder.ts";
+import { decodeCharacterRpcPayload, rescaleSubstats } from "./decoder.ts";
 import { syntheticCharacter } from "./synthetic-character.test-helper.ts";
 
 describe("decodeCharacterRpcPayload", () => {
@@ -40,5 +40,83 @@ describe("decodeCharacterRpcPayload", () => {
     expect(decoded.currentWeight).toBeUndefined();
     expect(decoded.snapshot.equipment).toHaveLength(1);
     expect(decoded.snapshot.artifacts).toHaveLength(1);
+  });
+});
+
+describe("positional and chaos character fields", () => {
+  const wornWeapon = (options: Parameters<typeof syntheticCharacter>[3]) =>
+    decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", options), true).snapshot.equipment[0]!;
+
+  test("defaults report no chaos substat", () => {
+    expect(wornWeapon({}).chaosType).toBe(-1);
+  });
+
+  test("surfaces the EquipType the chaos roll was drawn from", () => {
+    // 4 = EquipType.Axe: the chaos substat came from the axe pool.
+    expect(wornWeapon({ chaosType: 4 }).chaosType).toBe(4);
+  });
+
+  test("keeps substat wire positions when the game sends a hole", () => {
+    const item = wornWeapon({ substats: [{ type: 0, roll: 100 }, null, { type: 1, roll: 50 }] });
+
+    // The array is still densified for compatibility, so the index is the only way to tell that
+    // the second roll sits in slot 2 rather than slot 1.
+    expect(item.substats).toHaveLength(2);
+    expect(item.substats.map((stat) => stat.index)).toEqual([0, 2]);
+  });
+
+  test("carries StatData.ValueStr through as the substat qualifier", () => {
+    const item = wornWeapon({ substats: [{ type: 0, roll: 100, valueStr: "Fireball" }] });
+
+    expect(item.substats[0]!.qualifier).toBe("Fireball");
+  });
+
+  test("omits the qualifier when the stat is unscoped", () => {
+    expect(wornWeapon({}).substats[0]!.qualifier).toBeUndefined();
+  });
+
+  test("records which card socket is empty without changing the dense card list", () => {
+    const item = wornWeapon({ cards: [null, "Example Card", null] });
+
+    expect(item.cards).toEqual(["Example Card"]);
+    expect(item.cardsBySlot).toEqual([null, "Example Card", null]);
+  });
+
+  test("surfaces the stored weapon loadouts", () => {
+    const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", {
+      loadouts: [[], [{ slot: 0, itemId: "Thundercoil" }], [{ slot: 0, itemId: "Launcher" }]],
+    }), true);
+
+    expect(decoded.snapshot.loadouts?.map((set) => set.map((item) => item.itemId))).toEqual([
+      [], ["Thundercoil"], ["Launcher"],
+    ]);
+    // The active index is 0 and that loadout is empty, so worn gear still wins.
+    expect(decoded.snapshot.equipment.map((item) => item.itemId)).toEqual(["Example Sword"]);
+  });
+
+  test("omits loadouts entirely when the character has stored none", () => {
+    expect(decodeCharacterRpcPayload(syntheticCharacter(true), true).snapshot.loadouts).toBeUndefined();
+  });
+
+  test("labels grimoires by slot so an empty first slot cannot promote the second book", () => {
+    const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", {
+      grimoires: [null, "Book Of Fire"],
+    }), true);
+
+    expect(decoded.snapshot.grimoires).toHaveLength(1);
+    expect(decoded.snapshot.grimoires![0]).toMatchObject({ slot: "Grimoire 2", itemId: "Book Of Fire" });
+  });
+
+  test("rescaleSubstats preserves position and qualifier while recomputing the value", () => {
+    const snapshot = decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", {
+      substats: [null, { type: 0, roll: 100, valueStr: "Fireball" }],
+    }), true).snapshot;
+    const before = snapshot.equipment[0]!.substats[0]!;
+
+    const after = rescaleSubstats(snapshot).equipment[0]!.substats[0]!;
+
+    expect(after.value).toBe(before.value);
+    expect(after.index).toBe(1);
+    expect(after.qualifier).toBe("Fireball");
   });
 });

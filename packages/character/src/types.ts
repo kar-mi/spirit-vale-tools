@@ -25,6 +25,13 @@ export interface CharacterSnapshot {
   equipment: CharacterEquipment[];
   artifacts: CharacterArtifact[];
   skills: CharacterSkill[];
+  /**
+   * The three stored weapon loadouts (Normal, Secondary, Heavy) in wire order, when the payload
+   * carried them. `equipment` stays the active set; this is additive and may be absent.
+   */
+  loadouts?: CharacterEquipment[][];
+  /** Equipped grimoires in wire order. Absent when the payload ended before the build section. */
+  grimoires?: CharacterEquipment[];
   playtimeSeconds?: number;
   monsterKills?: number;
   bossKills?: number;
@@ -39,6 +46,16 @@ export interface CharacterSubstat {
   roll: number;
   value?: number;
   percent: boolean;
+  /**
+   * `StatData.ValueStr` — the qualifier scoping this stat to one skill or element (e.g. a damage
+   * bonus that only applies to a single skill). Empty string when the stat is unscoped.
+   */
+  qualifier?: string;
+  /**
+   * Position of this substat in the item's wire array. `substats` is densified, so without this
+   * an empty middle slot is indistinguishable from a shifted one.
+   */
+  index?: number;
 }
 
 export interface CharacterEquipment {
@@ -47,6 +64,16 @@ export interface CharacterEquipment {
   refine: number;
   cards: string[];
   substats: CharacterSubstat[];
+  /**
+   * `EquipData.ChaosType` — the `EquipType` whose substat pool the chaos roll was drawn from, or
+   * -1 when the item has no chaos substat. The chaos roll is the last present substat.
+   */
+  chaosType?: number;
+  /**
+   * Cards by socket position; `null` is an empty socket. `cards` drops empties, which loses which
+   * socket is free.
+   */
+  cardsBySlot?: Array<string | null>;
 }
 
 export interface CharacterArtifact {

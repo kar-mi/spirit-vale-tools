@@ -1,4 +1,33 @@
-export function syntheticCharacter(update: boolean, includeHistory = true, characterName = "Example Hero"): Buffer {
+/**
+ * Options exist so the positional/chaos/qualifier fields can be exercised. Every default
+ * reproduces the original payload byte for byte, so existing callers are unaffected.
+ */
+export interface SyntheticCharacterOptions {
+  /** `EquipData.ChaosType` on the worn weapon. -1 = no chaos substat. */
+  chaosType?: number;
+  /** Worn-weapon substats in wire order; `null` writes an absent entry (a hole). */
+  substats?: Array<{ type: number; roll: number; valueStr?: string } | null>;
+  /** Worn-weapon cards in wire order; `null` writes an empty socket. */
+  cards?: Array<string | null>;
+  /** Stored weapon loadouts (Normal, Secondary, Heavy). */
+  loadouts?: Array<Array<{ slot: number; itemId: string }>>;
+  /** Equipped grimoires in wire order; `null` writes an empty slot. */
+  grimoires?: Array<string | null>;
+}
+
+export function syntheticCharacter(
+  update: boolean,
+  includeHistory = true,
+  characterName = "Example Hero",
+  options: SyntheticCharacterOptions = {},
+): Buffer {
+  const {
+    chaosType = -1,
+    substats = [{ type: 0, roll: 100, valueStr: "" }],
+    cards = ["Example Card"],
+    loadouts = [[], [], []],
+    grimoires = [],
+  } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
   bool(out, false);
@@ -20,12 +49,15 @@ export function syntheticCharacter(update: boolean, includeHistory = true, chara
   list(out, [60, 30, 10, 20, 5, 15], (value) => packed(out, value));
   list(out, [0], () => {
     bool(out, false); packed(out, 0); bool(out, false);
-    list(out, [0], () => { bool(out, false); packed(out, 0); packed(out, 100); string(out, ""); });
-    list(out, ["Example Card"], (value) => string(out, value));
-    packed(out, 0); packed(out, 0); packed(out, -1); string(out, "example-equip-instance"); packed(out, 5); string(out, "Example Sword"); bool(out, false);
+    list(out, substats, (value) => {
+      if (!value) { bool(out, true); return; }
+      bool(out, false); packed(out, value.type); packed(out, value.roll); string(out, value.valueStr ?? "");
+    });
+    list(out, cards, (value) => maybeString(out, value));
+    packed(out, 0); packed(out, 0); packed(out, chaosType); string(out, "example-equip-instance"); packed(out, 5); string(out, "Example Sword"); bool(out, false);
   });
   packed(out, 0);
-  list(out, [], () => undefined); list(out, [], () => undefined); list(out, [], () => undefined);
+  for (const set of loadouts) list(out, set, (entry) => equipSlot(out, entry.slot, entry.itemId));
   list(out, [0], () => {
     bool(out, false);
     list(out, [0], () => { bool(out, false); packed(out, 71); packed(out, 100); string(out, ""); });
@@ -39,7 +71,7 @@ export function syntheticCharacter(update: boolean, includeHistory = true, chara
   list(out, [], () => undefined);
   bool(out, true);
   list(out, [], () => undefined); // Assigned skills.
-  list(out, [], () => undefined); // Grimoires.
+  list(out, grimoires, (value) => grimoire(out, value)); // Grimoires.
   bool(out, false); // InventoryData.
   dictionary(out, "fictional-bag-equipment", () => equipment(out, "Fictional Bag Sword"));
   dictionary(out, "fictional-bag-artifact", () => artifact(out, "Fictional Bag Rune"));
@@ -74,6 +106,24 @@ function refinable(out: number[], id: string, refine: number): void {
 }
 function stackable(out: number[], id: string, count: number): void {
   bool(out, false); packed(out, count); string(out, id); bool(out, false);
+}
+function equipSlot(out: number[], slot: number, itemId: string): void {
+  bool(out, false); packed(out, slot);
+  bool(out, false);
+  list(out, [], () => undefined); list(out, [], () => undefined);
+  packed(out, 0); packed(out, 0); packed(out, -1);
+  string(out, "fictional-loadout-instance"); packed(out, 0); string(out, itemId); bool(out, false);
+}
+function grimoire(out: number[], id: string | null): void {
+  if (id === null) { bool(out, true); return; }
+  bool(out, false);
+  list(out, [], () => undefined); list(out, [], () => undefined);
+  packed(out, 0); packed(out, 0); packed(out, -1);
+  string(out, "fictional-grimoire-instance"); packed(out, 0); string(out, id); bool(out, false);
+}
+function maybeString(out: number[], value: string | null): void {
+  if (value === null) { packed(out, -1); return; }
+  string(out, value);
 }
 function bool(out: number[], value: boolean): void { out.push(value ? 1 : 0); }
 function string(out: number[], value: string): void { const bytes = Buffer.from(value); packed(out, bytes.length); out.push(...bytes); }
