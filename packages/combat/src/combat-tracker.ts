@@ -5,6 +5,7 @@ import {
   loadBundledFishNetSemanticMap,
 } from "@kar-mi/spirit-vale-tools-capture";
 import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
@@ -284,6 +285,8 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
   4: "dodged",
 };
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
+const CURRENT_STATUS_COMPONENT_INDICES = new Set([5, 6]);
+const CURRENT_HEALTH_COMPONENT_INDICES = new Set([2, 3]);
 /**
  * Upper bound on a payload `recoverSummons` will even attempt. A calibration is 13 bytes per summon
  * and no build fields more than a handful, so this only exists to keep the heuristic away from the
@@ -357,6 +360,7 @@ export class FishNetCombatTracker {
     }
     const events: FishNetCombatEvent[] = monsterIdentity ? [monsterIdentity] : [];
     if (packet.objectId === undefined || !packet.rpcName) {
+      events.push(...this.recoverAmbiguousCombat(packet));
       events.push(...this.recoverSummons(packet));
       return events;
     }
@@ -487,6 +491,47 @@ export class FishNetCombatTracker {
       })),
       ...batch.removes.map((statusId): FishNetCombatStatusEvent => ({ ...base, statusId, action: "removed" })),
     ];
+  }
+
+  /** Recovers only current-build payloads whose domain codec and component position both agree. */
+  private recoverAmbiguousCombat(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
+    if (packet.rpcResolution !== "ambiguous"
+      || packet.packetName !== "observersRpc"
+      || packet.objectId === undefined
+      || packet.networkBehaviourIndex === undefined) return [];
+
+    if (packet.rpcHash === 5 && CURRENT_STATUS_COMPONENT_INDICES.has(packet.networkBehaviourIndex)) {
+      return this.consumeEffectDisplays({
+        ...packet,
+        networkBehaviourType: "StatusComponent",
+        rpcName: "ApplyEffectDisplays_O",
+      });
+    }
+
+    if (packet.rpcHash !== 1 || !CURRENT_HEALTH_COMPONENT_INDICES.has(packet.networkBehaviourIndex)) return [];
+    let amount: ReturnType<typeof readSignedPackedWhole>;
+    try {
+      amount = readSignedPackedWhole(packet.payload, 0);
+    } catch {
+      return [];
+    }
+    if (amount.value < 0) return [];
+    const settings = packet.payload.subarray(amount.nextOffset);
+    const settingsHex = settings.toString("hex");
+    const knownHealthRecovery = this.semanticMap?.recoveryStyles?.some((definition) =>
+      definition.networkBehaviourType === "HealthComponent"
+      && definition.rpcName === "Recover_C"
+      && definition.undecodedPayloadHex === settingsHex
+    ) ?? false;
+    if (!knownHealthRecovery) return [];
+
+    return [this.consumeRecover({
+      ...packet,
+      networkBehaviourType: "HealthComponent",
+      rpcName: "Recover_C",
+      decodedFields: [{ name: "amount", codec: "packedInt32", value: amount.value }],
+      undecodedPayload: settings,
+    })];
   }
 
   /**

@@ -136,6 +136,48 @@ function packed(value: number): Buffer {
   return Buffer.from(bytes);
 }
 
+function effectEntry(statusId: string, remaining: number, stacks = 1, maxStacks = 0): Buffer {
+  const seconds = Buffer.alloc(4);
+  seconds.writeFloatLE(remaining);
+  return Buffer.concat([
+    packed(Buffer.byteLength(statusId)),
+    Buffer.from(statusId),
+    seconds,
+    packed(stacks),
+    packed(maxStacks),
+    Buffer.from([0]),
+  ]);
+}
+
+function effectDisplayPayload(applies: readonly Buffer[], removes: readonly string[] = []): Buffer {
+  return Buffer.concat([
+    packed(applies.length),
+    ...applies,
+    packed(removes.length),
+    ...removes.map((id) => Buffer.concat([packed(Buffer.byteLength(id)), Buffer.from(id)])),
+  ]);
+}
+
+function ambiguousObserver(
+  tick: number,
+  objectId: number,
+  componentIndex: number,
+  rpcHash: number,
+  payload: Buffer,
+): DecodedFishNetPacket {
+  return {
+    tick,
+    objectId,
+    networkBehaviourIndex: componentIndex,
+    rpcHash,
+    rpcResolution: "ambiguous",
+    packetId: 8,
+    packetName: "observersRpc",
+    raw: Buffer.alloc(0),
+    payload,
+  };
+}
+
 describe("FishNetCombatTracker", () => {
   test("emits one flat monster identity event instead of repeating identity on hits", () => {
     const tracker = new FishNetCombatTracker({
@@ -235,6 +277,56 @@ describe("FishNetCombatTracker", () => {
     test("skips an entry whose id did not decode", () => {
       const tracker = new FishNetCombatTracker();
       expect(tracker.consume(packet(1, 60, "StatusComponent", "ApplySkillDisplay_O"))).toEqual([]);
+    });
+  });
+
+  describe("recovering ambiguous current-build combat payloads", () => {
+    test("recovers an exact effect-display batch on current status component positions", () => {
+      const tracker = new FishNetCombatTracker();
+      const payload = effectDisplayPayload(
+        [effectEntry("FictionalWard", 4.5, 2, 5)],
+        ["FictionalHaste"],
+      );
+
+      expect(tracker.consume(ambiguousObserver(1, 70, 5, 5, payload))).toEqual([
+        expect.objectContaining({
+          kind: "status",
+          rpc: "ApplyEffectDisplays_O",
+          actorId: 70,
+          statusId: "FictionalWard",
+          action: "applied",
+          remainingSeconds: 4.5,
+          stacks: 2,
+        }),
+        expect.objectContaining({
+          kind: "status",
+          rpc: "ApplyEffectDisplays_O",
+          actorId: 70,
+          statusId: "FictionalHaste",
+          action: "removed",
+        }),
+      ]);
+      expect(tracker.consume(ambiguousObserver(2, 71, 4, 5, payload))).toEqual([]);
+      expect(tracker.consume(ambiguousObserver(3, 71, 5, 5, Buffer.concat([payload, Buffer.from([0xff])])))).toEqual([]);
+    });
+
+    test("recovers Health Recover_C only from exact build-specific settings", () => {
+      const tracker = new FishNetCombatTracker();
+      const standardSettings = Buffer.from("0000ac0200000000", "hex");
+      const payload = Buffer.concat([packed(37), standardSettings]);
+
+      expect(tracker.consume(ambiguousObserver(1, 72, 2, 1, payload))).toEqual([
+        expect.objectContaining({
+          kind: "heal",
+          rpc: "Recover_C",
+          targetId: 72,
+          value: 37,
+          recoveryStyle: "standard",
+        }),
+      ]);
+      expect(tracker.consume(ambiguousObserver(2, 73, 4, 1, payload))).toEqual([]);
+      expect(tracker.consume(ambiguousObserver(3, 73, 2, 1, Buffer.concat([packed(37), Buffer.alloc(8, 0xff)]))))
+        .toEqual([]);
     });
   });
 
