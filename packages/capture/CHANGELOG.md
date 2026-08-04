@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.2.1
+
+### Patch Changes
+
+- d4f3926: Recover FishNet component types from verified, build-scoped prefab layouts when an instantiated spawn omits its RPC Link registrations.
+
 ## 1.2.0
 
 ### Minor Changes
