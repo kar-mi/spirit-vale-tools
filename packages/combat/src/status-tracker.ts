@@ -38,6 +38,13 @@ interface TrackedStatus {
   appliedAtMs: number;
   expiresAtMs?: number;
   stacks?: number;
+  /**
+   * Set for an entry that came from a summon calibration rather than a status feed. Summons are
+   * filed under a *skill* id and have no timer to refresh, so the activation-driven refresh has to
+   * leave them alone. This used to be inferred from `stacks` being present, which stopped working
+   * once the display feed began reporting stacks for ordinary statuses too.
+   */
+  summon?: true;
 }
 
 /**
@@ -45,6 +52,13 @@ interface TrackedStatus {
  * Their repeats must not restart `appliedAtMs`, or it would creep forward for the whole duration.
  */
 const REFRESHING_FEEDS = new Set<FishNetCombatStatusEvent["rpc"]>(["ApplyEffectDisplays_O", "ApplySkillDisplay_O"]);
+
+/**
+ * How far a refreshed expiry may move before it counts as a new application rather than rounding.
+ * Measured over a live session: repeats of one status landed within 1.6s of the established expiry,
+ * while the smallest genuine re-application moved it 2.4s, so 2s separates them with room either way.
+ */
+const EXPIRY_REFRESH_TOLERANCE_MS = 2_000;
 
 /** Tracks per-actor active buffs/debuffs from FishNet status apply/remove events. */
 export class FishNetStatusTracker {
@@ -138,6 +152,15 @@ export class FishNetStatusTracker {
   }
 
   /**
+   * Whether the status runs on a real countdown, as opposed to a toggle or aura the server merely
+   * keeps re-stating. The catalog is the authority: a status it gives no duration never counts down,
+   * whatever the wire reports for it.
+   */
+  private isTimed(statusId: string, level: number): boolean {
+    return statusDurationSeconds(this.directory.resolve(statusId), level) !== undefined;
+  }
+
+  /**
    * Picks the expiry to trust.
    *
    * A server-reported remaining time always wins - the catalog's nominal duration is only ever an
@@ -153,7 +176,27 @@ export class FishNetStatusTracker {
     observedAtMs: number,
     previous: TrackedStatus | undefined,
   ): number | undefined {
-    if (event.remainingSeconds !== undefined) return observedAtMs + event.remainingSeconds * 1_000;
+    if (event.remainingSeconds !== undefined) {
+      const reported = observedAtMs + event.remainingSeconds * 1_000;
+      // For a status with no catalog duration the reported second is a keep-alive window rather than
+      // a countdown - the server just re-states it on every refresh - so it has to keep moving
+      // forward. Holding it would pin the expiry in the past between refreshes and make the toggle
+      // blink out and back. Nothing publishes this value for such a status anyway.
+      if (!this.isTimed(event.statusId, level)) return reported;
+      // The server quantises what it reports, so refreshes of one countdown disagree by up to ~1.5s
+      // from rounding alone while a genuine re-application moves the expiry by at least ~2.4s. A
+      // status still running can only have *less* time left, so an earlier expiry is real progress
+      // and is taken as-is; only a later one is judged. Adopting the rounding instead re-phases the
+      // countdown - the rendered seconds sit still and then skip - and, since it always leans
+      // forward, walks the expiry along until the status never times out at all.
+      const established = previous?.expiresAtMs;
+      if (established !== undefined
+        && reported > established
+        && reported - established < EXPIRY_REFRESH_TOLERANCE_MS) {
+        return established;
+      }
+      return reported;
+    }
     if (event.rpc === "ApplyEffectDisplays_O") return undefined;
     // The skill-icon feed carries no timing whatsoever, so it can only ever confirm that something
     // is still on. Letting it answer here would erase a countdown the effect feed already reported
@@ -172,7 +215,7 @@ export class FishNetStatusTracker {
       else this.active.set(event.actorId, statuses);
       return;
     }
-    statuses.set(event.skillId, { level: 1, stacks: event.stacks, appliedAtMs: observedAtMs });
+    statuses.set(event.skillId, { level: 1, stacks: event.stacks, appliedAtMs: observedAtMs, summon: true });
     this.active.set(event.actorId, statuses);
   }
 
@@ -189,7 +232,7 @@ export class FishNetStatusTracker {
     const statuses = this.active.get(event.actorId);
     if (!statuses) return;
     for (const [statusId, tracked] of statuses) {
-      if (tracked.stacks !== undefined) continue;
+      if (tracked.summon) continue;
       const definition = this.directory.resolve(statusId);
       const isGranter = statusId === event.sourceId
         || definition?.effects.some((effect) => effect.id === event.sourceId);
@@ -223,6 +266,13 @@ export class FishNetStatusTracker {
       const definition = this.directory.resolve(statusId);
       const skillDefinition = this.skillDirectory.resolve(statusId);
       const spriteId = definition?.spriteId ?? skillDefinition?.spriteId;
+      // A status the catalog gives no duration is a toggle or aura: the server re-sends it about
+      // once a second, so the "1s remaining" it reports is the refresh cadence, not a lifetime. That
+      // countdown is still worth keeping internally - it is how a lapsed aura disappears - but
+      // publishing it would show a permanent buff as forever expiring in one second, and would put
+      // it in the timed-buff tile instead of the toggle tile the status picker already files it
+      // under.
+      const timed = statusDurationSeconds(definition, tracked.level) !== undefined;
       result.push({
         statusId,
         displayName: definition?.displayName ?? skillDefinition?.displayName ?? statusId,
@@ -231,7 +281,7 @@ export class FishNetStatusTracker {
         level: tracked.level,
         appliedAtMs: tracked.appliedAtMs,
         ...(tracked.stacks === undefined ? {} : { stacks: tracked.stacks }),
-        ...(tracked.expiresAtMs === undefined
+        ...(tracked.expiresAtMs === undefined || !timed
           ? {}
           : { expiresAtMs: tracked.expiresAtMs, remainingMs: Math.max(0, tracked.expiresAtMs - nowMs) }),
       });

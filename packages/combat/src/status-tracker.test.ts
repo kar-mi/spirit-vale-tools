@@ -183,6 +183,85 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
     expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ statusId: "Burn", stacks: 72 });
   });
 
+  test("holds the established expiry when a refresh only rounds it forward", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 0);
+    // A second later the server still says ~30s because it quantises what it reports. Taking that
+    // at face value would walk the expiry forward on every refresh, so the timer never runs out and
+    // the rendered seconds bounce.
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 29.6 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]?.remainingMs).toBe(29_000);
+  });
+
+  test("takes a refresh that reports less time left", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 0);
+    // Only a re-application can add time, so an earlier expiry is the countdown making progress.
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 28 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]?.remainingMs).toBe(28_000);
+  });
+
+  test("takes a refresh that adds enough time to be a re-application", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 2 }), 0);
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]?.remainingMs).toBe(30_000);
+  });
+
+  test("keeps a toggle alive between refreshes instead of blinking out", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    // "Aura" has no catalog duration, so its reported second is a keep-alive window that must keep
+    // advancing. Holding it - as a countdown's rounding correctly is - pins the expiry in the past
+    // between refreshes and the cell disappears and comes back.
+    for (const at of [0, 500, 1_000, 1_500, 2_000, 2_500]) {
+      tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), at);
+      expect(tracker.getActiveStatuses(1, at)).toHaveLength(1);
+    }
+  });
+
+  test("refreshes a self-granting buff when its skill is recast", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    // SelfBuff is granted by a skill of the same id, and the game does not resend the status on a
+    // recast - the activation is the only trace. The display feed reports stacks on everything, so
+    // a refresh path that skipped anything carrying stacks silently stopped covering these.
+    tracker.consumeStatus(display({ statusId: "SelfBuff", remainingSeconds: 60, stacks: 1 }), 0);
+    expect(tracker.getActiveStatuses(1, 30_000)[0]?.remainingMs).toBe(30_000);
+    tracker.consume(activationEvent({ sourceId: "SelfBuff", level: 1 }), 30_000);
+    expect(tracker.getActiveStatuses(1, 30_000)[0]?.remainingMs).toBe(60_000);
+  });
+
+  test("leaves summon stacks alone when a skill of the same id activates", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consume(summonEvent({ skillId: "FictionalClone", stacks: 2 }), 1_000);
+    tracker.consume(activationEvent({ sourceId: "FictionalClone" }), 5_000);
+    // A summon has no timer to refresh; it must keep its stack count and original application time.
+    expect(tracker.getActiveStatuses(1, 5_000)[0]).toMatchObject({ stacks: 2, appliedAtMs: 1_000 });
+  });
+
+  test("publishes no countdown for a status the catalog gives no duration", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    // "Aura" has no duration in the catalog, and the server re-sends it with a second left each
+    // time. Publishing that would render a permanent toggle as forever expiring in one second.
+    tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), 1_000);
+    const [status] = tracker.getActiveStatuses(1, 1_000);
+    expect(status?.remainingMs).toBeUndefined();
+    expect(status?.expiresAtMs).toBeUndefined();
+  });
+
+  test("still expires an unrefreshed toggle, using the timer it does not publish", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_500)).toHaveLength(1);
+    // Once the refreshes stop the aura has lapsed, so it must not linger forever.
+    expect(tracker.getActiveStatuses(1, 2_500)).toHaveLength(0);
+  });
+
+  test("keeps publishing a countdown for a status that genuinely has a duration", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 9 }), 1_000);
+    expect(tracker.getActiveStatuses(1, 1_000)[0]).toMatchObject({ remainingMs: 9_000 });
+  });
+
   test("the skill-icon feed never erases a countdown the effect feed reported", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 1_000);
