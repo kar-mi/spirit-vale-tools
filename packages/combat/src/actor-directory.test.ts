@@ -54,6 +54,22 @@ function spawn(
   };
 }
 
+function prefabSpawn(
+  tick: number,
+  objectId: number,
+  ownerConnectionId: number,
+  prefabId: number,
+  spawnSyncPayload: Buffer,
+): DecodedFishNetPacket {
+  return {
+    ...spawn(tick, objectId, ownerConnectionId, "UnrecognizedComponent", spawnSyncPayload),
+    rpcLinkRegistrations: [],
+    spawnType: "instantiated",
+    spawnCollectionId: 0,
+    spawnPrefabId: prefabId,
+  };
+}
+
 function ownership(tick: number, objectId: number, ownerConnectionId: number): DecodedFishNetPacket {
   return { ...packet(tick, "ownershipChange", objectId), ownerConnectionId };
 }
@@ -258,6 +274,37 @@ describe("FishNetActorDirectory", () => {
       archetype: 6,
       ownerConnectionId: 12,
     }]);
+  });
+
+  test("uses the verified player prefab when a spawn omits RPC-link registrations", () => {
+    const embeddedVisual = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Prefab Ranger"),
+      packed(8),
+    ]);
+    const directory = new FishNetActorDirectory();
+
+    expect(directory.consume(prefabSpawn(1, 62, 14, 0, embeddedVisual))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 1,
+      actorId: 62,
+      displayName: "Prefab Ranger",
+      archetype: 8,
+      ownerConnectionId: 14,
+    }]);
+  });
+
+  test("does not scan a non-player prefab without PlayerController evidence", () => {
+    const playerShapedPayload = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Fictional Decoy"),
+      packed(8),
+    ]);
+    const directory = new FishNetActorDirectory();
+
+    expect(directory.consume(prefabSpawn(1, 63, 15, 4, playerShapedPayload))).toEqual([]);
+    expect(directory.get(63)).toBeUndefined();
   });
 
   test("reads a player identity from length-delimited spawn SyncType sections", () => {

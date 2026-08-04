@@ -99,9 +99,7 @@ export class FishNetActorDirectory {
       const events = this.removeObject(packet.objectId, packet.tick);
       if (observedPlayerActor) this.observedPlayerActors.add(packet.objectId);
       const ownerConnectionId = validOwner(packet.ownerConnectionId);
-      const identityEligible = packet.rpcLinkRegistrations?.some(({ networkBehaviourType }) => {
-        return networkBehaviourType !== undefined && IDENTITY_BEHAVIOURS.has(networkBehaviourType);
-      }) || observedPlayerActor;
+      const identityEligible = hasIdentityBehaviourEvidence(packet) || observedPlayerActor;
       this.objects.set(packet.objectId, {
         ...(ownerConnectionId === undefined ? {} : { ownerConnectionId }),
         identityEligible,
@@ -290,7 +288,7 @@ export class FishNetActorDirectory {
   /** Names a spawn from embedded VisualData, falling back to the UID cache for delta spawns. */
   private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number; uid?: string } | undefined {
     const embedded = decodeSpawnIdentity(packet);
-    const uid = packet.spawnSyncPayload && hasPlayerControllerRegistration(packet)
+    const uid = packet.spawnSyncPayload && hasPlayerControllerEvidence(packet)
       ? scanSpawnUid(packet.spawnSyncPayload)
       : undefined;
     if (embedded) {
@@ -466,17 +464,31 @@ function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecode
 }
 
 const VISUAL_DATA_SYNC_INDEX = 5;
+const PLAYER_PREFAB_COLLECTION_ID = 0;
+const PLAYER_PREFAB_ID = 0;
 
 function decodeSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype: number } | undefined {
   const payload = packet.spawnSyncPayload;
   if (!payload || payload.length < 4) return undefined;
-  if (!hasPlayerControllerRegistration(packet)) return undefined;
+  if (!hasPlayerControllerEvidence(packet)) return undefined;
   return scanSpawnIdentity(payload);
 }
 
-function hasPlayerControllerRegistration(packet: DecodedFishNetPacket): boolean {
-  return packet.rpcLinkRegistrations
-    ?.some(({ networkBehaviourType }) => networkBehaviourType === "PlayerController") ?? false;
+function hasIdentityBehaviourEvidence(packet: DecodedFishNetPacket): boolean {
+  return isCurrentPlayerPrefab(packet) || (packet.rpcLinkRegistrations
+    ?.some(({ networkBehaviourType }) => networkBehaviourType !== undefined
+      && IDENTITY_BEHAVIOURS.has(networkBehaviourType)) ?? false);
+}
+
+function hasPlayerControllerEvidence(packet: DecodedFishNetPacket): boolean {
+  return isCurrentPlayerPrefab(packet) || (packet.rpcLinkRegistrations
+    ?.some(({ networkBehaviourType }) => networkBehaviourType === "PlayerController") ?? false);
+}
+
+/** The current build omits RPC-link registrations from spawns, so its verified prefab is evidence. */
+function isCurrentPlayerPrefab(packet: DecodedFishNetPacket): boolean {
+  return packet.spawnCollectionId === PLAYER_PREFAB_COLLECTION_ID
+    && packet.spawnPrefabId === PLAYER_PREFAB_ID;
 }
 
 /** Scan packed strings for a GUID UID in spawn state; accept only one unambiguous match. */
