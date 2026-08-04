@@ -14,6 +14,7 @@ import { PlayerSaveRpcDefinition } from "./game/player-save/index.ts";
 import { SkillsComponentRpcDefinition } from "./game/skills-component.ts";
 import { StatusComponentRpcDefinition } from "./game/status-component.ts";
 import { SummoningComponentRpcDefinition } from "./game/summoning-component.ts";
+import { FISHNET_PREFAB_DEFINITIONS } from "./prefabs.ts";
 
 export const FISHNET_RPC_MAP = {
   buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
@@ -34,4 +35,5 @@ export const FISHNET_RPC_MAP = {
     SummoningComponentRpcDefinition.definition,
   ],
   broadcasts: FishNetBroadcastDefinitions.definitions,
+  prefabs: FISHNET_PREFAB_DEFINITIONS,
 } as const satisfies FishNetRpcMap;

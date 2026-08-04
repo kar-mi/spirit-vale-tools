@@ -4,7 +4,7 @@ import {
   STARTING_RPC_LINK_ID,
 } from "./protocol.ts";
 import type { RpcLinkRegistrationState } from "./protocol.ts";
-import { bindBehaviourTypes } from "./rpc-resolution.ts";
+import { bindBehaviourTypes, bindPrefabBehaviourTypes } from "./rpc-resolution.ts";
 import { checkedEnd, readNetworkObjectReference, readSignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type { FishNetRpcMap } from "./types.ts";
 
@@ -94,7 +94,7 @@ export function parseObjectSpawn(
         const linksEnd = checkedEnd(buffer, linksStart, linksLength);
         const registrations = parseLinkRegistrations(buffer, linksStart, linksEnd, object.value);
         if (!registrations) continue;
-        const componentBindings = bindBehaviourTypes(registrations, map);
+        const registeredBindings = bindBehaviourTypes(registrations, map);
         candidateOffset = linksEnd;
 
         requireBytes(buffer, candidateOffset, 4, "spawn SyncType length");
@@ -103,6 +103,16 @@ export function parseObjectSpawn(
         candidateOffset = checkedEnd(buffer, syncStart, syncLength);
         const syncPayload = buffer.subarray(syncStart, candidateOffset);
         if (!isPlausibleBoundary(buffer, candidateOffset)) continue;
+        const prefabBindings = prefabId === undefined
+          ? []
+          : bindPrefabBehaviourTypes(collectionId, prefabId, object.value, registeredBindings, map);
+        const componentBindings = [...new Map([...prefabBindings, ...registeredBindings]).entries()];
+        const bindingByComponent = new Map(componentBindings);
+        for (const [, registration] of registrations) {
+          registration.networkBehaviourType ??= bindingByComponent.get(
+            `${registration.objectId}:${registration.componentIndex}`,
+          );
+        }
         candidates.push({
           end: candidateOffset,
           objectId: object.value,

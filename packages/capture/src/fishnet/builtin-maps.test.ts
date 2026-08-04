@@ -74,6 +74,29 @@ describe("bundled FishNet maps", () => {
     expect(new Set(broadcastHashes).size).toBe(broadcastHashes.length);
   });
 
+  test("contains collision-free component layouts for verified instantiated prefabs", () => {
+    const map = loadBundledFishNetRpcMap();
+    const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
+    expect(map.prefabs).toHaveLength(4);
+
+    const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
+    expect(new Set(prefabKeys).size).toBe(prefabKeys.length);
+    for (const prefab of map.prefabs ?? []) {
+      const indexes = prefab.components.map(({ index }) => index);
+      const types = prefab.components.map(({ typeName }) => typeName);
+      expect(new Set(indexes).size).toBe(indexes.length);
+      expect(new Set(types).size).toBe(types.length);
+      expect(types.every((typeName) => behaviourNames.has(typeName))).toBeTrue();
+    }
+
+    const component = (prefabId: number, index: number) => map.prefabs
+      ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
+      ?.components.find((entry) => entry.index === index)?.typeName;
+    expect(component(1, 5)).toBe("StatusComponent");
+    expect(component(4, 5)).toBe("StatusComponent");
+    expect(component(5, 6)).toBe("StatusComponent");
+  });
+
   test("decodes the verified Damage writer layout from the committed map", () => {
     const fullMap = loadBundledFishNetRpcMap();
     const health = fullMap.behaviours.find(({ typeName }) => typeName === "HealthComponent");

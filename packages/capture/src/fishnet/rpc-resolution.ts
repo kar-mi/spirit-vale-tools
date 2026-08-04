@@ -47,6 +47,47 @@ export function bindBehaviourTypes(
   return bindings;
 }
 
+/**
+ * Recovers component bindings from build-scoped prefab metadata when a spawn omits some or all RPC
+ * Link registrations. Any contradiction with bindings proven by this spawn rejects the bundled
+ * layout for the whole object; fresh wire evidence always wins.
+ */
+export function bindPrefabBehaviourTypes(
+  collectionId: number,
+  prefabId: number,
+  objectId: number,
+  verifiedBindings: readonly [string, string][],
+  map: FishNetRpcMap | undefined,
+): Array<[string, string]> {
+  if (!map?.prefabs) return [];
+  const layouts = map.prefabs.filter((layout) => (
+    layout.collectionId === collectionId && layout.prefabId === prefabId
+  ));
+  if (layouts.length !== 1 || !layouts[0]) return [];
+
+  const knownTypes = new Set(map.behaviours.map(({ typeName }) => typeName));
+  const componentsByIndex = new Map<number, string>();
+  const indexesByType = new Map<string, number>();
+  for (const component of layouts[0].components) {
+    if (!knownTypes.has(component.typeName)) return [];
+    if (componentsByIndex.has(component.index) || indexesByType.has(component.typeName)) return [];
+    componentsByIndex.set(component.index, component.typeName);
+    indexesByType.set(component.typeName, component.index);
+  }
+
+  const prefix = `${objectId}:`;
+  for (const [key, typeName] of verifiedBindings) {
+    if (!key.startsWith(prefix)) continue;
+    const componentIndex = Number(key.slice(prefix.length));
+    const expectedType = componentsByIndex.get(componentIndex);
+    if (expectedType !== undefined && expectedType !== typeName) return [];
+    const expectedIndex = indexesByType.get(typeName);
+    if (expectedIndex !== undefined && expectedIndex !== componentIndex) return [];
+  }
+
+  return layouts[0].components.map(({ index, typeName }) => [componentKey(objectId, index), typeName]);
+}
+
 export function inferBehaviourType(
   map: FishNetRpcMap | undefined,
   packetName: FishNetRpcPacketName,

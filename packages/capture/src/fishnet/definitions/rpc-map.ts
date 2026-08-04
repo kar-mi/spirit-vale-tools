@@ -38,9 +38,25 @@ export interface FishNetBroadcastDefinition {
   readonly fields?: readonly FishNetRpcParameter[];
 }
 
+export interface FishNetPrefabComponentDefinition {
+  readonly index: number;
+  readonly typeName: string;
+}
+
+/**
+ * A verified NetworkBehaviour layout for one entry in a FishNet spawnable-prefab collection.
+ * The enclosing RPC map supplies the game-build scope.
+ */
+export interface FishNetPrefabDefinition {
+  readonly collectionId: number;
+  readonly prefabId: number;
+  readonly components: readonly FishNetPrefabComponentDefinition[];
+}
+
 export interface FishNetRpcMap {
   readonly buildFingerprint: string;
   readonly metadataVersion: number;
   readonly behaviours: readonly FishNetBehaviourDefinition[];
   readonly broadcasts?: readonly FishNetBroadcastDefinition[];
+  readonly prefabs?: readonly FishNetPrefabDefinition[];
 }

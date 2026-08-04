@@ -61,6 +61,8 @@ export type {
   FishNetDecodedValue,
   FishNetBehaviourDefinition,
   FishNetBroadcastDefinition,
+  FishNetPrefabComponentDefinition,
+  FishNetPrefabDefinition,
   FishNetPacketName,
   FishNetRpcMap,
   FishNetRpcPacketName,

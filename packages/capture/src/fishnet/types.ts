@@ -6,6 +6,8 @@ export type {
 export type {
   FishNetBehaviourDefinition,
   FishNetBroadcastDefinition,
+  FishNetPrefabComponentDefinition,
+  FishNetPrefabDefinition,
   FishNetRpcDefinition,
   FishNetRpcMap,
   FishNetRpcParameter,

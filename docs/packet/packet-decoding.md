@@ -83,8 +83,9 @@ property: channeled packets are reliable; unreliable packets are not.
 
 `FishNetSessionDecoder` keeps state per `connectionId`:
 
-- Object spawns register component types and RPC Link entries; despawns remove
-  that object’s registrations.
+- Object spawns register component types and RPC Link entries. Instantiated
+  spawns may also recover missing component bindings from the RPC map's
+  build-scoped prefab metadata; despawns remove that object’s registrations.
 - RPC Link packets resolve through those registrations to the original RPC
   kind, object, component, and wire hash.
 - Split packets are accumulated separately by connection, direction, channel,
@@ -112,6 +113,11 @@ Resolution is deliberately conservative:
 
 - `rpcName` and decoded fields appear only when the behaviour, RPC kind, and
   compact wire hash select a verified definition.
+- A prefab layout is keyed by spawnable collection ID plus prefab ID inside the
+  already build-fingerprinted RPC map. It is used only for instantiated spawns.
+  A component type absent from the map, a duplicate layout, or any conflict
+  with that spawn's RPC Link registrations rejects recovery. Wire registrations
+  always win.
 - A fixed RPC can infer a behaviour only when the map yields one candidate.
 - Ambiguous or unknown links stay numeric and expose `rpcResolution` rather
   than a guessed name.
@@ -120,6 +126,24 @@ Resolution is deliberately conservative:
 
 The build fingerprint is an offline compatibility key for maps and catalogs;
 it is not sent on the network or required by FishNet connection setup.
+
+### Bundled prefab layouts
+
+The current build includes these verified default-collection layouts. Blank
+positions are intentionally unknown rather than inferred:
+
+| Prefab | Component indexes |
+| --- | --- |
+| 1 | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
+| 2 | `1 NetworkTransform` |
+| 4 | same player layout as prefab 1 |
+| 5 | `0 MonsterController`, `1 NetworkTransform`, `2 MoveComponent`, `3 HealthComponent`, `4 CombatComponent`, `5 SkillsComponent`, `6 StatusComponent`, `7 SummoningComponent` |
+
+The mapping was corroborated from complete RPC-registration fingerprints over
+37 sessions and 10,653 instantiated spawns, then checked against the current
+build's behaviour definitions. It is metadata for this build only: changing the
+game-build fingerprint selects a different RPC map and cannot reuse these
+indexes accidentally.
 
 ## Output types and extension points
 

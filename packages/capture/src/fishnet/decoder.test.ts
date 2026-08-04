@@ -131,6 +131,25 @@ function spawnWithLink(
   ]));
 }
 
+function spawnWithoutLinks(
+  objectId: number,
+  prefabId = 3,
+  collectionId = 1,
+): Buffer {
+  return message(3, Buffer.concat([
+    Buffer.from([4]), // instantiated spawn
+    packed(objectId),
+    u16(collectionId),
+    packed(0), // initialization order
+    packed(-1), // no owner
+    Buffer.from([0]), // no changed transform fields
+    packed(prefabId),
+    u32(0), // payload
+    u16(0), // no RPC Link registrations
+    u32(0), // no initial SyncTypes
+  ]));
+}
+
 function semanticMap(): FishNetRpcMap {
   return {
     buildFingerprint: "synthetic-build-v2",
@@ -209,6 +228,94 @@ describe("FishNet bundles and sessions", () => {
       rpcName: "RpcSyntheticNotice",
     });
     expect(results[1]?.payload).toEqual(Buffer.from("aabb", "hex"));
+  });
+
+  test("recovers direct RPCs from a build-scoped prefab component layout", () => {
+    const map: FishNetRpcMap = {
+      buildFingerprint: "synthetic-prefab-layout",
+      metadataVersion: 31,
+      behaviours: [{
+        typeName: "SyntheticStatus",
+        rpcs: [{
+          methodName: "ApplySyntheticStatus",
+          wireHash: 3,
+          packetKind: "targetRpc",
+          parameters: [{ name: "id", codec: "stringUtf8Packed" }],
+        }],
+      }, {
+        typeName: "SyntheticInventory",
+        rpcs: [{
+          methodName: "OpenSyntheticInventory",
+          wireHash: 3,
+          packetKind: "targetRpc",
+          parameters: [{ name: "id", codec: "stringUtf8Packed" }],
+        }],
+      }],
+      prefabs: [{
+        collectionId: 1,
+        prefabId: 3,
+        components: [{ index: 5, typeName: "SyntheticStatus" }],
+      }],
+    };
+    const decoder = new FishNetSessionDecoder(map);
+    const statusId = Buffer.concat([packed(5), Buffer.from("Haste")]);
+    const results = decoder.decode(tick(6, Buffer.concat([
+      spawnWithoutLinks(7),
+      targetRpc(7, 5, 3, statusId),
+      spawnWithoutLinks(8, 3, 2),
+      targetRpc(8, 5, 3, statusId),
+    ])), { reliable: true, connectionId: "prefab-layout" });
+
+    expect(results[0]).toMatchObject({
+      packetName: "objectSpawn",
+      spawnCollectionId: 1,
+      spawnPrefabId: 3,
+      rpcLinkRegistrations: [],
+    });
+    expect(results[1]).toMatchObject({
+      networkBehaviourIndex: 5,
+      networkBehaviourType: "SyntheticStatus",
+      rpcName: "ApplySyntheticStatus",
+      rpcResolution: "verified",
+    });
+    expect(results[3]).toMatchObject({
+      networkBehaviourIndex: 5,
+      rpcResolution: "ambiguous",
+    });
+    expect(results[3]?.networkBehaviourType).toBeUndefined();
+  });
+
+  test("prefers contradictory spawn registrations over prefab metadata", () => {
+    const map: FishNetRpcMap = {
+      buildFingerprint: "synthetic-prefab-conflict",
+      metadataVersion: 31,
+      behaviours: [{
+        typeName: "SyntheticStatus",
+        rpcs: [{ methodName: "ApplySyntheticStatus", wireHash: 3, packetKind: "targetRpc" }],
+      }, {
+        typeName: "SyntheticOther",
+        rpcs: [{ methodName: "ApplySyntheticOther", wireHash: 9, packetKind: "observersRpc" }],
+      }],
+      prefabs: [{
+        collectionId: 1,
+        prefabId: 3,
+        components: [{ index: 5, typeName: "SyntheticStatus" }],
+      }],
+    };
+    const decoder = new FishNetSessionDecoder(map);
+    const results = decoder.decode(tick(7, Buffer.concat([
+      spawnWithLink(9, 5, 900, 9),
+      targetRpc(9, 5, 3),
+    ])), { reliable: true, connectionId: "prefab-conflict" });
+
+    expect(results[0]).toMatchObject({
+      rpcLinkRegistrations: [{ networkBehaviourType: "SyntheticOther" }],
+    });
+    expect(results[1]).toMatchObject({
+      networkBehaviourType: "SyntheticOther",
+      rpcResolution: "unresolved",
+    });
+    expect(results[1]?.rpcName).toBeUndefined();
   });
 
   test("decodes ownership changes using the same session-local owner identifier", () => {
