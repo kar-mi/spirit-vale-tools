@@ -1,5 +1,18 @@
 # @kar-mi/spirit-vale-tools-market
 
+## 1.0.0
+
+### Major Changes
+
+- e4a1451: Update capture decoding for the current Spirit Vale network protocol and build fingerprint. Bundle the complete regenerated RPC map, recover client-writer-only ServerRPC registrations, correct current prefab component layouts, add signed packed 64-bit decoding, and reject RPC matches whose known signatures do not consume the payload exactly.
+
+  Migrate market decoding to the current JSON vending contracts and update persisted market stalls to use `stallId` and `slotId`. This removes the public `stallIndex` and `rotationY` fields, replaces the old binary vending DTO decoder, and bumps the market read-model schema.
+
+### Patch Changes
+
+- Updated dependencies [e4a1451]
+  - @kar-mi/spirit-vale-tools-capture@1.3.0
+
 ## 0.2.0
 
 ### Minor Changes
