@@ -219,6 +219,18 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
     }
   });
 
+  test("keeps a toggle alive when the clock has run ahead of the last refresh", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
+    // The overlay judges expiry against a clock extrapolated from wall time, so "now" sits ahead of
+    // the newest event it has read. A refresh landing at the far end of its cadence must still not
+    // let the toggle lapse in between.
+    for (const at of [0, 700, 1_400, 2_100, 2_800]) {
+      tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), at);
+      tracker.advance(at + 600);
+      expect(tracker.getActiveStatuses(1, at + 600)).toHaveLength(1);
+    }
+  });
+
   test("refreshes a self-granting buff when its skill is recast", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     // SelfBuff is granted by a skill of the same id, and the game does not resend the status on a
@@ -252,8 +264,9 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), 1_000);
     expect(tracker.getActiveStatuses(1, 1_500)).toHaveLength(1);
-    // Once the refreshes stop the aura has lapsed, so it must not linger forever.
-    expect(tracker.getActiveStatuses(1, 2_500)).toHaveLength(0);
+    // Once the refreshes stop the aura has lapsed, so it must not linger forever - the keep-alive
+    // grace only delays that, it does not remove the timeout.
+    expect(tracker.getActiveStatuses(1, 3_500)).toHaveLength(0);
   });
 
   test("keeps publishing a countdown for a status that genuinely has a duration", () => {

@@ -60,6 +60,17 @@ const REFRESHING_FEEDS = new Set<FishNetCombatStatusEvent["rpc"]>(["ApplyEffectD
  */
 const EXPIRY_REFRESH_TOLERANCE_MS = 2_000;
 
+/**
+ * Headroom added to the keep-alive window a status with no catalog duration reports. The window is
+ * the server's refresh cadence, not a lifetime, and it is judged against a clock that extrapolates
+ * between polls - so taking the reported second literally leaves no margin for a late refresh and
+ * the chip blinks out and back. Measured over a live session: refreshes land up to 0.70s apart and
+ * the overlay clock runs up to 0.60s ahead of the newest event it has read, so 1s covers both.
+ * Nothing publishes this value for such a status, so the only visible effect is that an aura that
+ * genuinely lapsed clears a second later.
+ */
+const KEEP_ALIVE_GRACE_MS = 1_000;
+
 /** Tracks per-actor active buffs/debuffs from FishNet status apply/remove events. */
 export class FishNetStatusTracker {
   private readonly directory: FishNetStatusDirectory;
@@ -181,8 +192,10 @@ export class FishNetStatusTracker {
       // For a status with no catalog duration the reported second is a keep-alive window rather than
       // a countdown - the server just re-states it on every refresh - so it has to keep moving
       // forward. Holding it would pin the expiry in the past between refreshes and make the toggle
-      // blink out and back. Nothing publishes this value for such a status anyway.
-      if (!this.isTimed(event.statusId, level)) return reported;
+      // blink out and back. The window also needs headroom, because a refresh can land late and the
+      // clock it is judged against runs ahead between polls. Nothing publishes this value for such a
+      // status anyway.
+      if (!this.isTimed(event.statusId, level)) return reported + KEEP_ALIVE_GRACE_MS;
       // The server quantises what it reports, so refreshes of one countdown disagree by up to ~1.5s
       // from rounding alone while a genuine re-application moves the expiry by at least ~2.4s. A
       // status still running can only have *less* time left, so an earlier expiry is real progress
