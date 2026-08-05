@@ -30,6 +30,23 @@ describe("decodeCharacterRpcPayload", () => {
     expect(JSON.stringify(decoded.snapshot)).not.toContain("example-character-id");
   });
 
+  test("rolls a back-slot item from the headgear pool", () => {
+    // Back items such as capes roll Atk, which the accessory pool has no cap for.
+    const payload = syntheticCharacter(true, false, "Example Hero", [
+      { slot: 9, itemId: "Daggers", substats: [{ type: 9, roll: 30 }, { type: 12, roll: 93 }] },
+    ]);
+    const decoded = decodeCharacterRpcPayload(payload, true);
+
+    expect(decoded.snapshot.equipment).toMatchObject([{
+      slot: "Back",
+      itemId: "Daggers",
+      substats: [
+        { type: 9, name: "ATK", roll: 30, value: 2 },
+        { type: 12, name: "MDEF", roll: 93, value: 5 },
+      ],
+    }]);
+  });
+
   test("rejects truncated data", () => {
     expect(() => decodeCharacterRpcPayload(syntheticCharacter(false).subarray(0, 12), false)).toThrow();
   });

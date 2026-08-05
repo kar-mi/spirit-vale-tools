@@ -19,6 +19,8 @@ export interface FishNetMarketListing {
   price: bigint;
   json: string | null;
   expiresAt: bigint;
+  /** Item name as the server rendered it for this listing, when the source carried one. */
+  searchText?: string | null;
 }
 
 export interface FishNetMarketCatalogItem {
@@ -137,7 +139,7 @@ export function decodeFishNetMarketPacket(packet: DecodedFishNetPacket): FishNet
       const listings = parseJsonArray(decodedString(packet, "listingsJson"), parseListingDto);
       return [{ kind: "catalog", tick: packet.tick, items: listings.map((listing) => ({
         sellerId: listing.sellerId,
-        searchText: listing.searchText,
+        searchText: listing.searchText ?? null,
         sellerName: listing.sellerName,
         listing,
       })) }];
@@ -177,7 +179,7 @@ function parseJsonArray<T>(json: string, parse: (value: unknown) => T): T[] {
   return value.map(parse);
 }
 
-function parseListingDto(value: unknown): FishNetMarketListing & { searchText: string | null } {
+function parseListingDto(value: unknown): FishNetMarketListing {
   if (!isRecord(value) || !isRecord(value["Item"])) throw new FishNetProtocolError("invalid vending listing JSON");
   const item = value["Item"];
   return {
@@ -330,7 +332,7 @@ export class FishNetMarketTracker {
         this.catalog = event.items?.slice() ?? [];
         this.listings.clear();
         for (const item of this.catalog) this.upsert(item.listing, item.searchText);
-        if (this.account?.ownListings) for (const listing of this.account.ownListings) this.upsert(listing, null);
+        if (this.account?.ownListings) for (const listing of this.account.ownListings) this.upsert(listing, listing?.searchText ?? null);
         return event;
       case "account": {
         const previous = this.account?.balance;
@@ -344,7 +346,7 @@ export class FishNetMarketTracker {
           event = { ...event, balanceDelta: this.lastBalanceDelta, collectedAmount };
         }
         this.awaitingCollectAccount = false;
-        if (event.account?.ownListings) for (const listing of event.account.ownListings) this.upsert(listing, null);
+        if (event.account?.ownListings) for (const listing of event.account.ownListings) this.upsert(listing, listing?.searchText ?? null);
         return event;
       }
       case "stalls":
@@ -358,7 +360,7 @@ export class FishNetMarketTracker {
         if (event.accountId !== null) this.stalls.delete(event.accountId);
         return event;
       case "listings":
-        for (const listing of event.listings ?? []) this.upsert(listing, null);
+        for (const listing of event.listings ?? []) this.upsert(listing, listing?.searchText ?? null);
         return event;
       case "collectResult":
         this.awaitingCollectAccount = event.success;
@@ -373,7 +375,7 @@ export class FishNetMarketTracker {
     this.listings.set(key, {
       listing,
       searchText: searchText ?? previous?.searchText ?? null,
-      stats: parseFishNetMarketStats(listing.json, listing.itemType),
+      stats: parseFishNetMarketStats(listing.json, catalogItemType(listing.itemType)),
     });
   }
 
@@ -436,16 +438,31 @@ export function resolveFishNetMarketListingDisplayName(
   searchText: string | null,
   itemDirectory: FishNetItemDirectory = DEFAULT_ITEM_DIRECTORY,
 ): string | null {
-  const direct = itemDirectory.resolve(listing.itemType, listing.itemId);
+  const itemType = catalogItemType(listing.itemType);
+  const direct = itemDirectory.resolve(itemType, listing.itemId);
   if (direct) return direct.displayName;
-  const serializedId = listing.itemType === 2 || listing.itemType === 3
-    ? serializedItemId(listing.json)
-    : undefined;
-  const serialized = itemDirectory.resolve(listing.itemType, serializedId);
+  const serializedId = itemType === 2 || itemType === 3 ? serializedItemId(listing.json) : undefined;
+  const serialized = itemDirectory.resolve(itemType, serializedId);
   if (serialized) return serialized.displayName;
   const liveName = searchText?.trim();
   if (liveName) return liveName;
   return listing.itemId;
+}
+
+/**
+ * Converts a market listing's item type to the one the bundled item catalog uses.
+ *
+ * The vending wire enum sits exactly one above the catalog's: equipment is 3 on a listing but 2 in
+ * the catalog, artifacts 4 against 3, cards 5 against 4, gems 6 against 5. Left uncorrected the
+ * catalog never resolves a listed item, and `calculateFishNetMarketStatValues` reads listed
+ * equipment as an artifact — scoring its substats against the four-stat artifact caps, so every
+ * other stat loses its cap and falls back to the raw 0-100 roll.
+ *
+ * A listing keeps its wire type in {@link FishNetMarketListing}; this conversion applies only where
+ * the type reaches the item catalog or the substat caps.
+ */
+export function catalogItemType(wireType: number): number {
+  return wireType > 0 ? wireType - 1 : wireType;
 }
 
 function serializedItemId(json: string | null): string | undefined {

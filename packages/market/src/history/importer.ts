@@ -2,7 +2,7 @@ import type { IndexStreamResult, ReadModel } from "@kar-mi/spirit-vale-tools-sql
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { parseMarketEventLogData } from "../event-log.ts";
 import { parseMarketSnapshotListings } from "../live-log.ts";
-import { marketListingKey, parseFishNetMarketStats, resolveFishNetMarketListingDisplayName } from "../market.ts";
+import { catalogItemType, marketListingKey, parseFishNetMarketStats, resolveFishNetMarketListingDisplayName } from "../market.ts";
 import type { FishNetMarketAccount, FishNetMarketEvent, FishNetMarketListing, FishNetMarketListingView, FishNetMarketStall } from "../market.ts";
 import { MARKET_DOMAIN_NAME, MARKET_TABLES } from "./domain.ts";
 
@@ -82,7 +82,7 @@ function writeListing(model: ReadModel, sessionId: string, listing: FishNetMarke
     values ($sessionId, $key, $id, $sellerId, $sellerName, $itemId, $itemType, $count, $countTraded, $price, $json, $expiresAt, $searchText, $displayName, $normalizedText)`)
     .run({ sessionId, key, id: listing.id, sellerId: listing.sellerId, sellerName: listing.sellerName, itemId: listing.itemId, itemType: listing.itemType, count: listing.count, countTraded: listing.countTraded, price: listing.price, json: listing.json, expiresAt: listing.expiresAt, searchText: search, displayName: display, normalizedText: normalize([display, search, listing.itemId, listing.sellerName]) });
   model.statement("delete from market_listing_stats where session_id = $sessionId and listing_key = $key").run({ sessionId, key });
-  const stats = "stats" in listing && listing.stats !== undefined ? listing.stats : parseFishNetMarketStats(listing.json, listing.itemType);
+  const stats = "stats" in listing && listing.stats !== undefined ? listing.stats : parseFishNetMarketStats(listing.json, catalogItemType(listing.itemType));
   for (const stat of stats ?? []) model.statement(`insert into market_listing_stats
     (session_id, listing_key, stat_type, stat_name, roll, value, percent, value_str)
     values ($sessionId, $key, $type, $name, $roll, $value, $percent, $valueStr)`)

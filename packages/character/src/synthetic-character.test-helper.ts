@@ -1,4 +1,21 @@
-export function syntheticCharacter(update: boolean, includeHistory = true, characterName = "Example Hero"): Buffer {
+export interface SyntheticEquipment {
+  /** Index into the equip slot list; 0 is the main hand. */
+  slot: number;
+  itemId: string;
+  substats?: ReadonlyArray<{ type: number; roll: number }>;
+  cards?: readonly string[];
+}
+
+const DEFAULT_EQUIPMENT: readonly SyntheticEquipment[] = [
+  { slot: 0, itemId: "Example Sword", substats: [{ type: 0, roll: 100 }], cards: ["Example Card"] },
+];
+
+export function syntheticCharacter(
+  update: boolean,
+  includeHistory = true,
+  characterName = "Example Hero",
+  equipped: readonly SyntheticEquipment[] = DEFAULT_EQUIPMENT,
+): Buffer {
   const out: number[] = [];
   if (update) packed(out, 4);
   bool(out, false);
@@ -18,11 +35,11 @@ export function syntheticCharacter(update: boolean, includeHistory = true, chara
   bool(out, false); float(out, 0); float(out, 0); float(out, 0);
   list(out, [], () => undefined); packed(out, 0); list(out, [], () => undefined); list(out, [], () => undefined);
   list(out, [60, 30, 10, 20, 5, 15], (value) => packed(out, value));
-  list(out, [0], () => {
-    bool(out, false); packed(out, 0); bool(out, false);
-    list(out, [0], () => { bool(out, false); packed(out, 0); packed(out, 100); string(out, ""); });
-    list(out, ["Example Card"], (value) => string(out, value));
-    packed(out, 0); packed(out, 0); packed(out, -1); string(out, "example-equip-instance"); packed(out, 5); string(out, "Example Sword"); bool(out, false);
+  list(out, [...equipped], (item) => {
+    bool(out, false); packed(out, item.slot); bool(out, false);
+    list(out, [...(item.substats ?? [])], (stat) => { bool(out, false); packed(out, stat.type); packed(out, stat.roll); string(out, ""); });
+    list(out, [...(item.cards ?? [])], (value) => string(out, value));
+    packed(out, 0); packed(out, 0); packed(out, -1); string(out, "example-equip-instance"); packed(out, 5); string(out, item.itemId); bool(out, false);
   });
   packed(out, 0);
   list(out, [], () => undefined); list(out, [], () => undefined); list(out, [], () => undefined);

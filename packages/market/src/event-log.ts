@@ -80,7 +80,8 @@ function parseListing(value: unknown): FishNetMarketListing | undefined {
     || !nullableString(value["sellerName"]) || !nullableString(value["itemId"])
     || !Number.isSafeInteger(value["itemType"]) || !Number.isSafeInteger(value["count"])
     || !Number.isSafeInteger(value["countTraded"]) || !decimal(value["price"])
-    || !nullableString(value["json"]) || !decimal(value["expiresAt"])) return undefined;
+    || !nullableString(value["json"]) || !decimal(value["expiresAt"])
+    || !(value["searchText"] === undefined || nullableString(value["searchText"]))) return undefined;
   return {
     id: value["id"] as string | null,
     sellerId: value["sellerId"] as string | null,
@@ -92,6 +93,7 @@ function parseListing(value: unknown): FishNetMarketListing | undefined {
     price: BigInt(value["price"]),
     json: value["json"] as string | null,
     expiresAt: BigInt(value["expiresAt"]),
+    ...(value["searchText"] === undefined ? {} : { searchText: value["searchText"] as string | null }),
   };
 }
 

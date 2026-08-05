@@ -18,6 +18,17 @@ test("loads a complete build-scoped item catalog", () => {
   expect(reloaded.items).not.toBe(catalog.items);
 });
 
+test("names a substat group on every equipment item bar the archetype grimoires", () => {
+  const equipment = loadBundledItemCatalog().items.filter((item) => item.itemType === 2);
+  const ungrouped = equipment.filter((item) => item.substatGroup === undefined);
+  // The grimoires are the one family the substat source leaves unclassified.
+  expect(ungrouped.every((item) => /^[A-Za-z]+_\d+$/.test(item.id))).toBe(true);
+  expect(equipment.length - ungrouped.length).toBe(576);
+  expect(resolveFishNetItem(2, "Drooping Pup")?.substatGroup).toBe("Headgear");
+  expect(resolveFishNetItem(2, "Armor_Vit")?.substatGroup).toBe("Chest");
+  expect(resolveFishNetItem(2, "Bronze Plugs")?.substatGroup).toBe("Accessory");
+});
+
 test("resolves duplicate ids independently by item type", () => {
   const directory = new FishNetItemDirectory({
     buildFingerprint: "synthetic-build",

@@ -1,4 +1,5 @@
 export {
+  catalogItemType,
   decodeFishNetMarketPacket,
   FishNetMarketTracker,
   marketListingKey,
