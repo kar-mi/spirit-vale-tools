@@ -5,16 +5,18 @@ import { FishNetInspectRoster } from "./inspect-roster.ts";
 import { syntheticCharacter } from "./synthetic-character.test-helper.ts";
 
 /** Inspect_T carries no leading CharacterUpdateType, hence `syntheticCharacter(false, …)`. */
-function inspectPacket(name: string, rpcName = "Inspect_T"): CapturedFishNetPacket {
-  return {
+function inspectPacket(name: string, rpcName: string | null = "Inspect_T"): CapturedFishNetPacket {
+  // Partial fixture, as elsewhere in this package: the roster reads only these fields.
+  const packet = {
     tick: 1,
     packetId: 1,
     packetName: "targetRpc",
-    rpcName,
+    ...(rpcName === null ? {} : { rpcName }),
     raw: Buffer.alloc(0),
     payload: syntheticCharacter(false, true, name),
     connectionId: "test-connection",
   } as CapturedFishNetPacket;
+  return packet;
 }
 
 describe("FishNetInspectRoster", () => {
@@ -99,32 +101,21 @@ describe("FishNetInspectRoster", () => {
   });
 });
 
-describe("FishNetInspectRoster shape matching", () => {
-  function unnamed(name: string): CapturedFishNetPacket {
-    const packet = inspectPacket(name);
-    delete (packet as { rpcName?: string }).rpcName;
-    return packet;
-  }
-
-  test("recognises an inspect reply whose RPC-link id never resolved", () => {
-    // A capture that joins mid-session cannot name PlayerController RPCs, so the reply arrives as
-    // a bare targetRpc and must be matched on shape instead.
-    const roster = new FishNetInspectRoster();
-    expect(roster.consume(unnamed("Fictional Stranger"))).toBe(true);
-    expect(roster.list().map((entry) => entry.snapshot.name)).toEqual(["Fictional Stranger"]);
-  });
-
-  test("never files the local player as an inspected stranger", () => {
+describe("FishNetInspectRoster self and stranger", () => {
+  test("never files your own character as an inspected stranger", () => {
+    // Inspecting yourself replies on the same RPC, so only the name separates the two cases.
     const roster = new FishNetInspectRoster();
     roster.setLocalName("Fictional Stranger");
-    expect(roster.consume(unnamed("Fictional Stranger"))).toBe(false);
+    expect(roster.consume(inspectPacket("Fictional Stranger"))).toBe(false);
     expect(roster.list()).toEqual([]);
   });
 
-  test("ignores an unnamed targetRpc too short to be a character", () => {
+  test("an unnamed targetRpc is never guessed at", () => {
+    // The bundled prefab layout names PlayerController RPCs even mid-session, so an unnamed
+    // targetRpc is some other traffic — decoding it speculatively could only invent a player.
     const roster = new FishNetInspectRoster();
-    const packet = unnamed("Fictional Stranger");
-    packet.payload = Buffer.alloc(64);
+    const packet = inspectPacket("Fictional Stranger", null);
     expect(roster.consume(packet)).toBe(false);
+    expect(roster.list()).toEqual([]);
   });
 });

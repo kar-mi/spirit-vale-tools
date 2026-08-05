@@ -50,6 +50,22 @@ function spawnWithLink(objectId: number, linkId: number): Buffer {
   ]));
 }
 
+/** An instantiated spawn that carries no RPC Link registrations, as a mid-session join sees. */
+function spawnWithoutLinks(objectId: number, collectionId: number, prefabId: number): Buffer {
+  return message(3, Buffer.concat([
+    Buffer.from([4]), packed(objectId), u16(collectionId), packed(0), packed(-1), Buffer.from([0]),
+    packed(prefabId), u32(0), u16(0), u32(0),
+  ]));
+}
+
+function targetRpc(objectId: number, componentIndex: number, hash: number, payload: Buffer): Buffer {
+  const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
+  return message(10, Buffer.concat([
+    packed(objectId), Buffer.from([1, componentIndex]),
+    packed(wireHash.length + payload.length), wireHash, payload,
+  ]));
+}
+
 describe("bundled FishNet maps", () => {
   test("loads the current immutable map and rejects unsupported fingerprints", () => {
     const map = loadBundledFishNetRpcMap();
@@ -202,5 +218,29 @@ describe("bundled FishNet maps", () => {
     const applyDamage = health?.rpcs.find(({ methodName }) => methodName === "ApplyDamage_C");
     const death = health?.rpcs.find(({ methodName }) => methodName === "Death_C");
     expect(death?.parameters?.[0]?.fields).toEqual(applyDamage?.parameters?.[0]?.fields);
+  });
+
+  test("names PlayerController RPCs from prefab metadata when a spawn omits RPC Links", () => {
+    // FishNet registers RPC-link ids per connection at spawn, so a capture that joins mid-session
+    // never sees them. The player prefab layout is what recovers the binding — without it the
+    // inspect reply is an anonymous multi-KB targetRpc and only a shape guess could claim it.
+    const map = loadBundledFishNetRpcMap();
+    const inspect = map.behaviours
+      .find(({ typeName }) => typeName === "PlayerController")?.rpcs
+      .find(({ methodName }) => methodName === "Inspect_T");
+    expect(inspect).toMatchObject({ packetKind: "targetRpc" });
+
+    const decoder = new FishNetSessionDecoder(map);
+    const results = decoder.decode(tick(1, Buffer.concat([
+      spawnWithoutLinks(12, 0, 0),
+      targetRpc(12, 0, inspect?.wireHash ?? -1, Buffer.alloc(4878, 7)),
+    ])), { reliable: true, connectionId: "prefab-inspect" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "targetRpc",
+      networkBehaviourType: "PlayerController",
+      rpcName: "Inspect_T",
+      rpcResolution: "verified",
+    });
   });
 });

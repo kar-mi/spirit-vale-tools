@@ -9,12 +9,6 @@ import type { CharacterSnapshot } from "./types.ts";
 const INSPECT_RPC = "Inspect_T";
 
 /**
- * A CharacterData for another player runs to several KB even without inventory, so a shorter
- * unnamed targetRpc is never worth attempting to decode.
- */
-const MIN_SHAPE_MATCH_BYTES = 512;
-
-/**
  * Roster cap. Inspecting is cheap and a busy town would otherwise grow this without bound; the
  * oldest entry is evicted, so the most recently inspected players are the ones kept.
  */
@@ -41,8 +35,8 @@ export class FishNetInspectRoster {
   constructor(private readonly limit: number = DEFAULT_LIMIT) {}
 
   /**
-   * The local player's name, so a shape-matched payload that is actually your own character is
-   * never mistaken for an inspected stranger.
+   * The local player's name. `Inspect_T` also carries YOUR character when you inspect yourself, and
+   * that copy belongs to the local stream, not to the stranger roster.
    */
   setLocalName(name: string | undefined): void {
     this.localName = name;
@@ -50,15 +44,11 @@ export class FishNetInspectRoster {
 
   /** Returns true when the packet was an inspect reply this roster consumed. */
   consume(packet: CapturedFishNetPacket, now = new Date()): boolean {
-    const named = packet.rpcName === INSPECT_RPC;
-    // FishNet registers RPC-link ids per connection at spawn, so a capture that joined mid-session
-    // cannot name PlayerController's RPCs at all. The inspect reply then arrives as an unnamed
-    // targetRpc and has to be recognised by SHAPE — it is the only unnamed targetRpc that decodes
-    // as a complete CharacterData.
-    const unnamedCandidate = packet.rpcName === undefined
-      && packet.packetName === "targetRpc"
-      && packet.payload.length >= MIN_SHAPE_MATCH_BYTES;
-    if (!named && !unnamedCandidate) return false;
+    // Matched by name alone. The bundled prefab layout binds PlayerController from the spawn's
+    // prefab id, so the reply is named even on a capture that joined mid-session and saw no RPC
+    // Link registrations — and the local character arrives on PlayerSave (`CharacterCallback_T`,
+    // `LoadCharacter_T`), a different behaviour, so the two streams cannot be confused.
+    if (packet.rpcName !== INSPECT_RPC) return false;
 
     let snapshot: CharacterSnapshot;
     try {
@@ -70,8 +60,6 @@ export class FishNetInspectRoster {
       return false;
     }
     if (!snapshot.name) return false;
-    // Shape matching has to clear a higher bar than a named RPC: any unnamed targetRpc reaches it.
-    if (!named && !plausibleCharacter(snapshot)) return false;
     if (snapshot.name === this.localName) return false;
 
     // Re-inserting moves the entry to the end, so eviction stays least-recently-inspected.
@@ -113,17 +101,4 @@ export class FishNetInspectRoster {
     const roster = this.list();
     for (const listener of this.listeners) listener(roster);
   }
-}
-
-/**
- * Whether a shape-matched payload really looks like a player. `decodeCharacterRpcPayload` already
- * rejects nonsense attributes and impossible string lengths, so this only has to exclude the
- * degenerate decodes that a wrong-but-parseable byte run can still produce.
- */
-function plausibleCharacter(snapshot: CharacterSnapshot): boolean {
-  if (snapshot.level < 1 || snapshot.level > 500) return false;
-  if (snapshot.jobLevel < 0 || snapshot.jobLevel > 200) return false;
-  if (!snapshot.archetypes.length) return false;
-  // A real inspected player is wearing or carrying something.
-  return snapshot.equipment.length > 0 || snapshot.artifacts.length > 0 || snapshot.skills.length > 0;
 }
