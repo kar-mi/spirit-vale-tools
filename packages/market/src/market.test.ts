@@ -20,7 +20,7 @@ describe("FishNet market decoding", () => {
     });
     const tracker = new FishNetMarketTracker({ itemDirectory: directory });
     tracker.consume(packet("RequestVendorItemList_T", list([
-      catalogItem("Live Example", listing("listing-name", "item-example", 2, 75n, "Merchant Example")),
+      catalogItem("Live Example", listing("listing-name", "item-example", 3, 75n, "Merchant Example")),
     ])));
 
     expect(tracker.query({ text: "mapped example" })[0]).toMatchObject({
@@ -30,7 +30,7 @@ describe("FishNet market decoding", () => {
     });
     expect(resolveFishNetMarketListingDisplayName({
       itemId: "instance-example",
-      itemType: 3,
+      itemType: 4,
       json: JSON.stringify({ Id: "artifact-example" }),
     }, null, directory)).toBe("Mapped Artifact");
     expect(resolveFishNetMarketListingDisplayName({
@@ -91,7 +91,7 @@ describe("FishNet market decoding", () => {
       catalogItem("Example Equipment", listing(
         "listing-equip",
         "item-equip",
-        2,
+        3,
         500n,
         "Merchant Equip",
         "seller-equip",
@@ -100,7 +100,7 @@ describe("FishNet market decoding", () => {
       catalogItem("Example Artifact", listing(
         "listing-artifact",
         "item-artifact",
-        3,
+        4,
         600n,
         "Merchant Artifact",
         "seller-artifact",
@@ -109,7 +109,7 @@ describe("FishNet market decoding", () => {
       catalogItem("Malformed Example", listing(
         "listing-malformed",
         "item-malformed",
-        2,
+        3,
         700n,
         "Merchant Invalid",
         "seller-invalid",
@@ -150,7 +150,7 @@ describe("FishNet market decoding", () => {
       catalogItem("Example Sword", listing(
         "listing-sword",
         "item-sword",
-        2,
+        3,
         900n,
         "Merchant Sword",
         "seller-sword",
@@ -186,6 +186,18 @@ describe("FishNet market decoding", () => {
     ]);
     expect(parseStats("Example Sword", [[80, 100, ""]])).toMatchObject([
       { name: "DoubleAttack", value: 20, percent: true },
+    ]);
+  });
+
+  test("converts an armour listing's rolls from the catalogued substat group", () => {
+    // A listing carries no equip slot, so the armour pool has to come from the item's own group.
+    expect(parseStats("Drooping Pup", [[12, 93, ""], [9, 30, ""]])).toMatchObject([
+      { name: "Mdef", value: 5, percent: false },
+      { name: "Atk", value: 2, percent: false },
+    ]);
+    // Chest and headgear both roll Mdef at different caps, so this is unresolvable by overlap.
+    expect(parseStats("Armor_Vit", [[12, 93, ""]])).toMatchObject([
+      { name: "Mdef", value: 10, percent: false },
     ]);
   });
 
@@ -227,6 +239,7 @@ function catalogItem(searchText: string, value: Record<string, unknown>): Record
   return { ...value, ItemDisplayName: searchText };
 }
 
+/** `itemType` is the vending wire enum, which sits one above the item catalog's. */
 function listing(
   id: string,
   itemId: string,
@@ -263,7 +276,7 @@ function parseStats(id: string, stats: Array<[number, number, string | null]>) {
     catalogItem("Synthetic Weapon", listing(
       "listing-hint",
       "item-hint",
-      2,
+      3,
       1n,
       "Merchant Hint",
       "seller-hint",

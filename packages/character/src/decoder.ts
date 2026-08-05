@@ -1,5 +1,13 @@
 import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
-import { resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
+import {
+  ATTRIBUTE_SUBSTAT_CAP,
+  EQUIP_SLOTS,
+  EQUIP_SLOT_SUBSTAT_GROUPS,
+  resolveFishNetItem,
+  SUBSTAT_CAPS,
+  substatScaledValue,
+} from "@kar-mi/spirit-vale-tools-items";
+import type { FishNetItemSubstatGroup } from "@kar-mi/spirit-vale-tools-items";
 import { resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
 import type { CharacterArtifact, CharacterAttributes, CharacterEquipment, CharacterSkill, CharacterSnapshot, CharacterSubstat } from "./types.ts";
@@ -11,7 +19,6 @@ const ARCHETYPES: Record<number, string> = {
   24: "Jester", 25: "Nightshade", 26: "Necromancer", 27: "Spellblade", 28: "Blade Master", 29: "Mechanist", 30: "Alchemist", 31: "Weaver",
 };
 const ARCHETYPE_IDS = new Map(Object.entries(ARCHETYPES).map(([id, name]) => [name, Number(id)]));
-const EQUIP_SLOTS = ["Main hand", "Off hand", "Head", "Legs", "Feet", "Chest", "Left accessory", "Right accessory", "Eyewear", "Back"];
 const ARTIFACT_SLOTS = ["Rune", "Jewel", "Scroll", "Relic"];
 const LOADOUTS = ["Normal", "Secondary", "Heavy"] as const;
 
@@ -261,7 +268,7 @@ export function rescaleSubstats(snapshot: CharacterSnapshot, resolveItem: typeof
 }
 
 function equipSlotIndex(slot: string): number {
-  const index = EQUIP_SLOTS.indexOf(slot);
+  const index = (EQUIP_SLOTS as readonly string[]).indexOf(slot);
   if (index >= 0) return index;
   const parsed = /^Slot (-?\d+)$/.exec(slot);
   return parsed ? Number(parsed[1]) : -1;
@@ -270,33 +277,25 @@ function equipSlotIndex(slot: string): number {
 function convertSubstat(type: number, roll: number, slot: number, artifact: boolean, substatGroup?: string): CharacterSubstat {
   const name = STAT_NAMES[type] ?? `Stat ${type}`;
   const cap = substatCap(type, slot, artifact, substatGroup);
-  const value = cap === undefined ? undefined : roundAwayFromZero(cap * (2 / 3 + roll / 300));
+  const value = cap === undefined ? undefined : substatScaledValue(cap, roll);
   return { type, name, roll, ...(value === undefined ? {} : { value }), percent: PERCENT_STATS.has(type) };
 }
 
 function substatCap(type: number, slot: number, artifact: boolean, substatGroup?: string): number | undefined {
-  if (type >= 0 && type <= 5) return 3;
-  if (artifact) return ({ 69: 2, 70: 2, 71: 2, 72: 2 } as Record<number, number>)[type];
-  const weaponCaps: Record<string, Record<number, number>> = {
-    Magic: { 69: 5, 70: 5, 47: 5, 48: 5, 64: 10, 90: -10, 63: 10, 9: 5, 10: 5, 182: 10, 67: 10, 189: 1 },
-    Melee: { 69: 5, 70: 5, 47: 5, 48: 5, 15: 10, 13: 20, 63: 10, 9: 5, 10: 5, 52: 10, 98: 5, 130: 1, 80: 20 },
-    Ranged: { 69: 5, 70: 5, 102: 5, 48: 5, 15: 10, 13: 20, 63: 10, 9: 5, 10: 5, 52: 10, 98: 5, 25: 1, 80: 20 },
-  };
-  const weaponCap = substatGroup ? weaponCaps[substatGroup]?.[type] : undefined;
+  if (type >= 0 && type <= 5) return ATTRIBUTE_SUBSTAT_CAP;
+  if (artifact) return SUBSTAT_CAPS.Artifact[type];
+  // Weapon pools follow the weapon; every other slot rolls from the pool its slot names.
+  const weaponCap = substatGroup === undefined ? undefined : weaponCaps(substatGroup)?.[type];
   if (weaponCap !== undefined) return weaponCap;
-  const caps: Record<number, Record<number, number>> = {
-    2: { 69: 2, 70: 2, 71: 2, 72: 2, 9: 3, 10: 3, 11: 5, 12: 5 },
-    3: { 75: 25, 76: 25, 98: 5, 64: 10, 14: 15, 121: 5, 90: -10 },
-    4: { 63: 10, 65: 10, 64: 10, 185: 1 },
-    5: { 71: 10, 72: 10, 11: 10, 12: 10, 73: 5, 74: 5, 58: -5, 57: -5, 68: 10, 121: 5 },
-    6: { 71: 2, 72: 2, 69: 2, 70: 2, 15: 5, 13: 10, 63: 5 },
-    7: { 71: 2, 72: 2, 69: 2, 70: 2, 15: 5, 13: 10, 63: 5 },
-    8: { 71: 2, 72: 2, 69: 2, 70: 2, 9: 3, 10: 3, 11: 5, 12: 5 },
-    9: { 71: 2, 72: 2, 69: 2, 70: 2, 15: 5, 13: 10, 63: 5 },
-  };
-  return caps[slot]?.[type];
+  const group = EQUIP_SLOT_SUBSTAT_GROUPS[slot];
+  return group === undefined ? undefined : SUBSTAT_CAPS[group][type];
 }
-function roundAwayFromZero(value: number): number { return value < 0 ? -Math.round(-value) : Math.round(value); }
+
+function weaponCaps(substatGroup: string): Record<number, number> | undefined {
+  return substatGroup === "Magic" || substatGroup === "Melee" || substatGroup === "Ranged"
+    ? SUBSTAT_CAPS[substatGroup satisfies FishNetItemSubstatGroup]
+    : undefined;
+}
 
 function skipCharacterState(reader: CharacterReader): void {
   if (!reader.object()) return;

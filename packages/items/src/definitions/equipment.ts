@@ -28,7 +28,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -137,7 +138,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -149,7 +151,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -171,7 +174,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -197,7 +201,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -209,7 +214,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -243,7 +249,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -285,7 +292,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -319,7 +327,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -357,7 +366,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -379,7 +389,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -421,7 +432,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -463,7 +475,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -505,7 +518,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -547,7 +561,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -589,7 +604,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -631,7 +647,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -643,7 +660,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -673,7 +691,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -816,7 +835,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -854,7 +874,8 @@ export class EquipmentItemDefinitions {
           "type": 74,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -923,7 +944,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -949,7 +971,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -971,7 +994,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -997,7 +1021,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1023,7 +1048,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1041,7 +1067,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1075,7 +1102,8 @@ export class EquipmentItemDefinitions {
           "type": 2,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1105,7 +1133,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1135,7 +1164,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1177,7 +1207,8 @@ export class EquipmentItemDefinitions {
             "id": "Earth"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1203,7 +1234,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1229,7 +1261,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1267,7 +1300,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -1325,7 +1359,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -1363,7 +1398,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -1516,7 +1552,8 @@ export class EquipmentItemDefinitions {
             "id": "HolyLight"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1628,7 +1665,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1658,7 +1696,8 @@ export class EquipmentItemDefinitions {
           "type": 72,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1680,7 +1719,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -1692,7 +1732,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1730,7 +1771,8 @@ export class EquipmentItemDefinitions {
           "type": 98,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -1807,7 +1849,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -1837,7 +1880,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -1859,7 +1903,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1922,7 +1967,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -1995,7 +2041,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2130,7 +2177,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2203,7 +2251,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -2245,7 +2294,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -2287,7 +2337,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -2379,7 +2430,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -2405,7 +2457,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -2431,7 +2484,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2461,7 +2515,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2495,7 +2550,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -2521,7 +2577,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2539,7 +2596,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2569,7 +2627,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2581,7 +2640,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2607,7 +2667,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2645,7 +2706,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2671,7 +2733,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2823,7 +2886,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -2963,7 +3027,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -2993,7 +3058,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3023,7 +3089,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3041,7 +3108,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3075,7 +3143,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -3109,7 +3178,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -3143,7 +3213,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -3165,7 +3236,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -3564,7 +3636,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3598,7 +3671,8 @@ export class EquipmentItemDefinitions {
           "type": 52,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3624,7 +3698,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3642,7 +3717,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3794,7 +3870,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3863,7 +3940,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3893,7 +3971,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3905,7 +3984,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3923,7 +4003,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3945,7 +4026,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -3971,7 +4053,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -3993,7 +4076,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -4089,7 +4173,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4131,7 +4216,8 @@ export class EquipmentItemDefinitions {
             "id": "ShadowStrike"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4157,7 +4243,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4214,7 +4301,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4232,37 +4320,43 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
       "id": "DiscipleArmlets",
       "displayName": "Disciple's Bracers",
-      "weight": 10
+      "weight": 10,
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
       "id": "DiscipleChest",
       "displayName": "Disciple's Manteau",
-      "weight": 50
+      "weight": 50,
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
       "id": "DiscipleFeet",
       "displayName": "Disciple's Shoes",
-      "weight": 20
+      "weight": 20,
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
       "id": "DiscipleHelm",
       "displayName": "Disciple's Visage",
-      "weight": 20
+      "weight": 20,
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
       "id": "DiscipleLegs",
       "displayName": "Disciple's Wraps",
-      "weight": 20
+      "weight": 20,
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -4296,7 +4390,8 @@ export class EquipmentItemDefinitions {
           "type": 17,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4353,7 +4448,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4371,7 +4467,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4428,7 +4525,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4489,7 +4587,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4531,7 +4630,8 @@ export class EquipmentItemDefinitions {
             "id": "HolyLight"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4561,7 +4661,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4603,7 +4704,8 @@ export class EquipmentItemDefinitions {
             "id": "Earthbolt"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4645,7 +4747,8 @@ export class EquipmentItemDefinitions {
             "id": "Thunderbolt"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4687,7 +4790,8 @@ export class EquipmentItemDefinitions {
             "id": "Firebolt"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4729,7 +4833,8 @@ export class EquipmentItemDefinitions {
             "id": "Icebolt"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4771,7 +4876,8 @@ export class EquipmentItemDefinitions {
             "id": "Firebolt"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4813,7 +4919,8 @@ export class EquipmentItemDefinitions {
             "id": "DeathCoilEnemy"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4855,7 +4962,8 @@ export class EquipmentItemDefinitions {
             "id": "SoulStrike"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4873,7 +4981,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -4978,7 +5087,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5103,7 +5213,8 @@ export class EquipmentItemDefinitions {
             "id": "Earth"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -5267,7 +5378,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -5309,7 +5421,8 @@ export class EquipmentItemDefinitions {
             "id": "Fire"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5374,7 +5487,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5849,7 +5963,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5926,7 +6041,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5956,7 +6072,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -5982,7 +6099,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6004,7 +6122,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -6073,7 +6192,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6107,7 +6227,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6141,7 +6262,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6175,7 +6297,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6209,7 +6332,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6243,7 +6367,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6277,7 +6402,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6311,7 +6437,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6357,7 +6484,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -6383,7 +6511,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6413,7 +6542,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6439,7 +6569,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6481,7 +6612,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6519,7 +6651,8 @@ export class EquipmentItemDefinitions {
             "id": "Fire"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -6553,7 +6686,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6721,7 +6855,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -6806,7 +6941,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -6864,7 +7000,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -6906,7 +7043,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -6944,7 +7082,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -6986,7 +7125,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -7032,7 +7172,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -7184,7 +7325,8 @@ export class EquipmentItemDefinitions {
             "id": "Water"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7320,7 +7462,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7346,7 +7489,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7372,7 +7516,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7394,7 +7539,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7451,7 +7597,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7485,7 +7632,8 @@ export class EquipmentItemDefinitions {
           "type": 121,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7550,7 +7698,8 @@ export class EquipmentItemDefinitions {
           "type": 2,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7576,7 +7725,8 @@ export class EquipmentItemDefinitions {
           "type": 3,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7602,7 +7752,8 @@ export class EquipmentItemDefinitions {
           "type": 4,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7628,7 +7779,8 @@ export class EquipmentItemDefinitions {
           "type": 5,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7654,7 +7806,8 @@ export class EquipmentItemDefinitions {
           "type": 0,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7684,7 +7837,8 @@ export class EquipmentItemDefinitions {
           "type": 1,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7722,7 +7876,8 @@ export class EquipmentItemDefinitions {
           "type": 86,
           "value": 3
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -7779,7 +7934,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7813,7 +7969,8 @@ export class EquipmentItemDefinitions {
           "type": 69,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7878,7 +8035,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -7900,7 +8058,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7938,7 +8097,8 @@ export class EquipmentItemDefinitions {
           "type": 176,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -7980,7 +8140,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -8022,7 +8183,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -8064,7 +8226,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -8149,7 +8312,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8293,7 +8457,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8335,7 +8500,8 @@ export class EquipmentItemDefinitions {
           "type": 63,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8451,7 +8617,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8477,7 +8644,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8503,7 +8671,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -8557,7 +8726,8 @@ export class EquipmentItemDefinitions {
             "id": "ShieldThrow"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -8674,7 +8844,8 @@ export class EquipmentItemDefinitions {
           "type": 98,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8700,7 +8871,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8742,7 +8914,8 @@ export class EquipmentItemDefinitions {
             "id": "Shadow"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8780,7 +8953,8 @@ export class EquipmentItemDefinitions {
             "id": "Holy"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -8916,7 +9090,8 @@ export class EquipmentItemDefinitions {
           "type": 141,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8942,7 +9117,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8968,7 +9144,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -8980,7 +9157,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9080,7 +9258,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9106,7 +9285,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -9136,7 +9316,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -9162,7 +9343,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -9188,7 +9370,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9218,7 +9401,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9339,7 +9523,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9373,7 +9558,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9403,7 +9589,8 @@ export class EquipmentItemDefinitions {
           "type": 16,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9445,7 +9632,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -9483,7 +9671,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -9525,7 +9714,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -9582,7 +9772,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -9749,7 +9940,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -9791,7 +9983,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -9833,7 +10026,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -9855,7 +10049,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -9967,7 +10162,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -10005,7 +10201,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10043,7 +10240,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10081,7 +10279,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10119,7 +10318,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10157,7 +10357,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10195,7 +10396,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10221,7 +10423,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -10322,7 +10525,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -10375,7 +10579,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -10609,7 +10814,8 @@ export class EquipmentItemDefinitions {
           "type": 74,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -10651,7 +10857,8 @@ export class EquipmentItemDefinitions {
           "type": 64,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -10721,7 +10928,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -10755,7 +10963,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -10789,7 +10998,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -10811,7 +11021,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -10841,7 +11052,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -11388,7 +11600,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11493,7 +11706,8 @@ export class EquipmentItemDefinitions {
           "type": 64,
           "value": 3
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -11547,7 +11761,8 @@ export class EquipmentItemDefinitions {
           "type": 10,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -11589,7 +11804,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11627,7 +11843,8 @@ export class EquipmentItemDefinitions {
           "type": 67,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11639,7 +11856,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11724,7 +11942,8 @@ export class EquipmentItemDefinitions {
           "type": 64,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11758,7 +11977,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -11784,7 +12004,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11842,7 +12063,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11943,7 +12165,8 @@ export class EquipmentItemDefinitions {
           "type": 14,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -11989,7 +12212,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -12031,7 +12255,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -12069,7 +12294,8 @@ export class EquipmentItemDefinitions {
           "type": 6,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12111,7 +12337,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -12161,7 +12388,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -12183,7 +12411,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -12221,7 +12450,8 @@ export class EquipmentItemDefinitions {
           "type": 121,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12247,7 +12477,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12289,7 +12520,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -12327,7 +12559,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -12369,7 +12602,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -12434,7 +12668,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12456,7 +12691,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -12525,7 +12761,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -12537,7 +12774,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12549,7 +12787,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12571,7 +12810,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -12583,7 +12823,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12613,7 +12854,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12655,7 +12897,8 @@ export class EquipmentItemDefinitions {
           "type": 74,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12799,7 +13042,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12872,7 +13116,8 @@ export class EquipmentItemDefinitions {
           "type": 5,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -12918,7 +13163,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -12960,7 +13206,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -12982,7 +13229,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -13028,7 +13276,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -13097,7 +13346,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13115,7 +13365,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13314,7 +13565,8 @@ export class EquipmentItemDefinitions {
           "type": 141,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -13356,7 +13608,8 @@ export class EquipmentItemDefinitions {
           "type": 72,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -13394,7 +13647,8 @@ export class EquipmentItemDefinitions {
           "type": 10,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -13416,7 +13670,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -13428,7 +13683,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13440,7 +13696,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13462,7 +13719,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13552,7 +13810,8 @@ export class EquipmentItemDefinitions {
             "id": "DeathCoilEnemy"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13578,7 +13837,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13600,7 +13860,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13622,7 +13883,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13824,7 +14086,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13854,7 +14117,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -13876,7 +14140,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14165,7 +14430,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14191,7 +14457,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14233,7 +14500,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14263,7 +14531,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14305,7 +14574,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -14343,7 +14613,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -14369,7 +14640,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -14411,7 +14683,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -14527,7 +14800,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14684,7 +14958,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14726,7 +15001,8 @@ export class EquipmentItemDefinitions {
           "type": 67,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -14834,7 +15110,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -14872,7 +15149,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -15023,7 +15301,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15061,7 +15340,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15103,7 +15383,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -15141,7 +15422,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -15171,7 +15453,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -15213,7 +15496,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -15239,7 +15523,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15277,7 +15562,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -15315,7 +15601,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -15353,7 +15640,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -15387,7 +15675,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -15433,7 +15722,8 @@ export class EquipmentItemDefinitions {
           "type": 68,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -15475,7 +15765,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -15513,7 +15804,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -15539,7 +15831,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -15581,7 +15874,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15623,7 +15917,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -15657,7 +15952,8 @@ export class EquipmentItemDefinitions {
           "type": 70,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15691,7 +15987,8 @@ export class EquipmentItemDefinitions {
           "type": 72,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15703,7 +16000,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15780,7 +16078,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15806,7 +16105,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15883,7 +16183,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -15905,7 +16206,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -15978,7 +16280,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16004,7 +16307,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16026,7 +16330,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16088,7 +16393,8 @@ export class EquipmentItemDefinitions {
           "type": 65,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -16126,7 +16432,8 @@ export class EquipmentItemDefinitions {
             "id": "Shadow"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -16156,7 +16463,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16186,7 +16494,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16212,7 +16521,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16367,7 +16677,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16379,7 +16690,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16401,7 +16713,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -16482,7 +16795,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16563,7 +16877,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16602,7 +16917,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16691,7 +17007,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16733,7 +17050,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16755,7 +17073,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -16871,7 +17190,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -16976,7 +17296,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -17014,7 +17335,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -17056,7 +17378,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -17107,7 +17430,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17129,7 +17453,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17159,7 +17484,8 @@ export class EquipmentItemDefinitions {
           "type": 86,
           "value": 2
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17171,7 +17497,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17252,7 +17579,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -17294,7 +17622,8 @@ export class EquipmentItemDefinitions {
           "type": 72,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -17352,7 +17681,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17386,7 +17716,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17463,7 +17794,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17493,7 +17825,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17519,7 +17852,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17596,7 +17930,8 @@ export class EquipmentItemDefinitions {
           "type": 71,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -17638,7 +17973,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -17793,7 +18129,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -17981,7 +18318,8 @@ export class EquipmentItemDefinitions {
           "type": 8,
           "value": 10
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -18023,7 +18361,8 @@ export class EquipmentItemDefinitions {
           "type": 8,
           "value": 5
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -18065,7 +18404,8 @@ export class EquipmentItemDefinitions {
           "type": 8,
           "value": 5
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -18091,7 +18431,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18117,7 +18458,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18165,7 +18507,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18207,7 +18550,8 @@ export class EquipmentItemDefinitions {
             "id": "Heal"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -18233,7 +18577,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18271,7 +18616,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -18305,7 +18651,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -18425,7 +18772,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -18451,7 +18799,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18477,7 +18826,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18519,7 +18869,8 @@ export class EquipmentItemDefinitions {
             "id": "NPC_Poison"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18605,7 +18956,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18667,7 +19019,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -18776,7 +19129,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -18822,7 +19176,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -18860,7 +19215,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -18906,7 +19262,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -18975,7 +19332,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19005,7 +19363,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19047,7 +19406,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19059,7 +19419,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19126,7 +19487,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19160,7 +19522,8 @@ export class EquipmentItemDefinitions {
           "type": 70,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19206,7 +19569,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19236,7 +19600,8 @@ export class EquipmentItemDefinitions {
           "type": 80,
           "value": 3
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19262,7 +19627,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19274,7 +19640,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19296,7 +19663,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19308,7 +19676,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19338,7 +19707,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19364,7 +19734,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19496,7 +19867,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19565,7 +19937,8 @@ export class EquipmentItemDefinitions {
             "id": "Wind"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19591,7 +19964,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19633,7 +20007,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19663,7 +20038,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19752,7 +20128,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -19778,7 +20155,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -19796,7 +20174,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19822,7 +20201,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19858,7 +20238,8 @@ export class EquipmentItemDefinitions {
           "type": 63,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -19923,7 +20304,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19941,7 +20323,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -19971,7 +20354,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 5
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20078,7 +20462,8 @@ export class EquipmentItemDefinitions {
             "id": "Water"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20100,7 +20485,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Accessory"
     },
     {
       "itemType": 2,
@@ -20164,7 +20550,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20194,7 +20581,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -20228,7 +20616,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -20258,7 +20647,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20355,7 +20745,8 @@ export class EquipmentItemDefinitions {
             "id": "Holy"
           }
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20377,7 +20768,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20407,7 +20799,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20488,7 +20881,8 @@ export class EquipmentItemDefinitions {
             "id": "Wind"
           }
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20608,7 +21002,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20646,7 +21041,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -20688,7 +21084,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Legs"
     },
     {
       "itemType": 2,
@@ -20730,7 +21127,8 @@ export class EquipmentItemDefinitions {
           "type": 63,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20752,7 +21150,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20829,7 +21228,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Feet"
     },
     {
       "itemType": 2,
@@ -20901,7 +21301,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20923,7 +21324,8 @@ export class EquipmentItemDefinitions {
           "type": 101,
           "value": 100
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
@@ -20945,7 +21347,8 @@ export class EquipmentItemDefinitions {
           "type": 11,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Chest"
     },
     {
       "itemType": 2,
@@ -20971,7 +21374,8 @@ export class EquipmentItemDefinitions {
           "type": 12,
           "value": 1
         }
-      ]
+      ],
+      "substatGroup": "Headgear"
     },
     {
       "itemType": 2,
