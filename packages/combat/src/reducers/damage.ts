@@ -410,10 +410,17 @@ export class DamageReducer {
       if (targetName !== undefined) this.current.enemyNames.set(event.targetId, targetName);
     }
 
-    // Team 0 is the party's outgoing damage, so a non-zero-team death is an incoming player death.
+    // A death belongs in the log when the victim is one of ours, which is a question about the
+    // victim rather than about the team: reflected damage keeps the original caster's team, so a
+    // team-0 death can still be a party member killed by their own hit bouncing back (a boss's
+    // NPC_SpellGuard). A known monster is never logged. Otherwise a team-0 death is the party
+    // killing something — unless the victim is a known player, or killed themselves, which is what
+    // a reflect looks like on the wire and which no mob death ever does.
     // The death event itself usually carries no damage — the lethal blow is a separate damage event
     // — so it is recorded regardless of whether it qualifies as a positive hit of its own.
-    if (event.kind !== "death" || event.team === 0) return;
+    if (event.kind !== "death") return;
+    if (this.mobIdentities.has(event.targetId)) return;
+    if (event.team === 0 && !this.identities.has(event.targetId) && event.actorId !== event.targetId) return;
     const windowStartMs = observedAtMs - DEATH_LOOKBACK_MS;
     const victimHits = (this.recentHits.get(event.targetId) ?? [])
       .filter((entry) => entry.atMs >= windowStartMs && entry.atMs <= observedAtMs)

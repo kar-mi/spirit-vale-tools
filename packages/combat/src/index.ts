@@ -5,6 +5,8 @@ export { FishNetStatusTracker } from "./status-tracker.ts";
 export type { FishNetActiveStatus, FishNetStatusTrackerOptions } from "./status-tracker.ts";
 export { loadDpsReplay, parseDpsLogRecord } from "./replay.ts";
 export type { DpsReplayResult } from "./replay.ts";
+export { decodeCombatCaptureJsonLines, replayCombatCapture } from "./replay-capture.ts";
+export type { CombatCaptureReplayOptions, CombatCaptureReplayResult } from "./replay-capture.ts";
 export { formatCombatReplaySummary, inspectCombatReplaySummary, readCombatReplaySummary } from "./replay-summary.ts";
 export type { CombatReplayInspection, CombatReplaySummary } from "./replay-summary.ts";
 export { COMBAT_DOMAIN_NAME, COMBAT_DOMAIN_VERSION, createCombatDomain } from "./history/domain.ts";

@@ -271,6 +271,9 @@ describe("FishNet bundles and sessions", () => {
       spawnCollectionId: 1,
       spawnPrefabId: 3,
       rpcLinkRegistrations: [],
+      // Exposed on the packet so a consumer can tell what spawned even with no link registrations,
+      // which is how this build spawns everything.
+      spawnComponentTypes: { 5: "SyntheticStatus" },
     });
     expect(results[1]).toMatchObject({
       networkBehaviourIndex: 5,

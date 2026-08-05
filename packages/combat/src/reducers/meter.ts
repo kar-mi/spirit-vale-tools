@@ -159,10 +159,15 @@ function tankedHit(
   identities: ReadonlyMap<number, CombatIdentity>,
 ): MeterHit | undefined {
   if (event.kind !== "damage" && event.kind !== "death") return undefined;
-  // Team zero is the party's outgoing damage, which the DPS meter owns.
-  if (event.team === 0 || event.actorId === event.targetId) return undefined;
-  if (!isPositiveHit(event)) return undefined;
+  // Team zero is the party's outgoing damage, which the DPS meter owns. A reflected hit is the
+  // exception: a boss's NPC_SpellGuard sends the caster's own damage back at them, so it arrives on
+  // the party's team and attributed to the victim themselves, but it is damage they really took.
+  // A victim the directory knows as a party member is counted whatever the hit looks like.
   const identity = identities.get(event.targetId);
+  const reflected = event.team === 0 && event.actorId === event.targetId;
+  const incoming = event.team !== 0 && event.actorId !== event.targetId;
+  if (!identity && !reflected && !incoming) return undefined;
+  if (!isPositiveHit(event)) return undefined;
   return {
     actorId: event.targetId,
     ...(identity === undefined ? {} : { identity }),
