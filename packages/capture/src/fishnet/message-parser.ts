@@ -21,7 +21,6 @@ import {
 } from "./rpc-resolution.ts";
 import type { RpcLookup } from "./rpc-resolution.ts";
 import { parseObjectSpawn } from "./spawn-parser.ts";
-import type { SpawnCandidate } from "./spawn-parser.ts";
 import {
   checkedEnd,
   readNetworkBehaviourHeader,
@@ -89,7 +88,6 @@ export function parseMessage(
       packet.spawnCustomPayload = candidate.customPayload;
       packet.spawnSyncPayload = candidate.syncPayload;
       packet.rpcLinkRegistrations = candidate.registrations.map(([linkId, registration]) => ({ linkId, ...registration }));
-      packet.spawnComponentTypes = spawnComponentTypes(candidate);
       return {
         packet,
         end: candidate.end,
@@ -194,26 +192,6 @@ export function parseMessage(
     // Preserve malformed packets as opaque data without guessing another boundary.
   }
   return { packet: opaquePacket(buffer, start, tick, bundleIndex, packetName), end: buffer.length, stop: true };
-}
-
-/**
- * Flattens the spawn's component bindings to `componentIndex -> networkBehaviourType`.
- *
- * The bindings are keyed by `objectId:componentIndex` because a spawn message can carry nested
- * objects; only the spawned object's own components describe what it is.
- */
-function spawnComponentTypes(candidate: SpawnCandidate): Record<number, string> | undefined {
-  const types: Record<number, string> = {};
-  let bound = false;
-  for (const [key, typeName] of candidate.componentBindings) {
-    const separator = key.lastIndexOf(":");
-    if (separator < 0 || Number(key.slice(0, separator)) !== candidate.objectId) continue;
-    const componentIndex = Number(key.slice(separator + 1));
-    if (!Number.isInteger(componentIndex)) continue;
-    types[componentIndex] = typeName;
-    bound = true;
-  }
-  return bound ? types : undefined;
 }
 
 function parseRpcLink(

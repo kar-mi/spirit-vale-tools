@@ -91,14 +91,6 @@ export interface DecodedFishNetPacket {
   /** Initial per-behaviour SyncType bytes embedded in an ObjectSpawn packet. */
   spawnSyncPayload?: Buffer;
   rpcLinkRegistrations?: FishNetRpcLinkRegistration[];
-  /**
-   * Behaviour type per spawned component, as `componentIndex -> networkBehaviourType`.
-   *
-   * Resolved from the prefab layout as well as from the RPC link registrations, so it names an
-   * object's components even on builds that spawn with an empty RPC link segment — which is the
-   * only way to tell a player object from a monster on those builds.
-   */
-  spawnComponentTypes?: Record<number, string>;
   syncPayload?: Buffer;
   /** First SyncType index in the length-delimited body. */
   syncIndex?: number;
