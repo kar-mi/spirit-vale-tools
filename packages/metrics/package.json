@@ -1,0 +1,19 @@
+{
+  "name": "@kar-mi/spirit-vale-tools-metrics",
+  "version": "0.1.0",
+  "description": "Shared rate-estimation primitives for Spirit Vale tools.",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm && bunx tsc --project ./tsconfig.build.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

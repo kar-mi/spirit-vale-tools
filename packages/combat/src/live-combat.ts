@@ -1,6 +1,6 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
-import { DamageReducer } from "./reducers/damage.ts";
+import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "./reducers/damage.ts";
 import type { EncounterAggregate } from "./reducers/damage.ts";
 import { MeterReducer } from "./reducers/meter.ts";
 import { renderEncounter } from "./reducers/rows.ts";
@@ -40,7 +40,8 @@ export interface CombatEncounterRecord {
 }
 
 export interface LiveCombatOptions {
-  currentWindowMs?: number;
+  /** Decay constant for every meter's current rate. Defaults to 2.5 seconds. */
+  currentTauSeconds?: number;
   timelinePoints?: number;
   retainedFinishedEncounters?: number;
   idleGapMs?: number;
@@ -66,7 +67,7 @@ export interface LiveCombatState {
  */
 export class LiveCombatService {
   private readonly reducer: DamageReducer;
-  private readonly currentWindowMs: number;
+  private readonly currentTauSeconds: number;
   private readonly minimumDurationMs: number;
   private readonly retainedFinishedEncounters: number;
   private readonly onEncounterFinished?: LiveCombatOptions["onEncounterFinished"];
@@ -85,7 +86,7 @@ export class LiveCombatService {
   private revision = 0;
 
   constructor(options: LiveCombatOptions = {}) {
-    this.currentWindowMs = positive(options.currentWindowMs ?? 5_000, "currentWindowMs");
+    this.currentTauSeconds = positive(options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS, "currentTauSeconds");
     this.minimumDurationMs = positive(options.minimumDurationMs ?? 1_000, "minimumDurationMs");
     this.retainedFinishedEncounters = integerAtLeast(
       options.retainedFinishedEncounters ?? 1,
@@ -97,12 +98,12 @@ export class LiveCombatService {
     this.onEncounterFinished = options.onEncounterFinished;
     this.reducer = new DamageReducer({
       idleGapMs: options.idleGapMs,
-      currentWindowMs: this.currentWindowMs,
+      currentTauSeconds: this.currentTauSeconds,
       maxTimelineBuckets: timelinePoints,
       onEncounterFinished: (encounter) => this.finishMeter(encounter),
     });
-    this.tanked = new MeterReducer({ kind: "tanked", currentWindowMs: this.currentWindowMs, maxTimelineBuckets: timelinePoints });
-    this.healing = new MeterReducer({ kind: "healing", currentWindowMs: this.currentWindowMs, maxTimelineBuckets: timelinePoints });
+    this.tanked = new MeterReducer({ kind: "tanked", currentTauSeconds: this.currentTauSeconds, maxTimelineBuckets: timelinePoints });
+    this.healing = new MeterReducer({ kind: "healing", currentTauSeconds: this.currentTauSeconds, maxTimelineBuckets: timelinePoints });
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
@@ -223,7 +224,6 @@ export class LiveCombatService {
         // that happened to contain incoming hits, so they stay comparable with the DPS figure.
         windowEndMs: encounter.endedAtMs ?? atMs,
         lastEventAtMs: finished?.lastEventAtMs ?? this.lastEventAtMs ?? encounter.lastDamageAtMs,
-        currentWindowMs: this.currentWindowMs,
         minimumDurationMs: this.minimumDurationMs,
         ...personal,
         ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
@@ -232,7 +232,6 @@ export class LiveCombatService {
     return {
       dps: renderEncounter(encounter, {
         nowMs: atMs,
-        currentWindowMs: this.currentWindowMs,
         minimumDurationMs: this.minimumDurationMs,
         ...personal,
       }),
@@ -269,7 +268,6 @@ interface RenderMeterOptions {
   nowMs: number;
   windowEndMs: number;
   lastEventAtMs: number;
-  currentWindowMs: number;
   minimumDurationMs: number;
   personalName?: string;
   personalActorId?: number;
@@ -289,7 +287,6 @@ function renderMeter(aggregate: EncounterAggregate, options: RenderMeterOptions)
   };
   const detail = renderEncounter(windowed, {
     nowMs: options.nowMs,
-    currentWindowMs: options.currentWindowMs,
     minimumDurationMs: options.minimumDurationMs,
     ...(options.personalName === undefined ? {} : { personalName: options.personalName }),
     ...(options.personalActorId === undefined ? {} : { personalActorId: options.personalActorId }),

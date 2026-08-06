@@ -47,5 +47,3 @@ export type {
   TrendRange,
   TrendSample,
 } from "./trend.ts";
-export { XpAggregateTracker } from "./xp-aggregate.ts";
-export type { XpAggregateBucket, XpAggregateCheckpoint, XpAggregateSnapshot } from "./xp-aggregate.ts";

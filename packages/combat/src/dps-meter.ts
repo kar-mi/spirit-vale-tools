@@ -1,3 +1,4 @@
+import { EwmaRate } from "@kar-mi/spirit-vale-tools-metrics";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent, FishNetCombatEvent } from "./combat-tracker.ts";
 
@@ -6,8 +7,8 @@ export interface FishNetDpsMeterOptions {
   idleGapMs?: number;
   /** Minimum duration used as the DPS divisor. Defaults to one second. */
   minimumDurationMs?: number;
-  /** Milliseconds of recent damage included in current DPS. Defaults to 5 seconds. */
-  currentWindowMs?: number;
+  /** Decay constant for current DPS. Defaults to 2.5 seconds, which matches a 5-second window's smoothing. */
+  currentTauSeconds?: number;
   /** Milliseconds to wait for a late identity before showing unidentified damage. Defaults to ten seconds. */
   anonymousIdentityGraceMs?: number;
   /** FishNet ticks per second used for replay records without wall-clock timestamps. Defaults to 30. */
@@ -49,6 +50,11 @@ export interface FishNetDpsActorRow {
   lastDamageAtMs?: number;
   damage: number;
   dps: number;
+  /**
+   * Recent damage per second: an exponentially-weighted rate, not a flat window of the last few
+   * seconds. It rises the instant a hit lands and then fades, so it never steps discontinuously as
+   * a hit ages out and never reads exactly zero after one.
+   */
   currentDps: number;
   contribution: number;
   hits: number;
@@ -106,6 +112,7 @@ interface ActorAggregate {
   targetIds: Set<number>;
   skills: Map<string, SkillAggregate>;
   damagePoints: DamagePoint[];
+  currentRate: EwmaRate;
 }
 
 interface DamagePoint {
@@ -124,7 +131,7 @@ interface EncounterAggregate {
 
 const DEFAULT_IDLE_GAP_MS = 30_000;
 const DEFAULT_MINIMUM_DURATION_MS = 1_000;
-const DEFAULT_CURRENT_WINDOW_MS = 5_000;
+const DEFAULT_CURRENT_TAU_SECONDS = 2.5;
 const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 const DEFAULT_REPLAY_TICKS_PER_SECOND = 30;
 const ANALYSIS_BUCKET_MS = 5_000;
@@ -133,7 +140,7 @@ const ANALYSIS_BUCKET_MS = 5_000;
 export class FishNetDpsMeter {
   private readonly idleGapMs: number;
   private readonly minimumDurationMs: number;
-  private readonly currentWindowMs: number;
+  private readonly currentTauSeconds: number;
   private readonly anonymousIdentityGraceMs: number;
   private readonly replayTicksPerSecond: number;
   private readonly finished: EncounterAggregate[] = [];
@@ -154,9 +161,9 @@ export class FishNetDpsMeter {
       options.minimumDurationMs ?? DEFAULT_MINIMUM_DURATION_MS,
       "minimumDurationMs",
     );
-    this.currentWindowMs = positiveFinite(
-      options.currentWindowMs ?? DEFAULT_CURRENT_WINDOW_MS,
-      "currentWindowMs",
+    this.currentTauSeconds = positiveFinite(
+      options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS,
+      "currentTauSeconds",
     );
     this.anonymousIdentityGraceMs = nonNegativeFinite(
       options.anonymousIdentityGraceMs ?? DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS,
@@ -202,7 +209,7 @@ export class FishNetDpsMeter {
 
     let actor = this.current.activeActors.get(event.actorId);
     if (!actor) {
-      actor = createActor(event.actorId);
+      actor = createActor(event.actorId, this.currentTauSeconds);
       this.current.actors.push(actor);
       this.current.activeActors.set(event.actorId, actor);
     }
@@ -237,7 +244,7 @@ export class FishNetDpsMeter {
     if (!this.current && !countedDamage) return;
     if (!this.current) {
       const actors = [...this.identities].map(([actorId, identity]) => ({
-        ...createActor(actorId),
+        ...createActor(actorId, this.currentTauSeconds),
         ...identity,
         activeIdentity: true,
       }));
@@ -253,7 +260,7 @@ export class FishNetDpsMeter {
 
     let actor = this.current.activeActors.get(event.actorId);
     if (!actor) {
-      actor = createActor(event.actorId);
+      actor = createActor(event.actorId, this.currentTauSeconds);
       this.current.actors.push(actor);
       this.current.activeActors.set(event.actorId, actor);
     }
@@ -272,6 +279,7 @@ export class FishNetDpsMeter {
       actor.hits += 1;
       if (event.hitResult === "critical") actor.criticalHits += 1;
       actor.damagePoints.push({ observedAtMs, damage: event.value });
+      actor.currentRate.record(event.value, observedAtMs);
       if (isMobTarget(this.identities, event.actorId, event.targetId)) actor.targetIds.add(event.targetId);
       let skill = actor.skills.get(event.sourceId);
       if (!skill) {
@@ -368,7 +376,6 @@ export class FishNetDpsMeter {
       durationMs,
       totalDamage,
       snapshotNowMs,
-      this.currentWindowMs,
       this.minimumDurationMs,
       actor.displayName === undefined,
     );
@@ -415,7 +422,6 @@ export class FishNetDpsMeter {
         personalDurationMs,
         totalDamage,
         snapshotNowMs,
-        this.currentWindowMs,
         this.minimumDurationMs,
         personalActor.displayName === undefined,
       );
@@ -436,7 +442,7 @@ export class FishNetDpsMeter {
   }
 }
 
-function createActor(actorId: number): ActorAggregate {
+function createActor(actorId: number, currentRate: number | EwmaRate): ActorAggregate {
   return {
     actorId,
     actorIds: [actorId],
@@ -448,6 +454,7 @@ function createActor(actorId: number): ActorAggregate {
     kills: 0,
     skills: new Map(),
     damagePoints: [],
+    currentRate: typeof currentRate === "number" ? new EwmaRate({ tauSeconds: currentRate }) : currentRate,
   };
 }
 
@@ -484,7 +491,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     let target = merged.get(key);
     if (!target) {
       target = {
-        ...createActor(actor.actorId),
+        ...createActor(actor.actorId, actor.currentRate.emptyLike()),
         ...(displayName === undefined ? {} : { displayName }),
         activeIdentity: actor.activeIdentity,
         damage: 0,
@@ -520,6 +527,7 @@ function mergeActors(actors: ActorAggregate[]): ActorAggregate[] {
     target.actorIds = [...new Set([...target.actorIds, ...actor.actorIds])];
     for (const targetId of actor.targetIds) target.targetIds.add(targetId);
     target.damagePoints.push(...actor.damagePoints);
+    target.currentRate.add(actor.currentRate);
     for (const skill of actor.skills.values()) {
       const current = target.skills.get(skill.sourceId);
       if (current) {
@@ -541,19 +549,9 @@ function actorRow(
   durationMs: number,
   partyDamage: number,
   nowMs: number,
-  currentWindowMs: number,
   minimumDurationMs: number,
   isUnidentified: boolean,
 ): FishNetDpsActorRow {
-  const currentCutoffMs = nowMs - currentWindowMs;
-  const windowDamage = actor.damagePoints.reduce(
-    (sum, point) => point.observedAtMs > currentCutoffMs ? sum + point.damage : sum,
-    0,
-  );
-  const currentDurationMs = Math.max(
-    minimumDurationMs,
-    Math.min(currentWindowMs, nowMs - startedAtMs),
-  );
   const skills = [...actor.skills.values()]
     .map((skill): FishNetDpsSkillRow => ({
       ...skill,
@@ -570,7 +568,7 @@ function actorRow(
     ...(actor.lastDamageAtMs === undefined ? {} : { lastDamageAtMs: actor.lastDamageAtMs }),
     damage: actor.damage,
     dps: perSecond(actor.damage, durationMs),
-    currentDps: perSecond(windowDamage, currentDurationMs),
+    currentDps: actor.currentRate.rateAt(nowMs, { fromMs: startedAtMs, minimumMs: minimumDurationMs }),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
     hits: actor.hits,
     criticalHits: actor.criticalHits,
@@ -584,7 +582,7 @@ function actorRow(
 }
 
 function combineActors(actors: readonly ActorAggregate[]): ActorAggregate {
-  const combined = createActor(actors[0]?.actorId ?? -1);
+  const combined = createActor(actors[0]?.actorId ?? -1, actors[0]?.currentRate.emptyLike() ?? DEFAULT_CURRENT_TAU_SECONDS);
   combined.actorIds = [];
   for (const actor of actors) {
     combined.actorIds.push(...actor.actorIds);
@@ -604,6 +602,7 @@ function combineActors(actors: readonly ActorAggregate[]): ActorAggregate {
     combined.kills += actor.kills;
     for (const targetId of actor.targetIds) combined.targetIds.add(targetId);
     combined.damagePoints.push(...actor.damagePoints);
+    combined.currentRate.add(actor.currentRate);
     for (const skill of actor.skills.values()) {
       const current = combined.skills.get(skill.sourceId);
       if (current) {

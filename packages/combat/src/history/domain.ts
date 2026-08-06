@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 5;
+export const COMBAT_DOMAIN_VERSION = 6;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -56,9 +56,14 @@ create table if not exists combat_actors (
   hits integer not null default 0,
   critical_hits integer not null default 0,
   kills integer not null default 0,
-  -- The trailing current-DPS window as JSON. Bounded by time (a few seconds of hits), and needed so
-  -- a pass that resumes mid-encounter reports the same currentDps as one that never stopped.
-  window_json text not null default '[]',
+  -- The current-DPS rate estimator: its accumulated rate and the time that rate was last advanced
+  -- to. Needed so a pass that resumes mid-encounter reports the same currentDps as one that never
+  -- stopped. Two numbers, where a trailing window of recent hits used to be serialised here.
+  ewma_rate real not null default 0,
+  ewma_at_ms integer not null default 0,
+  -- The decay constant the rate was accumulated with. Stored rather than assumed because the rate
+  -- only means anything paired with it, so a reader rebuilds the estimator that produced the value.
+  ewma_tau_seconds real not null default 2.5,
   primary key (session_id, encounter_id, meter, actor_index)
 );
 

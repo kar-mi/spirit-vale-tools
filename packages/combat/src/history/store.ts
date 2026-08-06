@@ -326,7 +326,9 @@ interface ActorRow {
   hits: number;
   critical_hits: number;
   kills: number;
-  window_json: string;
+  ewma_rate: number;
+  ewma_at_ms: number;
+  ewma_tau_seconds: number;
 }
 
 function hydrateActor(
@@ -337,7 +339,7 @@ function hydrateActor(
   row: ActorRow,
   encounterStartedAtMs: number,
 ): ActorAggregate {
-  const actor = createActor(row.actor_id, encounterStartedAtMs);
+  const actor = createActor(row.actor_id, encounterStartedAtMs, row.ewma_tau_seconds);
   if (row.display_name !== null) actor.displayName = row.display_name;
   if (row.archetype !== null) actor.archetype = row.archetype;
   if (row.owner_connection_id !== null) actor.ownerConnectionId = row.owner_connection_id;
@@ -349,7 +351,7 @@ function hydrateActor(
   actor.hits = row.hits;
   actor.criticalHits = row.critical_hits;
   actor.kills = row.kills;
-  actor.window = JSON.parse(row.window_json) as ActorAggregate["window"];
+  actor.currentRate.restore({ rate: row.ewma_rate, updatedAtMs: row.ewma_at_ms, tauSeconds: row.ewma_tau_seconds });
 
   for (const skill of database
     .query<{ source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, string, number]>(

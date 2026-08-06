@@ -181,7 +181,6 @@ describe("FishNetDpsMeter", () => {
       totalDamage: 100,
       durationMs: 1_000,
       partyDps: 100,
-      partyCurrentDps: 0,
       actors: [{
         damage: 100,
         hits: 1,
@@ -193,6 +192,11 @@ describe("FishNetDpsMeter", () => {
         ],
       }],
     });
+    // Twenty seconds past the only counted hit, the current rate has faded to near nothing without
+    // reaching zero — where a five-second window would have dropped to exactly 0.
+    const partyCurrentDps = meter.getLatestSnapshot(20_001)?.partyCurrentDps ?? 0;
+    expect(partyCurrentDps).toBeGreaterThan(0);
+    expect(partyCurrentDps).toBeLessThan(1);
   });
 
   test("credits summon damage to the server-provided summoner actor", () => {
@@ -449,36 +453,58 @@ describe("FishNetDpsMeter", () => {
   });
 
   describe("current DPS", () => {
-    test("ramps the divisor up to the rolling window duration", () => {
+    // An exponentially-weighted rate: a hit of `v` adds `v / tau` and then fades as e^{-elapsed/tau},
+    // with the reads corrected for the cold-start ramp by dividing by (1 - e^{-elapsed/tau}).
+    const TAU = 2.5;
+    const ramped = (rate: number, elapsedMs: number): number =>
+      rate / (1 - Math.exp(-Math.max(1_000, elapsedMs) / 1_000 / TAU));
+
+    test("a landing hit lifts the rate immediately, by the hit's value over the time constant", () => {
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      meter.consumeCombat(damage(101, 300), 0);
+
+      expect(meter.getLatestSnapshot(0)?.actors[0]?.currentDps).toBeCloseTo(ramped(300 / TAU, 0), 6);
+    });
+
+    test("ramps the divisor so a fresh encounter is not under-reported", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 300), 0);
       meter.consumeCombat(damage(101, 300), 3_000);
 
-      expect(meter.getLatestSnapshot(3_000)).toMatchObject({
-        partyCurrentDps: 200,
-        actors: [{ currentDps: 200 }],
-        personal: { currentDps: 200 },
-      });
+      // Without the ramp correction a stream this young reads well below its true rate.
+      const uncorrected = (300 / TAU) * Math.exp(-3_000 / 1_000 / TAU) + 300 / TAU;
+      const corrected = meter.getLatestSnapshot(3_000)?.actors[0]?.currentDps ?? 0;
+      expect(corrected).toBeCloseTo(ramped(uncorrected, 3_000), 6);
+      expect(corrected).toBeGreaterThan(uncorrected);
     });
 
-    test("includes only damage inside the rolling window", () => {
+    test("older damage still counts, weighted down rather than dropped at a window edge", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(101, 50), 9_000);
 
-      expect(meter.getLatestSnapshot(9_000)?.actors[0]?.currentDps).toBe(10);
+      const expected = (100 / TAU) * Math.exp(-9_000 / 1_000 / TAU) + 50 / TAU;
+      expect(meter.getLatestSnapshot(9_000)?.actors[0]?.currentDps).toBeCloseTo(ramped(expected, 9_000), 6);
     });
 
-    test("drops hits at the window boundary and reaches zero after the last hit expires", () => {
+    test("decays smoothly after the last hit instead of cliffing to zero", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 150), 0);
       meter.consumeCombat(damage(101, 150), 2_500);
 
-      expect(meter.getLatestSnapshot(5_000)?.actors[0]?.currentDps).toBe(30);
-      expect(meter.getLatestSnapshot(7_500)?.actors[0]?.currentDps).toBe(0);
+      const atFive = meter.getLatestSnapshot(5_000)?.actors[0]?.currentDps ?? 0;
+      const atSevenAndAHalf = meter.getLatestSnapshot(7_500)?.actors[0]?.currentDps ?? 0;
+      // A five-second rolling window read exactly 0 here; the estimator only fades.
+      expect(atSevenAndAHalf).toBeGreaterThan(0);
+      expect(atSevenAndAHalf).toBeLessThan(atFive);
+      // One time constant apart, the ratio is 1/e once both reads share the same ramp divisor.
+      expect(atSevenAndAHalf / atFive).toBeCloseTo(
+        Math.exp(-1) * (1 - Math.exp(-5_000 / 1_000 / TAU)) / (1 - Math.exp(-7_500 / 1_000 / TAU)),
+        6,
+      );
     });
 
-    test("defaults the window end to the last damage timestamp", () => {
+    test("defaults the read time to the last damage timestamp", () => {
       const meter = new FishNetDpsMeter({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(101, 200), 4_000);
@@ -487,28 +513,49 @@ describe("FishNetDpsMeter", () => {
         .toBe(meter.getLatestSnapshot(4_000)?.actors[0]?.currentDps);
     });
 
-    test("supports a custom window and validates its duration", () => {
-      const meter = new FishNetDpsMeter({ currentWindowMs: 10_000 });
+    test("supports a custom time constant and validates it", () => {
+      const meter = new FishNetDpsMeter({ currentTauSeconds: 5, personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
-      meter.consumeCombat(damage(101, 100), 9_000);
 
-      expect(meter.getLatestSnapshot(10_000)?.actors[0]?.currentDps).toBe(10);
-      expect(() => new FishNetDpsMeter({ currentWindowMs: 0 })).toThrow(
-        "currentWindowMs must be a positive finite number",
+      expect(meter.getLatestSnapshot(0)?.actors[0]?.currentDps)
+        .toBeCloseTo((100 / 5) / (1 - Math.exp(-1 / 5)), 6);
+      expect(() => new FishNetDpsMeter({ currentTauSeconds: 0 })).toThrow(
+        "currentTauSeconds must be a positive finite number",
       );
-      expect(() => new FishNetDpsMeter({ currentWindowMs: Number.NaN })).toThrow(
-        "currentWindowMs must be a positive finite number",
+      expect(() => new FishNetDpsMeter({ currentTauSeconds: Number.NaN })).toThrow(
+        "currentTauSeconds must be a positive finite number",
       );
     });
 
-    test("sums actor current DPS into the party value", () => {
+    test("converges on the same steady-state figure the five-second window it replaced reported", () => {
+      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      // 100 damage every 100ms is a true 1000 DPS, which is what a flat five-second window would
+      // have read once full: 5000 damage over five seconds.
+      for (let atMs = 0; atMs <= 60_000; atMs += 100) meter.consumeCombat(damage(101, 100), atMs);
+
+      const current = meter.getLatestSnapshot(60_000)?.actors[0]?.currentDps ?? 0;
+      // Discrete impulses land a little above the continuous limit; a few percent either way is the
+      // quantisation of the hit cadence, not drift between the two estimators.
+      expect(current).toBeWithin(970, 1_030);
+    });
+
+    test("sums actor current DPS into the party value, including rows held back from display", () => {
       const meter = new FishNetDpsMeter();
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(202, 300), 10_000);
 
       const snapshot = meter.getLatestSnapshot(10_000);
-      expect(snapshot?.actors.map(({ currentDps }) => currentDps)).toEqual([0]);
-      expect(snapshot?.partyCurrentDps).toBe(60);
+      const rows = snapshot?.actors ?? [];
+      const party = snapshot?.partyCurrentDps ?? 0;
+      // The late actor is still inside its identity grace period, so only one row is shown while
+      // both contribute to the party figure.
+      expect(rows).toHaveLength(1);
+      expect(party).toBeGreaterThan(rows[0]!.currentDps);
+      // Both rows ramp from the encounter start, not from their own first hit.
+      expect(party).toBeCloseTo(
+        ramped((100 / TAU) * Math.exp(-10_000 / 1_000 / TAU) + 300 / TAU, 10_000),
+        6,
+      );
     });
-  });
+    });
 });

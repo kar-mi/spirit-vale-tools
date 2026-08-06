@@ -4,7 +4,7 @@ import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { parseDpsLogRecord } from "../replay.ts";
 import { DamageReducer, createActor } from "../reducers/damage.ts";
-import type { ActorAggregate, CombatIdentity, DamageReducerOptions, DeathHitRecord, DeathRecord, EncounterAggregate } from "../reducers/damage.ts";
+import type { CombatIdentity, DamageReducerOptions, DeathHitRecord, DeathRecord, EncounterAggregate } from "../reducers/damage.ts";
 import { MeterReducer } from "../reducers/meter.ts";
 import type { MeterKind } from "../reducers/meter.ts";
 import { COMBAT_DOMAIN_NAME } from "./domain.ts";
@@ -17,7 +17,7 @@ const METER_KINDS: readonly { meter: StoredMeter; kind: MeterKind }[] = [
   { meter: "healing", kind: "healing" },
 ];
 
-export interface IndexCombatStreamOptions extends Pick<DamageReducerOptions, "idleGapMs" | "currentWindowMs"> {
+export interface IndexCombatStreamOptions extends Pick<DamageReducerOptions, "idleGapMs" | "currentTauSeconds"> {
   sessionId: string;
   sourcePath: string;
   batchBytes?: number;
@@ -49,7 +49,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
     meter,
     reducer: new MeterReducer({
       kind,
-      ...(options.currentWindowMs === undefined ? {} : { currentWindowMs: options.currentWindowMs }),
+      ...(options.currentTauSeconds === undefined ? {} : { currentTauSeconds: options.currentTauSeconds }),
     }),
   }));
   const meterAggregates = new Map<string, Map<StoredMeter, EncounterAggregate>>();
@@ -64,7 +64,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
 
   const reducer = new DamageReducer({
     ...(options.idleGapMs === undefined ? {} : { idleGapMs: options.idleGapMs }),
-    ...(options.currentWindowMs === undefined ? {} : { currentWindowMs: options.currentWindowMs }),
+    ...(options.currentTauSeconds === undefined ? {} : { currentTauSeconds: options.currentTauSeconds }),
     createEncounterId: () => `enc-${currentSequence}`,
     onEncounterFinished: (encounter) => {
       captureMeters(encounter.id);
@@ -236,9 +236,9 @@ function writeActors(
     database
       .query(`insert or replace into combat_actors
         (session_id, encounter_id, meter, actor_index, actor_id, active_slot, display_name, archetype, owner_connection_id, uid,
-         active_identity, damage, first_damage_at_ms, last_damage_at_ms, hits, critical_hits, kills, window_json)
+         active_identity, damage, first_damage_at_ms, last_damage_at_ms, hits, critical_hits, kills, ewma_rate, ewma_at_ms, ewma_tau_seconds)
         values ($sessionId, $encounterId, $meter, $actorIndex, $actorId, $activeSlot, $displayName, $archetype, $ownerConnectionId, $uid,
-                $activeIdentity, $damage, $firstDamageAtMs, $lastDamageAtMs, $hits, $criticalHits, $kills, $windowJson)`)
+                $activeIdentity, $damage, $firstDamageAtMs, $lastDamageAtMs, $hits, $criticalHits, $kills, $ewmaRate, $ewmaAtMs, $ewmaTauSeconds)`)
       .run({
         sessionId,
         encounterId,
@@ -257,7 +257,9 @@ function writeActors(
         hits: actor.hits,
         criticalHits: actor.criticalHits,
         kills: actor.kills,
-        windowJson: JSON.stringify(actor.window),
+        ewmaRate: actor.currentRate.state().rate,
+        ewmaAtMs: actor.currentRate.state().updatedAtMs,
+        ewmaTauSeconds: actor.currentRate.tauSeconds,
       });
 
     for (const skill of actor.skills.values()) {
@@ -571,7 +573,9 @@ interface ActorRow {
   hits: number;
   critical_hits: number;
   kills: number;
-  window_json: string;
+  ewma_rate: number;
+  ewma_at_ms: number;
+  ewma_tau_seconds: number;
 }
 
 /**
@@ -605,7 +609,7 @@ function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggreg
     .all({ sessionId, encounterId: row.encounter_id }) as ActorRow[];
 
   for (const actorRow of actorRows) {
-    const actor = createActor(actorRow.actor_id, encounter.startedAtMs);
+    const actor = createActor(actorRow.actor_id, encounter.startedAtMs, actorRow.ewma_tau_seconds);
     if (actorRow.display_name !== null) actor.displayName = actorRow.display_name;
     if (actorRow.archetype !== null) actor.archetype = actorRow.archetype;
     if (actorRow.owner_connection_id !== null) actor.ownerConnectionId = actorRow.owner_connection_id;
@@ -617,7 +621,11 @@ function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggreg
     actor.hits = actorRow.hits;
     actor.criticalHits = actorRow.critical_hits;
     actor.kills = actorRow.kills;
-    actor.window = JSON.parse(actorRow.window_json) as ActorAggregate["window"];
+    actor.currentRate.restore({
+      rate: actorRow.ewma_rate,
+      updatedAtMs: actorRow.ewma_at_ms,
+      tauSeconds: actorRow.ewma_tau_seconds,
+    });
 
     for (const skill of database
       .query("select source_id, source_label, damage, hits, critical_hits from combat_skills where session_id = ? and encounter_id = ? and meter = 'dps' and actor_index = ?")
@@ -680,7 +688,7 @@ function loadMeterAggregate(
   for (const actorRow of database
     .query("select * from combat_actors where session_id = ? and encounter_id = ? and meter = ? order by actor_index")
     .all(sessionId, open.id, meter) as ActorRow[]) {
-    const actor = createActor(actorRow.actor_id, aggregate.startedAtMs);
+    const actor = createActor(actorRow.actor_id, aggregate.startedAtMs, actorRow.ewma_tau_seconds);
     if (actorRow.display_name !== null) actor.displayName = actorRow.display_name;
     if (actorRow.archetype !== null) actor.archetype = actorRow.archetype;
     actor.activeIdentity = actorRow.active_identity === 1;
@@ -689,7 +697,11 @@ function loadMeterAggregate(
     if (actorRow.last_damage_at_ms !== null) actor.lastDamageAtMs = actorRow.last_damage_at_ms;
     actor.hits = actorRow.hits;
     actor.criticalHits = actorRow.critical_hits;
-    actor.window = JSON.parse(actorRow.window_json) as ActorAggregate["window"];
+    actor.currentRate.restore({
+      rate: actorRow.ewma_rate,
+      updatedAtMs: actorRow.ewma_at_ms,
+      tauSeconds: actorRow.ewma_tau_seconds,
+    });
 
     for (const skill of database
       .query("select source_id, source_label, damage, hits, critical_hits from combat_skills where session_id = ? and encounter_id = ? and meter = ? and actor_index = ?")
