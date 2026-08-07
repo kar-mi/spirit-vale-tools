@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-metrics",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared rate-estimation primitives for Spirit Vale tools.",
   "type": "module",
   "files": [
