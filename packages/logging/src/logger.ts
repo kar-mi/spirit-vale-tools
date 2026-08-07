@@ -5,13 +5,14 @@ import path from "node:path";
 
 import { currentStreamPointerPath, defaultLogDirectory, sessionDirectory, sessionStreamPath } from "./paths.ts";
 import { isMissing, isRecord } from "./predicates.ts";
+import { encodeLogRecord, encodeLogStreamHeader } from "./record-codec.ts";
 import type {
   CurrentLogStream,
   JsonObject,
-  LogRecord,
   LogSession,
   LogSessionMetadata,
   LogStream,
+  LogStreamHeader,
 } from "./types.ts";
 import { sanitizeCombatData } from "./combat-sanitizer.ts";
 
@@ -87,6 +88,7 @@ export class JsonLinesLogger {
   private reportedFailure = false;
   private overflowing = false;
   private closed = false;
+  private headerWritten = false;
   private handle?: Promise<FileHandle>;
   private readonly batchBytes: number;
   private readonly flushIntervalMs: number;
@@ -110,16 +112,8 @@ export class JsonLinesLogger {
       this.droppedRecords += 1;
       return;
     }
-    const record: LogRecord = {
-      schemaVersion: 1,
-      sessionId: this.sessionId,
-      sequence: ++this.sequence,
-      recordedAt: new Date().toISOString(),
-      source: this.source,
-      type,
-      data: safeData,
-    };
-    const line = `${JSON.stringify(record)}\n`;
+    this.ensureHeader();
+    const line = `${encodeLogRecord(++this.sequence, Date.now(), type, safeData)}\n`;
     const bytes = Buffer.byteLength(line);
     if (this.bufferedBytes + bytes > this.maxBufferedBytes) {
       this.droppedRecords += 1;
@@ -166,6 +160,31 @@ export class JsonLinesLogger {
       failed: this.firstFailure !== undefined,
       droppedRecords: this.droppedRecords,
     };
+  }
+
+  /**
+   * Emits the stream header ahead of the first record.
+   *
+   * Written here rather than by whoever created the file so that every stream file is
+   * self-describing however it was produced — including a bare `--output name.jsonl` from the CLI,
+   * which has no `session.json` beside it. v2 records carry no session id or producer of their own,
+   * so without this line a stream read in isolation would have no provenance at all.
+   */
+  private ensureHeader(): void {
+    if (this.headerWritten) return;
+    this.headerWritten = true;
+    const header: LogStreamHeader = {
+      schemaVersion: 2,
+      stream: this.options.stream,
+      sessionId: this.sessionId,
+      producer: this.source,
+      startedAt: new Date().toISOString(),
+    };
+    const line = `${encodeLogStreamHeader(header)}\n`;
+    const bytes = Buffer.byteLength(line);
+    this.lines.push(line);
+    this.currentBytes += bytes;
+    this.bufferedBytes += bytes;
   }
 
   private scheduleFlush(): void {
@@ -265,6 +284,7 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
     const override = options.outputPaths?.[stream];
     const streamPath = override ?? sessionStreamPath(id, stream, logDirectory);
     await ensureDirectory(path.dirname(streamPath));
+    // Created empty; the logger writes the stream header ahead of its first record.
     await writeFile(streamPath, "", override ? undefined : { flag: "wx" });
     loggers.set(stream, new JsonLinesLogger(streamPath, id, options.producer, {
       stream,
@@ -335,14 +355,6 @@ export async function activateLogSession(
     };
     await writeCurrentLogStreamPointer(pointer, logDirectory);
   }
-}
-
-export function parseLogRecord(value: unknown): LogRecord | undefined {
-  if (!isRecord(value) || value["schemaVersion"] !== 1) return undefined;
-  if (!isNonEmptyString(value["sessionId"]) || !Number.isSafeInteger(value["sequence"]) || (value["sequence"] as number) < 1) return undefined;
-  if (!isIsoDate(value["recordedAt"]) || !isNonEmptyString(value["source"]) || !isNonEmptyString(value["type"])) return undefined;
-  if (!isRecord(value["data"])) return undefined;
-  return value as unknown as LogRecord;
 }
 
 export async function readCurrentLogStream(

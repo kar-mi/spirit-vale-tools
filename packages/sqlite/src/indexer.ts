@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 
-import { JsonlTailReader, isMissing, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import { JsonlTailReader, isLogStreamHeader, isMissing, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import type { Database } from "bun:sqlite";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
@@ -120,6 +120,8 @@ async function indexFrom(
         invalidLines += 1;
         continue;
       }
+      // A v2 file opens with a stream header, which carries no record and is not a malformed line.
+      if (isLogStreamHeader(value)) continue;
       const record = parseLogRecord(value);
       if (!record) {
         invalidLines += 1;

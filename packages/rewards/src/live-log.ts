@@ -3,6 +3,7 @@ import {
   isRecord as record,
   JsonlTailReader,
   LiveLogSessionFollower,
+  isLogStreamHeader,
   parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
@@ -56,6 +57,7 @@ export class RewardLogFollower {
       if (!line.trim()) continue;
       let candidate: unknown;
       try { candidate = JSON.parse(line); } catch { invalidLines += 1; continue; }
+      if (isLogStreamHeader(candidate)) continue;
       const record = parseLogRecord(candidate);
       if (!record) { invalidLines += 1; continue; }
       if (record.type === "rewards.lifecycle") {
@@ -139,6 +141,7 @@ export class LiveRewardLogFollower {
     for (const line of lines) {
       if (!line.trim()) continue;
       let value: unknown; try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
+      if (isLogStreamHeader(value)) continue;
       const record = parseLogRecord(value); if (!record) { invalidLines += 1; continue; }
       if (record.type === "rewards.lifecycle") { const state = record.data["state"]; if (state === "started") this.status = "ready"; else if (state === "stopped") this.status = "stopped"; else invalidLines += 1; changed = true; continue; }
       if (record.type === "rewards.error") { this.status = "error"; changed = true; continue; }
@@ -201,6 +204,7 @@ export async function loadRewardReplay(path: string): Promise<{ snapshot: MobRew
     if (!line.trim()) continue;
     let value: unknown;
     try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
+    if (isLogStreamHeader(value)) continue;
     const record = parseLogRecord(value);
     if (!record || (record.type !== "rewards.kill" && record.type !== "rewards.unmatched")) continue;
     const event = parseRewardLogRecord(record.type, record.data);

@@ -5,7 +5,10 @@ const IDENTITY_KEYS = new Set(["kind", "operation", "tick", "actorId", "displayN
 // the first says which feed produced it, and the second is the server's own countdown. Dropping them
 // left a replayed status with no expiry and no way to tell an owner-only apply from an observer
 // refresh.
-const COMBAT_KEYS = new Set(["kind", "operation", "tick", "actorId", "mobId", "displayName", "value", "team", "sourceId", "sourceLabel", "recoveryStyle", "hitResult", "duplicatesDamageEvent", "critical", "targetId", "statusId", "level", "action", "skillId", "stacks", "rpc", "remainingSeconds"]);
+// `phase` is what `FishNetStatusTracker.consumeActivation` checks before it refreshes a status:
+// an "interrupt" or "cancel" must not extend a buff. Without it here, a replayed activation always
+// looked like a successful cast, so replay and live capture disagreed on every interrupted one.
+const COMBAT_KEYS = new Set(["kind", "operation", "tick", "actorId", "mobId", "displayName", "value", "team", "sourceId", "sourceLabel", "recoveryStyle", "hitResult", "duplicatesDamageEvent", "critical", "targetId", "statusId", "level", "action", "phase", "skillId", "stacks", "rpc", "remainingSeconds"]);
 
 /** Structural allowlist for shareable combat records. Returns undefined for diagnostics/unknown records. */
 export function sanitizeCombatData(type: string, data: JsonObject): JsonObject | undefined {

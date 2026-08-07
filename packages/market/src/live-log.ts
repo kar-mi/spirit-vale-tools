@@ -4,6 +4,7 @@ import {
   JsonlTailReader,
   LiveLogSessionFollower,
   nullableString,
+  isLogStreamHeader,
   parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
@@ -57,6 +58,7 @@ export class MarketLogFollower {
         invalidLines += 1;
         continue;
       }
+      if (isLogStreamHeader(candidate)) continue;
       const record = parseLogRecord(candidate);
       if (!record) {
         invalidLines += 1;

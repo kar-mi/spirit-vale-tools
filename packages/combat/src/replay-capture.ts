@@ -1,5 +1,5 @@
 import { FishNetSessionDecoder, loadBundledFishNetRpcMap, decodeLiteNetLibDatagram } from "@kar-mi/spirit-vale-tools-capture";
-import { parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import { isLogStreamHeader, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { FishNetActorDirectory } from "./actor-directory.ts";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import { FishNetCombatTracker } from "./combat-tracker.ts";
@@ -64,7 +64,9 @@ class CombatCaptureReplay {
     if (!line.trim()) return;
     let record;
     try {
-      record = parseLogRecord(JSON.parse(line));
+      const value: unknown = JSON.parse(line);
+      if (isLogStreamHeader(value)) return; // Stream metadata, not a record.
+      record = parseLogRecord(value);
     } catch {
       record = undefined;
     }

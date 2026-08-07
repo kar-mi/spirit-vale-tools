@@ -1,4 +1,4 @@
-import { JsonlTailReader, LiveLogSessionFollower, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import { JsonlTailReader, LiveLogSessionFollower, isLogStreamHeader, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { parseDpsLogRecord } from "./replay.ts";
@@ -48,6 +48,7 @@ export class DpsLogFollower {
         invalidLines += 1;
         continue;
       }
+      if (isLogStreamHeader(candidate)) continue;
       const record = parseLogRecord(candidate);
       if (!record) {
         invalidLines += 1;

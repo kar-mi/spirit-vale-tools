@@ -2,10 +2,16 @@ export {
   JsonLinesLogger,
   activateLogSession,
   createLogSession,
-  parseLogRecord,
   readCurrentLogStream,
   writeCurrentLogStreamPointer,
 } from "./logger.ts";
+export {
+  encodeLogRecord,
+  encodeLogStreamHeader,
+  isLogStreamHeader,
+  parseLogRecord,
+  parseLogStreamHeader,
+} from "./record-codec.ts";
 export type {
   CreateLogSessionOptions,
   JsonLinesLoggerOptions,
@@ -36,4 +42,5 @@ export type {
   LogSessionMetadata,
   ListedLogSession,
   LogStream,
+  LogStreamHeader,
 } from "./types.ts";

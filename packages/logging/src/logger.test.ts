@@ -3,7 +3,34 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, parseLogRecord, readCurrentLogStream, sessionStreamPath } from "./index.ts";
+import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, isLogStreamHeader, parseLogRecord, parseLogStreamHeader, readCurrentLogStream, sessionStreamPath } from "./index.ts";
+import type { LogRecord } from "./types.ts";
+
+/**
+ * Decodes a stream file's records the way a reader does: v2 opens with a header line that carries
+ * no record, so tests assert on decoded records rather than on raw lines.
+ */
+function decodeRecords(text: string): LogRecord[] {
+  const records: LogRecord[] = [];
+  let header;
+  for (const line of text.trimEnd().split("\n")) {
+    if (!line.trim()) continue;
+    const value: unknown = JSON.parse(line);
+    if (isLogStreamHeader(value)) {
+      header = parseLogStreamHeader(value);
+      if (!header) throw new Error(`malformed stream header: ${line}`);
+      continue;
+    }
+    const record = parseLogRecord(value, header);
+    if (!record) throw new Error(`undecodable line: ${line}`);
+    records.push(record);
+  }
+  return records;
+}
+
+function decodeSequences(text: string): number[] {
+  return decodeRecords(text).map((record) => record.sequence);
+}
 
 describe("shared JSON logger", () => {
   test("defaults to a logs folder under the working directory", () => {
@@ -20,8 +47,8 @@ describe("shared JSON logger", () => {
       await session.close();
       const current = await readCurrentLogStream("combat", root);
       expect(current?.sessionId).toBe(session.id);
-      const record = parseLogRecord(JSON.parse(await Bun.file(current!.path).text()));
-      expect(record).toMatchObject({ schemaVersion: 1, sequence: 1, type: "combat.event" });
+      const [record] = decodeRecords(await Bun.file(current!.path).text());
+      expect(record).toMatchObject({ schemaVersion: 2, sequence: 1, type: "combat.event", sessionId: session.id, source: "synthetic-test" });
       expect(session.id).toMatch(/^\d{8}T\d{9}Z-[0-9a-f]{8}$/);
 
       const nextSession = await createLogSession({ producer: "synthetic-test", streams: ["combat"], logDirectory: root });
@@ -85,7 +112,7 @@ describe("shared JSON logger", () => {
 
     expect(failures).toEqual(["combat:synthetic write failure"]);
     expect(appended).toHaveLength(1);
-    expect(JSON.parse(appended[0]!)).toMatchObject({ sequence: 2, data: { value: 2 } });
+    expect(decodeRecords(appended[0]!)).toMatchObject([{ sequence: 2, data: { value: 2 } }]);
   });
 
   test("reports only the first failure even when later batches keep failing", async () => {
@@ -120,9 +147,8 @@ describe("shared JSON logger", () => {
     for (let index = 1; index <= 40; index += 1) logger.log("market.event", { index });
     await logger.close();
 
-    const sequences = appended.join("").trimEnd().split("\n").map((line) => JSON.parse(line).sequence);
     expect(appended.length).toBeGreaterThan(1);
-    expect(sequences).toEqual(Array.from({ length: 40 }, (_value, index) => index + 1));
+    expect(decodeSequences(appended.join(""))).toEqual(Array.from({ length: 40 }, (_value, index) => index + 1));
   });
 
   test("stays ordered when records arrive during an in-flight flush", async () => {
@@ -143,8 +169,7 @@ describe("shared JSON logger", () => {
     await flushing;
     await logger.close();
 
-    const sequences = appended.join("").trimEnd().split("\n").map((line) => JSON.parse(line).sequence);
-    expect(sequences).toEqual([1, 2, 3]);
+    expect(decodeSequences(appended.join(""))).toEqual([1, 2, 3]);
   });
 
   test("writes a partial batch on the flush timer without flush() or close()", async () => {
@@ -170,12 +195,12 @@ describe("shared JSON logger", () => {
       session.logger("rewards").log("rewards.event", { index: 1 });
       await session.flush();
       const afterFlush = await Bun.file(sessionStreamPath(session.id, "rewards", root)).text();
-      expect(afterFlush.trimEnd().split("\n")).toHaveLength(1);
+      expect(decodeSequences(afterFlush)).toEqual([1]);
 
       session.logger("rewards").log("rewards.event", { index: 2 });
       await session.close();
       const afterClose = await Bun.file(sessionStreamPath(session.id, "rewards", root)).text();
-      expect(afterClose.trimEnd().split("\n").map((line) => JSON.parse(line).sequence)).toEqual([1, 2]);
+      expect(decodeSequences(afterClose)).toEqual([1, 2]);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -229,9 +254,9 @@ describe("shared JSON logger", () => {
     logger.log("combat.event", { kind: "damage", actorId: 7, value: 43 });
     await logger.close();
 
-    const records = appended.join("").trimEnd().split("\n").map((line) => JSON.parse(line));
+    const records = decodeRecords(appended.join(""));
     expect(records.map((record) => record.sequence)).toEqual([1, 2]);
-    expect(records[0].data).toEqual({ kind: "damage", actorId: 7, value: 42 });
+    expect(records[0]!.data).toEqual({ kind: "damage", actorId: 7, value: 42 });
   });
 
   test("activateLogSession makes the session's records durable before flipping pointers", async () => {
@@ -251,8 +276,7 @@ describe("shared JSON logger", () => {
       const current = await readCurrentLogStream("combat", root);
       expect(current?.sessionId).toBe(session.id);
       const text = await Bun.file(current!.path).text();
-      expect(text.trimEnd().split("\n")).toHaveLength(1);
-      expect(JSON.parse(text.trimEnd())).toMatchObject({ sequence: 1, data: { displayName: "Seeded" } });
+      expect(decodeRecords(text)).toMatchObject([{ sequence: 1, data: { displayName: "Seeded" } }]);
       await session.close();
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -273,7 +297,7 @@ describe("shared JSON logger", () => {
       session.logger("capture").log("capture.lifecycle", { state: "started" });
       await session.close();
 
-      expect(JSON.parse((await Bun.file(target).text()).trimEnd())).toMatchObject({ sequence: 1, type: "capture.lifecycle" });
+      expect(decodeRecords(await Bun.file(target).text())).toMatchObject([{ sequence: 1, type: "capture.lifecycle" }]);
       expect(await readCurrentLogStream("capture", root)).toBeUndefined();
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -298,7 +322,7 @@ describe("shared JSON logger", () => {
         });
         session.logger("capture").log("capture.lifecycle", { state: "started" });
         await session.close();
-        expect(JSON.parse((await Bun.file(target).text()).trimEnd())).toMatchObject({ type: "capture.lifecycle" });
+        expect(decodeRecords(await Bun.file(target).text())).toMatchObject([{ type: "capture.lifecycle" }]);
       }
     } finally {
       process.chdir(previousCwd);

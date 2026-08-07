@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, test } from "bun:test";
 import { openReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
-import { sanitizeCombatData } from "@kar-mi/spirit-vale-tools-logging";
+import { encodeLogRecord, encodeLogStreamHeader, sanitizeCombatData } from "@kar-mi/spirit-vale-tools-logging";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { loadDpsReplay } from "../replay.ts";
@@ -203,6 +203,56 @@ describe("combat read model", () => {
       await expectParity(context, second);
     } finally {
       await context.cleanup();
+    }
+  });
+
+  test("indexes a v2 log identically to the same content written as v1", async () => {
+    // Every other test in this file writes v1 lines, so those cover the logs already on disk. This
+    // one writes the same events in the current encoding — header line and all — and requires the
+    // read model to come out the same, which is the whole compatibility contract.
+    const events = (): string[] => [
+      identity(1, "Aurora", 0),
+      damage(1, 90, 100, 1_000),
+      damage(1, 90, 150, 4_000),
+      damage(1, 91, 75, 9_000, "skill:ember"),
+    ];
+
+    const v1Context = await fixture();
+    const v2Context = await fixture();
+    try {
+      await appendFile(v1Context.logPath, events().join(""));
+      const v1Model = await v1Context.open();
+      await indexCombatStream(v1Model, { sessionId: SESSION, sourcePath: v1Context.logPath, finalize: true });
+
+      // Re-encode the identical records as v2, behind the stream header a real writer emits.
+      sequence = 0;
+      const header = encodeLogStreamHeader({
+        schemaVersion: 2,
+        stream: "combat",
+        sessionId: SESSION,
+        producer: "synthetic-test",
+        startedAt: new Date(ORIGIN).toISOString(),
+      });
+      const v2Lines = events().map((line) => {
+        const parsed = JSON.parse(line) as LogRecord;
+        return `${encodeLogRecord(parsed.sequence, Date.parse(parsed.recordedAt), parsed.type, parsed.data)}\n`;
+      });
+      await appendFile(v2Context.logPath, `${header}\n${v2Lines.join("")}`);
+      const v2Model = await v2Context.open();
+      const result = await indexCombatStream(v2Model, { sessionId: SESSION, sourcePath: v2Context.logPath, finalize: true });
+      // The header is stream metadata, not a broken line.
+      expect(result.invalidLines).toBe(0);
+
+      const read = (model: ReadModel): unknown => {
+        const store = new CombatHistoryStore(model);
+        const listed = store.listEncounters({ sessionId: SESSION });
+        return listed.items.map((item) => store.getEncounter(SESSION, item.encounterId));
+      };
+      expect(read(v2Model)).toEqual(read(v1Model));
+      await expectParity(v2Context, v2Model);
+    } finally {
+      await v1Context.cleanup();
+      await v2Context.cleanup();
     }
   });
 

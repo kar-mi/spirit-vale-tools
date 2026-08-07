@@ -33,6 +33,16 @@ describe("combat log sanitizer", () => {
     });
   });
 
+  test("keeps an activation's phase, which decides whether a status is refreshed", () => {
+    const value = sanitizeCombatData("combat.event", {
+      kind: "activation", tick: 1, actorId: 2, sourceId: "FlowState", sourceLabel: "Flow State",
+      phase: "interrupt", rpc: "ToggleEnd_C", payloadBytes: 8, fields: { private: "payload" },
+    });
+    // `consumeActivation` returns early on an interrupt or a cancel. Dropping this made a replayed
+    // interrupt look like a successful cast and extend the buff, which live capture never did.
+    expect(value).toMatchObject({ kind: "activation", phase: "interrupt" });
+  });
+
   test("keeps summon stack fields", () => {
     const value = sanitizeCombatData("combat.event", {
       kind: "summon", tick: 1, actorId: 2, skillId: "FictionalSummon", stacks: 3,

@@ -4,7 +4,7 @@ import { DamageReducer } from "./reducers/damage.ts";
 import type { EncounterAggregate } from "./reducers/damage.ts";
 import { renderEncounter } from "./reducers/rows.ts";
 import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
-import { isRecord, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import { isRecord, isLogStreamHeader, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 export interface DpsReplayResult {
   snapshots: FishNetDpsEncounterSnapshot[];
@@ -33,6 +33,7 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
       invalidLines += 1;
       continue;
     }
+    if (isLogStreamHeader(candidate)) continue;
     const record = parseLogRecord(candidate);
     if (!record) {
       invalidLines += 1;
