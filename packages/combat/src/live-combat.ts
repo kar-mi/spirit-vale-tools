@@ -4,7 +4,7 @@ import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "./reducers/damage.ts
 import type { EncounterAggregate } from "./reducers/damage.ts";
 import { MeterReducer } from "./reducers/meter.ts";
 import { renderEncounter } from "./reducers/rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "./dps-meter.ts";
+import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
 
 export interface MeterRow {
   displayName: string;

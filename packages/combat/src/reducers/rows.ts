@@ -1,4 +1,4 @@
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot, FishNetDpsSkillRow, FishNetPersonalMatch } from "../dps-meter.ts";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot, FishNetDpsSkillRow, FishNetPersonalMatch } from "../snapshot.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, DEFAULT_MINIMUM_DURATION_MS, createActor } from "./damage.ts";
 import type { ActorAggregate, EncounterAggregate } from "./damage.ts";
 import { addSeries, seriesPoints } from "./timeline.ts";
@@ -14,8 +14,9 @@ export interface RenderOptions {
 const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 
 /**
- * Renders an aggregate into the same snapshot shape the legacy meter produces, so the read model and
- * the live service can be diffed against `FishNetDpsMeter` field for field.
+ * Renders an aggregate into an encounter snapshot. Every derived figure lives here — per-skill rows,
+ * timeline buckets, crit rates, contribution shares, the personal row — so the live service, the
+ * history read model and a whole-log replay all report identically from the same aggregates.
  */
 export function renderEncounter(
   encounter: EncounterAggregate,

@@ -11,20 +11,22 @@ bun add @kar-mi/spirit-vale-tools-combat
 ## Usage
 
 ```ts
-import { FishNetCombatTracker, FishNetDpsMeter } from "@kar-mi/spirit-vale-tools-combat";
+import { FishNetCombatTracker, LiveCombatService } from "@kar-mi/spirit-vale-tools-combat";
 
 const tracker = new FishNetCombatTracker();
-const meter = new FishNetDpsMeter({ personalName: "MyCharacter" });
+const meter = new LiveCombatService({ personalName: "MyCharacter" });
 
 // packet: DecodedFishNetPacket from @kar-mi/spirit-vale-tools-capture
 for (const event of tracker.consume(packet)) {
   meter.consumeCombat(event, Date.now());
 }
 
-for (const encounter of meter.getSnapshots()) {
-  console.log(encounter.partyDps, encounter.actors);
-}
+const { current } = meter.getState();
+if (current) console.log(current.dps.partyDps, current.dps.actors);
 ```
+
+To build encounters yourself rather than through the live service, drive
+`DamageReducer` and render each finished encounter with `renderEncounter`.
 
 Feed the tracker every decoded FishNet packet from live capture or replay. Use
 `FishNetActorDirectory` to resolve actor identities and `loadDpsReplay` /

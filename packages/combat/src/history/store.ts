@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 
-import type { FishNetDpsEncounterSnapshot } from "../dps-meter.ts";
+import type { FishNetDpsEncounterSnapshot } from "../snapshot.ts";
 import { createActor } from "../reducers/damage.ts";
 import type { ActorAggregate, EncounterAggregate } from "../reducers/damage.ts";
 import { renderEncounter } from "../reducers/rows.ts";

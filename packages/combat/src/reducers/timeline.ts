@@ -74,8 +74,15 @@ export function addSeries(target: BucketSeries, source: BucketSeries): void {
 }
 
 /**
- * Renders the series over `durationMs`, matching the legacy meter's `buildTimeline` exactly:
- * a leading zero point, then one point per bucket, padded with zeroes to cover the full duration.
+ * Renders the series over `durationMs`: a leading zero point, then one point per bucket, padded
+ * with zeroes to cover the full duration.
+ *
+ * Anything at or beyond the final bucket folds into it. `addToSeries` places a hit by its own
+ * timestamp and knows nothing of the duration the series is later rendered over, so a hit landing
+ * exactly on the closing boundary sits one bucket past the last rendered one — and `durationMs` is
+ * `lastDamageAtMs - startedAtMs`, which puts the closing hit of every encounter on that boundary
+ * whenever the duration is a whole number of buckets. Without this fold that damage disappears from
+ * the timeline while still counting toward `damage` and `dps`.
  */
 export function seriesPoints(series: BucketSeries, durationMs: number): TimelinePoint[] {
   const bucketCount = Math.max(1, Math.ceil(durationMs / series.widthMs));
@@ -84,7 +91,12 @@ export function seriesPoints(series: BucketSeries, durationMs: number): Timeline
   for (let index = 0; index < bucketCount; index += 1) {
     const elapsedMs = Math.min(durationMs, (index + 1) * series.widthMs);
     const bucketDurationMs = Math.max(1, elapsedMs - index * series.widthMs);
-    const damage = series.buckets[index] ?? 0;
+    let damage = series.buckets[index] ?? 0;
+    if (index === bucketCount - 1) {
+      for (let overflow = bucketCount; overflow < series.buckets.length; overflow += 1) {
+        damage += series.buckets[overflow] ?? 0;
+      }
+    }
     cumulativeDamage += damage;
     points.push({ elapsedMs, damage, cumulativeDamage, dps: damage / (bucketDurationMs / 1_000) });
   }

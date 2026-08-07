@@ -152,7 +152,7 @@ export class DamageReducer {
 
   constructor(options: DamageReducerOptions = {}) {
     this.idleGapMs = options.idleGapMs ?? DEFAULT_IDLE_GAP_MS;
-    this.currentTauSeconds = options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS;
+    this.currentTauSeconds = positiveTau(options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS);
     this.maxTimelineBuckets = options.maxTimelineBuckets ?? Number.POSITIVE_INFINITY;
     this.createEncounterId = options.createEncounterId ?? (() => `encounter-${this.nextEncounter++}`);
     if (options.onEncounterFinished) this.onEncounterFinished = options.onEncounterFinished;
@@ -276,30 +276,17 @@ export class DamageReducer {
       actor.activeIdentity = true;
     }
     if (countedDamage) {
-      actor.damage += event.value;
-      if (actor.firstDamageAtMs === undefined) {
-        actor.firstDamageAtMs = observedAtMs;
-        actor.actorSeries.originMs = observedAtMs;
-      }
-      actor.lastDamageAtMs = observedAtMs;
-      actor.hits += 1;
-      if (event.hitResult === "critical") actor.criticalHits += 1;
-      addToSeries(actor.encounterSeries, observedAtMs, event.value, this.maxTimelineBuckets);
-      addToSeries(actor.actorSeries, observedAtMs, event.value, this.maxTimelineBuckets);
-      actor.currentRate.record(event.value, observedAtMs);
+      recordHit(actor, {
+        value: event.value,
+        atMs: observedAtMs,
+        critical: event.hitResult === "critical",
+        sourceId: event.sourceId,
+        sourceLabel: event.sourceLabel,
+      }, this.maxTimelineBuckets);
       if (isMobTarget(this.identities, event.actorId, event.targetId)) {
         actor.targetIds.add(event.targetId);
         actor.targetDamage.set(event.targetId, (actor.targetDamage.get(event.targetId) ?? 0) + event.value);
       }
-      let skill = actor.skills.get(event.sourceId);
-      if (!skill) {
-        skill = { sourceId: event.sourceId, sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-        actor.skills.set(event.sourceId, skill);
-      }
-      skill.sourceLabel = event.sourceLabel;
-      skill.damage += event.value;
-      skill.hits += 1;
-      if (event.hitResult === "critical") skill.criticalHits += 1;
     }
     if (countedKill) actor.kills += 1;
   }
@@ -452,6 +439,50 @@ export class DamageReducer {
     }
     return actor;
   }
+}
+
+/** One positive hit's contribution to a row, shared by the damage reducer and the tanked/healing meters. */
+export interface RecordedHit {
+  value: number;
+  atMs: number;
+  critical: boolean;
+  sourceId: string;
+  sourceLabel: string;
+}
+
+/**
+ * Folds one hit into an actor's totals, both bucket series, its current-rate estimator and its
+ * per-skill row. Target attribution stays with the caller: the damage reducer counts enemies it can
+ * distinguish from party members, while the meters count their hit's counterpart unconditionally.
+ */
+export function recordHit(actor: ActorAggregate, hit: RecordedHit, maxTimelineBuckets: number): void {
+  actor.damage += hit.value;
+  if (actor.firstDamageAtMs === undefined) {
+    actor.firstDamageAtMs = hit.atMs;
+    actor.actorSeries.originMs = hit.atMs;
+  }
+  actor.lastDamageAtMs = hit.atMs;
+  actor.hits += 1;
+  if (hit.critical) actor.criticalHits += 1;
+  addToSeries(actor.encounterSeries, hit.atMs, hit.value, maxTimelineBuckets);
+  addToSeries(actor.actorSeries, hit.atMs, hit.value, maxTimelineBuckets);
+  actor.currentRate.record(hit.value, hit.atMs);
+
+  let skill = actor.skills.get(hit.sourceId);
+  if (!skill) {
+    skill = { sourceId: hit.sourceId, sourceLabel: hit.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
+    actor.skills.set(hit.sourceId, skill);
+  }
+  skill.sourceLabel = hit.sourceLabel;
+  skill.damage += hit.value;
+  skill.hits += 1;
+  if (hit.critical) skill.criticalHits += 1;
+}
+
+/** Rejected at construction rather than when the first actor is created, so a bad value fails fast. */
+export function positiveTau(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) throw new Error("currentTauSeconds must be a positive finite number");
+  return value;
 }
 
 export function createActor(

@@ -1,7 +1,6 @@
 import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
 import type { FishNetCombatEvent } from "../combat-tracker.ts";
-import { addToSeries } from "./timeline.ts";
-import { DEFAULT_CURRENT_TAU_SECONDS, createActor, isPositiveHit } from "./damage.ts";
+import { DEFAULT_CURRENT_TAU_SECONDS, createActor, isPositiveHit, positiveTau, recordHit } from "./damage.ts";
 import type { ActorAggregate, CombatIdentity, EncounterAggregate } from "./damage.ts";
 
 /**
@@ -37,7 +36,7 @@ export class MeterReducer {
 
   constructor(options: MeterReducerOptions) {
     this.kind = options.kind;
-    this.currentTauSeconds = options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS;
+    this.currentTauSeconds = positiveTau(options.currentTauSeconds ?? DEFAULT_CURRENT_TAU_SECONDS);
     this.maxTimelineBuckets = options.maxTimelineBuckets ?? Number.POSITIVE_INFINITY;
   }
 
@@ -115,29 +114,9 @@ export class MeterReducer {
       actor.activeIdentity = true;
     }
 
-    actor.damage += hit.value;
-    if (actor.firstDamageAtMs === undefined) {
-      actor.firstDamageAtMs = observedAtMs;
-      actor.actorSeries.originMs = observedAtMs;
-    }
-    actor.lastDamageAtMs = observedAtMs;
-    actor.hits += 1;
-    if (hit.critical) actor.criticalHits += 1;
-    addToSeries(actor.encounterSeries, observedAtMs, hit.value, this.maxTimelineBuckets);
-    addToSeries(actor.actorSeries, observedAtMs, hit.value, this.maxTimelineBuckets);
-    actor.currentRate.record(hit.value, observedAtMs);
+    recordHit(actor, { ...hit, atMs: observedAtMs }, this.maxTimelineBuckets);
     // `mobsHit` renders as the count of these: attackers for tanked damage, recipients for healing.
     if (hit.counterpartId !== undefined) actor.targetIds.add(hit.counterpartId);
-
-    let skill = actor.skills.get(hit.sourceId);
-    if (!skill) {
-      skill = { sourceId: hit.sourceId, sourceLabel: hit.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-      actor.skills.set(hit.sourceId, skill);
-    }
-    skill.sourceLabel = hit.sourceLabel;
-    skill.damage += hit.value;
-    skill.hits += 1;
-    if (hit.critical) skill.criticalHits += 1;
   }
 }
 

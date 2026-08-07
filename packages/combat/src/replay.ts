@@ -1,18 +1,26 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
-import { FishNetDpsMeter } from "./dps-meter.ts";
+import { DamageReducer } from "./reducers/damage.ts";
+import type { EncounterAggregate } from "./reducers/damage.ts";
+import { renderEncounter } from "./reducers/rows.ts";
+import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
 import { isRecord, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 export interface DpsReplayResult {
-  meter: FishNetDpsMeter;
+  snapshots: FishNetDpsEncounterSnapshot[];
   invalidLines: number;
 }
 
-/** Loads combat JSON Lines without retaining raw records or file contents. */
+/**
+ * Loads combat JSON Lines without retaining raw records or file contents.
+ *
+ * The reducer leaves `maxTimelineBuckets` unbounded by default, which is what a whole-log replay
+ * wants: full timeline resolution, where the live service caps it to keep memory bounded.
+ */
 export async function loadDpsReplay(path: string, personalName = ""): Promise<DpsReplayResult> {
-  const meter = new FishNetDpsMeter({ personalName });
+  const finished: EncounterAggregate[] = [];
+  const reducer = new DamageReducer({ onEncounterFinished: (encounter) => finished.push(encounter) });
   let invalidLines = 0;
-  let originTick: number | undefined;
   let recordedAtOriginMs: number | undefined;
   let lastTime = 0;
 
@@ -36,19 +44,21 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
       invalidLines += 1;
       continue;
     }
+    // `parseLogRecord` already rejects a record whose `recordedAt` will not parse, so every record
+    // reaching here has a usable wall clock; there is no tick-derived fallback to fall back to.
     const recordedAtMs = Date.parse(record.recordedAt);
-    if (Number.isFinite(recordedAtMs)) {
-      recordedAtOriginMs ??= recordedAtMs;
-      lastTime = Math.max(lastTime, recordedAtMs - recordedAtOriginMs);
-    } else {
-      originTick ??= event.tick;
-      lastTime = Math.max(lastTime, meter.replayTimeMs(event.tick, originTick));
-    }
-    if (event.kind === "actorIdentity") meter.consumeIdentity(event, lastTime);
-    else meter.consumeCombat(event, lastTime);
+    recordedAtOriginMs ??= recordedAtMs;
+    lastTime = Math.max(lastTime, recordedAtMs - recordedAtOriginMs);
+    if (event.kind === "actorIdentity") reducer.consumeIdentity(event, lastTime);
+    else reducer.consumeCombat(event, lastTime);
   }
-  meter.reset(lastTime);
-  return { meter, invalidLines };
+  // Closes the trailing encounter, so every encounter in the log reaches `finished`.
+  reducer.reset(lastTime);
+  // No `nowMs`: each encounter renders as of its own last damage, not as of the end of the file.
+  // Rendering a finished log at one shared "now" would decay every encounter but the last to a
+  // current rate of nearly zero.
+  const snapshots = finished.map((encounter) => renderEncounter(encounter, { personalName }));
+  return { snapshots, invalidLines };
 }
 
 async function* readLines(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {

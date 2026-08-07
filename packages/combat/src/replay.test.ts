@@ -20,11 +20,11 @@ describe("loadDpsReplay", () => {
     try {
       const result = await loadDpsReplay(file.name!, "Aster Vale");
       expect(result.invalidLines).toBe(2);
-      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120, 30]);
-      expect(result.meter.getSnapshots().at(-1)?.personalMatch).toBe("matched");
+      expect(result.snapshots.map(({ totalDamage }) => totalDamage)).toEqual([120, 30]);
+      expect(result.snapshots.at(-1)?.personalMatch).toBe("matched");
       const utf16Result = await loadDpsReplay(utf16File.name!, "Aster Vale");
       expect(utf16Result.invalidLines).toBe(2);
-      expect(utf16Result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120, 30]);
+      expect(utf16Result.snapshots.map(({ totalDamage }) => totalDamage)).toEqual([120, 30]);
     } finally {
       await file.delete();
       await utf16File.delete();
@@ -45,7 +45,7 @@ describe("loadDpsReplay", () => {
     try {
       const result = await loadDpsReplay(file.name!);
       expect(result.invalidLines).toBe(1);
-      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+      expect(result.snapshots.map(({ totalDamage }) => totalDamage)).toEqual([120]);
     } finally {
       await file.delete();
     }
@@ -63,7 +63,7 @@ describe("loadDpsReplay", () => {
     try {
       const result = await loadDpsReplay(file.name!);
       expect(result.invalidLines).toBe(1);
-      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+      expect(result.snapshots.map(({ totalDamage }) => totalDamage)).toEqual([120]);
     } finally {
       await file.delete();
     }
@@ -90,7 +90,7 @@ describe("loadDpsReplay", () => {
     try {
       const result = await loadDpsReplay(file.name!);
       expect(result.invalidLines).toBe(1);
-      expect(result.meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([120]);
+      expect(result.snapshots.map(({ totalDamage }) => totalDamage)).toEqual([120]);
     } finally {
       await file.delete();
     }

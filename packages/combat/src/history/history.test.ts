@@ -8,7 +8,7 @@ import { sanitizeCombatData } from "@kar-mi/spirit-vale-tools-logging";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { loadDpsReplay } from "../replay.ts";
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "../dps-meter.ts";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "../snapshot.ts";
 import { createCombatDomain } from "./domain.ts";
 import { indexCombatStream } from "./importer.ts";
 import { CombatHistoryStore } from "./store.ts";
@@ -140,7 +140,7 @@ function toAbsolute(snapshot: FishNetDpsEncounterSnapshot, originMs: number): Fi
 /** The whole point of the read model: it must agree with the legacy full-history replay. */
 async function expectParity(context: Fixture, model: ReadModel): Promise<void> {
   const store = new CombatHistoryStore(model);
-  const legacy = (await loadDpsReplay(context.logPath)).meter.getSnapshots();
+  const legacy = (await loadDpsReplay(context.logPath)).snapshots;
   const listed = store.listEncounters({ sessionId: SESSION });
   expect(listed.items).toHaveLength(legacy.length);
 

@@ -15,7 +15,7 @@ export interface CombatReplayInspection {
 
 export async function readCombatReplaySummary(path: string): Promise<CombatReplaySummary> {
   const replay = await loadDpsReplay(path);
-  const encounters = replay.meter.getSnapshots();
+  const encounters = replay.snapshots;
   return {
     encounters: encounters.length,
     totalDamage: encounters.reduce((total, encounter) => total + encounter.totalDamage, 0),

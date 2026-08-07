@@ -1,8 +1,108 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "./combat-tracker.ts";
-import { FishNetDpsMeter } from "./dps-meter.ts";
+import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
+import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "../combat-tracker.ts";
+import { DamageReducer } from "./damage.ts";
+import type { EncounterAggregate } from "./damage.ts";
+import { renderEncounter } from "./rows.ts";
+import type { FishNetDpsEncounterSnapshot } from "../snapshot.ts";
+
+interface HarnessOptions {
+  idleGapMs?: number;
+  minimumDurationMs?: number;
+  currentTauSeconds?: number;
+  anonymousIdentityGraceMs?: number;
+  personalName?: string;
+  personalActorId?: number;
+}
+
+/**
+ * Drives `DamageReducer` and renders through `renderEncounter`, exposing the reducer's split
+ * lifecycle as the single "feed events, read snapshots" surface these tests assert on.
+ *
+ * Pure delegation: the reducer owns accumulation and encounter boundaries, `renderEncounter` owns
+ * every derived figure, and the personal selection is a render option rather than meter state.
+ */
+class MeterHarness {
+  private readonly reducer: DamageReducer;
+  private readonly finished: EncounterAggregate[] = [];
+  private personalName: string;
+  private personalActorId: number | undefined;
+  private readonly minimumDurationMs: number | undefined;
+  private readonly anonymousIdentityGraceMs: number | undefined;
+
+  constructor(options: HarnessOptions = {}) {
+    this.reducer = new DamageReducer({
+      ...(options.idleGapMs === undefined ? {} : { idleGapMs: options.idleGapMs }),
+      ...(options.currentTauSeconds === undefined ? {} : { currentTauSeconds: options.currentTauSeconds }),
+      onEncounterFinished: (encounter) => this.finished.push(encounter),
+    });
+    this.personalName = options.personalName?.trim() ?? "";
+    this.personalActorId = options.personalActorId;
+    this.minimumDurationMs = options.minimumDurationMs;
+    this.anonymousIdentityGraceMs = options.anonymousIdentityGraceMs;
+  }
+
+  consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
+    this.reducer.consumeIdentity(event, observedAtMs);
+  }
+
+  consumeCombat(event: FishNetCombatDamageEvent | FishNetCombatDeathEvent, observedAtMs: number): void {
+    this.reducer.consumeCombat(event, observedAtMs);
+  }
+
+  advance(observedAtMs: number): void {
+    this.reducer.advance(observedAtMs);
+  }
+
+  reset(observedAtMs: number): void {
+    this.reducer.reset(observedAtMs);
+  }
+
+  clearEncounters(): void {
+    this.finished.length = 0;
+    this.reducer.current = undefined;
+  }
+
+  setPersonalName(name: string): void {
+    this.personalName = name.trim();
+  }
+
+  getPersonalName(): string {
+    return this.personalName;
+  }
+
+  setPersonalActorId(actorId: number | undefined): void {
+    if (actorId !== undefined && (!Number.isInteger(actorId) || actorId < 0)) {
+      throw new Error("personalActorId must be a non-negative integer");
+    }
+    this.personalActorId = actorId;
+  }
+
+  getPersonalActorId(): number | undefined {
+    return this.personalActorId;
+  }
+
+  getSnapshots(nowMs?: number): FishNetDpsEncounterSnapshot[] {
+    const encounters = this.reducer.current ? [...this.finished, this.reducer.current] : this.finished;
+    return encounters.map((encounter) => this.render(encounter, nowMs));
+  }
+
+  getLatestSnapshot(nowMs?: number): FishNetDpsEncounterSnapshot | undefined {
+    const encounter = this.reducer.current ?? this.finished.at(-1);
+    return encounter ? this.render(encounter, nowMs) : undefined;
+  }
+
+  private render(encounter: EncounterAggregate, nowMs?: number): FishNetDpsEncounterSnapshot {
+    return renderEncounter(encounter, {
+      ...(nowMs === undefined ? {} : { nowMs }),
+      ...(this.minimumDurationMs === undefined ? {} : { minimumDurationMs: this.minimumDurationMs }),
+      ...(this.anonymousIdentityGraceMs === undefined ? {} : { anonymousIdentityGraceMs: this.anonymousIdentityGraceMs }),
+      personalName: this.personalName,
+      ...(this.personalActorId === undefined ? {} : { personalActorId: this.personalActorId }),
+    });
+  }
+}
 
 function identity(
   actorId: number,
@@ -60,9 +160,9 @@ function death(actorId: number, value: number, duplicate: boolean): FishNetComba
   return { ...common, kind: "death", rpc: "Death_C", duplicatesDamageEvent: duplicate };
 }
 
-describe("FishNetDpsMeter", () => {
+describe("encounter aggregation and rendering", () => {
   test("ranks identified players and groups personal skill DPS over the encounter duration", () => {
-    const meter = new FishNetDpsMeter({ personalName: " aster vale " });
+    const meter = new MeterHarness({ personalName: " aster vale " });
     meter.consumeIdentity({ ...identity(101, "Aster Vale"), archetype: 12 }, 0);
     meter.consumeIdentity(identity(202, "Briar Stone"), 0);
     meter.consumeCombat(damage(101, 300, "SyntheticArc", "Synthetic Arc", 0, "critical"), 0);
@@ -83,7 +183,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("uses the personal first-to-last-hit span without changing the party ranking clock", () => {
-    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    const meter = new MeterHarness({ personalActorId: 101 });
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeIdentity(identity(202, "Briar Stone"), 0);
     meter.consumeCombat(damage(202, 100), 0);
@@ -105,7 +205,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("floors a single-hit personal duration at the configured minimum", () => {
-    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    const meter = new MeterHarness({ personalActorId: 101 });
     meter.consumeCombat(damage(202, 100), 0);
     meter.consumeCombat(damage(101, 300), 5_000);
     meter.consumeCombat(damage(202, 100), 10_000);
@@ -118,7 +218,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("counts distinct enemy targets as mobs hit without counting the player target", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat({ ...damage(101, 100), targetId: 900 }, 0);
     meter.consumeCombat({ ...damage(101, 100), targetId: 901 }, 1_000);
@@ -131,7 +231,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("retains damage received before identity and merges a reused actor identity", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeIdentity(identity(101, "Aster Vale"), 100);
     meter.consumeIdentity({ kind: "actorIdentity", operation: "remove", tick: 2, actorId: 101 }, 200);
@@ -142,7 +242,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("retains a known class through empty updates and accepts a changed class", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
     meter.consumeIdentity({ ...identity(101, "Aster Vale"), archetype: 12 }, 0);
     meter.consumeCombat(damage(101, 100), 0);
 
@@ -154,7 +254,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("filters enemies and non-positive damage while counting each credited lethal record once", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeCombat(death(101, 100, true), 0);
@@ -166,7 +266,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("excludes self-target damage and deaths from outgoing combat statistics", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat({ ...damage(101, 40, "SyntheticBleed", "Synthetic Bleed"), targetId: 101 }, 0);
     meter.consumeCombat({ ...death(101, 40, false), targetId: 101 }, 1);
@@ -200,7 +300,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("credits summon damage to the server-provided summoner actor", () => {
-    const meter = new FishNetDpsMeter({ personalActorId: 101 });
+    const meter = new MeterHarness({ personalActorId: 101 });
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat({
       ...damage(101, 300, "SyntheticSummonStrike", "Synthetic Summon Strike"),
@@ -237,7 +337,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("reports player critical rate and five-second cumulative and DPS timeline buckets", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat(damage(101, 100, "SyntheticArc", "Synthetic Arc", 0, "critical"), 0);
     meter.consumeCombat(damage(101, 50, "SyntheticArc", "Synthetic Arc"), 6_000);
@@ -253,8 +353,8 @@ describe("FishNetDpsMeter", () => {
     ]);
   });
 
-  test("splits idle encounters, supports resets, and converts replay ticks", () => {
-    const meter = new FishNetDpsMeter({ idleGapMs: 10_000 });
+  test("splits idle encounters and supports resets", () => {
+    const meter = new MeterHarness({ idleGapMs: 10_000 });
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeIdentity(identity(101, "Aster Vale"), 1);
     meter.consumeCombat(damage(101, 50), 10_000);
@@ -263,11 +363,10 @@ describe("FishNetDpsMeter", () => {
 
     expect(meter.getSnapshots()).toHaveLength(2);
     expect(meter.getSnapshots().map(({ totalDamage }) => totalDamage)).toEqual([100, 50]);
-    expect(meter.replayTimeMs(330, 300)).toBe(1_000);
   });
 
   test("preserves the current encounter across connection identity resets", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 2 }, 1_000);
@@ -283,7 +382,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("merges player damage by trimmed, case-insensitive name across identity changes", () => {
-    const meter = new FishNetDpsMeter({ personalName: " ember sage " });
+    const meter = new MeterHarness({ personalName: " ember sage " });
     meter.consumeIdentity({
       ...identity(101, "Ember Sage", 1, 7),
       uid: "00000000-0000-0000-0000-000000000001",
@@ -315,7 +414,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("clears encounter history while retaining identity and personal selection", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale", personalActorId: 101 });
+    const meter = new MeterHarness({ personalName: "Aster Vale", personalActorId: 101 });
     meter.consumeIdentity(identity(101, "Aster Vale"), 0);
     meter.consumeCombat(damage(101, 100), 0);
     meter.reset(1_000);
@@ -338,7 +437,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("uses a 30 second encounter timeout by default", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeCombat(damage(101, 50), 29_999);
     meter.consumeCombat(damage(101, 25), 60_000);
@@ -347,7 +446,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("matches simultaneous identities with the same normalized player name", () => {
-    const meter = new FishNetDpsMeter({ personalName: " aster vale " });
+    const meter = new MeterHarness({ personalName: " aster vale " });
     meter.consumeCombat(damage(101, 100), 0);
     meter.consumeIdentity(identity(101, "Aster Vale"), 1);
     meter.consumeIdentity(identity(202, "aster vale"), 1);
@@ -359,7 +458,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("merges same-owner combat aliases without making personal matching ambiguous", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
     meter.consumeIdentity(identity(202, "Aster Vale", 1, 7), 0);
     meter.consumeCombat(damage(101, 100), 0);
@@ -373,7 +472,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("merges credited kills across same-owner combat aliases", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
     meter.consumeIdentity(identity(202, "Aster Vale", 1, 7), 0);
     meter.consumeCombat(damage(101, 100), 0);
@@ -387,7 +486,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("merges identical display names when they belong to different owners", () => {
-    const meter = new FishNetDpsMeter({ personalName: "Aster Vale" });
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
     meter.consumeIdentity(identity(202, "Aster Vale", 1, 8), 0);
     meter.consumeCombat(damage(101, 100), 0);
@@ -401,7 +500,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("retains team-zero damage while waiting for a display-name sync", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeCombat(damage(303, 240), 0);
     expect(meter.getLatestSnapshot()).toMatchObject({
       totalDamage: 240,
@@ -414,7 +513,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("supports an explicit personal actor when no display name is available", () => {
-    const meter = new FishNetDpsMeter();
+    const meter = new MeterHarness();
     meter.consumeCombat(damage(303, 240), 0);
     meter.setPersonalActorId(303);
     expect(meter.getLatestSnapshot()).toMatchObject({
@@ -424,7 +523,7 @@ describe("FishNetDpsMeter", () => {
   });
 
   test("keeps explicit personal damage separate from the unidentified party aggregate", () => {
-    const meter = new FishNetDpsMeter({ personalActorId: 303 });
+    const meter = new MeterHarness({ personalActorId: 303 });
     meter.consumeCombat({ ...damage(303, 100), targetId: 900 }, 0);
     meter.consumeCombat({ ...damage(404, 300, "SyntheticRain", "Synthetic Rain"), targetId: 901 }, 0);
 
@@ -460,14 +559,14 @@ describe("FishNetDpsMeter", () => {
       rate / (1 - Math.exp(-Math.max(1_000, elapsedMs) / 1_000 / TAU));
 
     test("a landing hit lifts the rate immediately, by the hit's value over the time constant", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 300), 0);
 
       expect(meter.getLatestSnapshot(0)?.actors[0]?.currentDps).toBeCloseTo(ramped(300 / TAU, 0), 6);
     });
 
     test("ramps the divisor so a fresh encounter is not under-reported", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 300), 0);
       meter.consumeCombat(damage(101, 300), 3_000);
 
@@ -479,7 +578,7 @@ describe("FishNetDpsMeter", () => {
     });
 
     test("older damage still counts, weighted down rather than dropped at a window edge", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(101, 50), 9_000);
 
@@ -488,7 +587,7 @@ describe("FishNetDpsMeter", () => {
     });
 
     test("decays smoothly after the last hit instead of cliffing to zero", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 150), 0);
       meter.consumeCombat(damage(101, 150), 2_500);
 
@@ -505,7 +604,7 @@ describe("FishNetDpsMeter", () => {
     });
 
     test("defaults the read time to the last damage timestamp", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(101, 200), 4_000);
 
@@ -514,21 +613,21 @@ describe("FishNetDpsMeter", () => {
     });
 
     test("supports a custom time constant and validates it", () => {
-      const meter = new FishNetDpsMeter({ currentTauSeconds: 5, personalActorId: 101 });
+      const meter = new MeterHarness({ currentTauSeconds: 5, personalActorId: 101 });
       meter.consumeCombat(damage(101, 100), 0);
 
       expect(meter.getLatestSnapshot(0)?.actors[0]?.currentDps)
         .toBeCloseTo((100 / 5) / (1 - Math.exp(-1 / 5)), 6);
-      expect(() => new FishNetDpsMeter({ currentTauSeconds: 0 })).toThrow(
+      expect(() => new MeterHarness({ currentTauSeconds: 0 })).toThrow(
         "currentTauSeconds must be a positive finite number",
       );
-      expect(() => new FishNetDpsMeter({ currentTauSeconds: Number.NaN })).toThrow(
+      expect(() => new MeterHarness({ currentTauSeconds: Number.NaN })).toThrow(
         "currentTauSeconds must be a positive finite number",
       );
     });
 
     test("converges on the same steady-state figure the five-second window it replaced reported", () => {
-      const meter = new FishNetDpsMeter({ personalActorId: 101 });
+      const meter = new MeterHarness({ personalActorId: 101 });
       // 100 damage every 100ms is a true 1000 DPS, which is what a flat five-second window would
       // have read once full: 5000 damage over five seconds.
       for (let atMs = 0; atMs <= 60_000; atMs += 100) meter.consumeCombat(damage(101, 100), atMs);
@@ -540,7 +639,7 @@ describe("FishNetDpsMeter", () => {
     });
 
     test("sums actor current DPS into the party value, including rows held back from display", () => {
-      const meter = new FishNetDpsMeter();
+      const meter = new MeterHarness();
       meter.consumeCombat(damage(101, 100), 0);
       meter.consumeCombat(damage(202, 300), 10_000);
 
@@ -558,4 +657,37 @@ describe("FishNetDpsMeter", () => {
       );
     });
     });
+});
+
+describe("timeline bucket boundaries", () => {
+  test("keeps a closing hit that lands exactly on a bucket boundary", () => {
+    // durationMs is lastDamageAtMs - startedAtMs, so the final hit of an encounter always sits on
+    // the closing edge. When that edge is a whole number of 5s buckets the hit indexes one bucket
+    // past the last rendered one, and used to vanish from the timeline while still counting toward
+    // damage and dps.
+    const meter = new MeterHarness({ personalActorId: 101 });
+    meter.consumeCombat(damage(101, 300), 0);
+    meter.consumeCombat(damage(101, 200), 5_000);
+
+    const actor = meter.getLatestSnapshot(5_000)?.actors[0];
+    expect(actor?.damage).toBe(500);
+    expect(actor?.timeline).toEqual([
+      { elapsedMs: 0, damage: 0, cumulativeDamage: 0, dps: 0 },
+      { elapsedMs: 5_000, damage: 500, cumulativeDamage: 500, dps: 100 },
+    ]);
+    // The timeline must always account for every point of damage on the row.
+    expect(actor?.timeline.at(-1)?.cumulativeDamage).toBe(actor?.damage);
+  });
+
+  test("keeps a closing hit on a boundary several buckets into an encounter", () => {
+    const meter = new MeterHarness({ personalActorId: 101 });
+    meter.consumeCombat(damage(101, 100), 0);
+    meter.consumeCombat(damage(101, 100), 7_000);
+    meter.consumeCombat(damage(101, 400), 15_000);
+
+    const actor = meter.getLatestSnapshot(15_000)?.actors[0];
+    expect(actor?.damage).toBe(600);
+    expect(actor?.timeline.at(-1)?.cumulativeDamage).toBe(600);
+    expect(actor?.timeline.map(({ damage }) => damage)).toEqual([0, 100, 100, 400]);
+  });
 });
