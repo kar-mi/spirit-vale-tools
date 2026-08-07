@@ -128,6 +128,14 @@ const DEATH_LOOKBACK_MS = 10_000;
  * and evicts the least recently seen rather than growing for the whole session.
  */
 const MAX_MOB_IDENTITIES = 4_096;
+/**
+ * Player identities retained at once, capped for the same reasons as {@link MAX_MOB_IDENTITIES} and
+ * evicted least-recently-seen first. An indexing pass serialises this map to the read model on every
+ * batch, so an uncapped one costs repeated writes proportional to every player the session has ever
+ * seen — which in a crowded hub is far more than the handful an encounter actually needs. Evicting
+ * an entry does not lose a name from a stored encounter: each actor row carries its own copy.
+ */
+const MAX_IDENTITIES = 4_096;
 
 export class DamageReducer {
   readonly identities = new Map<number, CombatIdentity>();
@@ -185,7 +193,7 @@ export class DamageReducer {
     const archetype = event.archetype ?? previousIdentity?.archetype;
     const ownerConnectionId = event.ownerConnectionId ?? previousIdentity?.ownerConnectionId;
     const uid = event.uid ?? previousIdentity?.uid;
-    this.identities.set(event.actorId, {
+    this.rememberIdentity(event.actorId, {
       displayName: event.displayName,
       ...(archetype === undefined ? {} : { archetype }),
       ...(ownerConnectionId === undefined ? {} : { ownerConnectionId }),
@@ -214,7 +222,7 @@ export class DamageReducer {
       const archetype = event.actorIdentity.archetype ?? previousIdentity?.archetype;
       const ownerConnectionId = event.actorIdentity.ownerConnectionId ?? previousIdentity?.ownerConnectionId;
       const uid = event.actorIdentity.uid ?? previousIdentity?.uid;
-      this.identities.set(actorId, {
+      this.rememberIdentity(actorId, {
         displayName: event.actorIdentity.displayName,
         ...(archetype === undefined ? {} : { archetype }),
         ...(ownerConnectionId === undefined ? {} : { ownerConnectionId }),
@@ -363,6 +371,18 @@ export class DamageReducer {
     for (const [targetId, hits] of this.recentHits) {
       while (hits.length > 0 && hits[0]!.atMs < cutoffMs) hits.shift();
       if (hits.length === 0) this.recentHits.delete(targetId);
+    }
+  }
+
+  /** Records a player's identity, evicting the least recently seen once the cap is reached. */
+  private rememberIdentity(actorId: number, identity: CombatIdentity): void {
+    // Re-inserting moves the entry to the end, so iteration order is least-recently-seen first.
+    this.identities.delete(actorId);
+    this.identities.set(actorId, identity);
+    while (this.identities.size > MAX_IDENTITIES) {
+      const oldest = this.identities.keys().next();
+      if (oldest.done) break;
+      this.identities.delete(oldest.value);
     }
   }
 

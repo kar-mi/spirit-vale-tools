@@ -7,6 +7,7 @@ import { DamageReducer, createActor } from "../reducers/damage.ts";
 import type { CombatIdentity, DamageReducerOptions, DeathHitRecord, DeathRecord, EncounterAggregate } from "../reducers/damage.ts";
 import { MeterReducer } from "../reducers/meter.ts";
 import type { MeterKind } from "../reducers/meter.ts";
+import { takeDirtyFrom } from "../reducers/timeline.ts";
 import { COMBAT_DOMAIN_NAME } from "./domain.ts";
 
 /** Table discriminator for the three meters sharing the actor/skill/target/timeline tables. */
@@ -232,13 +233,29 @@ function writeActors(
   encounterId = aggregate.id,
 ): void {
   const database = statements(model);
-  for (const [actorIndex, actor] of aggregate.actors.entries()) {
-    database
-      .query(`insert or replace into combat_actors
+  // Resolved once rather than inside the loops below: `statement()` keys its cache on the SQL text,
+  // so re-fetching per row hashes a few hundred characters for every one of the thousands of rows a
+  // busy encounter writes.
+  const insertActor = database.query(`insert or replace into combat_actors
         (session_id, encounter_id, meter, actor_index, actor_id, active_slot, display_name, archetype, owner_connection_id, uid,
          active_identity, damage, first_damage_at_ms, last_damage_at_ms, hits, critical_hits, kills, ewma_rate, ewma_at_ms, ewma_tau_seconds)
         values ($sessionId, $encounterId, $meter, $actorIndex, $actorId, $activeSlot, $displayName, $archetype, $ownerConnectionId, $uid,
-                $activeIdentity, $damage, $firstDamageAtMs, $lastDamageAtMs, $hits, $criticalHits, $kills, $ewmaRate, $ewmaAtMs, $ewmaTauSeconds)`)
+                $activeIdentity, $damage, $firstDamageAtMs, $lastDamageAtMs, $hits, $criticalHits, $kills, $ewmaRate, $ewmaAtMs, $ewmaTauSeconds)`);
+  const insertSkill = database.query(`insert or replace into combat_skills
+    (session_id, encounter_id, meter, actor_index, source_id, source_label, damage, hits, critical_hits)
+    values ($sessionId, $encounterId, $meter, $actorIndex, $sourceId, $sourceLabel, $damage, $hits, $criticalHits)`);
+  const insertTarget = database.query(`insert or replace into combat_targets
+    (session_id, encounter_id, meter, actor_index, target_id, damage)
+    values ($sessionId, $encounterId, $meter, $actorIndex, $targetId, $damage)`);
+  const insertBucket = database.query(`insert or replace into combat_timeline_buckets
+    (session_id, encounter_id, meter, actor_index, origin, origin_ms, width_ms, bucket_index, damage)
+    values ($sessionId, $encounterId, $meter, $actorIndex, $origin, $originMs, $widthMs, $bucketIndex, $damage)`);
+  const deleteBucketTail = database.query(`delete from combat_timeline_buckets
+    where session_id = $sessionId and encounter_id = $encounterId and meter = $meter
+      and actor_index = $actorIndex and origin = $origin and bucket_index >= $bucketCount`);
+
+  for (const [actorIndex, actor] of aggregate.actors.entries()) {
+    insertActor
       .run({
         sessionId,
         encounterId,
@@ -263,10 +280,7 @@ function writeActors(
       });
 
     for (const skill of actor.skills.values()) {
-      database
-        .query(`insert or replace into combat_skills
-          (session_id, encounter_id, meter, actor_index, source_id, source_label, damage, hits, critical_hits)
-          values ($sessionId, $encounterId, $meter, $actorIndex, $sourceId, $sourceLabel, $damage, $hits, $criticalHits)`)
+      insertSkill
         .run({
           sessionId,
           encounterId,
@@ -281,10 +295,7 @@ function writeActors(
     }
 
     for (const targetId of actor.targetIds) {
-      database
-        .query(`insert or replace into combat_targets
-          (session_id, encounter_id, meter, actor_index, target_id, damage)
-          values ($sessionId, $encounterId, $meter, $actorIndex, $targetId, $damage)`)
+      insertTarget
         .run({
           sessionId,
           encounterId,
@@ -296,11 +307,19 @@ function writeActors(
     }
 
     for (const [origin, series] of [["encounter", actor.encounterSeries], ["actor", actor.actorSeries]] as const) {
-      for (const [bucketIndex, damage] of series.buckets.entries()) {
-        database
-          .query(`insert or replace into combat_timeline_buckets
-            (session_id, encounter_id, meter, actor_index, origin, origin_ms, width_ms, bucket_index, damage)
-            values ($sessionId, $encounterId, $meter, $actorIndex, $origin, $originMs, $widthMs, $bucketIndex, $damage)`)
+      // Only the buckets this pass touched. An open encounter is rewritten on every pass and its
+      // bucket count grows with its duration, so writing all of them would cost work quadratic in
+      // the length of the fight — which is what this avoids.
+      const dirtyFrom = takeDirtyFrom(series);
+      if (dirtyFrom === Number.POSITIVE_INFINITY) continue;
+      // Starting at 0 means the series was replaced wholesale (a resolution collapse re-spans every
+      // bucket and shortens the series), so any rows past the new end are stale.
+      if (dirtyFrom === 0) {
+        deleteBucketTail
+          .run({ sessionId, encounterId, meter, actorIndex, origin, bucketCount: series.buckets.length });
+      }
+      for (let bucketIndex = dirtyFrom; bucketIndex < series.buckets.length; bucketIndex += 1) {
+        insertBucket
           .run({
             sessionId,
             encounterId,
@@ -310,7 +329,7 @@ function writeActors(
             originMs: series.originMs,
             widthMs: series.widthMs,
             bucketIndex,
-            damage,
+            damage: series.buckets[bucketIndex] ?? 0,
           });
       }
     }
@@ -325,19 +344,33 @@ function writeEnemiesAndDeaths(
 ): void {
   const database = statements(model);
   const scope = { sessionId, encounterId: encounter.id };
-  // Deaths and enemy rows are positional, so rewrite them wholesale rather than upserting: an open
-  // encounter's list only ever grows, and replacing it keeps the stored rows an exact snapshot.
-  for (const table of ["combat_death_hits", "combat_deaths", "combat_enemies", "combat_enemy_skills"]) {
-    database.query(`delete from ${table} where session_id = $sessionId and encounter_id = $encounterId`).run(scope);
-  }
+  // Every row below is keyed by something stable — attacker/target/source for enemies, the array
+  // position for deaths and their hits — so the upserts alone are an exact snapshot. Clearing the
+  // four tables first would only matter if a row could disappear, and none can: `loadOpenEncounter`
+  // restores both sets from these same tables on every resume, and they only ever grow from there.
+  // An encounter that genuinely has to start over is cleared by `clear`/`clearEncounter` instead.
+
+  // Resolved once, for the same reason as in `writeActors`: these loops are per enemy, per skill and
+  // per death hit, so re-fetching by SQL text inside them is pure overhead.
+  const insertEnemySkill = database.query(`insert or replace into combat_enemy_skills
+    (session_id, encounter_id, attacker_actor_id, target_id, source_id, source_label, damage, hits, critical_hits)
+    values ($sessionId, $encounterId, $attackerActorId, $targetId, $sourceId, $sourceLabel, $damage, $hits, $criticalHits)`);
+  const insertEnemy = database.query(`insert or replace into combat_enemies
+    (session_id, encounter_id, target_id, display_name, first_seen_at_ms)
+    values ($sessionId, $encounterId, $targetId, $displayName, $firstSeenAtMs)`);
+  const insertDeath = database.query(`insert or replace into combat_deaths
+    (session_id, encounter_id, death_index, victim_name, target_id, died_at_ms, total_damage)
+    values ($sessionId, $encounterId, $deathIndex, $victimName, $targetId, $diedAtMs, $totalDamage)`);
+  const insertDeathHit = database.query(`insert or replace into combat_death_hits
+    (session_id, encounter_id, death_index, hit_index, before_death_ms, attacker_actor_id,
+     attacker_label, attacker_is_monster, source_label, damage, critical)
+    values ($sessionId, $encounterId, $deathIndex, $hitIndex, $beforeDeathMs, $attackerActorId,
+            $attackerLabel, $attackerIsMonster, $sourceLabel, $damage, $critical)`);
 
   for (const [attackerActorId, byTarget] of encounter.enemies) {
     for (const [targetId, bySkill] of byTarget) {
       for (const [sourceId, stats] of bySkill) {
-        database
-          .query(`insert or replace into combat_enemy_skills
-            (session_id, encounter_id, attacker_actor_id, target_id, source_id, source_label, damage, hits, critical_hits)
-            values ($sessionId, $encounterId, $attackerActorId, $targetId, $sourceId, $sourceLabel, $damage, $hits, $criticalHits)`)
+        insertEnemySkill
           .run({
             ...scope,
             attackerActorId,
@@ -355,10 +388,7 @@ function writeEnemiesAndDeaths(
   for (const [targetId, firstSeenAtMs] of encounter.enemyFirstSeenAtMs) {
     // The name is whatever was captured when the hit landed; `mobIdentities` is only a fallback for
     // rows carried over from before the aggregate recorded names.
-    database
-      .query(`insert or replace into combat_enemies
-        (session_id, encounter_id, target_id, display_name, first_seen_at_ms)
-        values ($sessionId, $encounterId, $targetId, $displayName, $firstSeenAtMs)`)
+    insertEnemy
       .run({
         ...scope,
         targetId,
@@ -368,10 +398,7 @@ function writeEnemiesAndDeaths(
   }
 
   for (const [deathIndex, death] of encounter.deaths.entries()) {
-    database
-      .query(`insert or replace into combat_deaths
-        (session_id, encounter_id, death_index, victim_name, target_id, died_at_ms, total_damage)
-        values ($sessionId, $encounterId, $deathIndex, $victimName, $targetId, $diedAtMs, $totalDamage)`)
+    insertDeath
       .run({
         ...scope,
         deathIndex,
@@ -381,12 +408,7 @@ function writeEnemiesAndDeaths(
         totalDamage: death.totalDamage,
       });
     for (const [hitIndex, hit] of death.hits.entries()) {
-      database
-        .query(`insert or replace into combat_death_hits
-          (session_id, encounter_id, death_index, hit_index, before_death_ms, attacker_actor_id,
-           attacker_label, attacker_is_monster, source_label, damage, critical)
-          values ($sessionId, $encounterId, $deathIndex, $hitIndex, $beforeDeathMs, $attackerActorId,
-                  $attackerLabel, $attackerIsMonster, $sourceLabel, $damage, $critical)`)
+      insertDeathHit
         .run({
           ...scope,
           deathIndex,

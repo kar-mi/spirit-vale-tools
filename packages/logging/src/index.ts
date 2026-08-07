@@ -20,7 +20,8 @@ export {
   sessionDirectory,
   sessionStreamPath,
 } from "./paths.ts";
-export { listLogSessions } from "./sessions.ts";
+export { DEFAULT_SESSION_RETENTION, listLogSessions, pruneLogSessions } from "./sessions.ts";
+export type { PruneLogSessionsOptions, PruneLogSessionsResult } from "./sessions.ts";
 export { decimal, isMissing, isRecord, nullableString } from "./predicates.ts";
 export type { LiveLogStatus } from "./predicates.ts";
 export { JsonlTailReader } from "./jsonl-tail-reader.ts";

@@ -83,9 +83,12 @@ function writeListing(model: ReadModel, sessionId: string, listing: FishNetMarke
     .run({ sessionId, key, id: listing.id, sellerId: listing.sellerId, sellerName: listing.sellerName, itemId: listing.itemId, itemType: listing.itemType, count: listing.count, countTraded: listing.countTraded, price: listing.price, json: listing.json, expiresAt: listing.expiresAt, searchText: search, displayName: display, normalizedText: normalize([display, search, listing.itemId, listing.sellerName]) });
   model.statement("delete from market_listing_stats where session_id = $sessionId and listing_key = $key").run({ sessionId, key });
   const stats = "stats" in listing && listing.stats !== undefined ? listing.stats : parseFishNetMarketStats(listing.json, listing.itemType);
-  for (const stat of stats ?? []) model.statement(`insert into market_listing_stats
+  // Resolved before the loop: `statement()` keys its cache on the SQL text, and a listing can carry
+  // a dozen stats.
+  const insertStat = model.statement(`insert into market_listing_stats
     (session_id, listing_key, stat_type, stat_name, roll, value, percent, value_str)
-    values ($sessionId, $key, $type, $name, $roll, $value, $percent, $valueStr)`)
+    values ($sessionId, $key, $type, $name, $roll, $value, $percent, $valueStr)`);
+  for (const stat of stats ?? []) insertStat
     .run({ sessionId, key, type: stat.type, name: stat.name ?? null, roll: stat.roll, value: stat.value ?? null, percent: stat.percent ? 1 : 0, valueStr: stat.valueStr });
 }
 

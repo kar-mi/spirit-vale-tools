@@ -24,10 +24,30 @@ export interface BucketSeries {
   originMs: number;
   widthMs: number;
   buckets: number[];
+  /**
+   * Lowest bucket index changed since the last {@link takeDirtyFrom}, or `Infinity` when none is.
+   *
+   * The read model rewrites an encounter's stored rows on every indexing pass, and a long encounter
+   * accumulates buckets without limit — so writing all of them each pass costs work quadratic in the
+   * encounter's duration. A series is append-mostly, so this records how far back the writer
+   * actually has to go. It is deliberately *not* set when a series is reconstructed from stored
+   * rows: those buckets are already persisted, and re-marking them dirty would defeat the point.
+   */
+  dirtyFrom: number;
 }
 
 export function createSeries(originMs: number, widthMs = ANALYSIS_BUCKET_MS): BucketSeries {
-  return { originMs, widthMs, buckets: [] };
+  return { originMs, widthMs, buckets: [], dirtyFrom: Number.POSITIVE_INFINITY };
+}
+
+/**
+ * Claims the dirty range and marks the series clean, returning the lowest index a writer must
+ * persist from. `Infinity` means nothing changed and the writer can skip the series entirely.
+ */
+export function takeDirtyFrom(series: BucketSeries): number {
+  const from = series.dirtyFrom;
+  series.dirtyFrom = Number.POSITIVE_INFINITY;
+  return from;
 }
 
 export function addToSeries(
@@ -42,6 +62,9 @@ export function addToSeries(
     collapse(series);
     index = Math.max(0, Math.floor((atMs - series.originMs) / series.widthMs));
   }
+  // Taken before padding: a hit past the end appends zero buckets, and those are new rows too, so
+  // the dirty range has to start at the old end rather than at the hit's own index.
+  series.dirtyFrom = Math.min(series.dirtyFrom, series.buckets.length, index);
   while (series.buckets.length <= index) series.buckets.push(0);
   series.buckets[index]! += damage;
 }
@@ -54,6 +77,9 @@ function collapse(series: BucketSeries): void {
   }
   series.buckets = merged;
   series.widthMs *= 2;
+  // Every bucket now covers a different span and the series is shorter, so nothing already stored
+  // for it is still valid. Writers treat a range starting at 0 as "replace the series".
+  series.dirtyFrom = 0;
 }
 
 /** Element-wise sum of two series that share an origin and width, e.g. when merging actor rows. */

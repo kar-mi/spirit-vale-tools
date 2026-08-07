@@ -206,6 +206,29 @@ describe("combat read model", () => {
     }
   });
 
+  test("many incremental passes over a long encounter match one uninterrupted pass", async () => {
+    // Buckets are 5 s wide, so 40 hits two seconds apart spread damage over ~16 buckets while the
+    // encounter stays open across every pass. This is what makes the writer's dirty-range tracking
+    // load-bearing: each pass must persist the buckets it touched without rewriting the earlier
+    // ones, and the result still has to equal a single pass over the whole log.
+    const context = await fixture();
+    try {
+      await appendFile(context.logPath, identity(1, "Aurora", 0));
+      for (let hit = 0; hit < 40; hit += 1) {
+        await appendFile(context.logPath, damage(1, 90, 10 + hit, 1_000 + hit * 2_000));
+        const model = await context.open();
+        await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+        model.close();
+      }
+
+      const final = await context.open();
+      await indexCombatStream(final, { sessionId: SESSION, sourcePath: context.logPath, finalize: true });
+      await expectParity(context, final);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
   test("indexing twice adds nothing and leaves totals unchanged", async () => {
     const context = await fixture();
     try {

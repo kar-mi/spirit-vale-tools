@@ -69,6 +69,38 @@ describe("reducer retention", () => {
     expect(reducer.mobIdentities.has(0)).toBe(false);
   });
 
+  test("caps retained player identities while keeping the most recently seen", () => {
+    // Same reasoning as the monster names: this map is serialised to the read model on every batch,
+    // so a crowded hub would otherwise make each pass rewrite every player the session ever saw.
+    const reducer = new DamageReducer();
+    for (let index = 0; index < 6_000; index += 1) {
+      reducer.consumeIdentity(
+        { kind: "actorIdentity", operation: "upsert", tick: index, actorId: index, displayName: `Player ${index}` } as never,
+        index,
+      );
+    }
+
+    expect(reducer.identities.size).toBeLessThanOrEqual(4_096);
+    expect(reducer.identities.get(5_999)?.displayName).toBe("Player 5999");
+    expect(reducer.identities.has(0)).toBe(false);
+  });
+
+  test("keeps a player identity alive when the actor is seen again", () => {
+    const reducer = new DamageReducer();
+    const upsert = (actorId: number, displayName: string, tick: number): void => {
+      reducer.consumeIdentity(
+        { kind: "actorIdentity", operation: "upsert", tick, actorId, displayName } as never,
+        tick,
+      );
+    };
+    upsert(1, "Aurora", 0);
+    for (let index = 0; index < 4_090; index += 1) upsert(1_000 + index, `Player ${index}`, index + 1);
+    upsert(1, "Aurora", 5_000);
+    for (let index = 0; index < 100; index += 1) upsert(9_000 + index, `Late ${index}`, 5_001 + index);
+
+    expect(reducer.identities.get(1)?.displayName).toBe("Aurora");
+  });
+
   test("keeps a name alive when the monster is seen again", () => {
     const reducer = new DamageReducer();
     reducer.consumeCombat(mobIdentity(1, "Shark Buccaneer", 0), 0);
