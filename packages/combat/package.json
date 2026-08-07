@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-combat",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Spirit Vale combat event tracking and replay utilities.",
   "type": "module",
   "files": [
@@ -18,10 +18,10 @@
   },
   "dependencies": {
     "@kar-mi/spirit-vale-tools-capture": "^1.2.0",
-    "@kar-mi/spirit-vale-tools-logging": "^0.4.1",
+    "@kar-mi/spirit-vale-tools-logging": "^0.5.0",
     "@kar-mi/spirit-vale-tools-metrics": "^0.2.0",
     "@kar-mi/spirit-vale-tools-skills": "^0.2.0",
-    "@kar-mi/spirit-vale-tools-sqlite": "^0.1.0",
+    "@kar-mi/spirit-vale-tools-sqlite": "^0.1.2",
     "@kar-mi/spirit-vale-tools-statuses": "^0.2.2"
   }
 }
