@@ -32,6 +32,23 @@ Feed the tracker every decoded FishNet packet from live capture or replay. Use
 `FishNetActorDirectory` to resolve actor identities and `loadDpsReplay` /
 `DpsSessionLogFollower` to rebuild encounters from recorded log sessions.
 
+`DpsSessionLogFollower` can be followed rather than polled, which is what an
+overlay should do — it wakes on a filesystem event instead of on a timer, and
+yields only batches that carry something:
+
+```ts
+const follower = DpsSessionLogFollower.watch();
+for await (const batch of follower) {
+  if (batch.changed) apply(batch.events);
+}
+follower.close();
+```
+
+Each batch carries `changed` and `revision`, so a consumer can skip re-projecting
+when the reducer state did not move. `FishNetStatusTracker` exposes the same
+`revision` alongside `nextExpiryAtMs()`, which says when the next status is due
+to lapse — enough to sleep until a chip actually disappears rather than ticking.
+
 For bounded live UI state, use `LiveCombatService`. It exposes the current and
 latest finished encounter with DPS, incoming damage-per-second (TPS), and
 healing-per-second (HPS) rows without retaining the full session history.

@@ -1,7 +1,7 @@
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "./reducers/damage.ts";
-import type { EncounterAggregate } from "./reducers/damage.ts";
+import type { CombatIdentity, EncounterAggregate } from "./reducers/damage.ts";
 import { MeterReducer } from "./reducers/meter.ts";
 import { renderEncounter } from "./reducers/rows.ts";
 import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
@@ -107,10 +107,30 @@ export class LiveCombatService {
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
+    // The observer feed re-states identities it has already sent, so most of these events leave the
+    // rendered state exactly as it was. Bumping the revision for them would make every consumer
+    // re-project and re-publish for nothing.
+    const previous = event.operation === "reset" ? undefined : this.reducer.identities.get(event.actorId);
+    const hadIdentities = this.reducer.identities.size > 0;
     this.reducer.consumeIdentity(event, observedAtMs);
     this.tanked.consumeIdentity(event);
     this.healing.consumeIdentity(event);
-    this.revision += 1;
+    if (this.identityChanged(event, previous, hadIdentities)) this.revision += 1;
+  }
+
+  private identityChanged(
+    event: FishNetActorIdentityEvent,
+    previous: CombatIdentity | undefined,
+    hadIdentities: boolean,
+  ): boolean {
+    if (event.operation === "reset") return hadIdentities;
+    if (event.operation === "remove") return previous !== undefined;
+    const current = this.reducer.identities.get(event.actorId);
+    if (!previous || !current) return true;
+    return previous.displayName !== current.displayName
+      || previous.archetype !== current.archetype
+      || previous.ownerConnectionId !== current.ownerConnectionId
+      || previous.uid !== current.uid;
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
@@ -142,14 +162,18 @@ export class LiveCombatService {
     return this.personalActorId;
   }
 
+  /**
+   * Advances the idle clock. This is driven by a timer rather than by data, so it only moves the
+   * revision when it actually closed an encounter — which it reports through
+   * {@link finishMeter} — otherwise a consumer would see a new revision on every tick of an idle
+   * overlay.
+   */
   advance(observedAtMs: number): void {
     this.reducer.advance(observedAtMs);
-    this.revision += 1;
   }
 
   reset(observedAtMs: number): void {
     this.reducer.reset(observedAtMs);
-    this.revision += 1;
   }
 
   getState(nowMs?: number): LiveCombatState {

@@ -25,7 +25,10 @@ for (const listing of listings) {
 ```
 
 Use `replayMarketCapture` to rebuild tracker state from a recorded log session
-and `MarketSessionLogFollower` to follow a live session.
+and `MarketSessionLogFollower` to follow a live session — either by polling it,
+or by iterating it (`MarketSessionLogFollower.watch()`), which wakes on a
+filesystem event instead of a timer and yields only batches that carry
+something. Call `close()` when done.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.
 

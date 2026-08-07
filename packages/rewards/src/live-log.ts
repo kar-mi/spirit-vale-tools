@@ -1,12 +1,17 @@
 import {
   decimal,
+  DEFAULT_STREAM_BATCH_BYTES,
   isRecord as record,
   JsonlTailReader,
   LiveLogSessionFollower,
   isLogStreamHeader,
   parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
-import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
+import type {
+  JsonlTailReadResult,
+  LiveLogSessionFollowerOptions,
+  LiveLogStatus,
+} from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
 import { MobRewardSession } from "./session.ts";
 import type { MobRewardSessionSnapshot } from "./session.ts";
@@ -38,12 +43,15 @@ export class RewardLogFollower {
   private status: RewardLogStatus = "watching";
 
   constructor(path: string, options: RewardLogFollowerOptions = {}) {
-    this.reader = new JsonlTailReader(path);
+    this.reader = new JsonlTailReader(path, { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
     this.onExperience = options.onExperience;
   }
 
   async poll(): Promise<RewardLogBatch> {
-    const { missing, reset, lines } = await this.reader.read();
+    return this.consumeRead(await this.reader.read());
+  }
+
+  consumeRead({ missing, reset, lines }: JsonlTailReadResult): RewardLogBatch {
     if (missing) return this.batch({ missing: true, reset: false, changed: false, invalidLines: 0 });
     if (reset) this.resetState();
     const consumed = this.consume(lines);
@@ -93,14 +101,23 @@ export class RewardLogFollower {
   }
 }
 
+/** Watcher tuning shared by both session followers in this package. */
+export type RewardSessionFollowerTuning =
+  Pick<LiveLogSessionFollowerOptions<RewardLogFollower, RewardLogBatch>, "fallbackPollMs" | "debounceMs" | "persistent">;
+
 export class RewardSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<RewardLogFollower, RewardLogBatch>;
 
-  constructor(logDirectory?: string, options: RewardLogFollowerOptions = {}) {
+  constructor(logDirectory?: string, options: RewardLogFollowerOptions & RewardSessionFollowerTuning = {}) {
+    const { fallbackPollMs, debounceMs, persistent, ...followerOptions } = options;
     this.inner = new LiveLogSessionFollower({
       stream: "rewards",
-      logDirectory,
-      createFollower: (path) => new RewardLogFollower(path, options),
+      ...(logDirectory === undefined ? {} : { logDirectory }),
+      ...(fallbackPollMs === undefined ? {} : { fallbackPollMs }),
+      ...(debounceMs === undefined ? {} : { debounceMs }),
+      ...(persistent === undefined ? {} : { persistent }),
+      readerOptions: { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
+      createFollower: (path) => new RewardLogFollower(path, followerOptions),
       mergeSessionChange: (batch, changedSession) => ({
         ...batch,
         reset: batch.reset || changedSession,
@@ -110,8 +127,28 @@ export class RewardSessionLogFollower {
     });
   }
 
+  /** Follows the stream on watcher events instead of a poll clock. */
+  static watch(
+    logDirectory?: string,
+    options: RewardLogFollowerOptions & RewardSessionFollowerTuning = {},
+  ): RewardSessionLogFollower {
+    return new RewardSessionLogFollower(logDirectory, options);
+  }
+
   poll(): Promise<RewardLogBatch> {
     return this.inner.poll();
+  }
+
+  next(): Promise<RewardLogBatch> {
+    return this.inner.next();
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator<RewardLogBatch> {
+    return this.inner[Symbol.asyncIterator]();
+  }
+
+  close(): void {
+    this.inner.close();
   }
 }
 
@@ -132,9 +169,11 @@ export class LiveRewardLogFollower {
   private readonly service: LiveRewardService;
   private readonly sourcePath: string;
   private status: RewardLogStatus = "watching";
-  constructor(path: string, options: LiveRewardOptions = {}) { this.sourcePath = path; this.reader = new JsonlTailReader(path); this.service = new LiveRewardService(options); }
+  constructor(path: string, options: LiveRewardOptions = {}) { this.sourcePath = path; this.reader = new JsonlTailReader(path, { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES }); this.service = new LiveRewardService(options); }
   async poll(): Promise<LiveRewardLogBatch> {
-    const { missing, reset, lines } = await this.reader.read();
+    return this.consumeRead(await this.reader.read());
+  }
+  consumeRead({ missing, reset, lines }: JsonlTailReadResult): LiveRewardLogBatch {
     if (missing) return this.batch(true, false, false, 0);
     if (reset) { this.service.reset(); this.status = "watching"; }
     let invalidLines = 0; let changed = false;
@@ -157,16 +196,28 @@ export { LiveRewardLogFollower as BoundedRewardLogFollower };
 
 export class LiveRewardSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<LiveRewardLogFollower, LiveRewardLogBatch>;
-  constructor(logDirectory?: string, options: LiveRewardOptions = {}) {
+  constructor(logDirectory?: string, options: LiveRewardOptions & RewardSessionFollowerTuning = {}) {
+    const { fallbackPollMs, debounceMs, persistent, ...serviceOptions } = options;
     this.inner = new LiveLogSessionFollower({
       stream: "rewards",
-      logDirectory,
-      createFollower: (path) => new LiveRewardLogFollower(path, options),
+      ...(logDirectory === undefined ? {} : { logDirectory }),
+      ...(fallbackPollMs === undefined ? {} : { fallbackPollMs }),
+      ...(debounceMs === undefined ? {} : { debounceMs }),
+      ...(persistent === undefined ? {} : { persistent }),
+      readerOptions: { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
+      createFollower: (path) => new LiveRewardLogFollower(path, serviceOptions),
       mergeSessionChange: (batch, changedSession) => ({ ...batch, reset: batch.reset || changedSession, changed: batch.changed || changedSession }),
-      noStreamBatch: (reset) => ({ snapshot: new LiveRewardService(options).snapshot(), invalidLines: 0, missing: true, reset, changed: reset, status: "waiting" }),
+      noStreamBatch: (reset) => ({ snapshot: new LiveRewardService(serviceOptions).snapshot(), invalidLines: 0, missing: true, reset, changed: reset, status: "waiting" }),
     });
   }
+  /** Follows the stream on watcher events instead of a poll clock. */
+  static watch(logDirectory?: string, options: LiveRewardOptions & RewardSessionFollowerTuning = {}): LiveRewardSessionLogFollower {
+    return new LiveRewardSessionLogFollower(logDirectory, options);
+  }
   poll(): Promise<LiveRewardLogBatch> { return this.inner.poll(); }
+  next(): Promise<LiveRewardLogBatch> { return this.inner.next(); }
+  [Symbol.asyncIterator](): AsyncIterator<LiveRewardLogBatch> { return this.inner[Symbol.asyncIterator](); }
+  close(): void { this.inner.close(); }
 }
 
 export { LiveRewardSessionLogFollower as BoundedRewardSessionLogFollower };

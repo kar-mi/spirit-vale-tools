@@ -29,7 +29,10 @@ console.log(catalogMobs.length);
 ```
 
 Use `loadRewardReplay` to rebuild reward state from a recorded log session and
-`RewardSessionLogFollower` to follow a live session.
+`RewardSessionLogFollower` to follow a live session — either by polling it, or
+by iterating it (`RewardSessionLogFollower.watch()`), which wakes on a
+filesystem event instead of a timer and yields only batches that carry
+something. Call `close()` when done.
 
 The tracker derives XP gains from the character's absolute XP callback. Session
 and aggregate XP totals therefore include party-shared and other standalone

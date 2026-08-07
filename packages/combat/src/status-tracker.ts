@@ -85,28 +85,67 @@ export class FishNetStatusTracker {
    * reset (e.g. ownership handoff), where it still carries statuses forward.
    */
   private readonly actorIdByUid = new Map<string, number>();
+  private revisionValue = 0;
+  private nextExpiryRevision = -1;
+  private nextExpiry?: number;
 
   constructor(options: FishNetStatusTrackerOptions = {}) {
     this.directory = new FishNetStatusDirectory(options.statusCatalog ?? loadBundledStatusCatalog());
     this.skillDirectory = new FishNetSkillDirectory(options.skillCatalog ?? loadBundledSkillCatalog());
   }
 
+  /**
+   * Bumped only when the tracked set actually changed.
+   *
+   * The display feed re-states statuses that are merely still active roughly once a second, so most
+   * of what arrives here leaves the rendered chips identical. A consumer that compares this against
+   * the revision it last drew can skip the projection and the publish for those.
+   */
+  get revision(): number {
+    return this.revisionValue;
+  }
+
+  /**
+   * Earliest moment a tracked status is due to disappear, or undefined when nothing is on a timer.
+   *
+   * Lets a consumer sleep until a chip is due to lapse instead of ticking to find out. Recomputed
+   * lazily after a change, since every change already wakes the consumer.
+   */
+  nextExpiryAtMs(): number | undefined {
+    if (this.nextExpiryRevision === this.revisionValue) return this.nextExpiry;
+    let earliest: number | undefined;
+    for (const statuses of this.active.values()) {
+      for (const tracked of statuses.values()) {
+        if (tracked.expiresAtMs === undefined) continue;
+        if (earliest === undefined || tracked.expiresAtMs < earliest) earliest = tracked.expiresAtMs;
+      }
+    }
+    this.nextExpiry = earliest;
+    this.nextExpiryRevision = this.revisionValue;
+    return earliest;
+  }
+
+  private touch(): void {
+    this.revisionValue += 1;
+  }
+
   consume(event: FishNetCombatEvent, observedAtMs: number): void {
     if (event.kind === "status") this.consumeStatus(event, observedAtMs);
     else if (event.kind === "summon") this.consumeSummon(event, observedAtMs);
     else if (event.kind === "activation") this.consumeActivation(event, observedAtMs);
-    else if (event.kind === "death") this.active.delete(event.targetId);
+    else if (event.kind === "death" && this.active.delete(event.targetId)) this.touch();
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent): void {
     if (event.operation === "reset") {
       this.identities.clear();
+      if (this.active.size > 0) this.touch();
       this.active.clear();
       return;
     }
     if (event.operation === "remove") {
       this.identities.delete(event.actorId);
-      this.active.delete(event.actorId);
+      if (this.active.delete(event.actorId)) this.touch();
       return;
     }
     if (event.uid) {
@@ -135,13 +174,14 @@ export class FishNetStatusTracker {
       if (!toStatuses.has(statusId)) toStatuses.set(statusId, tracked);
     }
     this.active.set(toActorId, toStatuses);
+    this.touch();
   }
 
   consumeStatus(event: FishNetCombatStatusEvent, observedAtMs: number): void {
     if (event.actorIdentity) this.identities.set(event.actorId, event.actorIdentity.displayName);
     const statuses = this.active.get(event.actorId) ?? new Map<string, TrackedStatus>();
     if (event.action === "removed") {
-      statuses.delete(event.statusId);
+      if (statuses.delete(event.statusId)) this.touch();
       if (statuses.size === 0) this.active.delete(event.actorId);
       else this.active.set(event.actorId, statuses);
       return;
@@ -151,15 +191,17 @@ export class FishNetStatusTracker {
     // rather than resetting to 1 and mis-deriving every level-scaled duration from then on.
     const level = event.level ?? previous?.level ?? 1;
     const expiresAtMs = this.resolveExpiry(event, level, observedAtMs, previous);
-    statuses.set(event.statusId, {
+    const tracked: TrackedStatus = {
       level,
       // The display feed repeats while a status is merely still active, so treating every packet as
       // a fresh application would make "applied at" drift forward for the whole duration.
       appliedAtMs: REFRESHING_FEEDS.has(event.rpc) ? previous?.appliedAtMs ?? observedAtMs : observedAtMs,
       ...(expiresAtMs === undefined ? {} : { expiresAtMs }),
       ...(event.stacks === undefined ? {} : { stacks: event.stacks }),
-    });
+    };
+    statuses.set(event.statusId, tracked);
     this.active.set(event.actorId, statuses);
+    if (!sameTracked(previous, tracked)) this.touch();
   }
 
   /**
@@ -223,13 +265,16 @@ export class FishNetStatusTracker {
     if (event.actorIdentity) this.identities.set(event.actorId, event.actorIdentity.displayName);
     const statuses = this.active.get(event.actorId) ?? new Map<string, TrackedStatus>();
     if (event.stacks <= 0) {
-      statuses.delete(event.skillId);
+      if (statuses.delete(event.skillId)) this.touch();
       if (statuses.size === 0) this.active.delete(event.actorId);
       else this.active.set(event.actorId, statuses);
       return;
     }
-    statuses.set(event.skillId, { level: 1, stacks: event.stacks, appliedAtMs: observedAtMs, summon: true });
+    const previous = statuses.get(event.skillId);
+    const tracked: TrackedStatus = { level: 1, stacks: event.stacks, appliedAtMs: observedAtMs, summon: true };
+    statuses.set(event.skillId, tracked);
     this.active.set(event.actorId, statuses);
+    if (!sameTracked(previous, tracked)) this.touch();
   }
 
   /**
@@ -255,19 +300,28 @@ export class FishNetStatusTracker {
         ? { ...definition, effects: [sourceEffect] }
         : definition;
       const durationSeconds = statusDurationSeconds(durationDefinition, event.level ?? tracked.level);
+      const expiresAtMs = durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
+      if (tracked.appliedAtMs !== observedAtMs || tracked.expiresAtMs !== expiresAtMs) this.touch();
       tracked.appliedAtMs = observedAtMs;
-      tracked.expiresAtMs = durationSeconds === undefined ? undefined : observedAtMs + durationSeconds * 1_000;
+      tracked.expiresAtMs = expiresAtMs;
     }
   }
 
   /** Drops statuses whose computed duration has elapsed; servers do not always send an explicit remove. */
   advance(nowMs: number): void {
+    // Driven by a clock rather than by data, so it must stay silent on the ticks where nothing
+    // actually lapsed - otherwise the revision moves on every frame of an idle overlay.
+    let expired = false;
     for (const [actorId, statuses] of this.active) {
       for (const [statusId, tracked] of statuses) {
-        if (tracked.expiresAtMs !== undefined && tracked.expiresAtMs <= nowMs) statuses.delete(statusId);
+        if (tracked.expiresAtMs !== undefined && tracked.expiresAtMs <= nowMs) {
+          statuses.delete(statusId);
+          expired = true;
+        }
       }
       if (statuses.size === 0) this.active.delete(actorId);
     }
+    if (expired) this.touch();
   }
 
   getActiveStatuses(actorId: number, nowMs: number): FishNetActiveStatus[] {
@@ -326,9 +380,20 @@ export class FishNetStatusTracker {
 
   /** Discards all tracked statuses, e.g. when the encounter/session resets. */
   reset(): void {
+    if (this.active.size > 0) this.touch();
     this.active.clear();
     this.identities.clear();
     this.actorIdByUid.clear();
   }
+}
+
+/** Whether a re-stated status is identical to the one already tracked, field for field. */
+function sameTracked(previous: TrackedStatus | undefined, next: TrackedStatus): boolean {
+  return previous !== undefined
+    && previous.level === next.level
+    && previous.appliedAtMs === next.appliedAtMs
+    && previous.expiresAtMs === next.expiresAtMs
+    && previous.stacks === next.stacks
+    && previous.summon === next.summon;
 }
 

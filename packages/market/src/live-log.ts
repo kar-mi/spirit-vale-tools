@@ -1,5 +1,6 @@
 import {
   decimal,
+  DEFAULT_STREAM_BATCH_BYTES,
   isRecord,
   JsonlTailReader,
   LiveLogSessionFollower,
@@ -7,7 +8,11 @@ import {
   isLogStreamHeader,
   parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
-import type { LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
+import type {
+  JsonlTailReadResult,
+  LiveLogSessionFollowerOptions,
+  LiveLogStatus,
+} from "@kar-mi/spirit-vale-tools-logging";
 import { parseMarketEventLogData } from "./event-log.ts";
 import { FishNetMarketTracker, resolveFishNetMarketListingDisplayName } from "./market.ts";
 import type { FishNetMarketListingView, FishNetMarketStat } from "./market.ts";
@@ -35,11 +40,14 @@ export class MarketLogFollower {
   private observedAt?: string;
 
   constructor(path: string) {
-    this.reader = new JsonlTailReader(path);
+    this.reader = new JsonlTailReader(path, { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
   }
 
   async poll(): Promise<MarketLogBatch> {
-    const { missing, reset, lines } = await this.reader.read();
+    return this.consumeRead(await this.reader.read());
+  }
+
+  consumeRead({ missing, reset, lines }: JsonlTailReadResult): MarketLogBatch {
     if (missing) return this.batch({ missing: true, reset: false, changed: false, invalidLines: 0 });
     if (reset) this.resetState();
     const consumed = this.consume(lines);
@@ -124,14 +132,19 @@ export class MarketLogFollower {
   }
 }
 
+export type MarketSessionLogFollowerOptions =
+  Pick<LiveLogSessionFollowerOptions<MarketLogFollower, MarketLogBatch>, "fallbackPollMs" | "debounceMs" | "persistent">;
+
 /** Follows whichever market session is named by the shared current-stream pointer. */
 export class MarketSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<MarketLogFollower, MarketLogBatch>;
 
-  constructor(logDirectory?: string) {
+  constructor(logDirectory?: string, options: MarketSessionLogFollowerOptions = {}) {
     this.inner = new LiveLogSessionFollower({
       stream: "market",
-      logDirectory,
+      ...(logDirectory === undefined ? {} : { logDirectory }),
+      ...options,
+      readerOptions: { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
       createFollower: (path) => new MarketLogFollower(path),
       mergeSessionChange: (batch, changedSession) => ({
         ...batch,
@@ -142,8 +155,25 @@ export class MarketSessionLogFollower {
     });
   }
 
+  /** Follows the stream on watcher events instead of a poll clock. */
+  static watch(logDirectory?: string, options: MarketSessionLogFollowerOptions = {}): MarketSessionLogFollower {
+    return new MarketSessionLogFollower(logDirectory, options);
+  }
+
   poll(): Promise<MarketLogBatch> {
     return this.inner.poll();
+  }
+
+  next(): Promise<MarketLogBatch> {
+    return this.inner.next();
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator<MarketLogBatch> {
+    return this.inner[Symbol.asyncIterator]();
+  }
+
+  close(): void {
+    this.inner.close();
   }
 }
 

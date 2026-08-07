@@ -1,4 +1,11 @@
-import { JsonlTailReader, LiveLogSessionFollower, isLogStreamHeader, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import {
+  DEFAULT_STREAM_BATCH_BYTES,
+  JsonlTailReader,
+  LiveLogSessionFollower,
+  isLogStreamHeader,
+  parseLogRecord,
+} from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonlTailReadResult, LiveLogSessionFollowerOptions } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { parseDpsLogRecord } from "./replay.ts";
@@ -13,6 +20,10 @@ export interface DpsLogBatch {
   invalidLines: number;
   missing: boolean;
   reset: boolean;
+  /** Whether this batch carries anything a consumer has to act on. */
+  changed: boolean;
+  /** Bumped once per changed batch, so a consumer can skip re-projecting on an unchanged one. */
+  revision: number;
   path?: string;
   sessionId?: string;
 }
@@ -24,16 +35,25 @@ export class DpsLogFollower {
   private lastObservedAtMs = 0;
   private originTick?: number;
   private lastTick?: number;
+  private revision = 0;
 
   constructor(path: string, private readonly ticksPerSecond = 30) {
-    this.reader = new JsonlTailReader(path, { createDecoder: decoderFor });
+    this.reader = new JsonlTailReader(path, { createDecoder: decoderFor, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
   }
 
   async poll(): Promise<DpsLogBatch> {
-    const { missing, reset, lines } = await this.reader.read();
-    if (missing) return { events: [], invalidLines: 0, missing: true, reset: false };
+    return this.consumeRead(await this.reader.read());
+  }
+
+  consumeRead({ missing, reset, lines }: JsonlTailReadResult): DpsLogBatch {
+    if (missing) {
+      return { events: [], invalidLines: 0, missing: true, reset: false, changed: false, revision: this.revision };
+    }
     if (reset) this.resetState();
-    return { ...this.consume(lines), missing: false, reset };
+    const consumed = this.consume(lines);
+    const changed = reset || consumed.events.length > 0;
+    if (changed) this.revision += 1;
+    return { ...consumed, missing: false, reset, changed, revision: this.revision };
   }
 
   private consume(lines: string[]): Pick<DpsLogBatch, "events" | "invalidLines"> {
@@ -92,22 +112,54 @@ export class DpsLogFollower {
   }
 }
 
+export type DpsSessionLogFollowerOptions =
+  Pick<LiveLogSessionFollowerOptions<DpsLogFollower, DpsLogBatch>, "fallbackPollMs" | "debounceMs" | "persistent">
+  & { ticksPerSecond?: number };
+
 /** Follows whichever combat session is named by the shared current-stream pointer. */
 export class DpsSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<DpsLogFollower, DpsLogBatch>;
 
-  constructor(logDirectory?: string, ticksPerSecond = 30) {
+  constructor(logDirectory?: string, ticksPerSecond = 30, options: DpsSessionLogFollowerOptions = {}) {
+    const { ticksPerSecond: ticksOverride, ...tuning } = options;
+    const ticks = ticksOverride ?? ticksPerSecond;
     this.inner = new LiveLogSessionFollower({
       stream: "combat",
-      logDirectory,
-      createFollower: (path) => new DpsLogFollower(path, ticksPerSecond),
-      mergeSessionChange: (batch, changedSession) => ({ ...batch, reset: batch.reset || changedSession }),
-      noStreamBatch: (reset) => ({ events: [], invalidLines: 0, missing: true, reset }),
+      ...(logDirectory === undefined ? {} : { logDirectory }),
+      ...tuning,
+      readerOptions: { createDecoder: decoderFor, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
+      createFollower: (path) => new DpsLogFollower(path, ticks),
+      mergeSessionChange: (batch, changedSession) => ({
+        ...batch,
+        reset: batch.reset || changedSession,
+        changed: batch.changed || changedSession,
+      }),
+      noStreamBatch: (reset) => ({ events: [], invalidLines: 0, missing: true, reset, changed: reset, revision: 0 }),
     });
+  }
+
+  /**
+   * Follows the stream without polling: the returned follower wakes on a watcher event and yields
+   * only batches that carry something.
+   */
+  static watch(logDirectory?: string, options: DpsSessionLogFollowerOptions = {}): DpsSessionLogFollower {
+    return new DpsSessionLogFollower(logDirectory, options.ticksPerSecond ?? 30, options);
   }
 
   poll(): Promise<DpsLogBatch> {
     return this.inner.poll();
+  }
+
+  next(): Promise<DpsLogBatch> {
+    return this.inner.next();
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator<DpsLogBatch> {
+    return this.inner[Symbol.asyncIterator]();
+  }
+
+  close(): void {
+    this.inner.close();
   }
 }
 

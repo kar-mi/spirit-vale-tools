@@ -62,7 +62,20 @@ export class JsonlTailReader {
     return this.readOffset - this.partialBytes;
   }
 
-  async read(): Promise<JsonlTailReadResult> {
+  /**
+   * Byte position of the next read, including any buffered partial line. Two readers over the same
+   * file that report the same position have consumed exactly the same bytes, so this is what a
+   * catch-up reader targets when it is being brought level with another one.
+   */
+  get bytePosition(): number {
+    return this.readOffset;
+  }
+
+  /**
+   * @param limitBytes Caps this read below {@link JsonlTailReaderOptions.maxReadBytes}. Used to stop
+   * a catch-up read exactly at another reader's position rather than at end of file.
+   */
+  async read(limitBytes = Number.POSITIVE_INFINITY): Promise<JsonlTailReadResult> {
     let size: number;
     try {
       size = (await stat(this.path)).size;
@@ -75,7 +88,8 @@ export class JsonlTailReader {
     if (reset) this.reset();
     if (size === this.readOffset) return { missing: false, reset, lines: [], size, bytesRead: 0 };
 
-    const length = Math.min(size - this.readOffset, this.maxReadBytes);
+    const length = Math.min(size - this.readOffset, this.maxReadBytes, limitBytes);
+    if (length < 1) return { missing: false, reset, lines: [], size, bytesRead: 0 };
     const bytes = Buffer.allocUnsafe(length);
     const file = await open(this.path, "r");
     try {

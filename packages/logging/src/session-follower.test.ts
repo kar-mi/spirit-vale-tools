@@ -15,7 +15,10 @@ interface FakeBatch {
 class FakeFollower {
   constructor(private readonly path: string) {}
   poll(): Promise<FakeBatch> {
-    return Promise.resolve({ value: this.path, reset: false });
+    return Promise.resolve(this.consumeRead());
+  }
+  consumeRead(): FakeBatch {
+    return { value: this.path, reset: false };
   }
 }
 

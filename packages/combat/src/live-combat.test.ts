@@ -152,4 +152,22 @@ describe("LiveCombatService", () => {
     expect(finished).toHaveLength(1);
     expect(service.getState().revision).toBeGreaterThan(0);
   });
+
+  test("holds the revision still on re-stated identities and idle advances", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    const named = service.getState().revision;
+    expect(named).toBeGreaterThan(0);
+
+    // The observer feed re-sends identities it has already sent; nothing rendered changes.
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 100);
+    expect(service.getState().revision).toBe(named);
+
+    // Advancing an idle clock closes nothing here, so consumers have nothing to re-project.
+    service.advance(500);
+    expect(service.getState().revision).toBe(named);
+
+    service.consumeIdentity(identity(1, "Aurora Prime", 0) as never, 200);
+    expect(service.getState().revision).toBeGreaterThan(named);
+  });
 });

@@ -580,4 +580,41 @@ describe("FishNetStatusTracker identity resolution", () => {
     tracker.consume(deathEvent({ actorId: 99, targetId: 1 }), 1_000);
     expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);
   });
+
+  test("the revision only moves when the tracked set actually changed", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    expect(tracker.revision).toBe(0);
+
+    tracker.consumeStatus(statusEvent({ statusId: "Burn", level: 1 }), 1_000);
+    const applied = tracker.revision;
+    expect(applied).toBeGreaterThan(0);
+
+    // The observer feed re-states a status that is merely still running; nothing about it moved.
+    tracker.consumeStatus(statusEvent({ statusId: "Burn", level: 1, rpc: "ApplyEffectDisplays_O", remainingSeconds: 4 }), 1_000);
+    expect(tracker.revision).toBe(applied);
+
+    // Ticks on which nothing lapses are equally uninteresting.
+    tracker.advance(1_500);
+    expect(tracker.revision).toBe(applied);
+
+    tracker.advance(60_000);
+    expect(tracker.revision).toBeGreaterThan(applied);
+    expect(tracker.getActiveStatuses(1, 60_000)).toHaveLength(0);
+  });
+
+  test("reports the earliest expiry so a consumer can sleep until a status lapses", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    expect(tracker.nextExpiryAtMs()).toBeUndefined();
+
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Burn", level: 1 }), 1_000);
+    const burnExpiry = tracker.getActiveStatuses(1, 1_000)[0]?.expiresAtMs;
+    expect(tracker.nextExpiryAtMs()).toBe(burnExpiry!);
+
+    // A status with no expiry at all must not displace the one that does have a deadline.
+    tracker.consumeStatus(statusEvent({ actorId: 2, statusId: "Aura" }), 1_000);
+    expect(tracker.nextExpiryAtMs()).toBe(burnExpiry!);
+
+    tracker.consumeStatus(statusEvent({ actorId: 1, statusId: "Burn", action: "removed" }), 1_100);
+    expect(tracker.nextExpiryAtMs()).toBeUndefined();
+  });
 });
