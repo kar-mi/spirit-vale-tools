@@ -95,6 +95,7 @@ export function renderEncounter(
     partyDps: perSecond(totalDamage, durationMs),
     partyCurrentDps,
     actors,
+    unidentifiedActorIds: visibleAnonymousActors.flatMap((actor) => actor.actorIds),
     personalName,
     personalMatch,
     ...(personalMatch === "matched" && personal ? { personal } : {}),

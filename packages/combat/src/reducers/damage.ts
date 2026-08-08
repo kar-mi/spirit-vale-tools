@@ -213,7 +213,12 @@ export class DamageReducer {
     if (event.kind === "monsterIdentity") {
       if (event.operation === "reset") this.mobIdentities.clear();
       else if (event.operation === "remove") this.mobIdentities.delete(event.actorId);
-      else this.rememberMobIdentity(event.actorId, event.displayName);
+      else {
+        this.rememberMobIdentity(event.actorId, event.displayName);
+        if (this.current?.enemyFirstSeenAtMs.has(event.actorId)) {
+          this.current.enemyNames.set(event.actorId, event.displayName);
+        }
+      }
       return;
     }
     const actorId = event.actorId;

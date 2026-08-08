@@ -4,6 +4,7 @@ import {
 } from "@kar-mi/spirit-vale-tools-capture";
 import {
   DamageReducer,
+  CURRENT_BOSS_SKILL_NAMES,
   FishNetActorDirectory,
   FishNetCombatTracker,
   MeterReducer,
@@ -44,6 +45,7 @@ const result = await replayCombatCapture(input, {
     ...(fishNetBuildFingerprint === undefined ? {} : { buildFingerprint: fishNetBuildFingerprint }),
     ...(semanticMap === undefined ? {} : { semanticMap }),
     monsterCatalog: mobDefinitionsById(),
+    bossCatalog: CURRENT_BOSS_SKILL_NAMES,
   }),
   onEvent: (event, observedAtMs) => {
     lastObservedAtMs = observedAtMs;

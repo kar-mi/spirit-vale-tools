@@ -510,6 +510,7 @@ describe("encounter aggregation and rendering", () => {
     expect(meter.getLatestSnapshot(10_000)?.actors).toMatchObject([
       { displayName: "Unidentified", damage: 240, isUnidentified: true },
     ]);
+    expect(meter.getLatestSnapshot(10_000)?.unidentifiedActorIds).toEqual([303]);
   });
 
   test("supports an explicit personal actor when no display name is available", () => {

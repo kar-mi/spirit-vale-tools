@@ -198,6 +198,52 @@ describe("FishNetCombatTracker", () => {
     const [hit] = tracker.consume(damage(3, 52, 10, "skill:strike", 100));
     expect(hit).not.toHaveProperty("targetIdentity");
   });
+
+  test("names an anonymous boss from a curated distinctive skill", () => {
+    const tracker = new FishNetCombatTracker({
+      bossCatalog: new Map([["UmbralWide", { displayName: "Umbral Warden" }]]),
+    });
+
+    expect(tracker.consume(cast(1, 54777, "UmbralWide"))).toMatchObject([
+      { kind: "activation", actorId: 54777, sourceId: "UmbralWide" },
+      { kind: "monsterIdentity", operation: "upsert", actorId: 54777, mobId: "boss:UmbralWide", displayName: "Umbral Warden" },
+    ]);
+  });
+
+  test("does not override a game-provided monster identity with a curated boss mapping", () => {
+    const tracker = new FishNetCombatTracker({
+      monsterCatalog: new Map([["authoritative_mob", { level: 2, displayName: "Authoritative Mob" }]]),
+      bossCatalog: new Map([["UmbralWide", { displayName: "Curated Boss" }]]),
+    });
+    tracker.consume({
+      tick: 1, packetId: 1, packetName: "syncType", objectId: 54777,
+      networkBehaviourType: "MonsterController", raw: Buffer.alloc(0), payload: Buffer.alloc(0),
+      decodedFields: [field("Data.Id", "authoritative_mob"), field("Data.Level", 2), field("Data.Rank", 0)],
+    });
+
+    expect(tracker.consume(cast(2, 54777, "UmbralWide"))).toEqual([
+      expect.objectContaining({ kind: "activation", actorId: 54777, sourceId: "UmbralWide" }),
+    ]);
+  });
+
+  test("drops a curated boss name when its object id is reused", () => {
+    const tracker = new FishNetCombatTracker({
+      bossCatalog: new Map([
+        ["OldBossSkill", { displayName: "Old Boss" }],
+        ["NewBossSkill", { displayName: "New Boss" }],
+      ]),
+    });
+    tracker.consume(cast(1, 54777, "OldBossSkill"));
+
+    expect(tracker.consume({
+      tick: 2, packetId: 1, packetName: "objectSpawn", objectId: 54777,
+      raw: Buffer.alloc(0), payload: Buffer.alloc(0),
+    })).toEqual([{ kind: "monsterIdentity", operation: "remove", tick: 2, actorId: 54777 }]);
+    expect(tracker.consume(cast(3, 54777, "NewBossSkill"))).toMatchObject([
+      { kind: "activation", actorId: 54777, sourceId: "NewBossSkill" },
+      { kind: "monsterIdentity", operation: "upsert", actorId: 54777, displayName: "New Boss" },
+    ]);
+  });
   test("emits changed summon stack counts from authoritative calibration snapshots", () => {
     const tracker = new FishNetCombatTracker();
 

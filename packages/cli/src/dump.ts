@@ -4,7 +4,7 @@ import {
 } from "@kar-mi/spirit-vale-tools-capture";
 import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
-import { FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
+import { CURRENT_BOSS_SKILL_NAMES, FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
 import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
 import { mobDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
 import {
@@ -50,6 +50,7 @@ const combatTracker = combatOnly
       // Names each hit's target from its spawn packet. The combat log carries no spawn packets, so
       // a name not stamped on the event here cannot be recovered when the log is replayed.
       monsterCatalog: mobDefinitionsById(),
+      bossCatalog: CURRENT_BOSS_SKILL_NAMES,
     })
   : undefined;
 const actorDirectory = combatOnly ? new FishNetActorDirectory() : undefined;

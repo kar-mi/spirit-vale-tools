@@ -52,6 +52,15 @@ describe("enemy names", () => {
     expect(reducer.current?.enemyNames.has(500)).toBe(false);
   });
 
+  test("backfills a boss name learned after the opening hit", () => {
+    const reducer = new DamageReducer();
+
+    reducer.consumeCombat(damage(90, 500, 0), 0);
+    reducer.consumeCombat(spawnIdentity(500, "Umbral Warden", 1), 1);
+
+    expect(reducer.current?.enemyNames.get(500)).toBe("Umbral Warden");
+  });
+
   test.each(["remove", "reset"] as const)("drops stale spawn identity on %s", (operation) => {
     const reducer = new DamageReducer();
 

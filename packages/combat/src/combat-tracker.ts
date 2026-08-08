@@ -33,6 +33,11 @@ export interface FishNetMonsterCatalog {
   get(mobId: string): { readonly level: number; readonly displayName: string } | undefined;
 }
 
+/** Curated, build-scoped boss names keyed by a skill unique to that boss. */
+export interface FishNetBossCatalog {
+  get(skillId: string): { readonly displayName: string } | undefined;
+}
+
 export interface FishNetCombatTrackerOptions {
   /** Ticks to retain a completed activation for trailing hits. Defaults to 30. */
   hitGraceTicks?: number;
@@ -55,6 +60,8 @@ export interface FishNetCombatTrackerOptions {
   localActorIdResolver?: () => number | undefined;
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */
   monsterCatalog?: FishNetMonsterCatalog;
+  /** Fallback names for otherwise-anonymous bosses; game-provided identities always win. */
+  bossCatalog?: FishNetBossCatalog;
 }
 
 export type FishNetCombatMonsterIdentityEvent =
@@ -310,9 +317,12 @@ export class FishNetCombatTracker {
   private readonly healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
   private readonly localActorIdResolver?: () => number | undefined;
   private readonly monsterCatalog?: FishNetMonsterCatalog;
+  private readonly bossCatalog?: FishNetBossCatalog;
   private readonly monsters?: FishNetMonsterDirectory;
   private readonly semanticMap?: FishNetSemanticMap;
   private readonly activations = new Map<string, ActivationState>();
+  /** Curated boss names are valid only for the lifetime of their network object id. */
+  private readonly bossIdentities = new Map<number, string>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
   private readonly recentDamageSignatures = new Set<string>();
@@ -344,21 +354,29 @@ export class FishNetCombatTracker {
     this.localActorIdResolver = options.localActorIdResolver;
     this.monsterCatalog = options.monsterCatalog;
     if (options.monsterCatalog) this.monsters = new FishNetMonsterDirectory(options.monsterCatalog);
+    this.bossCatalog = options.bossCatalog;
   }
 
   consume(packet: DecodedFishNetPacket): FishNetCombatEvent[] {
     // Spawn and sync packets carry no RPC, so this has to run before the early return below.
     const monsterIdentity = this.monsterIdentity(packet.tick, this.monsters?.consume(packet));
+    const bossLifecycle = this.bossIdentityLifecycle(packet);
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
       this.reset();
-      return monsterIdentity ? [monsterIdentity] : [];
+      return uniqueMonsterIdentityEvents([
+        ...(monsterIdentity ? [monsterIdentity] : []),
+        ...(bossLifecycle ? [bossLifecycle] : []),
+      ]);
     }
     this.pruneExpired(packet.tick);
     if (this.recentDamageTick !== packet.tick) {
       this.recentDamageTick = packet.tick;
       this.recentDamageSignatures.clear();
     }
-    const events: FishNetCombatEvent[] = monsterIdentity ? [monsterIdentity] : [];
+    const events: FishNetCombatEvent[] = [
+      ...(monsterIdentity ? [monsterIdentity] : []),
+      ...(bossLifecycle ? [bossLifecycle] : []),
+    ];
     if (packet.objectId === undefined || !packet.rpcName) {
       events.push(...this.recoverAmbiguousCombat(packet));
       events.push(...this.recoverSummons(packet));
@@ -367,7 +385,11 @@ export class FishNetCombatTracker {
 
     if (SKILL_RPC_NAMES.has(packet.rpcName) && matchesBehaviour(packet, "SkillsComponent")) {
       const skillEvent = this.consumeSkill(packet);
-      if (skillEvent) events.push(skillEvent);
+      if (skillEvent) {
+        events.push(skillEvent);
+        const bossIdentity = this.bossIdentity(skillEvent);
+        if (bossIdentity) events.push(bossIdentity);
+      }
       return events;
     }
     if (packet.rpcName === "Attack_C" && matchesBehaviour(packet, "CombatComponent")) {
@@ -427,6 +449,7 @@ export class FishNetCombatTracker {
 
   reset(): void {
     this.activations.clear();
+    this.bossIdentities.clear();
     this.activeRegenSources.clear();
     this.summonStacks.clear();
     this.recentDamageSignatures.clear();
@@ -452,6 +475,41 @@ export class FishNetCombatTracker {
       mobId: change.spawn.mobId,
       displayName: definition.displayName,
     } : undefined;
+  }
+
+  /** Uses the normal monster-identity path so all consumers receive the curated boss name. */
+  private bossIdentity(event: FishNetCombatActivationEvent): FishNetCombatMonsterIdentityEvent | undefined {
+    // Spawn-derived monster data and player identities are authoritative. The curated registry
+    // exists only for boss objects that expose neither of those game-provided identities.
+    if (!event.sourceId || event.actorIdentity || this.monsters?.get(event.actorId)) return undefined;
+    const definition = this.bossCatalog?.get(event.sourceId);
+    if (!definition) return undefined;
+    if (this.bossIdentities.has(event.actorId)) return undefined;
+    this.bossIdentities.set(event.actorId, definition.displayName);
+    return {
+      kind: "monsterIdentity",
+      operation: "upsert",
+      tick: event.tick,
+      actorId: event.actorId,
+      mobId: `boss:${event.sourceId}`,
+      displayName: definition.displayName,
+    };
+  }
+
+  /**
+   * FishNet may reuse an object id in a later zone. Drop a curated boss name at every object
+   * lifetime boundary so the next boss cannot inherit the old one's identity before it casts.
+   */
+  private bossIdentityLifecycle(packet: DecodedFishNetPacket): FishNetCombatMonsterIdentityEvent | undefined {
+    if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
+      if (this.bossIdentities.size === 0) return undefined;
+      this.bossIdentities.clear();
+      return { kind: "monsterIdentity", operation: "reset", tick: packet.tick };
+    }
+    if ((packet.packetName !== "objectSpawn" && packet.packetName !== "objectDespawn")
+      || packet.objectId === undefined
+      || !this.bossIdentities.delete(packet.objectId)) return undefined;
+    return { kind: "monsterIdentity", operation: "remove", tick: packet.tick, actorId: packet.objectId };
   }
 
   /**
@@ -1119,6 +1177,10 @@ function resolveDamageSource(
     sourceId: "unknown",
     sourceLabel: "unknown",
   };
+}
+
+function uniqueMonsterIdentityEvents(events: FishNetCombatMonsterIdentityEvent[]): FishNetCombatMonsterIdentityEvent[] {
+  return events.filter((event, index) => event.operation !== "reset" || events.findIndex((candidate) => candidate.operation === "reset") === index);
 }
 
 function tryLoadBundledSkillCatalog(buildFingerprint: string): FishNetSkillCatalog | undefined {

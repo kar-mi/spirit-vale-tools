@@ -1,4 +1,5 @@
 export { FishNetCombatTracker } from "./combat-tracker.ts";
+export { createBossCatalog, CURRENT_BOSS_SKILL_NAMES } from "./boss-catalog.ts";
 export { FishNetActorDirectory } from "./actor-directory.ts";
 export { FishNetStatusTracker } from "./status-tracker.ts";
 export type { FishNetActiveStatus, FishNetStatusTrackerOptions } from "./status-tracker.ts";
@@ -73,6 +74,7 @@ export type {
   FishNetCombatSummonEvent,
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
+  FishNetBossCatalog,
   FishNetMonsterCatalog,
   FishNetHealAttribution,
   FishNetHealingTraits,
