@@ -1,4 +1,5 @@
 import { FishNetProtocolError } from "./protocol.ts";
+import { resolveBundledMapName } from "./map-definitions/index.ts";
 import { checkedEnd, readSignedPackedWhole, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type {
   DecodedFishNetPacket,
@@ -74,6 +75,7 @@ const PRIMITIVE_CODECS: Readonly<Record<string, FishNetWireCodec>> = {
   "System.Int16": "int16",
   "System.UInt16": "uint16",
   "System.Int32": "packedInt32",
+  "System.Int32[]": "packedInt32Array",
   "System.Int64": "packedInt64",
   "System.Single": "float32",
   "System.Double": "float64",
@@ -101,7 +103,16 @@ function decodeParameters(
     if (codec) {
       try {
         const decoded = decodeField(buffer, offset, codec);
-        fields.push({ name, typeName: parameter.typeName, codec, value: decoded.value });
+        const resolvedName = name === "mapId" && typeof decoded.value === "number"
+          ? resolveBundledMapName(decoded.value)
+          : undefined;
+        fields.push({
+          name,
+          typeName: parameter.typeName,
+          codec,
+          value: decoded.value,
+          ...(resolvedName === undefined ? {} : { resolvedName }),
+        });
         offset = decoded.nextOffset;
       } catch {
         return { offset, complete: false };
@@ -141,6 +152,19 @@ function decodeField(
     case "float32": return { value: buffer.readFloatLE(offset), nextOffset: fixed(4) };
     case "float64": return { value: buffer.readDoubleLE(offset), nextOffset: fixed(8) };
     case "packedInt32": return readSignedPackedWhole(buffer, offset);
+    case "packedInt32Array": {
+      const count = readSignedPackedWhole(buffer, offset);
+      if (count.value === -1) return { value: null, nextOffset: count.nextOffset };
+      if (count.value < 0 || count.value > 100_000) throw new FishNetProtocolError("invalid packed Int32[] length");
+      const value: number[] = [];
+      let nextOffset = count.nextOffset;
+      for (let index = 0; index < count.value; index += 1) {
+        const item = readSignedPackedWhole(buffer, nextOffset);
+        value.push(item.value);
+        nextOffset = item.nextOffset;
+      }
+      return { value, nextOffset };
+    }
     case "packedInt64": {
       const decoded = readUnsignedPackedWhole(buffer, offset);
       const signed = (decoded.value >> 1n) ^ -(decoded.value & 1n);

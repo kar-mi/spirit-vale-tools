@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { loadBundledFishNetRpcMap } from "./builtin-maps.ts";
 import {
   decodeFishNetBundle,
+  decodeFishNetPayload,
   FishNetSessionDecoder,
 } from "./decoder.ts";
 import type { FishNetBehaviourDefinition, FishNetRpcMap } from "./types.ts";
@@ -181,6 +182,36 @@ function semanticMap(): FishNetRpcMap {
 }
 
 describe("FishNet bundles and sessions", () => {
+  test("decodes a packed Int32 array before a following channel index", () => {
+    const map: FishNetRpcMap = {
+      buildFingerprint: "synthetic-channel-list",
+      metadataVersion: 31,
+      behaviours: [{
+        typeName: "SyntheticChannels",
+        rpcs: [{
+          wireHash: 6,
+          packetKind: "targetRpc",
+          methodName: "SyntheticChannelList",
+          parameters: [
+            { name: "playerCounts", typeName: "System.Int32[]" },
+            { name: "currentIndex", typeName: "System.Int32" },
+          ],
+        }],
+      }],
+      broadcasts: [],
+    };
+    const payload = Buffer.concat([packed(2), packed(12), packed(18), packed(1)]);
+    const packet = decodeFishNetPayload(
+      tick(1, fixedRpc(10, 1, 0, 6, payload)),
+      { reliable: true, rpcMap: map },
+    );
+
+    expect(packet.decodedFields).toMatchObject([
+      { name: "playerCounts", codec: "packedInt32Array", value: [12, 18] },
+      { name: "currentIndex", codec: "packedInt32", value: 1 },
+    ]);
+  });
+
   test("classifies runtime packet ids as RPC Links", () => {
     const [result] = decodeFishNetBundle(tick(3, linked(900, Buffer.from([0xaa]))), { reliable: true });
     expect(result).toMatchObject({ packetId: 900, packetName: "rpcLink", linkId: 900, linkResolved: false });

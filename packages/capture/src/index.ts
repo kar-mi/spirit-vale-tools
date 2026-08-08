@@ -11,6 +11,7 @@ export {
   FishNetSessionDecoder,
 } from "./fishnet/decoder.ts";
 export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
+export { resolveBundledMapName } from "./fishnet/map-definitions/index.ts";
 export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
 export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";

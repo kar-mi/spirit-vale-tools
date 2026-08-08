@@ -10,6 +10,7 @@ export type FishNetWireCodec =
   | "float64"
   | "packedInt32"
   | "packedInt64"
+  | "packedInt32Array"
   | "packedUInt64"
   | "stringUtf8Packed"
   | "vector3IntPacked"
@@ -24,4 +25,6 @@ export interface FishNetDecodedField {
   typeName?: string;
   codec: FishNetWireCodec;
   value: FishNetDecodedValue;
+  /** Public game-data label resolved for known IDs (currently mapId). */
+  resolvedName?: string;
 }
