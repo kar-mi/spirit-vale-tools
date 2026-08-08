@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 2.2.1
+
+### Patch Changes
+
+- b95c188: Add fallback-only curated boss identities, scoped to FishNet object lifetimes, and expose unresolved actor IDs in combat snapshots.
+
 ## 2.2.0
 
 ### Minor Changes
