@@ -1090,6 +1090,32 @@ describe("FishNet bundles and sessions", () => {
     expect(result?.undecodedPayload).toBeUndefined();
   });
 
+  test("shows the Eternal Tower floor, absent run, or NA for ETUpdateRun", () => {
+    const map: FishNetRpcMap = {
+      buildFingerprint: "synthetic-et-floor",
+      metadataVersion: 31,
+      behaviours: [{
+        typeName: "SyntheticEternalTower",
+        rpcs: [{
+          wireHash: 93,
+          packetKind: "targetRpc",
+          methodName: "ETUpdateRun",
+          parameters: [{ name: "match", typeName: "EternalTowerRun" }],
+        }],
+      }],
+    };
+    const decoder = new FishNetSessionDecoder(map);
+    const decode = (payload: Buffer, tickValue: number) => decoder.decode(
+      tick(tickValue, targetRpc(17, 0, 93, payload)),
+      { reliable: true, connectionId: "synthetic-et" },
+    )[0];
+
+    expect(decode(Buffer.concat([Buffer.from([0]), packed(7), packed(11), packed(2), packed(42)]), 40)?.decodedFields)
+      .toEqual([{ name: "floor", typeName: "System.Int32", codec: "packedInt32", value: 42 }]);
+    expect(decode(Buffer.from([1]), 41)?.decodedFields?.[0]?.value).toBe("-");
+    expect(decode(Buffer.from([0, 2]), 42)?.decodedFields?.[0]?.value).toBe("NA");
+  });
+
   test("emits multiple fixed messages from one reliable bundle in order", () => {
     const results = decodeFishNetBundle(tick(5, Buffer.concat([
       message(14, u32(20)),
