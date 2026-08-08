@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.3.1
+
+### Patch Changes
+
+- 70a8d83: Decode known map IDs to public names, including the current channel population arrays. Decode the
+  floor from Eternal Tower run updates, clearly marking absent and undecodable runs.
+
 ## 1.3.0
 
 ### Minor Changes
