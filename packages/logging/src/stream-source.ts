@@ -143,7 +143,10 @@ class LogStreamSource {
   private start(): void {
     if (this.closed || this.fallbackTimer) return;
     this.ensurePointerWatcher();
-    this.fallbackTimer = this.hold(setInterval(() => void this.drain(), this.fallbackPollMs));
+    // fs.watch is advisory and can miss the atomic rename used to replace a stream pointer,
+    // especially on Windows. Make the fallback a real pointer poll instead of only draining the
+    // file selected by the last watcher event.
+    this.fallbackTimer = this.hold(setInterval(() => void this.forceDrain(), this.fallbackPollMs));
   }
 
   private hold<T extends { unref?: () => void }>(timer: T): T {

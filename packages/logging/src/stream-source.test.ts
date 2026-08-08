@@ -74,6 +74,29 @@ describe("log stream source", () => {
     expect(payloadLines(read.lines)).toHaveLength(1);
   });
 
+  test("fallback polling discovers a session switch after the pointer watcher is lost", async () => {
+    const directory = await temporaryDirectory();
+    const first = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
+    await first.close();
+    const subscription = subscribe(directory);
+    expect((await subscription.poll()).current?.sessionId).toBe(first.id);
+
+    // Removing the watched directory invalidates its watcher. Recreating it models a missed
+    // notification around atomic pointer replacement without relying on platform-specific timing.
+    await rm(path.join(directory, "current"), { recursive: true, force: true });
+    const second = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
+    second.logger("combat").log("combat.event", { kind: "damage", tick: 2, actorId: 7, targetId: 8, value: 20 });
+    await second.close();
+
+    // Losing the directory can first publish the brief no-pointer state. The next changed batch
+    // must discover the replacement pointer even though its watcher no longer exists.
+    let read = await subscription.next();
+    if (read.current?.sessionId !== second.id) read = await subscription.next();
+    expect(read.changedSession).toBe(true);
+    expect(read.current?.sessionId).toBe(second.id);
+    expect(payloadLines(read.lines)).toHaveLength(1);
+  });
+
   test("coalesces a burst of appends into one batch", async () => {
     const directory = await temporaryDirectory();
     const session = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
