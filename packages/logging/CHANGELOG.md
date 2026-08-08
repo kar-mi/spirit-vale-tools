@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.6.1
+
+### Patch Changes
+
+- de3c2b0: Recover live log followers when a current-stream pointer watcher misses a session rotation.
+
 ## 0.6.0
 
 ### Minor Changes
