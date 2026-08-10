@@ -10,14 +10,14 @@ import type { LogStream } from "./types.ts";
 describe("managed log session discovery", () => {
   test("filters, sorts, limits, and marks the validated current stream", async () => {
     await withLogs(async (root) => {
-      await addSession(root, "session-alpha", "2026-01-01T00:00:00.000Z", ["combat"]);
-      await addSession(root, "session-bravo", "2026-01-02T00:00:00.000Z", ["rewards"]);
+      await addSession(root, "session-alpha", "2026-01-01T00:00:00.000Z", "combat");
+      await addSession(root, "session-bravo", "2026-01-02T00:00:00.000Z", "rewards");
       for (let index = 0; index < 30; index += 1) {
-        await addSession(root, `session-combat-${String(index).padStart(2, "0")}`, `2026-02-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`, ["combat"]);
+        await addSession(root, `session-combat-${String(index).padStart(2, "0")}`, `2026-02-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`, "combat");
       }
       await writeJson(path.join(root, "current", "combat.json"), {
         schemaVersion: 1, stream: "combat", sessionId: "session-combat-29",
-        startedAt: "2026-03-02T00:00:00.000Z", relativePath: "sessions/session-combat-29/combat.jsonl",
+        startedAt: "2026-03-02T00:00:00.000Z", relativePath: "combat/session-combat-29.jsonl",
       });
       const sessions = await listLogSessions("combat", root, 25);
       expect(sessions).toHaveLength(25);
@@ -27,27 +27,29 @@ describe("managed log session discovery", () => {
     });
   });
 
-  test("ignores malformed, mismatched, incomplete, and redirected sessions", async () => {
+  test("falls back to file mtime for a corrupt header, ignores mismatched and redirected sessions", async () => {
     await withLogs(async (root) => {
-      await addSession(root, "valid-session", "2026-04-01T00:00:00.000Z", ["combat"]);
-      await addSession(root, "mismatched-directory", "2026-04-02T00:00:00.000Z", ["combat"], "different-session");
-      await writeJson(path.join(root, "sessions", "malformed", "session.json"), { schemaVersion: 7 });
-      await addSession(root, "missing-stream", "2026-04-03T00:00:00.000Z", ["combat"], undefined, false);
+      await addSession(root, "valid-session", "2026-04-01T00:00:00.000Z", "combat");
+      await addSession(root, "mismatched-session", "2026-04-02T00:00:00.000Z", "combat", "different-session");
+      const combatDirectory = path.join(root, "combat");
+      await mkdir(combatDirectory, { recursive: true });
+      await writeFile(path.join(combatDirectory, "corrupt-header.jsonl"), "not json\n", "utf8");
       const outside = path.join(root, "outside.jsonl");
       await writeFile(outside, "", "utf8");
-      const redirected = path.join(root, "sessions", "redirected");
-      await mkdir(redirected, { recursive: true });
-      await writeJson(path.join(redirected, "session.json"), metadata("redirected", "2026-04-04T00:00:00.000Z", ["combat"]));
       let linked = false;
-      try { await symlink(outside, path.join(redirected, "combat.jsonl"), "file"); linked = true; } catch { /* Symlinks may require Windows developer mode. */ }
+      try { await symlink(outside, path.join(combatDirectory, "redirected.jsonl"), "file"); linked = true; } catch { /* Symlinks may require Windows developer mode. */ }
       await writeJson(path.join(root, "current", "combat.json"), {
         schemaVersion: 1, stream: "combat", sessionId: "valid-session",
         startedAt: "2026-04-05T00:00:00.000Z", relativePath: "../outside.jsonl",
       });
       const sessions = await listLogSessions("combat", root);
-      expect(sessions.map((session) => session.id)).toEqual(["valid-session"]);
-      expect(sessions[0]?.active).toBe(false);
-      if (linked) expect(sessions.some((session) => session.id === "redirected")).toBe(false);
+      const ids = sessions.map((session) => session.id);
+      expect(ids).toContain("valid-session");
+      expect(ids).toContain("corrupt-header");
+      expect(ids).not.toContain("mismatched-session");
+      expect(ids).not.toContain("redirected");
+      expect(sessions.find((session) => session.id === "valid-session")?.active).toBe(false);
+      void linked;
     });
   });
 
@@ -62,14 +64,11 @@ async function withLogs(run: (root: string) => Promise<void>): Promise<void> {
   try { await run(root); } finally { await rm(root, { recursive: true, force: true }); }
 }
 
-async function addSession(root: string, id: string, createdAt: string, streams: LogStream[], metadataId = id, includeStream = true): Promise<void> {
-  const directory = path.join(root, "sessions", id);
-  await writeJson(path.join(directory, "session.json"), metadata(metadataId, createdAt, streams));
-  if (includeStream) for (const stream of streams) await writeFile(path.join(directory, `${stream}.jsonl`), "", "utf8");
-}
-
-function metadata(sessionId: string, createdAt: string, streams: LogStream[]) {
-  return { schemaVersion: 1, sessionId, producer: "synthetic-test", createdAt, streams };
+async function addSession(root: string, id: string, createdAt: string, stream: LogStream, headerSessionId = id): Promise<void> {
+  const directory = path.join(root, stream);
+  await mkdir(directory, { recursive: true });
+  const header = { schemaVersion: 2, stream, sessionId: headerSessionId, producer: "synthetic-test", startedAt: createdAt };
+  await writeFile(path.join(directory, `${id}.jsonl`), `${JSON.stringify(header)}\n`, "utf8");
 }
 
 async function writeJson(target: string, value: unknown): Promise<void> {

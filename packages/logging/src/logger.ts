@@ -3,14 +3,13 @@ import type { FileHandle } from "node:fs/promises";
 import { Buffer } from "node:buffer";
 import path from "node:path";
 
-import { currentStreamPointerPath, defaultLogDirectory, sessionDirectory, sessionStreamPath } from "./paths.ts";
+import { currentStreamPointerPath, defaultLogDirectory, streamSessionPath } from "./paths.ts";
 import { isMissing, isRecord } from "./predicates.ts";
 import { encodeLogRecord, encodeLogStreamHeader } from "./record-codec.ts";
 import type {
   CurrentLogStream,
   JsonObject,
   LogSession,
-  LogSessionMetadata,
   LogStream,
   LogStreamHeader,
 } from "./types.ts";
@@ -166,8 +165,8 @@ export class JsonLinesLogger {
    * Emits the stream header ahead of the first record.
    *
    * Written here rather than by whoever created the file so that every stream file is
-   * self-describing however it was produced — including a bare `--output name.jsonl` from the CLI,
-   * which has no `session.json` beside it. v2 records carry no session id or producer of their own,
+   * self-describing however it was produced — including a bare `--output name.jsonl` from the CLI.
+   * Sessions have no metadata file of their own; v2 records carry no session id or producer either,
    * so without this line a stream read in isolation would have no provenance at all.
    */
   private ensureHeader(): void {
@@ -270,19 +269,15 @@ async function ensureDirectory(directory: string): Promise<void> {
 export async function createLogSession(options: CreateLogSessionOptions): Promise<LogSession> {
   const logDirectory = options.logDirectory ?? defaultLogDirectory();
   const id = createSessionId();
-  const directory = sessionDirectory(id, logDirectory);
   const createdAt = new Date().toISOString();
   const streams = [...new Set(options.streams)];
   if (streams.length === 0) throw new Error("a log session requires at least one stream");
-  await ensureDirectory(directory);
-  const metadata: LogSessionMetadata = { schemaVersion: 1, sessionId: id, producer: options.producer, createdAt, streams };
-  await writeFile(path.join(directory, "session.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
 
   const activate = options.activate ?? true;
   const loggers = new Map<LogStream, JsonLinesLogger>();
   for (const stream of streams) {
     const override = options.outputPaths?.[stream];
-    const streamPath = override ?? sessionStreamPath(id, stream, logDirectory);
+    const streamPath = override ?? streamSessionPath(stream, id, logDirectory);
     await ensureDirectory(path.dirname(streamPath));
     // Created empty; the logger writes the stream header ahead of its first record.
     await writeFile(streamPath, "", override ? undefined : { flag: "wx" });
@@ -305,7 +300,6 @@ export async function createLogSession(options: CreateLogSessionOptions): Promis
 
   return {
     id,
-    directory,
     logger(stream) {
       const logger = loggers.get(stream);
       if (!logger) throw new Error(`stream ${stream} is not part of session ${id}`);
@@ -345,7 +339,7 @@ export async function activateLogSession(
   await session.flush?.();
   const startedAt = new Date().toISOString();
   for (const stream of streams) {
-    const streamPath = sessionStreamPath(session.id, stream, logDirectory);
+    const streamPath = streamSessionPath(stream, session.id, logDirectory);
     const pointer: CurrentLogStream = {
       schemaVersion: 1,
       stream,

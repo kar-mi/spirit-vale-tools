@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, isLogStreamHeader, parseLogRecord, parseLogStreamHeader, readCurrentLogStream, sessionStreamPath } from "./index.ts";
+import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, isLogStreamHeader, parseLogRecord, parseLogStreamHeader, readCurrentLogStream, streamSessionPath } from "./index.ts";
 import type { LogRecord } from "./types.ts";
 
 /**
@@ -194,12 +194,12 @@ describe("shared JSON logger", () => {
       const session = await createLogSession({ producer: "synthetic-test", streams: ["rewards"], logDirectory: root });
       session.logger("rewards").log("rewards.event", { index: 1 });
       await session.flush();
-      const afterFlush = await Bun.file(sessionStreamPath(session.id, "rewards", root)).text();
+      const afterFlush = await Bun.file(streamSessionPath("rewards", session.id, root)).text();
       expect(decodeSequences(afterFlush)).toEqual([1]);
 
       session.logger("rewards").log("rewards.event", { index: 2 });
       await session.close();
-      const afterClose = await Bun.file(sessionStreamPath(session.id, "rewards", root)).text();
+      const afterClose = await Bun.file(streamSessionPath("rewards", session.id, root)).text();
       expect(decodeSequences(afterClose)).toEqual([1, 2]);
     } finally {
       await rm(root, { recursive: true, force: true });

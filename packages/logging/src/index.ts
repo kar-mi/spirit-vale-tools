@@ -23,8 +23,8 @@ export { sanitizeCombatData } from "./combat-sanitizer.ts";
 export {
   defaultLogDirectory,
   currentStreamPointerPath,
-  sessionDirectory,
-  sessionStreamPath,
+  streamCategoryDirectory,
+  streamSessionPath,
 } from "./paths.ts";
 export { listLogSessions } from "./sessions.ts";
 export { decimal, isMissing, isRecord, nullableString } from "./predicates.ts";
@@ -46,7 +46,6 @@ export type {
   JsonObject,
   LogRecord,
   LogSession,
-  LogSessionMetadata,
   ListedLogSession,
   LogStream,
   LogStreamHeader,

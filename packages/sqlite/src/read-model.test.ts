@@ -104,7 +104,7 @@ interface Fixture {
 
 async function fixture(): Promise<Fixture> {
   const root = path.resolve(import.meta.dir, "../../../.local", `read-model-test-${crypto.randomUUID()}`);
-  const logPath = path.join(root, "sessions", SESSION, `${STREAM}.jsonl`);
+  const logPath = path.join(root, STREAM, `${SESSION}.jsonl`);
   await mkdir(path.dirname(logPath), { recursive: true });
   await writeFile(logPath, "");
   const rebuilds: ReadModelRebuild[] = [];

@@ -96,7 +96,7 @@ interface Fixture {
 async function fixture(): Promise<Fixture> {
   sequence = 0;
   const root = path.resolve(import.meta.dir, "../../../../.local", `combat-history-${crypto.randomUUID()}`);
-  const logPath = path.join(root, "sessions", SESSION, "combat.jsonl");
+  const logPath = path.join(root, "combat", `${SESSION}.jsonl`);
   await mkdir(path.dirname(logPath), { recursive: true });
   await writeFile(logPath, "");
   const opened: ReadModel[] = [];

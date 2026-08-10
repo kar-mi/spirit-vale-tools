@@ -8,10 +8,9 @@ import type { JsonObject, LogRecord, LogStream, LogStreamHeader } from "./types.
  * `{"schemaVersion":1,"sessionId":"…","sequence":3,"recordedAt":"2026-08-07T00:39:10.719Z",
  *   "source":"desktop-capture","type":"combat.event","data":{…}}`
  *
- * Of that, `schemaVersion`, `sessionId` and `source` never varied within a file and were already
- * recorded in `session.json`; `recordedAt` spent 24 bytes on an ISO string for a value every reader
- * immediately `Date.parse`d back to a number. Across 130 real combat logs that was 34% of the bytes
- * on disk. v2 keeps only what varies:
+ * Of that, `schemaVersion`, `sessionId` and `source` never varied within a file; `recordedAt` spent
+ * 24 bytes on an ISO string for a value every reader immediately `Date.parse`d back to a number.
+ * Across 130 real combat logs that was 34% of the bytes on disk. v2 keeps only what varies:
  * `{"seq":3,"at":1754526750719,"type":"combat.event","data":{…}}`
  *
  * `type` stays: it is *not* recoverable from `data`. 743,106 records in those logs carry no

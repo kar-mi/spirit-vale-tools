@@ -101,7 +101,7 @@ describe("log stream source", () => {
     const directory = await temporaryDirectory();
     const session = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
     await session.close();
-    const streamPath = path.join(directory, "sessions", session.id, "combat.jsonl");
+    const streamPath = path.join(directory, "combat", `${session.id}.jsonl`);
     const subscription = subscribe(directory, { debounceMs: 30 });
     await subscription.poll();
 
@@ -116,7 +116,7 @@ describe("log stream source", () => {
     const directory = await temporaryDirectory();
     const session = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
     await session.close();
-    const streamPath = path.join(directory, "sessions", session.id, "combat.jsonl");
+    const streamPath = path.join(directory, "combat", `${session.id}.jsonl`);
     const backlog = Array.from({ length: 8 }, (_value, index) => line(index)).join("\n");
     await writeFile(streamPath, `${backlog}\n`, "utf8");
 
@@ -154,7 +154,7 @@ describe("log stream source", () => {
     expect(payloadLines(replayed.lines)).toHaveLength(1);
     expect(replayed.changedSession).toBe(true);
 
-    const streamPath = path.join(directory, "sessions", session.id, "combat.jsonl");
+    const streamPath = path.join(directory, "combat", `${session.id}.jsonl`);
     await appendFile(streamPath, `${line(2)}\n`, "utf8");
     expect(payloadLines((await early.next()).lines)).toHaveLength(1);
     expect(payloadLines((await late.next()).lines)).toHaveLength(1);
@@ -168,7 +168,7 @@ describe("log stream source", () => {
     const subscription = subscribe(directory);
     await subscription.poll();
 
-    const streamPath = path.join(directory, "sessions", session.id, "combat.jsonl");
+    const streamPath = path.join(directory, "combat", `${session.id}.jsonl`);
     await writeFile(streamPath, `${line(9)}\n`, "utf8");
     const read = await subscription.poll();
     expect(read.reset).toBe(true);

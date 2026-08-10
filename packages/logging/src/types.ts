@@ -23,9 +23,9 @@ export interface LogRecord<T extends JsonObject = JsonObject> {
  * First line of a v2 stream file, carrying what v1 repeated on every record.
  *
  * Measured over 130 real combat logs, `sessionId`, `source` and `schemaVersion` were 28.2% of the
- * bytes on disk while being byte-identical on every line — and all three were already in the
- * session's `session.json`. This line keeps a stream file self-describing when it is read on its
- * own, without that cost.
+ * bytes on disk while being byte-identical on every line. This line keeps a stream file
+ * self-describing when it is read on its own, without that cost — it is the sole record of a
+ * session's metadata, since sessions have no separate metadata file of their own.
  *
  * Nothing downstream reads `sessionId` or `source` off a record, so a reader that starts partway
  * through a file (an incremental indexing pass resuming from a byte offset) can decode records
@@ -38,14 +38,6 @@ export interface LogStreamHeader {
   sessionId: string;
   producer: string;
   startedAt: string;
-}
-
-export interface LogSessionMetadata {
-  schemaVersion: 1;
-  sessionId: string;
-  producer: string;
-  createdAt: string;
-  streams: LogStream[];
 }
 
 export interface ListedLogSession {
@@ -65,7 +57,6 @@ export interface CurrentLogStream {
 
 export interface LogSession {
   id: string;
-  directory: string;
   logger(stream: LogStream): JsonLinesLogger;
   /** Resolves once every record logged before this call has reached the disk on every stream. */
   flush(): Promise<void>;

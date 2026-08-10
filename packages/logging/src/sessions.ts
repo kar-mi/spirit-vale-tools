@@ -1,9 +1,12 @@
-import { lstat, readFile, readdir } from "node:fs/promises";
+import { lstat, open, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
-import { currentStreamPointerPath, defaultLogDirectory } from "./paths.ts";
+import { currentStreamPointerPath, defaultLogDirectory, streamCategoryDirectory } from "./paths.ts";
 import { isMissing, isRecord } from "./predicates.ts";
-import type { CurrentLogStream, ListedLogSession, LogSessionMetadata, LogStream } from "./types.ts";
+import { parseLogStreamHeader } from "./record-codec.ts";
+import type { CurrentLogStream, ListedLogSession, LogStream, LogStreamHeader } from "./types.ts";
+
+const HEADER_PROBE_BYTES = 4096;
 
 export async function listLogSessions(
   stream: LogStream,
@@ -11,10 +14,10 @@ export async function listLogSessions(
   limit = 25,
 ): Promise<ListedLogSession[]> {
   if (!Number.isSafeInteger(limit) || limit < 0) throw new RangeError("session limit must be a non-negative integer");
-  const sessionsRoot = path.resolve(logDirectory, "sessions");
+  const categoryDirectory = streamCategoryDirectory(stream, logDirectory);
   let entries;
   try {
-    entries = await readdir(sessionsRoot, { withFileTypes: true });
+    entries = await readdir(categoryDirectory, { withFileTypes: true });
   } catch (error) {
     if (isMissing(error)) return [];
     throw error;
@@ -22,27 +25,20 @@ export async function listLogSessions(
 
   const current = await readCurrentPointer(stream, logDirectory);
   const sessions = await Promise.all(entries.map(async (entry): Promise<ListedLogSession | undefined> => {
-    if (!entry.isDirectory() || entry.isSymbolicLink()) return undefined;
-    const directory = path.join(sessionsRoot, entry.name);
-    const metadataPath = path.join(directory, "session.json");
-    const streamPath = path.join(directory, `${stream}.jsonl`);
+    if (!entry.isFile() || entry.isSymbolicLink() || !entry.name.endsWith(".jsonl")) return undefined;
+    const sessionId = entry.name.slice(0, -".jsonl".length);
+    const filePath = path.join(categoryDirectory, entry.name);
     try {
-      const [directoryInfo, metadataInfo, streamInfo, source] = await Promise.all([
-        lstat(directory),
-        lstat(metadataPath),
-        lstat(streamPath),
-        readFile(metadataPath, "utf8"),
-      ]);
-      if (!directoryInfo.isDirectory() || directoryInfo.isSymbolicLink()
-        || !metadataInfo.isFile() || metadataInfo.isSymbolicLink()
-        || !streamInfo.isFile() || streamInfo.isSymbolicLink()) return undefined;
-      const metadata = parseSessionMetadata(JSON.parse(source));
-      if (!metadata || metadata.sessionId !== entry.name || !metadata.streams.includes(stream)) return undefined;
+      const info = await lstat(filePath);
+      if (!info.isFile() || info.isSymbolicLink()) return undefined;
+      const header = await readHeaderLine(filePath);
+      if (header && (header.sessionId !== sessionId || header.stream !== stream)) return undefined;
+      const createdAt = header?.startedAt ?? info.mtime.toISOString();
       return {
-        id: metadata.sessionId,
-        createdAt: metadata.createdAt,
-        path: streamPath,
-        active: current?.sessionId === metadata.sessionId && current.path === path.resolve(streamPath),
+        id: sessionId,
+        createdAt,
+        path: filePath,
+        active: current?.sessionId === sessionId && current.path === path.resolve(filePath),
       };
     } catch {
       return undefined;
@@ -55,12 +51,27 @@ export async function listLogSessions(
     .slice(0, limit);
 }
 
-function parseSessionMetadata(value: unknown): LogSessionMetadata | undefined {
-  if (!isRecord(value) || value["schemaVersion"] !== 1 || typeof value["sessionId"] !== "string"
-    || value["sessionId"].length === 0 || typeof value["producer"] !== "string" || value["producer"].length === 0
-    || typeof value["createdAt"] !== "string" || !Number.isFinite(Date.parse(value["createdAt"]))
-    || !Array.isArray(value["streams"]) || !value["streams"].every(isLogStream)) return undefined;
-  return value as unknown as LogSessionMetadata;
+/** Reads just the first line of a stream file and parses it as a v2 header, without loading the rest. */
+async function readHeaderLine(filePath: string): Promise<LogStreamHeader | undefined> {
+  let handle;
+  try {
+    handle = await open(filePath, "r");
+  } catch {
+    return undefined;
+  }
+  try {
+    const buffer = Buffer.alloc(HEADER_PROBE_BYTES);
+    const { bytesRead } = await handle.read(buffer, 0, HEADER_PROBE_BYTES, 0);
+    const text = buffer.toString("utf8", 0, bytesRead);
+    const newline = text.indexOf("\n");
+    const line = newline === -1 ? text : text.slice(0, newline);
+    if (!line.trim()) return undefined;
+    return parseLogStreamHeader(JSON.parse(line));
+  } catch {
+    return undefined;
+  } finally {
+    await handle.close();
+  }
 }
 
 async function readCurrentPointer(
@@ -77,8 +88,4 @@ async function readCurrentPointer(
     if (!resolved.startsWith(root)) return undefined;
     return { ...(value as unknown as CurrentLogStream), path: resolved };
   } catch { return undefined; }
-}
-
-function isLogStream(value: unknown): value is LogStream {
-  return value === "capture" || value === "combat" || value === "market" || value === "rewards" || value === "other";
 }
