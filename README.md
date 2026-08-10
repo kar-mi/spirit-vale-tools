@@ -1,7 +1,7 @@
 # Spirit Vale Tools
 
 Spirit Vale Tools provides reusable Bun packages and command-line utilities for
-passive packet capture, protocol decoding, catalogs, combat, character, market,
+passive packet capture, protocol decoding, catalogs, combat, character,
 and reward analysis. Capture uses Npcap in non-promiscuous mode and never
 sends, modifies, drops, or injects game traffic.
 
@@ -21,7 +21,6 @@ scope:
 | `@kar-mi/spirit-vale-tools-statuses` | Build-scoped status catalog |
 | `@kar-mi/spirit-vale-tools-combat` | Combat tracking, DPS, logs, and replay |
 | `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation |
-| `@kar-mi/spirit-vale-tools-market` | Market decoding, tracking, querying, and replay |
 | `@kar-mi/spirit-vale-tools-rewards` | Reward decoding, tracking, trends, and replay |
 
 See the [developer guide](developer.md) for registry setup, installation, and
@@ -46,7 +45,6 @@ API-compatible mode enabled.
 ```powershell
 bun run capture:dump -- --duration 30
 bun run rewards
-bun run market -- --live
 ```
 
 More CLI behavior, package details, logging, and protocol references are

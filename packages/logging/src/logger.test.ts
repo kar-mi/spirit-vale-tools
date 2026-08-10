@@ -119,13 +119,13 @@ describe("shared JSON logger", () => {
     const failures: string[] = [];
     let attempts = 0;
     const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
-      stream: "market",
+      stream: "rewards",
       batchBytes: 1,
       append: async () => { throw new Error(`failure ${++attempts}`); },
       onWriteError: ({ error }) => failures.push(error.message),
     });
 
-    for (let index = 0; index < 4; index += 1) logger.log("market.event", { index });
+    for (let index = 0; index < 4; index += 1) logger.log("rewards.event", { index });
     await expect(logger.close()).rejects.toThrow("failure 1");
 
     expect(attempts).toBe(4);
@@ -136,7 +136,7 @@ describe("shared JSON logger", () => {
   test("preserves record order across many batches", async () => {
     const appended: string[] = [];
     const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
-      stream: "market",
+      stream: "rewards",
       batchBytes: 200,
       append: async (_path, data) => {
         await Promise.resolve();
@@ -144,7 +144,7 @@ describe("shared JSON logger", () => {
       },
     });
 
-    for (let index = 1; index <= 40; index += 1) logger.log("market.event", { index });
+    for (let index = 1; index <= 40; index += 1) logger.log("rewards.event", { index });
     await logger.close();
 
     expect(appended.length).toBeGreaterThan(1);
@@ -154,7 +154,7 @@ describe("shared JSON logger", () => {
   test("stays ordered when records arrive during an in-flight flush", async () => {
     const appended: string[] = [];
     const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
-      stream: "market",
+      stream: "rewards",
       batchBytes: 1,
       append: async (_path, data) => {
         await Bun.sleep(1);
@@ -162,10 +162,10 @@ describe("shared JSON logger", () => {
       },
     });
 
-    logger.log("market.event", { index: 1 });
+    logger.log("rewards.event", { index: 1 });
     const flushing = logger.flush();
-    logger.log("market.event", { index: 2 });
-    logger.log("market.event", { index: 3 });
+    logger.log("rewards.event", { index: 2 });
+    logger.log("rewards.event", { index: 3 });
     await flushing;
     await logger.close();
 
@@ -175,12 +175,12 @@ describe("shared JSON logger", () => {
   test("writes a partial batch on the flush timer without flush() or close()", async () => {
     const appended: string[] = [];
     const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
-      stream: "market",
+      stream: "rewards",
       flushIntervalMs: 5,
       append: async (_path, data) => { appended.push(String(data)); },
     });
 
-    logger.log("market.event", { index: 1 });
+    logger.log("rewards.event", { index: 1 });
     expect(appended).toHaveLength(0);
     await Bun.sleep(40);
     expect(appended).toHaveLength(1);
@@ -213,7 +213,7 @@ describe("shared JSON logger", () => {
     const appended: string[] = [];
     const maxBufferedBytes = 2_000;
     const logger = new JsonLinesLogger("synthetic.jsonl", "session-example", "synthetic-test", {
-      stream: "market",
+      stream: "rewards",
       batchBytes: 1,
       maxBufferedBytes,
       append: async (_path, data) => {
@@ -224,7 +224,7 @@ describe("shared JSON logger", () => {
     });
 
     for (let index = 0; index < 200; index += 1) {
-      logger.log("market.event", { index, filler: "x".repeat(64) });
+      logger.log("rewards.event", { index, filler: "x".repeat(64) });
       expect(logger.stats().bufferedBytes).toBeLessThanOrEqual(maxBufferedBytes);
     }
     const stalled = logger.stats();
@@ -236,7 +236,7 @@ describe("shared JSON logger", () => {
     await logger.flush();
     expect(logger.stats().bufferedBytes).toBe(0);
 
-    logger.log("market.event", { index: "after-recovery" });
+    logger.log("rewards.event", { index: "after-recovery" });
     await logger.flush();
     expect(logger.stats().droppedRecords).toBe(stalled.droppedRecords);
     expect(appended.join("")).toContain("after-recovery");

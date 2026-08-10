@@ -3,7 +3,7 @@
 Session-oriented logging utilities for Spirit Vale tools.
 
 > **Internal package.** This package is published only because the domain
-> packages (`combat`, `market`, `rewards`) depend on it at runtime; it is
+> packages (`combat`, `rewards`) depend on it at runtime; it is
 > installed automatically alongside them and is not a supported public API.
 
 ## Install

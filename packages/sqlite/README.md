@@ -68,8 +68,8 @@ so it is cheap to call repeatedly and resumes across process restarts.
 - A truncated, replaced, or rewound log rebuilds that stream; a corrupt database
   or a changed infrastructure schema rebuilds the whole file; a changed domain
   `version` rebuilds only that domain.
-- Use `model.bigintStatement(...)` for 64-bit values such as market prices and
-  reward coins. A plain read rounds anything past `Number.MAX_SAFE_INTEGER`.
+- Use `model.bigintStatement(...)` for 64-bit values such as reward coins. A
+  plain read rounds anything past `Number.MAX_SAFE_INTEGER`.
 - Prefer `model.statement(...)` / `model.bigintStatement(...)` for your own reads.
   They are cached for the model's lifetime and finalized by `close()`. Statements
   prepared directly with `database.query()` or `database.prepare()` are not, and

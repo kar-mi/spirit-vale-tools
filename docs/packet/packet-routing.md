@@ -16,10 +16,8 @@ flowchart TD
   FAN --> COM[@kar-mi/spirit-vale-tools-combat]
   FAN --> CHR[@kar-mi/spirit-vale-tools-character]
   FAN --> REW[@kar-mi/spirit-vale-tools-rewards]
-  FAN --> MAR[@kar-mi/spirit-vale-tools-market]
   COM --> LOG[@kar-mi/spirit-vale-tools-logging]
   REW --> LOG
-  MAR --> LOG
 ```
 
 | Type | Owner | What it represents | Typical consumer |
@@ -43,7 +41,6 @@ the normal live-capture handoff to feature packages.
 | `@kar-mi/spirit-vale-tools-combat` | `DecodedFishNetPacket` | Actor identities plus combat activation, damage, and death events |
 | `@kar-mi/spirit-vale-tools-character` | `CapturedFishNetPacket` | Local-character records and view state from PlayerSave data |
 | `@kar-mi/spirit-vale-tools-rewards` | `DecodedFishNetPacket` | Monster/reward session state and reward events; uses combat context where needed |
-| `@kar-mi/spirit-vale-tools-market` | `DecodedFishNetPacket` | Market response decoding, tracker state, queryable market events |
 | `@kar-mi/spirit-vale-tools-logging` | Domain events and diagnostics | Versioned JSON Lines session streams; it does not decode packets |
 | `@kar-mi/spirit-vale-tools-items` and `@kar-mi/spirit-vale-tools-skills` | Build fingerprint/catalog lookups | Static item and skill metadata used to enrich domain output; neither parses transport bytes |
 

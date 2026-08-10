@@ -4,7 +4,7 @@ import type { LogRecord, LogStream } from "@kar-mi/spirit-vale-tools-logging";
 
 /**
  * A set of tables owned by one domain package. The read model never imports domain code; a domain
- * hands it schema callbacks instead, so combat, rewards, and market stay independent of each other.
+ * hands it schema callbacks instead, so combat and rewards stay independent of each other.
  */
 export interface ReadModelDomain {
   /** Stable key, e.g. "combat". Scopes rebuilds and indexing progress. */
