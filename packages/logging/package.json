@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-logging",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Session-oriented logging utilities for Spirit Vale tools.",
   "type": "module",
   "files": [

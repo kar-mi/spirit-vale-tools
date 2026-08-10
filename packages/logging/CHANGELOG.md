@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.8.0
+
+### Minor Changes
+
+- 1ce4722: Remove `"market"` from `LogStream`. The market package has been retired, and logging no longer accepts it as a stream value.
+
 ## 0.7.0
 
 ### Minor Changes
