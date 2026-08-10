@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-sqlite
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [5f876dd]
+  - @kar-mi/spirit-vale-tools-logging@0.7.0
+
 ## 0.1.3
 
 ### Patch Changes

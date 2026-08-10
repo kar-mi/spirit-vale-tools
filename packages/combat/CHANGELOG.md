@@ -1,5 +1,13 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 2.2.2
+
+### Patch Changes
+
+- Updated dependencies [5f876dd]
+  - @kar-mi/spirit-vale-tools-logging@0.7.0
+  - @kar-mi/spirit-vale-tools-sqlite@0.1.4
+
 ## 2.2.1
 
 ### Patch Changes
