@@ -35,7 +35,7 @@ export function materializeGearStats(equipment: readonly CharacterEquipment[], a
   const stats = [...equipment, ...artifacts].flatMap((item) => item.substats);
   for (const item of equipment) {
     stats.push(...itemEffects(2, item.itemId, item.refine, undefined, resolveItem));
-    for (const card of item.cards) stats.push(...itemEffects(4, card, 0, undefined, resolveItem));
+    for (const card of item.cards) stats.push(...itemEffects(4, card, item.refine, undefined, resolveItem));
   }
   for (const artifact of artifacts) {
     stats.push(...itemEffects(3, artifact.itemId, artifact.refine, artifact.slot, resolveItem));

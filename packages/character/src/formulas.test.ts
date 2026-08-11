@@ -144,6 +144,16 @@ describe("calculateCharacterStats", () => {
     expect(leech([artifact(4)])).toBe(3.5);
     expect(leech([artifact(0), artifact(0), artifact(0), artifact(0)])).toBe(15);
   });
+
+  test("scales socketed card refine effects with the equipped gear's refine level", () => {
+    const resolveItem: ItemResolver = (itemType, itemId) => itemType === 4 && itemId === "Delivery Robot"
+      ? { itemType: 4, id: "Delivery Robot", displayName: "Delivery Robot Card", refineEffects: [{ type: 101, value: 100 }] }
+      : undefined;
+    const equipment = (refine: number): CharacterEquipment[] => [{ slot: "Back", itemId: "Fictional Pack", refine, cards: ["Delivery Robot"], substats: [] }];
+    const weightBonus = (equip: CharacterEquipment[]) => materializeGearStats(equip, [], resolveItem).filter((stat) => stat.type === 101).reduce((total, stat) => total + (stat.value ?? 0), 0);
+    expect(weightBonus(equipment(0))).toBe(0);
+    expect(weightBonus(equipment(3))).toBe(300);
+  });
 });
 
 function substat(type: number, name: string, value: number, percent = false): CharacterSubstat { return { type, name, roll: 0, value, percent }; }

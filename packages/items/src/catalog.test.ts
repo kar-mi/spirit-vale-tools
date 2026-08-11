@@ -47,6 +47,12 @@ test("includes standard artifact effects and refine scaling", () => {
   });
 });
 
+test("scales Delivery Robot card weight bonus per refine level", () => {
+  expect(resolveFishNetItem(4, "Delivery Robot")).toMatchObject({
+    refineEffects: [{ type: 101, value: 100 }],
+  });
+});
+
 test("keeps class-rune skill effects bound to their artifact slots", () => {
   expect(resolveFishNetItem(3, "Warrior")).toMatchObject({
     artifactSlotEffects: {
