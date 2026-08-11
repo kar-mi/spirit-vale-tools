@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.3.2
+
+### Patch Changes
+
+- f82d0d8: Update bundled FishNet RPC metadata and verified prefab layouts for the current game build.
+
 ## 1.3.1
 
 ### Patch Changes
