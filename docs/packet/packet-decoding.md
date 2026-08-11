@@ -134,14 +134,13 @@ positions are intentionally unknown rather than inferred:
 
 | Prefab | Component indexes |
 | --- | --- |
-| 1 | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
 | 2 | `1 NetworkTransform` |
-| 4 | same player layout as prefab 1 |
+| 4 | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
 | 5 | `0 MonsterController`, `1 NetworkTransform`, `2 MoveComponent`, `3 HealthComponent`, `4 CombatComponent`, `5 SkillsComponent`, `6 StatusComponent`, `7 SummoningComponent` |
 
-The mapping was corroborated from complete RPC-registration fingerprints over
-37 sessions and 10,653 instantiated spawns, then checked against the current
-build's behaviour definitions. It is metadata for this build only: changing the
+The mapping was corroborated from complete RPC-registration fingerprints in the
+matched build, then checked against the current build's behaviour definitions.
+It is metadata for this build only: changing the
 game-build fingerprint selects a different RPC map and cannot reuse these
 indexes accidentally.
 

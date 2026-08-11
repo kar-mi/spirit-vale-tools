@@ -1,5 +1,5 @@
 /** SHA-256 of the canonical current-build source manifest. */
-export const CURRENT_GAME_BUILD_FINGERPRINT = "78097699284dd7dea7a3e81d03007cf98fde9c45a4fd1141dfbbdf2eb1ab6f1d";
+export const CURRENT_GAME_BUILD_FINGERPRINT = "d509d36cc0b7d4aac2c6d5bf283e493bd6798b2cad33ec49804340374b5c636a";
 
 export const BUNDLED_GAME_BUILD_FINGERPRINTS = [
   CURRENT_GAME_BUILD_FINGERPRINT,

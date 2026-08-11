@@ -765,18 +765,18 @@ describe("FishNet bundles and sessions", () => {
   });
 
   describe("refusing a match the payload contradicts", () => {
-    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 30. A behaviour with
-    // many RPCs can use a 16-bit hash whose low byte is also 30 - here 0x661e - and the 8-bit
+    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 31. A behaviour with
+    // many RPCs can use a 16-bit hash whose low byte is also 31 - here 0x661f - and the 8-bit
     // reading then claims a full heal that never happened.
     const COLLIDING_HASH_TAIL = Buffer.from([0x66]);
 
     test("does not claim a parameterless method for a packet carrying bytes", () => {
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 1, 30, COLLIDING_HASH_TAIL)),
+        tick(1, observersRpc(4801, 1, 31, COLLIDING_HASH_TAIL)),
         { reliable: true, connectionId: "hash-collision" },
       );
-      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661e, rpcResolution: "unresolved" });
+      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661f, rpcResolution: "unresolved" });
       expect(packet?.rpcName).toBeUndefined();
     });
 
@@ -784,7 +784,7 @@ describe("FishNet bundles and sessions", () => {
       // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 0, 29)),
+        tick(1, observersRpc(4801, 0, 31)),
         { reliable: true, connectionId: "hash-collision-genuine" },
       );
       expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });
@@ -945,7 +945,7 @@ describe("FishNet bundles and sessions", () => {
     test("uses the current monster prefab layout for component-three damage", () => {
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const context = { reliable: true, connectionId: "current-monster-prefab" };
-      decoder.decode(tick(1, spawnWithoutLinks(4900, 4, 0)), context);
+      decoder.decode(tick(1, spawnWithoutLinks(4900, 5, 0)), context);
       const struct = damageStruct("SyntheticStrike");
       const vector3 = Buffer.concat([f32(1), f32(2), f32(3)]);
       const [damage] = decoder.decode(

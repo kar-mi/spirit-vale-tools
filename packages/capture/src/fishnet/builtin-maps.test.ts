@@ -77,7 +77,7 @@ describe("bundled FishNet maps", () => {
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.behaviours).toHaveLength(13);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(319);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(331);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -93,7 +93,7 @@ describe("bundled FishNet maps", () => {
   test("contains collision-free component layouts for verified instantiated prefabs", () => {
     const map = loadBundledFishNetRpcMap();
     const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
-    expect(map.prefabs).toHaveLength(2);
+    expect(map.prefabs).toHaveLength(3);
 
     const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
     expect(new Set(prefabKeys).size).toBe(prefabKeys.length);
@@ -108,9 +108,10 @@ describe("bundled FishNet maps", () => {
     const component = (prefabId: number, index: number) => map.prefabs
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
-    expect(component(0, 5)).toBe("StatusComponent");
-    expect(component(4, 3)).toBe("HealthComponent");
-    expect(component(4, 4)).toBe("CombatComponent");
+    expect(component(2, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(4, 5)).toBe("StatusComponent");
+    expect(component(5, 3)).toBe("HealthComponent");
+    expect(component(5, 4)).toBe("CombatComponent");
   });
 
   test("decodes the verified Damage writer layout from the committed map", () => {
@@ -232,7 +233,7 @@ describe("bundled FishNet maps", () => {
 
     const decoder = new FishNetSessionDecoder(map);
     const results = decoder.decode(tick(1, Buffer.concat([
-      spawnWithoutLinks(12, 0, 0),
+      spawnWithoutLinks(12, 0, 4),
       targetRpc(12, 0, inspect?.wireHash ?? -1, Buffer.alloc(4878, 7)),
     ])), { reliable: true, connectionId: "prefab-inspect" });
 
