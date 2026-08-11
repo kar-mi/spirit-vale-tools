@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-items
 
+## 0.1.6
+
+### Patch Changes
+
+- bf1d886: Correctly scale socketed card effects with their equipped gear's refine level, including the Delivery Robot card's weight bonus.
+
 ## 0.1.5
 
 ### Patch Changes
