@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.4.0
+
+### Minor Changes
+
+- 5f45103: Decode the authoritative Eternal Tower run prefix and expose a stateful tracker for tower phase and floor.
+
 ## 1.3.3
 
 ### Patch Changes
