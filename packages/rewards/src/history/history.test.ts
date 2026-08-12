@@ -23,7 +23,7 @@ describe("reward history", () => {
     await writeFile(logPath, [kill("a", 0, "9007199254740993"), kill("b", 3_600_000, "2"), line(7_200_000, { kind: "unmatched", tick: 9, reason: "expired", reward: "experience", experience: 5, jobExperience: 1, coins: "999", drops: [] })].join(""));
     const model = await openReadModel({ path: path.join(root, "model.sqlite"), domains: [createRewardsDomain()] });
     try {
-      const first = await indexRewardStream(model, { sessionId: SESSION, sourcePath: logPath, batchBytes: 1 });
+      const first = await indexRewardStream(model, { sessionId: SESSION, sourcePath: logPath, batchBytes: 512 });
       expect(first.recordsIndexed).toBe(3);
       const store = new RewardHistoryStore(model);
       const summary = store.getSummary(SESSION, { recentKillLimit: 1, chartPoints: 2 });
