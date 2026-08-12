@@ -88,13 +88,21 @@ describe("log stream source", () => {
     second.logger("combat").log("combat.event", { kind: "damage", tick: 2, actorId: 7, targetId: 8, value: 20 });
     await second.close();
 
-    // Losing the directory can first publish the brief no-pointer state. The next changed batch
-    // must discover the replacement pointer even though its watcher no longer exists.
-    let read = await subscription.next();
-    if (read.current?.sessionId !== second.id) read = await subscription.next();
-    expect(read.changedSession).toBe(true);
-    expect(read.current?.sessionId).toBe(second.id);
-    expect(payloadLines(read.lines)).toHaveLength(1);
+    // Losing the directory can first publish the brief no-pointer state, and the pointer can be
+    // discovered before the session's data is flushed to it. Keep reading until both the session
+    // switch and its one payload line have shown up, even if they arrive in separate batches.
+    let changedSession = false;
+    let sessionId: string | undefined;
+    let lines: string[] = [];
+    while (sessionId !== second.id || lines.length === 0) {
+      const read = await subscription.next();
+      changedSession ||= read.changedSession;
+      if (read.current) sessionId = read.current.sessionId;
+      lines = lines.concat(payloadLines(read.lines));
+    }
+    expect(changedSession).toBe(true);
+    expect(sessionId).toBe(second.id);
+    expect(lines).toHaveLength(1);
   });
 
   test("coalesces a burst of appends into one batch", async () => {
