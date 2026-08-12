@@ -29,4 +29,26 @@ describe("bundled syncvar names", () => {
     expect(findSyncType(map, "HealthComponent", 2)).toBeUndefined();
     expect(findSyncType(map, "CombatComponent", 0)).toBeUndefined();
   });
+
+  test("retains the build-derived LootDrop DTO and lock layouts", () => {
+    expect(findSyncType(map, "LootDrop", 0)).toMatchObject({
+      name: "Dto",
+      fields: [
+        { name: "DisplayName", codec: "stringUtf8Packed" },
+        { name: "SpriteId", codec: "stringUtf8Packed" },
+        { name: "Rarity", codec: "packedInt32" },
+        { name: "Scale", codec: "float32" },
+        { name: "LootChance", codec: "float32" },
+        { name: "LootType", codec: "packedInt32" },
+      ],
+    });
+    expect(findSyncType(map, "LootDrop", 1)).toMatchObject({
+      name: "Lock",
+      fields: [
+        { name: "ExpireAt", codec: "packedInt64" },
+        { name: "PartyId", codec: "packedInt32" },
+        { name: "PlayerId", codec: "stringUtf8Packed" },
+      ],
+    });
+  });
 });

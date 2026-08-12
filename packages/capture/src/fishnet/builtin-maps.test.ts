@@ -66,6 +66,17 @@ function targetRpc(objectId: number, componentIndex: number, hash: number, paylo
   ]));
 }
 
+function syncType(objectId: number, componentIndex: number, body: Buffer): Buffer {
+  return message(7, Buffer.concat([
+    packed(objectId), Buffer.from([1, componentIndex]), u32(body.length), body,
+  ]));
+}
+
+function string(value: string): Buffer {
+  const encoded = Buffer.from(value, "utf8");
+  return Buffer.concat([packed(encoded.length), encoded]);
+}
+
 describe("bundled FishNet maps", () => {
   test("loads the current immutable map and rejects unsupported fingerprints", () => {
     const map = loadBundledFishNetRpcMap();
@@ -76,7 +87,7 @@ describe("bundled FishNet maps", () => {
 
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
-    expect(map.behaviours).toHaveLength(13);
+    expect(map.behaviours).toHaveLength(14);
     expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(331);
     expect(map.broadcasts).toHaveLength(6);
 
@@ -93,7 +104,7 @@ describe("bundled FishNet maps", () => {
   test("contains collision-free component layouts for verified instantiated prefabs", () => {
     const map = loadBundledFishNetRpcMap();
     const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
-    expect(map.prefabs).toHaveLength(3);
+    expect(map.prefabs).toHaveLength(5);
 
     const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
     expect(new Set(prefabKeys).size).toBe(prefabKeys.length);
@@ -108,7 +119,9 @@ describe("bundled FishNet maps", () => {
     const component = (prefabId: number, index: number) => map.prefabs
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
-    expect(component(2, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(0, 0)).toBe("LootDrop");
+    expect(component(1, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(3, 2)).toBe("HealthComponent");
     expect(component(4, 5)).toBe("StatusComponent");
     expect(component(5, 3)).toBe("HealthComponent");
     expect(component(5, 4)).toBe("CombatComponent");
@@ -242,6 +255,54 @@ describe("bundled FishNet maps", () => {
       networkBehaviourType: "PlayerController",
       rpcName: "Inspect_T",
       rpcResolution: "verified",
+    });
+  });
+
+  test("decodes real-player health from prefab metadata without RPC Links", () => {
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const results = decoder.decode(tick(2, Buffer.concat([
+      spawnWithoutLinks(13, 0, 3),
+      syncType(13, 2, Buffer.concat([Buffer.from([0]), packed(417)])),
+    ])), { reliable: true, connectionId: "prefab-player-health" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "syncType",
+      networkBehaviourType: "HealthComponent",
+      syncIndex: 0,
+      syncName: "CurrentHealth",
+      decodedFields: [{ name: "CurrentHealth", value: 417 }],
+    });
+  });
+
+  test("decodes LootDrop DTO SyncTypes from prefab metadata", () => {
+    const body = Buffer.concat([
+      Buffer.from([0]),
+      string("Synthetic Relic"),
+      string("synthetic_relic_icon"),
+      packed(2),
+      f32(1.25),
+      f32(0.5),
+      packed(3),
+    ]);
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const results = decoder.decode(tick(3, Buffer.concat([
+      spawnWithoutLinks(14, 0, 0),
+      syncType(14, 0, body),
+    ])), { reliable: true, connectionId: "prefab-loot" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "syncType",
+      networkBehaviourType: "LootDrop",
+      syncIndex: 0,
+      syncName: "Dto",
+      decodedFields: [
+        { name: "DisplayName", value: "Synthetic Relic" },
+        { name: "SpriteId", value: "synthetic_relic_icon" },
+        { name: "Rarity", value: 2 },
+        { name: "Scale", value: 1.25 },
+        { name: "LootChance", value: 0.5 },
+        { name: "LootType", value: 3 },
+      ],
     });
   });
 });
