@@ -1,8 +1,18 @@
 # Healing attribution
 
 `FishNetCombatTracker` emits `FishNetCombatHealEvent` (`kind: "heal"`) for
-`HealthComponent.Recover_C`. This note covers why attributing a heal to a
-healer is inherently best-effort, and how the tracker approximates it anyway.
+`HealthComponent.ApplyDamage_C` with a negative damage value and for
+`HealthComponent.Recover_C`. Negative `ApplyDamage_C` heals are attributed from
+their wire fields; this note covers why `Recover_C` attribution is inherently
+best-effort and how the tracker approximates it anyway.
+
+## Authoritative combat heals: negative `ApplyDamage_C`
+
+`ApplyDamage_C` carries a complete `Damage` payload. When `Damage.Value` is
+negative, the tracker emits a heal whose amount is the absolute value, healer is
+`Damage.AttackerId`, target is the RPC object, and source is
+`Damage.DamageSourceId`. This is direct wire attribution (`"exact"`), so it
+does not depend on cast timing or status correlation.
 
 ## The core problem: `Recover_C` carries no healer id
 

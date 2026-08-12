@@ -26,6 +26,22 @@ function healed(value: number): FishNetCombatEvent {
   } as FishNetCombatEvent;
 }
 
+function directHealed(value: number): FishNetCombatEvent {
+  return {
+    kind: "heal",
+    rpc: "ApplyDamage_C",
+    tick: 0,
+    payloadBytes: 0,
+    fields: {},
+    targetId: 2,
+    actorId: 1,
+    sourceId: "Heal",
+    sourceLabel: "Heal",
+    value,
+    attribution: "exact",
+  } as FishNetCombatEvent;
+}
+
 function fullHealed(): FishNetCombatEvent {
   return { kind: "fullHeal", rpc: "FullHeal_C", tick: 0, payloadBytes: 0, fields: {}, targetId: 1 } as FishNetCombatEvent;
 }
@@ -104,6 +120,12 @@ describe("healing meter", () => {
     const reducer = healingMeter();
     reducer.consumeCombat(healed(400), 1_000, IDENTITIES);
     expect(total(reducer)).toBe(400);
+  });
+
+  test("counts directly attributed ApplyDamage_C heals", () => {
+    const reducer = healingMeter();
+    reducer.consumeCombat(directHealed(150), 1_000, IDENTITIES);
+    expect(total(reducer)).toBe(150);
   });
 
   test("ignores a full heal", () => {

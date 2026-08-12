@@ -230,7 +230,8 @@ export type FishNetHealAttribution = FishNetDamageAttribution | "unattributed";
 
 export interface FishNetCombatHealEvent {
   kind: "heal";
-  rpc: "Recover_C";
+  /** `ApplyDamage_C` is authoritative when its signed damage value is negative. */
+  rpc: "ApplyDamage_C" | "Recover_C";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
@@ -777,6 +778,22 @@ export class FishNetCombatTracker {
     const rawSourceId = nullableStringField(packet, "dmg.DamageSourceId");
     const { sourceId, sourceLabel } = resolveDamageSource(rawSourceId, damageType, this.skillLabels);
     const value = requiredNumberField(packet, "dmg.Value");
+    if (!death && value < 0) {
+      return [{
+        kind: "heal",
+        rpc: "ApplyDamage_C",
+        tick: packet.tick,
+        payloadBytes: packet.payload.length,
+        fields: decodedFieldRecord(packet),
+        targetId: packet.objectId!,
+        actorId,
+        sourceId,
+        sourceLabel,
+        value: -value,
+        attribution: "exact",
+        actorIdentity: this.actorIdentityResolver?.(actorId),
+      }];
+    }
     const hitCode = requiredNumberField(packet, "dmg.Hit");
     const hitResult = HIT_RESULTS[hitCode] ?? hitCode;
     const targetId = packet.objectId!;

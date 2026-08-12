@@ -830,6 +830,29 @@ describe("FishNetCombatTracker", () => {
     });
   });
 
+  test("attributes a negative ApplyDamage_C value directly to its healer", () => {
+    const identity = { displayName: "Synthetic Healer" };
+    const tracker = new FishNetCombatTracker({
+      actorIdentityResolver: (actorId) => actorId === 10 ? identity : undefined,
+    });
+
+    const events = tracker.consume(damage(1, 20, 10, "Heal", -150));
+
+    expect(events).toEqual([
+      expect.objectContaining({
+        kind: "heal",
+        rpc: "ApplyDamage_C",
+        targetId: 20,
+        actorId: 10,
+        sourceId: "Heal",
+        sourceLabel: "Heal",
+        value: 150,
+        attribution: "exact",
+        actorIdentity: identity,
+      }),
+    ]);
+  });
+
   test("identifies passive regeneration independently for every actor", () => {
     const tracker = new FishNetCombatTracker();
     const [heal] = tracker.consume(recover(1, 20, 25, "00010000000000"));
