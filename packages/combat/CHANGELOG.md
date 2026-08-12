@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 2.2.4
+
+### Patch Changes
+
+- f33abc8: Attribute negative `ApplyDamage_C` values to their healer directly in the healing meter.
+
 ## 2.2.3
 
 ### Patch Changes
