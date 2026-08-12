@@ -1090,7 +1090,7 @@ describe("FishNet bundles and sessions", () => {
     expect(result?.undecodedPayload).toBeUndefined();
   });
 
-  test("shows the Eternal Tower floor, absent run, or NA for ETUpdateRun", () => {
+  test("decodes the generated EternalTowerRun prefix and nullable absence", () => {
     const map: FishNetRpcMap = {
       buildFingerprint: "synthetic-et-floor",
       metadataVersion: 31,
@@ -1100,7 +1100,18 @@ describe("FishNet bundles and sessions", () => {
           wireHash: 93,
           packetKind: "targetRpc",
           methodName: "ETUpdateRun",
-          parameters: [{ name: "match", typeName: "EternalTowerRun" }],
+          parameters: [{
+            name: "match",
+            typeName: "EternalTowerRun",
+            nullable: true,
+            fields: [
+              { name: "InstanceId", typeName: "System.Int32", codec: "packedInt32" },
+              { name: "PartyId", typeName: "System.Int32", codec: "packedInt32" },
+              { name: "State", typeName: "EternalTowerState", codec: "packedInt32" },
+              { name: "Floor", typeName: "System.Int32", codec: "packedInt32" },
+              { name: "AliveCounts", typeName: "SyntheticDictionary" },
+            ],
+          }],
         }],
       }],
     };
@@ -1111,9 +1122,18 @@ describe("FishNet bundles and sessions", () => {
     )[0];
 
     expect(decode(Buffer.concat([Buffer.from([0]), packed(7), packed(11), packed(2), packed(42)]), 40)?.decodedFields)
-      .toEqual([{ name: "floor", typeName: "System.Int32", codec: "packedInt32", value: 42 }]);
-    expect(decode(Buffer.from([1]), 41)?.decodedFields?.[0]?.value).toBe("-");
-    expect(decode(Buffer.from([0, 2]), 42)?.decodedFields?.[0]?.value).toBe("NA");
+      .toEqual([
+        { name: "match.InstanceId", typeName: "System.Int32", codec: "packedInt32", value: 7 },
+        { name: "match.PartyId", typeName: "System.Int32", codec: "packedInt32", value: 11 },
+        { name: "match.State", typeName: "EternalTowerState", codec: "packedInt32", value: 2 },
+        { name: "match.Floor", typeName: "System.Int32", codec: "packedInt32", value: 42 },
+      ]);
+    expect(decode(Buffer.from([1]), 41)?.decodedFields).toEqual([
+      { name: "match", typeName: "EternalTowerRun", codec: "nullable", value: null },
+    ]);
+    expect(decode(Buffer.from([0, 2]), 42)?.decodedFields).toEqual([
+      { name: "match.InstanceId", typeName: "System.Int32", codec: "packedInt32", value: 1 },
+    ]);
   });
 
   test("emits multiple fixed messages from one reliable bundle in order", () => {

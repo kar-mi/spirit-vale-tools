@@ -14,48 +14,11 @@ export function applyDecodedFields(
   parameters: readonly FishNetRpcParameter[] | undefined,
   startOffset = 0,
 ): void {
-  if (packet.rpcName === "ETUpdateRun") {
-    applyEternalTowerFloor(packet, startOffset);
-    return;
-  }
   if (!parameters || parameters.length === 0) return;
   const fields: FishNetDecodedField[] = [];
   const decoded = decodeParameters(packet.payload, startOffset, parameters, "", fields);
   if (fields.length > 0) packet.decodedFields = fields;
   if (decoded.offset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(decoded.offset);
-}
-
-/**
- * EternalTowerRun has no generated field map, but its generated FishNet reader has a stable
- * leading shape: nullable flag, instance ID, party ID, state, then floor. Keep this deliberately
- * narrow so an incomplete tower update is visible as NA rather than being mistaken for a floor.
- */
-function applyEternalTowerFloor(packet: DecodedFishNetPacket, startOffset: number): void {
-  const field = (value: number | "-" | "NA"): FishNetDecodedField => ({
-    name: "floor",
-    typeName: "System.Int32",
-    codec: "packedInt32",
-    value,
-  });
-  try {
-    requireBytes(packet.payload, startOffset, 1, "EternalTowerRun nullable flag");
-    const isNull = packet.payload[startOffset];
-    if (isNull === 1) {
-      packet.decodedFields = [field("-")];
-      if (startOffset + 1 < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(startOffset + 1);
-      return;
-    }
-    if (isNull !== 0) throw new FishNetProtocolError("invalid EternalTowerRun nullable flag");
-
-    let offset = startOffset + 1;
-    for (let index = 0; index < 3; index += 1) offset = readSignedPackedWhole(packet.payload, offset).nextOffset;
-    const floor = readSignedPackedWhole(packet.payload, offset);
-    packet.decodedFields = [field(floor.value)];
-    if (floor.nextOffset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(floor.nextOffset);
-  } catch {
-    packet.decodedFields = [field("NA")];
-    if (startOffset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(startOffset);
-  }
 }
 
 /**
@@ -155,6 +118,21 @@ function decodeParameters(
         return { offset, complete: false };
       }
       continue;
+    }
+    if (parameter.nullable) {
+      try {
+        requireBytes(buffer, offset, 1, `${name} nullable flag`);
+        const isNull = buffer[offset];
+        if (isNull === 1) {
+          fields.push({ name, typeName: parameter.typeName, codec: "nullable", value: null });
+          offset += 1;
+          continue;
+        }
+        if (isNull !== 0) throw new FishNetProtocolError(`invalid ${name} nullable flag`);
+        offset += 1;
+      } catch {
+        return { offset, complete: false };
+      }
     }
     if (!parameter.fields || parameter.fields.length === 0) return { offset, complete: false };
     const nested = decodeParameters(buffer, offset, parameter.fields, name, fields);

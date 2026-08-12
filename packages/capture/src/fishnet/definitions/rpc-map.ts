@@ -4,6 +4,8 @@ import type { FishNetRpcPacketName } from "./protocol.ts";
 export interface FishNetRpcParameter {
   readonly name: string;
   readonly typeName?: string;
+  /** Generated reference-type writer prefixes the structured value with FishNet's null flag. */
+  readonly nullable?: boolean;
   /** Present only when the generated writer call established the exact wire codec. */
   readonly codec?: FishNetWireCodec;
   /** Ordered fields for a generated structured writer. Leaf fields carry codecs. */

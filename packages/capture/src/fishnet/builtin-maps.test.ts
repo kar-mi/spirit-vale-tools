@@ -127,6 +127,32 @@ describe("bundled FishNet maps", () => {
     expect(component(5, 4)).toBe("CombatComponent");
   });
 
+  test("decodes the build-derived Eternal Tower run prefix on the real player prefab", () => {
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const run = Buffer.concat([
+      Buffer.from([0]),
+      packed(17),
+      packed(23),
+      packed(2),
+      packed(42),
+    ]);
+    const results = decoder.decode(tick(9, Buffer.concat([
+      spawnWithoutLinks(70, 0, 3),
+      targetRpc(70, 0, 95, run),
+    ])), { reliable: true, connectionId: "synthetic-tower" });
+
+    expect(results[1]).toMatchObject({
+      networkBehaviourType: "PlayerController",
+      rpcName: "ETUpdateRun",
+      decodedFields: [
+        { name: "match.InstanceId", value: 17 },
+        { name: "match.PartyId", value: 23 },
+        { name: "match.State", value: 2 },
+        { name: "match.Floor", value: 42 },
+      ],
+    });
+  });
+
   test("decodes the verified Damage writer layout from the committed map", () => {
     const fullMap = loadBundledFishNetRpcMap();
     const health = fullMap.behaviours.find(({ typeName }) => typeName === "HealthComponent");

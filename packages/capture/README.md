@@ -39,4 +39,25 @@ APIs. The package root exports the pure protocol decoders
 (`decodeLiteNetLibDatagram`, `decodeFishNetBundle`, `FishNetSessionDecoder`)
 for replay and testing without a live capture.
 
+### Eternal Tower state
+
+`FishNetEternalTowerTracker` consumes decoded capture packets and exposes the
+server-authoritative tower phase and floor:
+
+```ts
+import { FishNetEternalTowerTracker } from "@kar-mi/spirit-vale-tools-capture";
+
+const tower = new FishNetEternalTowerTracker();
+capture.on("fishNetPacket", (packet) => {
+  if (!tower.consume(packet)) return;
+  const state = tower.current();
+  console.log(state.known, state.inTower, state.active, state.floor);
+});
+```
+
+`known` remains false until an authoritative `ETUpdateRun` or
+`ETAdvanceFloor` arrives. `accept` is an active run that has not entered the
+tower instance. A completed run remains `inTower` until the server clears its
+run snapshot; `active` is false during that exit window.
+
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

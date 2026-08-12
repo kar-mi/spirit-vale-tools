@@ -148,6 +148,23 @@ This is metadata for this build only: changing the
 game-build fingerprint selects a different RPC map and cannot reuse these
 indexes accidentally.
 
+### Eternal Tower state
+
+The current build's `PlayerController` map includes the generated nullable
+prefix of `ETUpdateRun(EternalTowerRun)`: `InstanceId`, `PartyId`, `State`, and
+`Floor`. The remaining dictionary, timer, and party fields stay in
+`undecodedPayload` until their generated collection serializers are mapped.
+`ETAdvanceFloor` independently exposes its packed `floor` and `finished`
+values.
+
+`FishNetEternalTowerTracker` combines those target RPCs into a state snapshot.
+It does not treat the outbound `ETEnter` or `ETLeave` server RPCs as proof of a
+transition. Its phase values correspond to the game enum (`none`, `accept`,
+`inRun`, `ending`, `finished`). `inTower` is true for `inRun`, `ending`, and
+`finished`; `active` is true for `accept`, `inRun`, and `ending`. This preserves
+the completed-but-not-yet-exited interval instead of reporting that the player
+has already left.
+
 ## Output types and extension points
 
 The public type hierarchy is:

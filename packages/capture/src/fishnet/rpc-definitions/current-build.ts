@@ -1795,7 +1795,47 @@ export const CURRENT_BUILD_RPC_BEHAVIOURS =
         "parameters": [
           {
             "name": "match",
-            "typeName": "EternalTowerRun"
+            "typeName": "EternalTowerRun",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "InstanceId",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "PartyId",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "State",
+                "typeName": "EternalTowerState",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Floor",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "AliveCounts",
+                "typeName": "System.Collections.Generic.Dictionary<System.String,System.Int32>"
+              },
+              {
+                "name": "Timer",
+                "typeName": "GameSessionTimer"
+              },
+              {
+                "name": "Players",
+                "typeName": "System.Collections.Generic.List<PartyMember>"
+              },
+              {
+                "name": "ReadyCount",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              }
+            ]
           }
         ]
       },
