@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 1.3.3
+
+### Patch Changes
+
+- 6c65ece: Fix RPC mapping: add the LootDrop sync-only behaviour and correct prefab component/index assignments in the bundled FishNet metadata.
+
 ## 1.3.2
 
 ### Patch Changes
