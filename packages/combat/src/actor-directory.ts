@@ -1,4 +1,5 @@
 import type { DecodedFishNetPacket, FishNetDecodedValue } from "@kar-mi/spirit-vale-tools-capture";
+import { loadBundledFishNetRpcMap } from "@kar-mi/spirit-vale-tools-capture";
 import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
 export interface FishNetActorIdentity {
@@ -464,8 +465,22 @@ function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecode
 }
 
 const VISUAL_DATA_SYNC_INDEX = 5;
-const PLAYER_PREFAB_COLLECTION_ID = 0;
-const PLAYER_PREFAB_ID = 0;
+const PLAYER_PREFAB_NAME = "Player";
+
+/**
+ * Spawnable prefabs that are a real player, as `collectionId:prefabId`, derived from the bundled
+ * map rather than hardcoded: prefab IDs are wire values and shift between game builds.
+ *
+ * `PlayerClone` carries an identical component layout, so `PlayerController` alone cannot separate
+ * the two and the serialized prefab name is the discriminator. Clones are excluded deliberately -
+ * counting a mirrored entity as a player would invent an actor and duplicate its name in the meter.
+ */
+const PLAYER_PREFAB_KEYS: ReadonlySet<string> = new Set(
+  (loadBundledFishNetRpcMap().prefabs ?? [])
+    .filter(({ prefabName, components }) => prefabName === PLAYER_PREFAB_NAME
+      && components.some(({ typeName }) => typeName === "PlayerController"))
+    .map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`),
+);
 
 function decodeSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype: number } | undefined {
   const payload = packet.spawnSyncPayload;
@@ -487,8 +502,8 @@ function hasPlayerControllerEvidence(packet: DecodedFishNetPacket): boolean {
 
 /** The current build omits RPC-link registrations from spawns, so its verified prefab is evidence. */
 function isCurrentPlayerPrefab(packet: DecodedFishNetPacket): boolean {
-  return packet.spawnCollectionId === PLAYER_PREFAB_COLLECTION_ID
-    && packet.spawnPrefabId === PLAYER_PREFAB_ID;
+  if (packet.spawnCollectionId === undefined || packet.spawnPrefabId === undefined) return false;
+  return PLAYER_PREFAB_KEYS.has(`${packet.spawnCollectionId}:${packet.spawnPrefabId}`);
 }
 
 /** Scan packed strings for a GUID UID in spawn state; accept only one unambiguous match. */

@@ -284,7 +284,7 @@ describe("FishNetActorDirectory", () => {
     ]);
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 62, 14, 0, embeddedVisual))).toEqual([{
+    expect(directory.consume(prefabSpawn(1, 62, 14, 4, embeddedVisual))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -303,8 +303,22 @@ describe("FishNetActorDirectory", () => {
     ]);
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 63, 15, 4, playerShapedPayload))).toEqual([]);
+    // Prefab 0 is LootDrop. It carries no PlayerController, so a player-shaped payload on it must
+    // not be scanned however convincing the bytes look.
+    expect(directory.consume(prefabSpawn(1, 63, 15, 0, playerShapedPayload))).toEqual([]);
     expect(directory.get(63)).toBeUndefined();
+  });
+
+  test("does not treat the identically shaped PlayerClone prefab as a player", () => {
+    const embeddedVisual = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Mirror Ranger"),
+      packed(8),
+    ]);
+    const directory = new FishNetActorDirectory();
+
+    expect(directory.consume(prefabSpawn(1, 64, 16, 1, embeddedVisual))).toEqual([]);
+    expect(directory.get(64)).toBeUndefined();
   });
 
   test("reads a player identity from length-delimited spawn SyncType sections", () => {

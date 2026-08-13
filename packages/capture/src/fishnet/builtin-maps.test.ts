@@ -120,11 +120,27 @@ describe("bundled FishNet maps", () => {
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
     expect(component(0, 0)).toBe("LootDrop");
-    expect(component(1, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
-    expect(component(3, 2)).toBe("HealthComponent");
+    expect(component(1, 1)).toBe("MoveComponent");
+    expect(component(2, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(4, 2)).toBe("HealthComponent");
     expect(component(4, 5)).toBe("StatusComponent");
     expect(component(5, 3)).toBe("HealthComponent");
     expect(component(5, 4)).toBe("CombatComponent");
+  });
+
+  test("names exactly one real-player prefab and excludes the identically shaped clone", () => {
+    // `Player` and `PlayerClone` carry the same nine components, so only the serialized name
+    // separates them. Combat's actor directory derives its player prefab from this, and a rename
+    // must fail here rather than silently leaving every spawn unrecognized.
+    const map = loadBundledFishNetRpcMap();
+    const withPlayerController = map.prefabs
+      ?.filter(({ components }) => components.some(({ typeName }) => typeName === "PlayerController"));
+    expect(withPlayerController?.map(({ prefabId, prefabName }) => `${prefabId}:${prefabName}`))
+      .toEqual(["1:PlayerClone", "4:Player"]);
+
+    const players = withPlayerController?.filter(({ prefabName }) => prefabName === "Player") ?? [];
+    expect(players).toHaveLength(1);
+    expect(players[0]).toMatchObject({ collectionId: 0, prefabId: 4 });
   });
 
   test("decodes the build-derived Eternal Tower run prefix on the real player prefab", () => {
@@ -137,7 +153,7 @@ describe("bundled FishNet maps", () => {
       packed(42),
     ]);
     const results = decoder.decode(tick(9, Buffer.concat([
-      spawnWithoutLinks(70, 0, 3),
+      spawnWithoutLinks(70, 0, 4),
       targetRpc(70, 0, 95, run),
     ])), { reliable: true, connectionId: "synthetic-tower" });
 
@@ -287,7 +303,7 @@ describe("bundled FishNet maps", () => {
   test("decodes real-player health from prefab metadata without RPC Links", () => {
     const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
     const results = decoder.decode(tick(2, Buffer.concat([
-      spawnWithoutLinks(13, 0, 3),
+      spawnWithoutLinks(13, 0, 4),
       syncType(13, 2, Buffer.concat([Buffer.from([0]), packed(417)])),
     ])), { reliable: true, connectionId: "prefab-player-health" });
 

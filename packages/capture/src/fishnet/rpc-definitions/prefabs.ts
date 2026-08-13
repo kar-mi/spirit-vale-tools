@@ -14,15 +14,15 @@ const PLAYER_COMPONENTS = [
 
 /** Verified layouts for instantiated prefabs in the current build's default collection. */
 export const FISHNET_PREFAB_DEFINITIONS = [
-  { collectionId: 0, prefabId: 0, components: [
+  { collectionId: 0, prefabId: 0, prefabName: "LootDrop", components: [
     { index: 0, typeName: "LootDrop" },
   ] },
-  { collectionId: 0, prefabId: 1, components: [
+  { collectionId: 0, prefabId: 1, prefabName: "PlayerClone", components: PLAYER_COMPONENTS },
+  { collectionId: 0, prefabId: 2, prefabName: "SkillInstance", components: [
     { index: 1, typeName: "FishNet.Component.Transforming.NetworkTransform" },
   ] },
-  { collectionId: 0, prefabId: 3, components: PLAYER_COMPONENTS },
-  { collectionId: 0, prefabId: 4, components: PLAYER_COMPONENTS },
-  { collectionId: 0, prefabId: 5, components: [
+  { collectionId: 0, prefabId: 4, prefabName: "Player", components: PLAYER_COMPONENTS },
+  { collectionId: 0, prefabId: 5, prefabName: "Monster", components: [
     { index: 0, typeName: "MonsterController" },
     { index: 1, typeName: "FishNet.Component.Transforming.NetworkTransform" },
     { index: 2, typeName: "MoveComponent" },

@@ -132,21 +132,29 @@ it is not sent on the network or required by FishNet connection setup.
 The current build includes these verified default-collection layouts. Blank
 positions are intentionally unknown rather than inferred:
 
-| Prefab | Component indexes |
-| --- | --- |
-| 0 | `0 LootDrop` |
-| 1 | `1 NetworkTransform` |
-| 3 | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
-| 4 | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
-| 5 | `0 MonsterController`, `1 NetworkTransform`, `2 MoveComponent`, `3 HealthComponent`, `4 CombatComponent`, `5 SkillsComponent`, `6 StatusComponent`, `7 SummoningComponent` |
+| Prefab | Name | Component indexes |
+| --- | --- | --- |
+| 0 | `LootDrop` | `0 LootDrop` |
+| 1 | `PlayerClone` | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
+| 2 | `SkillInstance` | `1 NetworkTransform` |
+| 4 | `Player` | `0 PlayerController`, `1 MoveComponent`, `2 HealthComponent`, `3 CombatComponent`, `4 SkillsComponent`, `5 StatusComponent`, `6 SummoningComponent`, `7 PlayerSave`, `8 NetworkTransform` |
+| 5 | `Monster` | `0 MonsterController`, `1 NetworkTransform`, `2 MoveComponent`, `3 HealthComponent`, `4 CombatComponent`, `5 SkillsComponent`, `6 StatusComponent`, `7 SummoningComponent` |
 
 The mapping is copied from the matched data-mine build's serialized
 `NetworkObject` component layouts, then checked against its RPC and SyncType
 metadata. Prefab 0 is wire-known through `LootDrop`'s two SyncVars even though
-that behaviour has no RPCs. Blank component slots and prefab 2 remain unknown.
+that behaviour has no RPCs. Blank component slots and prefab 3
+(`BossGravestone`, whose only behaviour has no wire metadata) remain unknown.
 This is metadata for this build only: changing the
 game-build fingerprint selects a different RPC map and cannot reuse these
 indexes accidentally.
+
+Prefab IDs are wire values and are reassigned between builds — this build moved
+the player clone from 3 to 1 and `SkillInstance` from 1 to 2. Nothing outside
+the map should hardcode one. `Player` and `PlayerClone` are byte-identical in
+layout, so `prefabName` is the only way to tell a real player spawn from a
+mirrored one; combat's actor directory uses it to avoid registering clones as
+actors.
 
 ### Eternal Tower state
 

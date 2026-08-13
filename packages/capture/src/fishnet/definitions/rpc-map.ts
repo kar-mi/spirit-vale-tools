@@ -52,6 +52,11 @@ export interface FishNetPrefabComponentDefinition {
 export interface FishNetPrefabDefinition {
   readonly collectionId: number;
   readonly prefabId: number;
+  /**
+   * Serialized prefab name. `Player` and `PlayerClone` share an identical component layout, so the
+   * name is the only thing that separates a real player spawn from a mirrored one.
+   */
+  readonly prefabName?: string;
   readonly components: readonly FishNetPrefabComponentDefinition[];
 }
 
