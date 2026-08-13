@@ -152,9 +152,14 @@ indexes accidentally.
 Prefab IDs are wire values and are reassigned between builds — this build moved
 the player clone from 3 to 1 and `SkillInstance` from 1 to 2. Nothing outside
 the map should hardcode one. `Player` and `PlayerClone` are byte-identical in
-layout, so `prefabName` is the only way to tell a real player spawn from a
-mirrored one; combat's actor directory uses it to avoid registering clones as
-actors.
+layout, so `prefabName` is the only way to tell them apart.
+
+Both count as player-owned objects. A clone is a second network object under
+its owner's connection and deals damage under its own `AttackerId`, so treating
+only `Player` as a player leaves that damage on an anonymous actor. Counting
+both does not split a player in two: the actor directory propagates one identity
+across every object of an owner, and the meter folds those aggregates back
+together by display name.
 
 ### Eternal Tower state
 

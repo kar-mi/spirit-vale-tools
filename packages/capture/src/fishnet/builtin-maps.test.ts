@@ -128,19 +128,15 @@ describe("bundled FishNet maps", () => {
     expect(component(5, 4)).toBe("CombatComponent");
   });
 
-  test("names exactly one real-player prefab and excludes the identically shaped clone", () => {
+  test("carries both player-controlled prefabs, named so a clone is distinguishable", () => {
     // `Player` and `PlayerClone` carry the same nine components, so only the serialized name
-    // separates them. Combat's actor directory derives its player prefab from this, and a rename
-    // must fail here rather than silently leaving every spawn unrecognized.
+    // separates them. Combat's actor directory treats both as player-owned objects; the names are
+    // what let a consumer tell them apart, and a rename must fail here rather than pass silently.
     const map = loadBundledFishNetRpcMap();
     const withPlayerController = map.prefabs
       ?.filter(({ components }) => components.some(({ typeName }) => typeName === "PlayerController"));
-    expect(withPlayerController?.map(({ prefabId, prefabName }) => `${prefabId}:${prefabName}`))
-      .toEqual(["1:PlayerClone", "4:Player"]);
-
-    const players = withPlayerController?.filter(({ prefabName }) => prefabName === "Player") ?? [];
-    expect(players).toHaveLength(1);
-    expect(players[0]).toMatchObject({ collectionId: 0, prefabId: 4 });
+    expect(withPlayerController?.map(({ collectionId, prefabId, prefabName }) =>
+      `${collectionId}:${prefabId}:${prefabName}`)).toEqual(["0:1:PlayerClone", "0:4:Player"]);
   });
 
   test("decodes the build-derived Eternal Tower run prefix on the real player prefab", () => {

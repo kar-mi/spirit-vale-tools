@@ -465,20 +465,20 @@ function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecode
 }
 
 const VISUAL_DATA_SYNC_INDEX = 5;
-const PLAYER_PREFAB_NAME = "Player";
 
 /**
- * Spawnable prefabs that are a real player, as `collectionId:prefabId`, derived from the bundled
- * map rather than hardcoded: prefab IDs are wire values and shift between game builds.
+ * Spawnable prefabs carrying a `PlayerController`, as `collectionId:prefabId`, derived from the
+ * bundled map rather than hardcoded: prefab IDs are wire values and shift between game builds.
  *
- * `PlayerClone` carries an identical component layout, so `PlayerController` alone cannot separate
- * the two and the serialized prefab name is the discriminator. Clones are excluded deliberately -
- * counting a mirrored entity as a player would invent an actor and duplicate its name in the meter.
+ * `PlayerClone` is included alongside `Player`. A clone is a second network object under the same
+ * owner connection, and its damage arrives under its own `AttackerId`, so leaving it out strands
+ * that damage on an anonymous actor. Including it does not invent a row: `refreshOwner` propagates
+ * one identity across every object of an owner, and `mergeActors` folds the aggregates back
+ * together by display name.
  */
 const PLAYER_PREFAB_KEYS: ReadonlySet<string> = new Set(
   (loadBundledFishNetRpcMap().prefabs ?? [])
-    .filter(({ prefabName, components }) => prefabName === PLAYER_PREFAB_NAME
-      && components.some(({ typeName }) => typeName === "PlayerController"))
+    .filter(({ components }) => components.some(({ typeName }) => typeName === "PlayerController"))
     .map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`),
 );
 

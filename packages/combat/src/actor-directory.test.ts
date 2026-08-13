@@ -309,7 +309,9 @@ describe("FishNetActorDirectory", () => {
     expect(directory.get(63)).toBeUndefined();
   });
 
-  test("does not treat the identically shaped PlayerClone prefab as a player", () => {
+  test("names a PlayerClone spawn so its damage is not stranded on an anonymous actor", () => {
+    // A clone is a second network object under the owner's connection and deals damage under its
+    // own AttackerId. Excluding it left that damage on an unnamed actor keyed by object id.
     const embeddedVisual = Buffer.concat([
       Buffer.from([0, 1, 5]),
       packedString("Mirror Ranger"),
@@ -317,8 +319,39 @@ describe("FishNetActorDirectory", () => {
     ]);
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 64, 16, 1, embeddedVisual))).toEqual([]);
-    expect(directory.get(64)).toBeUndefined();
+    expect(directory.consume(prefabSpawn(1, 64, 16, 1, embeddedVisual))).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 1,
+      actorId: 64,
+      displayName: "Mirror Ranger",
+      archetype: 8,
+      ownerConnectionId: 16,
+    }]);
+  });
+
+  test("gives a clone its owner's identity so both fold into one meter row", () => {
+    const directory = new FishNetActorDirectory();
+    const embeddedVisual = Buffer.concat([
+      Buffer.from([0, 1, 5]),
+      packedString("Owner Ranger"),
+      packed(8),
+    ]);
+    directory.consume(prefabSpawn(1, 70, 21, 4, embeddedVisual));
+
+    // The clone spawns under the same owner connection carrying no identity of its own.
+    const events = directory.consume(prefabSpawn(2, 71, 21, 1, Buffer.alloc(0)));
+
+    expect(events).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 2,
+      actorId: 71,
+      displayName: "Owner Ranger",
+      archetype: 8,
+      ownerConnectionId: 21,
+    }]);
+    expect(directory.get(71)?.displayName).toBe(directory.get(70)?.displayName);
   });
 
   test("reads a player identity from length-delimited spawn SyncType sections", () => {
