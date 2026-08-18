@@ -274,7 +274,8 @@ export class DamageReducer {
         deaths: [],
       };
     }
-    if (countedDamage) this.current.lastDamageAtMs = observedAtMs;
+    const encounter = this.current;
+    if (countedDamage) encounter.lastDamageAtMs = observedAtMs;
     // Death-log attribution is independent of outgoing enemy damage and still includes lethal
     // records that also contribute to the meter.
     this.recordEncounterHit(event, observedAtMs);
@@ -296,34 +297,12 @@ export class DamageReducer {
         sourceLabel: event.sourceLabel,
       }, this.maxTimelineBuckets);
       if (isMobTarget(this.identities, event.actorId, event.targetId)) {
-        this.recordEnemyHit(actor, event, observedAtMs);
+        recordEnemyHit(encounter, actor, event, observedAtMs, this.mobIdentities);
         actor.targetIds.add(event.targetId);
         actor.targetDamage.set(event.targetId, (actor.targetDamage.get(event.targetId) ?? 0) + event.value);
       }
     }
     if (countedKill) actor.kills += 1;
-  }
-
-  /** Attributes one outgoing party hit to the exact actor lifetime that produced it. */
-  private recordEnemyHit(
-    actor: ActorAggregate,
-    event: FishNetCombatDamageEvent | FishNetCombatDeathEvent,
-    observedAtMs: number,
-  ): void {
-    const bySkill = actor.enemySkills.get(event.targetId) ?? new Map<string, EnemySkillStats>();
-    actor.enemySkills.set(event.targetId, bySkill);
-    const stats = bySkill.get(event.sourceId)
-      ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-    stats.sourceLabel = event.sourceLabel;
-    stats.damage += event.value;
-    stats.hits += 1;
-    if (event.hitResult === "critical") stats.criticalHits += 1;
-    bySkill.set(event.sourceId, stats);
-    if (!this.current!.enemyFirstSeenAtMs.has(event.targetId)) {
-      this.current!.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
-    }
-    const targetName = this.mobIdentities.get(event.targetId);
-    if (targetName !== undefined) this.current!.enemyNames.set(event.targetId, targetName);
   }
 
   /** Finalizes an encounter that has been idle long enough. */
@@ -509,6 +488,34 @@ export function recordHit(actor: ActorAggregate, hit: RecordedHit, maxTimelineBu
 export function positiveTau(value: number): number {
   if (!Number.isFinite(value) || value <= 0) throw new Error("currentTauSeconds must be a positive finite number");
   return value;
+}
+
+/**
+ * Attributes one outgoing party hit to the exact actor lifetime that produced it. Only reached
+ * under `isMobTarget`, which requires the target to be absent from `identities`, so the mob name
+ * is the only possible source of a label.
+ */
+function recordEnemyHit(
+  encounter: EncounterAggregate,
+  actor: ActorAggregate,
+  event: FishNetCombatDamageEvent | FishNetCombatDeathEvent,
+  observedAtMs: number,
+  mobIdentities: ReadonlyMap<number, string>,
+): void {
+  const bySkill = actor.enemySkills.get(event.targetId) ?? new Map<string, EnemySkillStats>();
+  actor.enemySkills.set(event.targetId, bySkill);
+  const stats = bySkill.get(event.sourceId)
+    ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
+  stats.sourceLabel = event.sourceLabel;
+  stats.damage += event.value;
+  stats.hits += 1;
+  if (event.hitResult === "critical") stats.criticalHits += 1;
+  bySkill.set(event.sourceId, stats);
+  if (!encounter.enemyFirstSeenAtMs.has(event.targetId)) {
+    encounter.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
+  }
+  const targetName = mobIdentities.get(event.targetId);
+  if (targetName !== undefined) encounter.enemyNames.set(event.targetId, targetName);
 }
 
 export function createActor(

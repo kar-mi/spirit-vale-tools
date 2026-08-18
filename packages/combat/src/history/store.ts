@@ -178,9 +178,12 @@ export class CombatHistoryStore {
       return { targetId: enemy.target_id, label: `${name} (${index})` };
     });
 
-    const encounter = this.loadEncounter(sessionId, encounterId, "dps");
+    // Timelines are the bulk of an encounter load and nothing below reads one. `includeAllAnonymous`
+    // keeps a row that is still inside the live meter's grace period: hiding it here would drop its
+    // damage from the breakdown while the enemy picker, fed by the same hits, still lists its target.
+    const encounter = this.loadEncounter(sessionId, encounterId, "dps", { withTimeline: false });
     const skills: CombatEnemySkillRow[] = encounter
-      ? displayActorAggregates(encounter).flatMap(({ rowId, actor }) => [...actor.enemySkills].flatMap(
+      ? displayActorAggregates(encounter, { includeAllAnonymous: true }).flatMap(({ rowId, actor }) => [...actor.enemySkills].flatMap(
         ([targetId, bySkill]) => [...bySkill].map(([sourceId, stats]) => ({
           attackerRowId: rowId,
           targetId,
@@ -265,6 +268,7 @@ export class CombatHistoryStore {
     sessionId: string,
     encounterId: string,
     meter: StoredMeter,
+    options: { withTimeline?: boolean } = {},
   ): EncounterAggregate | undefined {
     const database = this.model.database;
     const row = database
@@ -293,7 +297,15 @@ export class CombatHistoryStore {
         "select * from combat_actors where session_id = ? and encounter_id = ? and meter = ? order by actor_index",
       )
       .all(sessionId, encounterId, meter)) {
-      encounter.actors.push(hydrateActor(database, sessionId, encounterId, meter, actorRow, encounter.startedAtMs));
+      encounter.actors.push(hydrateActor(
+        database,
+        sessionId,
+        encounterId,
+        meter,
+        actorRow,
+        encounter.startedAtMs,
+        options.withTimeline ?? true,
+      ));
     }
     return encounter;
   }
@@ -335,6 +347,7 @@ function hydrateActor(
   meter: StoredMeter,
   row: ActorRow,
   encounterStartedAtMs: number,
+  withTimeline: boolean,
 ): ActorAggregate {
   const actor = createActor(row.actor_id, encounterStartedAtMs, row.ewma_tau_seconds);
   if (row.display_name !== null) actor.displayName = row.display_name;
@@ -390,16 +403,18 @@ function hydrateActor(
     }
   }
 
-  for (const bucket of database
-    .query<{ origin: string; origin_ms: number; width_ms: number; bucket_index: number; damage: number }, [string, string, string, number]>(
-      "select origin, origin_ms, width_ms, bucket_index, damage from combat_timeline_buckets where session_id = ? and encounter_id = ? and meter = ? and actor_index = ? order by bucket_index",
-    )
-    .all(sessionId, encounterId, meter, row.actor_index)) {
-    const series = bucket.origin === "actor" ? actor.actorSeries : actor.encounterSeries;
-    series.originMs = bucket.origin_ms;
-    series.widthMs = bucket.width_ms;
-    while (series.buckets.length <= bucket.bucket_index) series.buckets.push(0);
-    series.buckets[bucket.bucket_index] = bucket.damage;
+  if (withTimeline) {
+    for (const bucket of database
+      .query<{ origin: string; origin_ms: number; width_ms: number; bucket_index: number; damage: number }, [string, string, string, number]>(
+        "select origin, origin_ms, width_ms, bucket_index, damage from combat_timeline_buckets where session_id = ? and encounter_id = ? and meter = ? and actor_index = ? order by bucket_index",
+      )
+      .all(sessionId, encounterId, meter, row.actor_index)) {
+      const series = bucket.origin === "actor" ? actor.actorSeries : actor.encounterSeries;
+      series.originMs = bucket.origin_ms;
+      series.widthMs = bucket.width_ms;
+      while (series.buckets.length <= bucket.bucket_index) series.buckets.push(0);
+      series.buckets[bucket.bucket_index] = bucket.damage;
+    }
   }
   return actor;
 }

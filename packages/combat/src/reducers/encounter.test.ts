@@ -508,7 +508,7 @@ describe("encounter aggregation and rendering", () => {
       actors: [],
     });
     expect(meter.getLatestSnapshot(10_000)?.actors).toMatchObject([
-      { displayName: "Unidentified", damage: 240, isUnidentified: true },
+      { displayName: "Unidentified (303)", damage: 240, isUnidentified: true },
     ]);
     expect(meter.getLatestSnapshot(10_000)?.unidentifiedActorIds).toEqual([303]);
   });
@@ -523,18 +523,19 @@ describe("encounter aggregation and rendering", () => {
     });
   });
 
-  test("keeps explicit personal damage separate from the unidentified party aggregate", () => {
+  test("gives each unidentified player its own row instead of one aggregate", () => {
     const meter = new MeterHarness({ personalActorId: 303 });
     meter.consumeCombat({ ...damage(303, 100), targetId: 900 }, 0);
     meter.consumeCombat({ ...damage(404, 300, "SyntheticRain", "Synthetic Rain"), targetId: 901 }, 0);
 
     const expectSeparatedPersonal = () => {
       expect(meter.getLatestSnapshot(10_000)).toMatchObject({
-        actors: [{
-          actorIds: [303, 404],
-          displayName: "Unidentified",
-          damage: 400,
-        }],
+        // Two anonymous players, two rows, ordered by damage rather than folded together.
+        actors: [
+          { actorIds: [404], displayName: "Unidentified (404)", damage: 300, rowId: "actor:404" },
+          { actorIds: [303], displayName: "Unidentified (303)", damage: 100, rowId: "actor:303" },
+        ],
+        unidentifiedActorIds: [303, 404],
         personalMatch: "matched",
         personal: {
           actorIds: [303],

@@ -304,6 +304,30 @@ describe("combat read model", () => {
     }
   });
 
+  test("keeps a still-anonymous attacker in the breakdown of an open encounter", async () => {
+    const context = await fixture();
+    try {
+      // Never finalized, and the only hit lands at `lastDamageAtMs`, so this actor sits inside the
+      // grace period the live meter uses to hide rows whose identity has not arrived yet.
+      await appendFile(context.logPath, [
+        mobIdentity(90, "Training Construct", 0),
+        damage(1, 90, 100, 1_000),
+      ].join(""));
+      const model = await context.open();
+      await indexCombatStream(model, { sessionId: SESSION, sourcePath: context.logPath });
+
+      const store = new CombatHistoryStore(model);
+      const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
+      const breakdown = store.getEnemyBreakdown(SESSION, encounterId);
+      // The picker offers the mob, so the skills table must not come back empty for it.
+      expect(breakdown.enemies.map((enemy) => enemy.targetId)).toEqual([90]);
+      expect(breakdown.skills.map((row) => [row.attackerRowId, row.targetId, row.damage]))
+        .toEqual([["actor:1", 90, 100]]);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
   test("keeps enemy damage with the correct actor lifetime when an id is reused", async () => {
     const context = await fixture();
     try {
@@ -326,10 +350,10 @@ describe("combat read model", () => {
       const store = new CombatHistoryStore(model);
       const encounterId = store.listEncounters({ sessionId: SESSION }).items[0]!.encounterId;
       expect(store.getEncounter(SESSION, encounterId)!.actors.map((actor) => [actor.rowId, actor.damage]))
-        .toEqual([["name:bramble", 400], ["unidentified", 100]]);
+        .toEqual([["name:bramble", 400], ["actor:1", 100]]);
       expect(store.getEnemyBreakdown(SESSION, encounterId).skills
         .map((row) => [row.attackerRowId, row.targetId, row.damage]))
-        .toEqual([["name:bramble", 91, 400], ["unidentified", 90, 100]]);
+        .toEqual([["name:bramble", 91, 400], ["actor:1", 90, 100]]);
       await expectParity(context, model);
     } finally {
       await context.cleanup();

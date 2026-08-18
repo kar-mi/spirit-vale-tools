@@ -70,7 +70,7 @@ export interface FishNetDpsEncounterSnapshot {
   partyDps: number;
   partyCurrentDps: number;
   actors: FishNetDpsActorRow[];
-  /** Actor ids whose party damage is retained in the aggregate Unidentified row. */
+  /** Actor ids on rows with no verified player identity. Each such actor keeps its own row. */
   unidentifiedActorIds: number[];
   personalName: string;
   personalMatch: FishNetPersonalMatch;

@@ -27,7 +27,14 @@ export type {
   StoredMeter,
 } from "./history/store.ts";
 export { DamageReducer } from "./reducers/damage.ts";
-export type { ActorAggregate, CombatIdentity, DamageReducerOptions, EncounterAggregate, SkillAggregate } from "./reducers/damage.ts";
+export type {
+  ActorAggregate,
+  CombatIdentity,
+  DamageReducerOptions,
+  EncounterAggregate,
+  EnemySkillStats,
+  SkillAggregate,
+} from "./reducers/damage.ts";
 export { MeterReducer } from "./reducers/meter.ts";
 export type { MeterKind, MeterReducerOptions } from "./reducers/meter.ts";
 export { LiveCombatService } from "./live-combat.ts";
@@ -38,8 +45,8 @@ export type {
   MeterEncounterSnapshot,
   MeterRow,
 } from "./live-combat.ts";
-export { renderEncounter } from "./reducers/rows.ts";
-export type { RenderOptions } from "./reducers/rows.ts";
+export { actorRowId, displayActorAggregates, renderEncounter } from "./reducers/rows.ts";
+export type { DisplayActorAggregate, DisplayActorOptions, RenderOptions } from "./reducers/rows.ts";
 export { ANALYSIS_BUCKET_MS } from "./reducers/timeline.ts";
 export type { BucketSeries, TimelinePoint } from "./reducers/timeline.ts";
 export { DpsLogFollower, DpsSessionLogFollower } from "./live-log.ts";

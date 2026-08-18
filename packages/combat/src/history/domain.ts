@@ -106,7 +106,7 @@ create table if not exists combat_timeline_buckets (
 );
 
 -- Per rendered DPS actor lifetime, per enemy, per skill. The actor index prevents a reused network
--- actor id from assigning the same hit to both an identified row and the Unidentified aggregate.
+-- actor id from assigning the same hit to two rows that are actually different players.
 create table if not exists combat_enemy_skills (
   session_id text not null,
   encounter_id text not null,
