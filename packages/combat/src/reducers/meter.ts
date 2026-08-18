@@ -48,7 +48,6 @@ export class MeterReducer {
       lastDamageAtMs: startedAtMs,
       actors: [],
       activeActors: new Map(),
-      enemies: new Map(),
       enemyFirstSeenAtMs: new Map(),
       enemyNames: new Map(),
       deaths: [],

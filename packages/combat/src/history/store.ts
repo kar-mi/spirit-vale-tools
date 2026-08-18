@@ -4,7 +4,7 @@ import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 import type { FishNetDpsEncounterSnapshot } from "../snapshot.ts";
 import { createActor } from "../reducers/damage.ts";
 import type { ActorAggregate, EncounterAggregate } from "../reducers/damage.ts";
-import { renderEncounter } from "../reducers/rows.ts";
+import { displayActorAggregates, renderEncounter } from "../reducers/rows.ts";
 import type { RenderOptions } from "../reducers/rows.ts";
 
 export interface Page<T> {
@@ -51,7 +51,7 @@ export interface CombatEnemyOption {
 }
 
 export interface CombatEnemySkillRow {
-  attackerActorId: number;
+  attackerRowId: string;
   targetId: number;
   sourceId: string;
   sourceLabel: string;
@@ -178,20 +178,20 @@ export class CombatHistoryStore {
       return { targetId: enemy.target_id, label: `${name} (${index})` };
     });
 
-    const skills = this.model.database
-      .query<{ attacker_actor_id: number; target_id: number; source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string]>(
-        "select * from combat_enemy_skills where session_id = ? and encounter_id = ? order by damage desc",
-      )
-      .all(sessionId, encounterId)
-      .map((row) => ({
-        attackerActorId: row.attacker_actor_id,
-        targetId: row.target_id,
-        sourceId: row.source_id,
-        sourceLabel: row.source_label,
-        damage: row.damage,
-        hits: row.hits,
-        criticalHits: row.critical_hits,
-      }));
+    const encounter = this.loadEncounter(sessionId, encounterId, "dps");
+    const skills: CombatEnemySkillRow[] = encounter
+      ? displayActorAggregates(encounter).flatMap(({ rowId, actor }) => [...actor.enemySkills].flatMap(
+        ([targetId, bySkill]) => [...bySkill].map(([sourceId, stats]) => ({
+          attackerRowId: rowId,
+          targetId,
+          sourceId,
+          sourceLabel: stats.sourceLabel,
+          damage: stats.damage,
+          hits: stats.hits,
+          criticalHits: stats.criticalHits,
+        })),
+      )).sort((left, right) => right.damage - left.damage)
+      : [];
     return { encounterId, enemies: options, skills };
   }
 
@@ -283,9 +283,6 @@ export class CombatHistoryStore {
       ...(row.ended_at_ms === null ? {} : { endedAtMs: row.ended_at_ms }),
       actors: [],
       activeActors: new Map(),
-      // Rendering an encounter snapshot needs only the actor aggregates; enemies and deaths are
-      // served by their own queries rather than loaded here.
-      enemies: new Map(),
       enemyFirstSeenAtMs: new Map(),
       enemyNames: new Map(),
       deaths: [],
@@ -374,6 +371,23 @@ function hydrateActor(
     .all(sessionId, encounterId, meter, row.actor_index)) {
     actor.targetIds.add(target.target_id);
     actor.targetDamage.set(target.target_id, target.damage);
+  }
+
+  if (meter === "dps") {
+    for (const enemySkill of database
+      .query<{ target_id: number; source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, number]>(
+        "select target_id, source_id, source_label, damage, hits, critical_hits from combat_enemy_skills where session_id = ? and encounter_id = ? and actor_index = ?",
+      )
+      .all(sessionId, encounterId, row.actor_index)) {
+      const bySkill = actor.enemySkills.get(enemySkill.target_id) ?? new Map();
+      actor.enemySkills.set(enemySkill.target_id, bySkill);
+      bySkill.set(enemySkill.source_id, {
+        sourceLabel: enemySkill.source_label,
+        damage: enemySkill.damage,
+        hits: enemySkill.hits,
+        criticalHits: enemySkill.critical_hits,
+      });
+    }
   }
 
   for (const bucket of database

@@ -53,6 +53,8 @@ export interface ActorAggregate {
   kills: number;
   targetIds: Set<number>;
   targetDamage: Map<number, number>;
+  /** Enemy target id -> skill id -> outgoing damage attributed to this actor lifetime. */
+  enemySkills: Map<number, Map<string, EnemySkillStats>>;
   skills: Map<string, SkillAggregate>;
   encounterSeries: BucketSeries;
   actorSeries: BucketSeries;
@@ -93,8 +95,6 @@ export interface EncounterAggregate {
   endedAtMs?: number;
   actors: ActorAggregate[];
   activeActors: Map<number, ActorAggregate>;
-  /** attacker actor id -> enemy target id -> skill id -> totals. Counts every positive hit. */
-  enemies: Map<number, Map<number, Map<string, EnemySkillStats>>>;
   /** First time each enemy was hit, which orders the enemy picker. */
   enemyFirstSeenAtMs: Map<number, number>;
   /**
@@ -269,16 +269,15 @@ export class DamageReducer {
         lastDamageAtMs: observedAtMs,
         actors,
         activeActors: new Map(actors.map((actor) => [actor.actorId, actor])),
-        enemies: new Map(),
         enemyFirstSeenAtMs: new Map(),
         enemyNames: new Map(),
         deaths: [],
       };
     }
     if (countedDamage) this.current.lastDamageAtMs = observedAtMs;
-    // Only now that the encounter exists, so an encounter's opening hit is not lost.
+    // Death-log attribution is independent of outgoing enemy damage and still includes lethal
+    // records that also contribute to the meter.
     this.recordEncounterHit(event, observedAtMs);
-
     const actor = this.actorFor(event.actorId);
     const eventIdentity = event.actorIdentity ?? this.identities.get(event.actorId);
     if (eventIdentity) {
@@ -297,11 +296,34 @@ export class DamageReducer {
         sourceLabel: event.sourceLabel,
       }, this.maxTimelineBuckets);
       if (isMobTarget(this.identities, event.actorId, event.targetId)) {
+        this.recordEnemyHit(actor, event, observedAtMs);
         actor.targetIds.add(event.targetId);
         actor.targetDamage.set(event.targetId, (actor.targetDamage.get(event.targetId) ?? 0) + event.value);
       }
     }
     if (countedKill) actor.kills += 1;
+  }
+
+  /** Attributes one outgoing party hit to the exact actor lifetime that produced it. */
+  private recordEnemyHit(
+    actor: ActorAggregate,
+    event: FishNetCombatDamageEvent | FishNetCombatDeathEvent,
+    observedAtMs: number,
+  ): void {
+    const bySkill = actor.enemySkills.get(event.targetId) ?? new Map<string, EnemySkillStats>();
+    actor.enemySkills.set(event.targetId, bySkill);
+    const stats = bySkill.get(event.sourceId)
+      ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
+    stats.sourceLabel = event.sourceLabel;
+    stats.damage += event.value;
+    stats.hits += 1;
+    if (event.hitResult === "critical") stats.criticalHits += 1;
+    bySkill.set(event.sourceId, stats);
+    if (!this.current!.enemyFirstSeenAtMs.has(event.targetId)) {
+      this.current!.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
+    }
+    const targetName = this.mobIdentities.get(event.targetId);
+    if (targetName !== undefined) this.current!.enemyNames.set(event.targetId, targetName);
   }
 
   /** Finalizes an encounter that has been idle long enough. */
@@ -408,27 +430,6 @@ export class DamageReducer {
     if (event.kind !== "damage" && event.kind !== "death") return;
     if (!this.current) return;
 
-    if (isPositiveHit(event)) {
-      const byTarget = this.current.enemies.get(event.actorId) ?? new Map<number, Map<string, EnemySkillStats>>();
-      this.current.enemies.set(event.actorId, byTarget);
-      const bySkill = byTarget.get(event.targetId) ?? new Map<string, EnemySkillStats>();
-      byTarget.set(event.targetId, bySkill);
-      const stats = bySkill.get(event.sourceId)
-        ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-      stats.damage += event.value;
-      stats.hits += 1;
-      if (event.hitResult === "critical") stats.criticalHits += 1;
-      bySkill.set(event.sourceId, stats);
-      if (!this.current.enemyFirstSeenAtMs.has(event.targetId)) {
-        this.current.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
-      }
-      // Captured now, while the identity lifecycle state is still known. The session-scoped map is
-      // capped and may later evict this object, but the encounter must retain its historical label.
-      const targetName = this.identities.get(event.targetId)?.displayName
-        ?? this.mobIdentities.get(event.targetId);
-      if (targetName !== undefined) this.current.enemyNames.set(event.targetId, targetName);
-    }
-
     // A death belongs in the log when the victim is one of ours, which is a question about the
     // victim rather than about the team: reflected damage keeps the original caster's team, so a
     // team-0 death can still be a party member killed by their own hit bouncing back (a boss's
@@ -522,6 +523,7 @@ export function createActor(
     damage: 0,
     targetIds: new Set(),
     targetDamage: new Map(),
+    enemySkills: new Map(),
     hits: 0,
     criticalHits: 0,
     kills: 0,

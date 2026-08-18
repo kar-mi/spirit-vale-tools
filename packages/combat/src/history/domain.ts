@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 6;
+export const COMBAT_DOMAIN_VERSION = 7;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -105,19 +105,19 @@ create table if not exists combat_timeline_buckets (
   primary key (session_id, encounter_id, meter, actor_index, origin, bucket_index)
 );
 
--- Per attacker, per enemy, per skill. Counts every positive hit, so it includes incoming damage the
--- DPS tables exclude.
+-- Per rendered DPS actor lifetime, per enemy, per skill. The actor index prevents a reused network
+-- actor id from assigning the same hit to both an identified row and the Unidentified aggregate.
 create table if not exists combat_enemy_skills (
   session_id text not null,
   encounter_id text not null,
-  attacker_actor_id integer not null,
+  actor_index integer not null,
   target_id integer not null,
   source_id text not null,
   source_label text not null,
   damage integer not null default 0,
   hits integer not null default 0,
   critical_hits integer not null default 0,
-  primary key (session_id, encounter_id, attacker_actor_id, target_id, source_id)
+  primary key (session_id, encounter_id, actor_index, target_id, source_id)
 );
 
 create table if not exists combat_enemies (

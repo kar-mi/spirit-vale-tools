@@ -27,6 +27,8 @@ export interface FishNetDpsTimelinePoint {
 }
 
 export interface FishNetDpsActorRow {
+  /** Stable identity for this rendered row, including merged and unidentified rows. */
+  rowId: string;
   actorIds: number[];
   displayName: string;
   archetype?: number;
