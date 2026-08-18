@@ -588,6 +588,28 @@ describe("FishNetActorDirectory", () => {
       { kind: "actorIdentity", operation: "remove", tick: 7, actorId: 140 },
     ]);
   });
+
+  test("decodes non-Latin display names past the old 32-byte cap", () => {
+    // Twelve Hangul characters are 36 UTF-8 bytes, and the guild role is 18. Both used to
+    // overflow byte caps that were sized as if a character were one byte, which made the whole
+    // CharacterData decode throw and left the local player permanently unidentified.
+    const koreanName = "김철수박영희이준호최지우";
+    expect(Buffer.byteLength(koreanName)).toBe(36);
+
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    const events = directory.consume({
+      ...packet(2, "rpcLink", 40),
+      rpcName: "CharacterCallback_T",
+      payload: Buffer.concat([
+        packed(2), packedString(""), packedString(syntheticUid), packedString("account-example"), packed(0),
+        packedString(""), packedString("길드마스터대리"), packedString(koreanName),
+      ]),
+    });
+
+    expect(events).toMatchObject([{ operation: "upsert", actorId: 40, displayName: koreanName }]);
+    expect(directory.get(40)).toMatchObject({ displayName: koreanName, uid: syntheticUid });
+  });
 });
 
 const syntheticUid = "00000000-0000-4000-8000-000000000001";

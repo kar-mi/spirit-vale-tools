@@ -582,15 +582,19 @@ function decodeCharacterDataName(payload: Buffer): { displayName: string; uid: s
     try {
       let offset = 0;
       if (skipEnum) offset = readSignedPackedWhole(payload, offset).nextOffset;
-      const lead = readCharacterString(payload, offset, 64);
-      const uid = readCharacterString(payload, lead.nextOffset, 40);
+      // Every cap below is a *byte* count, and must match the authoritative DTO reader in
+      // @kar-mi/spirit-vale-tools-character. Sizing them as if they were character counts
+      // silently rejects non-Latin names: Hangul and CJK are three bytes per character, so a
+      // 32-byte name cap truncates identity at ten characters.
+      const lead = readCharacterString(payload, offset, 80);
+      const uid = readCharacterString(payload, lead.nextOffset, 80);
       if (!GUID_PATTERN.test(uid.value)) continue;
-      const account = readCharacterString(payload, uid.nextOffset, 24);
+      const account = readCharacterString(payload, uid.nextOffset, 80);
       const counter = readSignedPackedWhole(payload, account.nextOffset);
-      const guildId = readCharacterString(payload, counter.nextOffset, 40);
+      const guildId = readCharacterString(payload, counter.nextOffset, 80);
       if (guildId.value.length > 0 && !GUID_PATTERN.test(guildId.value)) continue;
-      const role = readCharacterString(payload, guildId.nextOffset, 32);
-      const name = readCharacterString(payload, role.nextOffset, 32);
+      const role = readCharacterString(payload, guildId.nextOffset, 80);
+      const name = readCharacterString(payload, role.nextOffset, 64);
       if (name.value.trim().length > 0) return { displayName: name.value, uid: uid.value };
     } catch {
       // Fall through to the next candidate offset.

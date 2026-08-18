@@ -45,7 +45,7 @@ export type {
   MeterEncounterSnapshot,
   MeterRow,
 } from "./live-combat.ts";
-export { actorRowId, displayActorAggregates, renderEncounter } from "./reducers/rows.ts";
+export { actorRowId, displayActorAggregates, normalizeName, renderEncounter } from "./reducers/rows.ts";
 export type { DisplayActorAggregate, DisplayActorOptions, RenderOptions } from "./reducers/rows.ts";
 export { ANALYSIS_BUCKET_MS } from "./reducers/timeline.ts";
 export type { BucketSeries, TimelinePoint } from "./reducers/timeline.ts";

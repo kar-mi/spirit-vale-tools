@@ -314,8 +314,14 @@ export function perSecond(damage: number, durationMs: number): number {
   return damage / (durationMs / 1_000);
 }
 
+/**
+ * The single identity key for a display name. NFC folds the two Unicode spellings of the same
+ * text onto one key - Hangul in particular arrives both precomposed and as conjoining jamo,
+ * which render identically but compare unequal and would otherwise split one player into two
+ * rows. `toLowerCase` rather than `toLocaleLowerCase` keeps the key independent of host locale.
+ */
 export function normalizeName(name: string): string {
-  return name.trim().toLocaleLowerCase();
+  return name.normalize("NFC").trim().toLowerCase();
 }
 
 function minDefined(left: number | undefined, right: number | undefined): number | undefined {

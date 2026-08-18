@@ -6,6 +6,7 @@ import {
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import { FishNetSkillDirectory, loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import { normalizeName } from "./reducers/rows.ts";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type {
   FishNetCombatActivationEvent,
@@ -370,10 +371,10 @@ export class FishNetStatusTracker {
 
   /** Resolves active statuses by display name, independent of whether that actor has dealt any damage. */
   getActiveStatusesForName(personalName: string, nowMs: number): FishNetActiveStatus[] {
-    const normalized = personalName.trim().toLocaleLowerCase();
+    const normalized = normalizeName(personalName);
     if (!normalized) return [];
     const actorIds = [...this.identities]
-      .filter(([, displayName]) => displayName.trim().toLocaleLowerCase() === normalized)
+      .filter(([, displayName]) => normalizeName(displayName) === normalized)
       .map(([actorId]) => actorId);
     return this.getActiveStatusesForActors(actorIds, nowMs);
   }
