@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [eb8aa93]
+  - @kar-mi/spirit-vale-tools-combat@3.0.0
+
 ## 1.1.2
 
 ### Patch Changes
