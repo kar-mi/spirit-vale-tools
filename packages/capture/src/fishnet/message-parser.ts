@@ -137,6 +137,11 @@ export function parseMessage(
         const packet = basePacket(buffer, start, end, tick, bundleIndex, packetId, packetName);
         packet.objectId = objectId;
         packet.networkBehaviourIndex = header.componentIndex;
+        // Recovery deliberately does not teach the connection, unlike the fixed-RPC path. That path
+        // gates on `rejectedByPayload` before writing a binding, and a SyncType packet has no
+        // equivalent check to offer, so a binding learned here would enter `state.components` on
+        // weaker evidence and then feed every later elimination on the object. Repeating the
+        // recovery costs a scan of the component map; it measured at a few percent of decode time.
         packet.networkBehaviourType = state.components.get(componentKey(objectId, header.componentIndex))
           ?? recoverComponentFromPrefabLayouts(options.rpcMap, state.components, objectId, header.componentIndex);
         packet.syncPayload = buffer.subarray(header.nextOffset + 4, end);
@@ -420,6 +425,11 @@ function applySyncTypeEntries(packet: DecodedFishNetPacket, options: FishNetDeco
  *
  * A component whose behaviour is unknown ends the walk. Its values cannot be sized, so where the
  * next component begins is unknowable and the rest is left alone rather than guessed at.
+ *
+ * A zero count ends the walk for the same reason. The writer emits a run only for a component that
+ * has SyncTypes to send, so a count of zero is not an empty-but-valid run to step over - it means
+ * these two bytes were not a run header, and continuing would read misaligned bytes as component
+ * and count pairs. The undecoded remainder stays available as `spawnSyncPayload` either way.
  */
 function decodeSpawnSyncTypes(
   candidate: SpawnCandidate,
