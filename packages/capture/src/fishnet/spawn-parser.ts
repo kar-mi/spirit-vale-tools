@@ -5,7 +5,7 @@ import {
 } from "./protocol.ts";
 import type { RpcLinkRegistrationState } from "./protocol.ts";
 import { bindBehaviourTypes, bindPrefabBehaviourTypes } from "./rpc-resolution.ts";
-import { checkedEnd, readNetworkObjectReference, readSignedPackedWhole, requireBytes } from "./wire-reader.ts";
+import { checkedEnd, readFloatVector, readNetworkObjectReference, readSignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type { FishNetRpcMap } from "./types.ts";
 
 export interface SpawnCandidate {
@@ -22,6 +22,15 @@ export interface SpawnCandidate {
   /** Game-defined WritePayload bytes preceding the RPC link and SyncType sections. */
   customPayload: Buffer;
   syncPayload: Buffer;
+  /** Spawn-time local position, present only when the spawn carries the position flag. */
+  localPosition?: readonly [number, number, number];
+  /**
+   * Spawn-time local rotation as `[x, y, z, w]`. Only the uncompressed 16-byte quaternion form is
+   * decoded; the 4- and 8-byte packings stay absent rather than guessed.
+   */
+  localRotation?: readonly [number, number, number, number];
+  /** Spawn-time local scale, present only when the spawn carries the scale flag. */
+  localScale?: readonly [number, number, number];
 }
 
 export function parseObjectSpawn(
@@ -61,14 +70,29 @@ export function parseObjectSpawn(
     const transformFlags = buffer[offset] ?? 0;
     if ((transformFlags & ~0x07) !== 0) return undefined;
     offset += 1;
-    if ((transformFlags & 0x01) !== 0) offset = checkedEnd(buffer, offset, 12);
+    let localPosition: readonly [number, number, number] | undefined;
+    if ((transformFlags & 0x01) !== 0) {
+      const position = readFloatVector(buffer, offset, 3);
+      localPosition = position.value as [number, number, number];
+      offset = position.nextOffset;
+    }
 
     const rotations = (transformFlags & 0x02) !== 0 ? [8, 4, 16] : [0];
     const candidates: SpawnCandidate[] = [];
     for (const rotationBytes of rotations) {
       try {
+        // Only the 16-byte form is four float32s. The 4- and 8-byte packings are compressed
+        // quaternions whose exact layout is unverified here, so they stay undecoded.
+        const localRotation = rotationBytes === 16
+          ? readFloatVector(buffer, offset, 4).value as [number, number, number, number]
+          : undefined;
         let candidateOffset = checkedEnd(buffer, offset, rotationBytes);
-        if ((transformFlags & 0x04) !== 0) candidateOffset = checkedEnd(buffer, candidateOffset, 12);
+        let localScale: readonly [number, number, number] | undefined;
+        if ((transformFlags & 0x04) !== 0) {
+          const scale = readFloatVector(buffer, candidateOffset, 3);
+          localScale = scale.value as [number, number, number];
+          candidateOffset = scale.nextOffset;
+        }
         let sceneId: bigint | undefined;
         let prefabId: number | undefined;
         if ((flags & 0x02) !== 0) {
@@ -126,6 +150,9 @@ export function parseObjectSpawn(
           nested,
           customPayload,
           syncPayload,
+          ...(localPosition === undefined ? {} : { localPosition }),
+          ...(localRotation === undefined ? {} : { localRotation }),
+          ...(localScale === undefined ? {} : { localScale }),
         });
       } catch {
         // Try the next supported quaternion packing width.

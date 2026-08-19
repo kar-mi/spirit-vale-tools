@@ -8,6 +8,15 @@ export type {
 } from "./catalog.ts";
 export { decodeFishNetRewardPacket } from "./reward-decoder.ts";
 export type { DecodedRewardPacket, ExperienceCoinsState, RewardItem, RewardItemCategory } from "./reward-decoder.ts";
+export { FishNetLootDropTracker } from "./loot-drop-tracker.ts";
+export type {
+  FishNetLootDrop,
+  FishNetLootDropEvent,
+  FishNetLootDropRemovedEvent,
+  FishNetLootDropSpawnEvent,
+  FishNetLootDropTrackerOptions,
+  FishNetLootDropUpdateEvent,
+} from "./loot-drop-tracker.ts";
 export { FishNetMobDirectory, FishNetMobRewardTracker, catalogMob } from "./reward-tracker.ts";
 export type {
   FishNetConfirmedMobKill,

@@ -11,6 +11,8 @@ export {
   FishNetSessionDecoder,
 } from "./fishnet/decoder.ts";
 export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
+export { findPrefab } from "./fishnet/rpc-resolution.ts";
+export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/network-transform-decoder.ts";
 export { resolveBundledMapName } from "./fishnet/map-definitions/index.ts";
 export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
@@ -76,6 +78,10 @@ export type {
   FishNetRpcLinkRegistration,
   FishNetRpcParameter,
   FishNetRpcResolution,
+  FishNetSpawnSyncEntry,
+  FishNetSyncEntry,
   FishNetSyncTypeDefinition,
   FishNetWireCodec,
+  DecodedNetworkTransform,
+  NetworkTransformAxes,
 } from "./fishnet/types.ts";

@@ -21,4 +21,10 @@ export type {
   FishNetRpcLinkRegistration,
   FishNetRpcPacketName,
   FishNetRpcResolution,
+  FishNetSpawnSyncEntry,
+  FishNetSyncEntry,
 } from "./definitions/protocol.ts";
+export type {
+  DecodedNetworkTransform,
+  NetworkTransformAxes,
+} from "./network-transform-decoder.ts";

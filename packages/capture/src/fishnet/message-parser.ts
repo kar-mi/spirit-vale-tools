@@ -1,4 +1,4 @@
-import { applyDecodedFields, tryDecodeFields } from "./field-decoder.ts";
+import { applyDecodedFields, decodeFieldRun, tryDecodeFields } from "./field-decoder.ts";
 import {
   basePacket,
   classifyPacket,
@@ -17,10 +17,12 @@ import {
   findSyncType,
   inferBehaviourType,
   lookupRpc,
+  recoverComponentFromPrefabLayouts,
   rejectedByPayload,
 } from "./rpc-resolution.ts";
 import type { RpcLookup } from "./rpc-resolution.ts";
 import { parseObjectSpawn } from "./spawn-parser.ts";
+import type { SpawnCandidate } from "./spawn-parser.ts";
 import {
   checkedEnd,
   readNetworkBehaviourHeader,
@@ -30,9 +32,12 @@ import {
 } from "./wire-reader.ts";
 import type {
   DecodedFishNetPacket,
+  FishNetDecodedField,
   FishNetDecodeOptions,
   FishNetPacketName,
   FishNetRpcPacketName,
+  FishNetSpawnSyncEntry,
+  FishNetSyncEntry,
 } from "./types.ts";
 
 export interface ConnectionState {
@@ -87,6 +92,10 @@ export function parseMessage(
       packet.spawnNested = candidate.nested;
       packet.spawnCustomPayload = candidate.customPayload;
       packet.spawnSyncPayload = candidate.syncPayload;
+      packet.spawnSyncEntries = decodeSpawnSyncTypes(candidate, options);
+      if (candidate.localPosition) packet.spawnLocalPosition = candidate.localPosition;
+      if (candidate.localRotation) packet.spawnLocalRotation = candidate.localRotation;
+      if (candidate.localScale) packet.spawnLocalScale = candidate.localScale;
       packet.rpcLinkRegistrations = candidate.registrations.map(([linkId, registration]) => ({ linkId, ...registration }));
       return {
         packet,
@@ -128,19 +137,13 @@ export function parseMessage(
         const packet = basePacket(buffer, start, end, tick, bundleIndex, packetId, packetName);
         packet.objectId = objectId;
         packet.networkBehaviourIndex = header.componentIndex;
-        packet.networkBehaviourType = state.components.get(componentKey(objectId, header.componentIndex));
+        packet.networkBehaviourType = state.components.get(componentKey(objectId, header.componentIndex))
+          ?? recoverComponentFromPrefabLayouts(options.rpcMap, state.components, objectId, header.componentIndex);
         packet.syncPayload = buffer.subarray(header.nextOffset + 4, end);
         packet.payload = packet.syncPayload;
         if (packet.syncPayload.length > 0) {
           packet.syncIndex = packet.syncPayload.readUInt8(0);
-          const sync = findSyncType(options.rpcMap, packet.networkBehaviourType, packet.syncIndex);
-          if (sync) {
-            packet.syncName = sync.name;
-            const fields = sync.fields ?? (sync.codec
-              ? [{ name: sync.name, typeName: sync.typeName, codec: sync.codec }]
-              : undefined);
-            applyDecodedFields(packet, fields, 1);
-          }
+          applySyncTypeEntries(packet, options);
         }
         return { packet, end, stop: false };
       }
@@ -319,7 +322,8 @@ function parseFixedRpc(
     packet.rpcHash = hash8;
     if (hash16 !== undefined) packet.rpcHash16Candidate = hash16;
     const inferredType = packet.networkBehaviourType === undefined
-      ? inferBehaviourType(options.rpcMap, packetName as FishNetRpcPacketName, hash8, hash16)
+      ? recoverComponentFromPrefabLayouts(options.rpcMap, state.components, header.objectId, header.componentIndex)
+        ?? inferBehaviourType(options.rpcMap, packetName as FishNetRpcPacketName, hash8, hash16)
       : undefined;
     if (inferredType !== undefined) packet.networkBehaviourType = inferredType;
     let lookup = lookupRpc(options.rpcMap, packet.networkBehaviourType, packetName as FishNetRpcPacketName, hash8, hash16);
@@ -366,4 +370,100 @@ function parseFixedRpc(
   } catch {
     return { packet: opaquePacket(buffer, start, tick, bundleIndex, packetName), end: buffer.length, stop: true };
   }
+}
+
+/**
+ * Walks every SyncType entry concatenated into one length-delimited body. FishNet writes each dirty
+ * SyncType as an index byte followed by its serialized value, and several can share one packet, so
+ * decoding only the first left the rest as opaque bytes even when their layouts were known.
+ *
+ * The walk stops at the first entry that cannot be resolved or does not decode cleanly, keeping the
+ * remainder as `undecodedPayload` rather than guessing where the next boundary is.
+ */
+function applySyncTypeEntries(packet: DecodedFishNetPacket, options: FishNetDecodeOptions): void {
+  const payload = packet.syncPayload;
+  if (!payload) return;
+  const entries: FishNetSyncEntry[] = [];
+  const fields: FishNetDecodedField[] = [];
+  let offset = 0;
+  while (offset < payload.length) {
+    const index = payload.readUInt8(offset);
+    const sync = findSyncType(options.rpcMap, packet.networkBehaviourType, index);
+    if (!sync) break;
+    const parameters = sync.fields ?? (sync.codec
+      ? [{ name: sync.name, typeName: sync.typeName, codec: sync.codec }]
+      : undefined);
+    if (!parameters) break;
+    const run = decodeFieldRun(payload, parameters, offset + 1);
+    fields.push(...run.fields);
+    if (entries.length === 0) packet.syncName = sync.name;
+    // A partial run keeps the fields it read - matching the previous single-entry behaviour - but
+    // its end offset is not a trustworthy boundary, so no further entry is attempted.
+    if (!run.complete) {
+      offset = run.consumed;
+      break;
+    }
+    entries.push({ index, name: sync.name, fields: run.fields });
+    offset = run.consumed;
+  }
+  if (fields.length > 0) packet.decodedFields = fields;
+  if (entries.length > 0) packet.syncEntries = entries;
+  if (offset < payload.length) packet.undecodedPayload = payload.subarray(offset);
+}
+
+/**
+ * Decodes the SyncTypes an ObjectSpawn carries for its own components.
+ *
+ * This body is framed differently from a standalone SyncType packet: that packet's header already
+ * names one component, whereas a spawn covers several, so each run is `componentIndex`, a count,
+ * and then that many index-prefixed values.
+ *
+ * A component whose behaviour is unknown ends the walk. Its values cannot be sized, so where the
+ * next component begins is unknowable and the rest is left alone rather than guessed at.
+ */
+function decodeSpawnSyncTypes(
+  candidate: SpawnCandidate,
+  options: FishNetDecodeOptions,
+): FishNetSpawnSyncEntry[] | undefined {
+  const payload = candidate.syncPayload;
+  if (payload.length === 0) return undefined;
+  const bindings = new Map(candidate.componentBindings);
+  const entries: FishNetSpawnSyncEntry[] = [];
+  let offset = 0;
+  while (offset + 2 <= payload.length) {
+    const componentIndex = payload.readUInt8(offset);
+    const count = payload.readUInt8(offset + 1);
+    if (count === 0) break;
+    const networkBehaviourType = bindings.get(componentKey(candidate.objectId, componentIndex));
+    if (networkBehaviourType === undefined) break;
+    let cursor = offset + 2;
+    const run: FishNetSpawnSyncEntry[] = [];
+    for (let index = 0; index < count; index += 1) {
+      if (cursor >= payload.length) return finish(entries);
+      const syncIndex = payload.readUInt8(cursor);
+      const sync = findSyncType(options.rpcMap, networkBehaviourType, syncIndex);
+      if (!sync) return finish(entries);
+      const parameters = sync.fields ?? (sync.codec
+        ? [{ name: sync.name, typeName: sync.typeName, codec: sync.codec }]
+        : undefined);
+      if (!parameters) return finish(entries);
+      const decoded = decodeFieldRun(payload, parameters, cursor + 1);
+      if (!decoded.complete) return finish(entries);
+      run.push({
+        componentIndex,
+        networkBehaviourType,
+        index: syncIndex,
+        name: sync.name,
+        fields: decoded.fields,
+      });
+      cursor = decoded.consumed;
+    }
+    entries.push(...run);
+    offset = cursor;
+  }
+  return finish(entries);
+}
+
+function finish(entries: FishNetSpawnSyncEntry[]): FishNetSpawnSyncEntry[] | undefined {
+  return entries.length > 0 ? entries : undefined;
 }

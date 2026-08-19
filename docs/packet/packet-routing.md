@@ -38,9 +38,9 @@ the normal live-capture handoff to feature packages.
 | Package | Input from the decoded stream | Output/responsibility |
 | --- | --- | --- |
 | `@kar-mi/spirit-vale-tools-capture` | Npcap frames and optional typed map configuration | Capture events, protocol types, LiteNetLib leaves, FishNet packets, RPC/SyncType/broadcast resolution |
-| `@kar-mi/spirit-vale-tools-combat` | `DecodedFishNetPacket` | Actor identities plus combat activation, damage, and death events |
+| `@kar-mi/spirit-vale-tools-combat` | `DecodedFishNetPacket` | Actor identities plus combat activation, damage, and death events; live object positions |
 | `@kar-mi/spirit-vale-tools-character` | `CapturedFishNetPacket` | Local-character records and view state from PlayerSave data |
-| `@kar-mi/spirit-vale-tools-rewards` | `DecodedFishNetPacket` | Monster/reward session state and reward events; uses combat context where needed |
+| `@kar-mi/spirit-vale-tools-rewards` | `DecodedFishNetPacket` | Monster/reward session state and reward events, plus ground-loot drops; uses combat context where needed |
 | `@kar-mi/spirit-vale-tools-logging` | Domain events and diagnostics | Versioned JSON Lines session streams; it does not decode packets |
 | `@kar-mi/spirit-vale-tools-items` and `@kar-mi/spirit-vale-tools-skills` | Build fingerprint/catalog lookups | Static item and skill metadata used to enrich domain output; neither parses transport bytes |
 
@@ -54,7 +54,9 @@ Combat identity matching uses the CharacterData UID as an internal stable key;
 Steam and account identifiers are not used. Shareable combat records may retain
 the UID, visible IGN, actor ID, owner connection ID, and replay timing, but
 exclude raw protocol payloads, arbitrary decoded fields, coordinates, and
-diagnostics.
+diagnostics. Coordinates are therefore live-only state held in a tracker rather
+than anything a domain stream carries; see
+[positions and ground loot](../positions.md).
 
 ## Adding a new packet consumer
 

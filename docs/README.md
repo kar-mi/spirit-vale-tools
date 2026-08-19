@@ -15,6 +15,8 @@ implementation, and contributor references.
   what each carries on the wire, and which feeds are not consumed yet.
 - [Healing attribution](combat/healing-attribution.md) — why heal-to-healer
   attribution is best-effort, and its known limitations.
+- [Positions and ground loot](positions.md) — consuming world coordinates for
+  players, monsters, and dropped items, and why they stay live-only.
 
 ## Capture and protocol guides
 

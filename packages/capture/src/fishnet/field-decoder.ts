@@ -1,6 +1,6 @@
 import { FishNetProtocolError } from "./protocol.ts";
 import { resolveBundledMapName } from "./map-definitions/index.ts";
-import { checkedEnd, readSignedPackedWhole, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
+import { checkedEnd, readFloatVector, readSignedPackedWhole, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type {
   DecodedFishNetPacket,
   FishNetDecodedField,
@@ -19,6 +19,32 @@ export function applyDecodedFields(
   const decoded = decodeParameters(packet.payload, startOffset, parameters, "", fields);
   if (fields.length > 0) packet.decodedFields = fields;
   if (decoded.offset < packet.payload.length) packet.undecodedPayload = packet.payload.subarray(decoded.offset);
+}
+
+/** Fields decoded from one entry, with the offset the next entry starts at. */
+export interface FieldDecodeRun {
+  fields: FishNetDecodedField[];
+  consumed: number;
+  complete: boolean;
+}
+
+/**
+ * Decodes one parameter list and reports where it ended, so a caller walking several concatenated
+ * entries in one payload can find the next boundary. Like {@link applyDecodedFields} it keeps the
+ * prefix it managed to read, but it mutates nothing and leaves the caller to decide whether an
+ * incomplete run is a stopping point.
+ */
+export function decodeFieldRun(
+  payload: Buffer,
+  parameters: readonly FishNetRpcParameter[] | undefined,
+  startOffset = 0,
+): FieldDecodeRun {
+  if (!parameters || parameters.length === 0) {
+    return { fields: [], consumed: startOffset, complete: true };
+  }
+  const fields: FishNetDecodedField[] = [];
+  const decoded = decodeParameters(payload, startOffset, parameters, "", fields);
+  return { fields, consumed: decoded.offset, complete: decoded.complete };
 }
 
 /**
@@ -196,8 +222,8 @@ function decodeField(
       const nextOffset = checkedEnd(buffer, length.nextOffset, length.value);
       return { value: buffer.toString("utf8", length.nextOffset, nextOffset), nextOffset };
     }
-    case "vector2": return decodeFloatVector(buffer, offset, 2);
-    case "vector3": return decodeFloatVector(buffer, offset, 3);
+    case "vector2": return readFloatVector(buffer, offset, 2);
+    case "vector3": return readFloatVector(buffer, offset, 3);
     case "vector3IntPacked": {
       const values: number[] = [];
       let nextOffset = offset;
@@ -208,14 +234,7 @@ function decodeField(
       }
       return { value: values, nextOffset };
     }
-    case "quaternion": return decodeFloatVector(buffer, offset, 4);
+    case "quaternion": return readFloatVector(buffer, offset, 4);
   }
 }
 
-function decodeFloatVector(buffer: Buffer, offset: number, count: number): { value: number[]; nextOffset: number } {
-  requireBytes(buffer, offset, count * 4, "float vector");
-  return {
-    value: Array.from({ length: count }, (_, index) => buffer.readFloatLE(offset + (index * 4))),
-    nextOffset: offset + (count * 4),
-  };
-}

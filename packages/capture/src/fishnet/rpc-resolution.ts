@@ -1,8 +1,10 @@
 import { applyDecodedFields, tryDecodeFields } from "./field-decoder.ts";
+import { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./network-transform-decoder.ts";
 import { componentKey } from "./protocol.ts";
 import type { RpcLinkRegistrationState } from "./protocol.ts";
 import type {
   DecodedFishNetPacket,
+  FishNetDecodedField,
   FishNetRpcDefinition,
   FishNetRpcMap,
   FishNetRpcPacketName,
@@ -145,6 +147,57 @@ export function eliminateBoundBehaviourTypes(
 }
 
 /**
+ * Recovers a component's behaviour type for an object whose spawn was never captured, using the
+ * bindings already verified on that same object.
+ *
+ * A capture that attaches mid-session never sees the local player's spawn, so nothing registers its
+ * component layout and every packet on its other components stays unresolved for the whole session.
+ * What is available is the object's own verified bindings: they narrow which prefab layouts the
+ * object could possibly be, and where every surviving candidate names the same type for the wanted
+ * index, that type holds for all of them and is not a guess.
+ *
+ * The bar is deliberately high. Recovery needs at least one already-verified binding to narrow
+ * from, every candidate must define the wanted index, and they must all agree on it. A layout that
+ * contradicts a known binding is discarded rather than tolerated, and a single candidate that
+ * leaves the index blank abandons the whole attempt.
+ */
+export function recoverComponentFromPrefabLayouts(
+  map: FishNetRpcMap | undefined,
+  components: ReadonlyMap<string, string>,
+  objectId: number,
+  componentIndex: number,
+): string | undefined {
+  if (!map?.prefabs) return undefined;
+  const prefix = `${objectId}:`;
+  const known = new Map<number, string>();
+  for (const [key, typeName] of components) {
+    if (!key.startsWith(prefix)) continue;
+    const index = Number(key.slice(prefix.length));
+    if (Number.isInteger(index)) known.set(index, typeName);
+  }
+  // With nothing bound, every layout in the build is a candidate and agreement means nothing.
+  if (known.size === 0 || known.has(componentIndex)) return undefined;
+
+  const recovered = new Set<string>();
+  for (const layout of map.prefabs) {
+    const byIndex = new Map(layout.components.map(({ index, typeName }) => [index, typeName]));
+    let consistent = true;
+    for (const [index, typeName] of known) {
+      if (byIndex.get(index) !== typeName) {
+        consistent = false;
+        break;
+      }
+    }
+    if (!consistent) continue;
+    const candidate = byIndex.get(componentIndex);
+    // A candidate layout that leaves this index blank cannot confirm anything about it.
+    if (candidate === undefined) return undefined;
+    recovered.add(candidate);
+  }
+  return recovered.size === 1 ? [...recovered][0] : undefined;
+}
+
+/**
  * Narrows an ambiguous behaviour-type match by testing the payload against each candidate's
  * signature. This complements `eliminateBoundBehaviourTypes`, which can only narrow once *something*
  * else on the object is already bound: an object whose spawn was never captured has no bindings at
@@ -213,6 +266,30 @@ export function applyRpcLookup(packet: DecodedFishNetPacket, lookup: RpcLookup):
   if (lookup.resolution !== "verified") return;
   packet.rpcName = lookup.methodName;
   applyDecodedFields(packet, lookup.parameters);
+  applyNetworkTransform(packet);
+}
+
+/**
+ * NetworkTransform's movement RPCs declare a bare `ArraySegment<byte>`, so the generated map cannot
+ * describe their contents and the field decoder leaves the whole payload undecoded. Their layout is
+ * fixed by FishNet rather than by the game build, so it is parsed here instead.
+ */
+function applyNetworkTransform(packet: DecodedFishNetPacket): void {
+  if (packet.rpcName === undefined || !NETWORK_TRANSFORM_RPC_NAMES.has(packet.rpcName)) return;
+  const update = decodeNetworkTransformData(packet.payload);
+  if (!update) return;
+  packet.networkTransform = update;
+  const fields: FishNetDecodedField[] = [];
+  for (const [axis, value] of Object.entries(update.position)) {
+    if (value !== undefined) fields.push({ name: `position.${axis}`, typeName: "System.Single", codec: "float32", value });
+  }
+  for (const [axis, value] of Object.entries(update.scale ?? {})) {
+    if (value !== undefined) fields.push({ name: `scale.${axis}`, typeName: "System.Single", codec: "float32", value });
+  }
+  if (fields.length > 0) packet.decodedFields = [...(packet.decodedFields ?? []), ...fields];
+  packet.undecodedPayload = update.consumed < packet.payload.length
+    ? packet.payload.subarray(update.consumed)
+    : undefined;
 }
 
 export function findBroadcast(map: FishNetRpcMap | undefined, wireHash: number) {
@@ -252,4 +329,17 @@ function definitionLookup(matches: readonly (FishNetRpcDefinition & { typeName?:
     ambiguousBehaviourTypes: ambiguousBehaviourTypes?.length ? ambiguousBehaviourTypes : undefined,
     wireHash: wireHashes.size === 1 ? wireHashes.values().next().value : undefined,
   };
+}
+
+/**
+ * Resolves a spawn's collection and prefab IDs to the build's prefab layout. Prefab IDs are wire
+ * values reassigned between builds, so consumers must match on `prefabName` through this rather
+ * than on a hardcoded numeric ID.
+ */
+export function findPrefab(map: FishNetRpcMap | undefined, collectionId: number, prefabId: number) {
+  if (!map?.prefabs) return undefined;
+  const matches = map.prefabs.filter((layout) => (
+    layout.collectionId === collectionId && layout.prefabId === prefabId
+  ));
+  return matches.length === 1 ? matches[0] : undefined;
 }

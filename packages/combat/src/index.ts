@@ -87,3 +87,9 @@ export type {
   FishNetHealingTraits,
   FishNetHitResult,
 } from "./combat-tracker.ts";
+export { FishNetPositionTracker } from "./position-tracker.ts";
+export type {
+  FishNetPosition,
+  FishNetPositionEvent,
+  FishNetPositionTrackerOptions,
+} from "./position-tracker.ts";

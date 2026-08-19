@@ -151,6 +151,129 @@ function spawnWithoutLinks(
   ]));
 }
 
+function spawnWithTransform(
+  objectId: number,
+  position: readonly [number, number, number] | undefined,
+  scale: readonly [number, number, number] | undefined,
+  prefabId = 3,
+  collectionId = 1,
+): Buffer {
+  const transformFlags = (position ? 0x01 : 0) | (scale ? 0x04 : 0);
+  return message(3, Buffer.concat([
+    Buffer.from([4]), // instantiated spawn
+    packed(objectId),
+    u16(collectionId),
+    packed(0), // initialization order
+    packed(-1), // no owner
+    Buffer.from([transformFlags]),
+    ...(position ? position.map(f32) : []),
+    ...(scale ? scale.map(f32) : []),
+    packed(prefabId),
+    u32(0), // payload
+    u16(0), // no RPC Link registrations
+    u32(0), // no initial SyncTypes
+  ]));
+}
+
+function spawnWithSyncPayload(objectId: number, componentIndex: number, syncPayload: Buffer): Buffer {
+  const records = Buffer.concat([
+    Buffer.from([componentIndex]),
+    u16(1),
+    u16(901),
+    u16(0x4321),
+    u16(9),
+  ]);
+  return message(3, Buffer.concat([
+    Buffer.from([4]), // instantiated spawn
+    packed(objectId),
+    u16(1), // spawnable collection
+    packed(0), // initialization order
+    packed(-1), // no owner
+    Buffer.from([0]), // no changed transform fields
+    packed(3), // prefab id
+    u32(0), // payload
+    u16(records.length),
+    records,
+    u32(syncPayload.length),
+    syncPayload,
+  ]));
+}
+
+/** Two layouts that share a controller at index 0 and a transform at index 2. */
+function spawnlessRecoveryMap(): FishNetRpcMap {
+  return {
+    buildFingerprint: "synthetic-spawnless",
+    metadataVersion: 31,
+    behaviours: [
+      {
+        typeName: "SyntheticSpawnlessController",
+        rpcs: [{
+          wireHash: 22,
+          packetKind: "serverRpc",
+          methodName: "SyntheticSendInputs",
+          parameters: [{ name: "value", typeName: "System.UInt16", codec: "uint16" }],
+        }],
+      },
+      {
+        typeName: "SyntheticSpawnlessTransform",
+        rpcs: [{
+          wireHash: 5,
+          packetKind: "serverRpc",
+          methodName: "SyntheticUpdateTransform",
+          parameters: [{ name: "value", typeName: "System.UInt16", codec: "uint16" }],
+        }],
+      },
+    ],
+    broadcasts: [],
+    prefabs: [
+      { collectionId: 0, prefabId: 1, prefabName: "SyntheticSpawnlessClone", components: [
+        { index: 0, typeName: "SyntheticSpawnlessController" },
+        { index: 2, typeName: "SyntheticSpawnlessTransform" },
+      ] },
+      { collectionId: 0, prefabId: 4, prefabName: "SyntheticSpawnlessUnit", components: [
+        { index: 0, typeName: "SyntheticSpawnlessController" },
+        { index: 2, typeName: "SyntheticSpawnlessTransform" },
+      ] },
+    ],
+  };
+}
+
+function twoSyncVarMap(): FishNetRpcMap {
+  return {
+    buildFingerprint: "synthetic-two-sync",
+    metadataVersion: 31,
+    behaviours: [{
+      typeName: "SyntheticContainer",
+      // One RPC so a spawn's link registration can bind the behaviour, which is what selects the
+      // SyncType definitions below.
+      rpcs: [{ wireHash: 0x4321, packetKind: "observersRpc", methodName: "SyntheticContainerNotice" }],
+      syncTypes: [
+        {
+          index: 0,
+          name: "Dto",
+          typeName: "SyntheticDto",
+          fields: [
+            { name: "Label", typeName: "System.String", codec: "stringUtf8Packed" },
+            { name: "Weight", typeName: "System.Single", codec: "float32" },
+          ],
+        },
+        {
+          index: 1,
+          name: "Lock",
+          typeName: "SyntheticLock",
+          fields: [{ name: "PartyId", typeName: "System.Int32", codec: "packedInt32" }],
+        },
+      ],
+    }],
+    broadcasts: [],
+  };
+}
+
+function syntheticString(value: string): Buffer {
+  const bytes = Buffer.from(value, "utf8");
+  return Buffer.concat([packed(bytes.length), bytes]);
+}
+
 function semanticMap(): FishNetRpcMap {
   return {
     buildFingerprint: "synthetic-build-v2",
@@ -588,6 +711,164 @@ describe("FishNet bundles and sessions", () => {
     // guesses when there is nothing to eliminate against.
     const unrelated = decoder.decode(tick(44, fixedServerRpc(61, 3, 1)), context);
     expect(unrelated[0]).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
+  });
+
+
+  describe("spawn transform", () => {
+    test("reports the position and scale a spawn was placed at", () => {
+      const [packet] = decodeFishNetBundle(
+        tick(4, spawnWithTransform(21, [12.5, -3.25, 100.75], [2, 2, 2])),
+        { reliable: true },
+      );
+
+      expect(packet).toMatchObject({
+        packetName: "objectSpawn",
+        objectId: 21,
+        spawnLocalPosition: [12.5, -3.25, 100.75],
+        spawnLocalScale: [2, 2, 2],
+      });
+    });
+
+    test("omits transform fields the spawn flags say are absent", () => {
+      const [packet] = decodeFishNetBundle(tick(4, spawnWithTransform(22, undefined, undefined)), { reliable: true });
+
+      expect(packet?.packetName).toBe("objectSpawn");
+      expect(packet?.spawnLocalPosition).toBeUndefined();
+      expect(packet?.spawnLocalRotation).toBeUndefined();
+      expect(packet?.spawnLocalScale).toBeUndefined();
+    });
+  });
+
+  describe("SyncTypes bundled into one body", () => {
+    test("decodes every entry concatenated into a single payload", () => {
+      const decoder = new FishNetSessionDecoder(twoSyncVarMap());
+      const body = Buffer.concat([
+        Buffer.from([1]), // Lock
+        packed(88),
+        Buffer.from([0]), // Dto
+        syntheticString("Relic"),
+        f32(1.5),
+      ]);
+      const results = decoder.decode(tick(30, Buffer.concat([
+        spawnWithLink(9, 0, 901, 0x4321),
+        message(7, Buffer.concat([packed(9), Buffer.from([1, 0]), u32(body.length), body])),
+      ])), { reliable: true, connectionId: "two-sync" });
+
+      const sync = results.find((packet) => packet.packetName === "syncType");
+      expect(sync).toMatchObject({ syncIndex: 1, syncName: "Lock" });
+      expect(sync?.syncEntries).toMatchObject([
+        { index: 1, name: "Lock" },
+        { index: 0, name: "Dto" },
+      ]);
+      expect(sync?.decodedFields).toMatchObject([
+        { name: "PartyId", value: 88 },
+        { name: "Label", value: "Relic" },
+        { name: "Weight", value: 1.5 },
+      ]);
+      expect(sync?.undecodedPayload).toBeUndefined();
+    });
+
+    test("keeps trailing bytes undecoded rather than guessing the next boundary", () => {
+      const decoder = new FishNetSessionDecoder(twoSyncVarMap());
+      const body = Buffer.concat([
+        Buffer.from([1]), // Lock
+        packed(4),
+        Buffer.from([9]), // no SyncType has index 9
+        Buffer.from("dead", "hex"),
+      ]);
+      const results = decoder.decode(tick(31, Buffer.concat([
+        spawnWithLink(9, 0, 902, 0x4321),
+        message(7, Buffer.concat([packed(9), Buffer.from([1, 0]), u32(body.length), body])),
+      ])), { reliable: true, connectionId: "two-sync-partial" });
+
+      const sync = results.find((packet) => packet.packetName === "syncType");
+      expect(sync?.syncEntries).toMatchObject([{ index: 1, name: "Lock" }]);
+      expect(sync?.decodedFields).toMatchObject([{ name: "PartyId", value: 4 }]);
+      expect(sync?.undecodedPayload).toEqual(Buffer.from("09dead", "hex"));
+    });
+  });
+
+
+  describe("SyncTypes carried inside an ObjectSpawn", () => {
+    test("walks each component's run of SyncTypes", () => {
+      const decoder = new FishNetSessionDecoder(twoSyncVarMap());
+      // componentIndex 0, two SyncTypes: Lock then Dto.
+      const syncPayload = Buffer.concat([
+        Buffer.from([0, 2]),
+        Buffer.from([1]),
+        packed(88),
+        Buffer.from([0]),
+        syntheticString("Relic"),
+        f32(1.5),
+      ]);
+      const [packet] = decoder.decode(
+        tick(40, spawnWithSyncPayload(11, 0, syncPayload)),
+        { reliable: true, connectionId: "spawn-sync" },
+      );
+
+      expect(packet?.spawnSyncEntries).toMatchObject([
+        { componentIndex: 0, index: 1, name: "Lock", networkBehaviourType: "SyntheticContainer" },
+        { componentIndex: 0, index: 0, name: "Dto" },
+      ]);
+      expect(packet?.spawnSyncEntries?.[1]?.fields).toMatchObject([
+        { name: "Label", value: "Relic" },
+        { name: "Weight", value: 1.5 },
+      ]);
+    });
+
+    test("stops at a component whose behaviour is unknown rather than guessing its width", () => {
+      const decoder = new FishNetSessionDecoder(twoSyncVarMap());
+      const syncPayload = Buffer.concat([
+        Buffer.from([0, 1]),
+        Buffer.from([1]),
+        packed(7),
+        // Component 4 has no binding, so its values cannot be sized.
+        Buffer.from([4, 1]),
+        Buffer.from([0]),
+        Buffer.from("cafe", "hex"),
+      ]);
+      const [packet] = decoder.decode(
+        tick(41, spawnWithSyncPayload(12, 0, syncPayload)),
+        { reliable: true, connectionId: "spawn-sync-partial" },
+      );
+
+      expect(packet?.spawnSyncEntries).toMatchObject([{ componentIndex: 0, index: 1, name: "Lock" }]);
+    });
+  });
+
+
+  describe("recovering components for an object whose spawn was never captured", () => {
+    test("binds a component every layout consistent with the object's known bindings agrees on", () => {
+      const decoder = new FishNetSessionDecoder(spawnlessRecoveryMap());
+      // No spawn is ever decoded for object 60. Its controller resolves on its own wire hash, and
+      // that binding is what narrows the layouts the transform is then recovered from.
+      const results = decoder.decode(tick(50, Buffer.concat([
+        fixedServerRpc(60, 0, 22, u16(3)),
+        fixedServerRpc(60, 2, 5, u16(9)),
+      ])), { reliable: true, connectionId: "spawnless" });
+
+      expect(results[0]).toMatchObject({
+        networkBehaviourType: "SyntheticSpawnlessController",
+        rpcName: "SyntheticSendInputs",
+      });
+      expect(results[1]).toMatchObject({
+        networkBehaviourType: "SyntheticSpawnlessTransform",
+        rpcName: "SyntheticUpdateTransform",
+        rpcResolution: "verified",
+      });
+    });
+
+    test("leaves the component unresolved while the object has nothing bound to narrow from", () => {
+      const decoder = new FishNetSessionDecoder(spawnlessRecoveryMap());
+      const [packet] = decoder.decode(
+        tick(51, fixedServerRpc(61, 2, 5, u16(9))),
+        { reliable: true, connectionId: "spawnless-cold" },
+      );
+
+      // Resolution here can only come from the wire hash, never from an unnarrowed layout guess.
+      expect(packet?.networkBehaviourIndex).toBe(2);
+      expect(packet?.objectId).toBe(61);
+    });
   });
 
   describe("link table quarantine across re-authentication", () => {

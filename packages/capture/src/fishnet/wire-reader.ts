@@ -66,3 +66,12 @@ export function readNetworkBehaviourHeader(buffer: Buffer, start: number): Netwo
     nextOffset: reference.nextOffset + 1,
   };
 }
+
+/** Reads `count` consecutive little-endian float32 values, as Unity serializes Vector3 and Quaternion. */
+export function readFloatVector(buffer: Buffer, start: number, count: number): { value: number[]; nextOffset: number } {
+  requireBytes(buffer, start, count * 4, "float vector");
+  return {
+    value: Array.from({ length: count }, (_, index) => buffer.readFloatLE(start + (index * 4))),
+    nextOffset: start + (count * 4),
+  };
+}

@@ -81,6 +81,24 @@ RPC hash. Reliable packets also carry a packed payload length, which makes a
 bundle boundary explicit. The `reliable` option must match the LiteNetLib
 property: channeled packets are reliable; unreliable packets are not.
 
+An ObjectSpawn's transform header is read rather than skipped. Its position and scale are three
+little-endian `float32` values each, exposed as `spawnLocalPosition` and `spawnLocalScale`. Rotation
+is exposed as `spawnLocalRotation` only in the uncompressed 16-byte quaternion form; the 4- and
+8-byte packings are traversed to find the following fields but left undecoded.
+
+A SyncType body can carry several SyncTypes in sequence, each an index byte followed by its value.
+Every entry whose layout is known is decoded, and they appear in wire order as `syncEntries` with
+their fields concatenated into `decodedFields`. The walk stops at the first entry that cannot be
+resolved or does not decode cleanly, leaving the remainder as `undecodedPayload` rather than
+guessing where the next boundary is. `syncIndex` and `syncName` continue to describe the first
+entry.
+
+An ObjectSpawn carries its own initial SyncTypes, decoded as `spawnSyncEntries`. That body is framed
+differently from a standalone SyncType packet, whose header already names one component: a spawn
+covers several, so each run is a component index, a count, and then that many index-prefixed values.
+A component whose behaviour is unknown ends the walk, because its values cannot be sized and the
+next component's boundary is therefore unknowable.
+
 `FishNetSessionDecoder` keeps state per `connectionId`:
 
 - Object spawns register component types and RPC Link entries. Instantiated
@@ -119,6 +137,15 @@ Resolution is deliberately conservative:
   with that spawn's RPC Link registrations rejects recovery. Wire registrations
   always win.
 - A fixed RPC can infer a behaviour only when the map yields one candidate.
+- A component on an object whose spawn was never captured may be recovered from
+  the prefab layouts, but only where the object's own already-verified bindings
+  narrow the candidates and every survivor names the same type for that index.
+  Recovery needs at least one verified binding to narrow from, every surviving
+  layout must define the wanted index, and they must agree; a layout that
+  contradicts a known binding is discarded, and one that leaves the index blank
+  abandons the attempt. This is what makes a capture that attaches mid-session
+  usable: nothing registers the local player's layout, so without it every
+  packet on its other components stays unresolved for the whole session.
 - Ambiguous or unknown links stay numeric and expose `rpcResolution` rather
   than a guessed name.
 - `decodedFields` contain only fields whose exact codecs are known. The
@@ -177,6 +204,42 @@ transition. Its phase values correspond to the game enum (`none`, `accept`,
 `finished`; `active` is true for `accept`, `inRun`, and `ending`. This preserves
 the completed-but-not-yet-exited interval instead of reporting that the player
 has already left.
+
+## NetworkTransform updates
+
+`NetworkTransform`'s three movement RPCs — `TargetUpdateTransform`,
+`ObserversUpdateClientAuthoritativeTransform`, and `ServerUpdateTransform` — declare a bare
+`ArraySegment<byte>`, so the generated map cannot describe their contents. Their layout is fixed by
+FishNet rather than by the game build, so it is parsed directly and exposed as `networkTransform`.
+
+The segment is a packed length followed by one update:
+
+| Offset | Field |
+| --- | --- |
+| 0 | update flags `u8` |
+| then | position axes the flags select |
+| then | rotation, when flag `0x40` is set |
+| then | extension flags `u8`, when flag `0x80` is set |
+| then | scale axes the extension flags select |
+| then | parent NetworkBehaviour, when extension flag `0x40` is set |
+
+Each axis owns two flag bits — `0x01`/`0x02` for X, `0x04`/`0x08` for Y, `0x10`/`0x20` for Z. The
+first selects a signed 16-bit whole divided by 100; the second a full `float32`, which the sender
+uses when the scaled value would not fit. Neither bit means the axis was not resent and keeps its
+previous value, so an update is usually a partial position rather than a whole one. Positions are
+absolute, not deltas, so reading one needs no carried baseline.
+
+Rotation is a quaternion whose packing is a component setting rather than a wire field, so only its
+width is reported, as `rotationBytes`. Where no extension byte follows, the width is whatever the
+segment has left and is therefore exact; where one does, only a width that lands the rest of the
+entry precisely on its end is accepted, and an ambiguous fit is rejected.
+
+Exactly one update is read per payload. Bytes after the segment are retained as `undecodedPayload`:
+in the observed build they are further bundled messages that could not be split, not additional
+updates, and reading them as updates yields out-of-world coordinates.
+
+For turning these partial updates into whole positions, see
+[positions and ground loot](../positions.md).
 
 ## Output types and extension points
 
