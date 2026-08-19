@@ -1,5 +1,33 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.2.0
+
+### Minor Changes
+
+- 74908b7: Add `FishNetLootDropTracker`, which tracks items on the ground from the spawn that places them to
+  the despawn that removes them: world position from the spawn transform, and name, sprite, rarity,
+  type and party lock from the `LootDrop` SyncVars.
+
+  Drops whose SyncVars arrive inside their spawn packet are named at spawn time; a follow-up SyncType
+  packet is not guaranteed and some drops never send one.
+
+  A despawn carries only an object id, so a removed drop is reported as gone rather than as picked up
+  by anyone.
+
+### Patch Changes
+
+- 74908b7: Clear tracked positions and open loot drops on `authenticated` and `disconnect`.
+
+  Object ids are scoped to one connection, so state carried across a session boundary would place
+  objects using another connection's ids. This matches the reset the other trackers already perform.
+
+- Updated dependencies [74908b7]
+- Updated dependencies [74908b7]
+- Updated dependencies [74908b7]
+- Updated dependencies [74908b7]
+  - @kar-mi/spirit-vale-tools-capture@1.6.0
+  - @kar-mi/spirit-vale-tools-combat@3.2.0
+
 ## 1.1.3
 
 ### Patch Changes
