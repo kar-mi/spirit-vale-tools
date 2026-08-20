@@ -4,6 +4,7 @@ import {
   STARTING_RPC_LINK_ID,
 } from "./protocol.ts";
 import type { RpcLinkRegistrationState } from "./protocol.ts";
+import { decodeQuaternion } from "./quaternion-compression.ts";
 import { bindBehaviourTypes, bindPrefabBehaviourTypes } from "./rpc-resolution.ts";
 import { checkedEnd, readFloatVector, readNetworkObjectReference, readSignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type { FishNetRpcMap } from "./types.ts";
@@ -24,10 +25,7 @@ export interface SpawnCandidate {
   syncPayload: Buffer;
   /** Spawn-time local position, present only when the spawn carries the position flag. */
   localPosition?: readonly [number, number, number];
-  /**
-   * Spawn-time local rotation as `[x, y, z, w]`. Only the uncompressed 16-byte quaternion form is
-   * decoded; the 4- and 8-byte packings stay absent rather than guessed.
-   */
+  /** Spawn-time local rotation as `[x, y, z, w]`, decoded from whichever quaternion packing the spawn carried. */
   localRotation?: readonly [number, number, number, number];
   /** Spawn-time local scale, present only when the spawn carries the scale flag. */
   localScale?: readonly [number, number, number];
@@ -81,11 +79,9 @@ export function parseObjectSpawn(
     const candidates: SpawnCandidate[] = [];
     for (const rotationBytes of rotations) {
       try {
-        // Only the 16-byte form is four float32s. The 4- and 8-byte packings are compressed
-        // quaternions whose exact layout is unverified here, so they stay undecoded.
-        const localRotation = rotationBytes === 16
-          ? readFloatVector(buffer, offset, 4).value as [number, number, number, number]
-          : undefined;
+        const localRotation = rotationBytes === 0
+          ? undefined
+          : decodeQuaternion(buffer, offset, rotationBytes as 4 | 8 | 16);
         let candidateOffset = checkedEnd(buffer, offset, rotationBytes);
         let localScale: readonly [number, number, number] | undefined;
         if ((transformFlags & 0x04) !== 0) {

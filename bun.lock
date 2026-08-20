@@ -12,21 +12,22 @@
     },
     "packages/capture": {
       "name": "@kar-mi/spirit-vale-tools-capture",
-      "version": "1.3.1",
+      "version": "1.6.0",
     },
     "packages/character": {
       "name": "@kar-mi/spirit-vale-tools-character",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-capture": "^0.2.1",
-        "@kar-mi/spirit-vale-tools-items": "^0.1.3",
-        "@kar-mi/spirit-vale-tools-skills": "^0.1.3",
+        "@kar-mi/spirit-vale-tools-capture": "^1.0.0",
+        "@kar-mi/spirit-vale-tools-items": "^0.1.6",
+        "@kar-mi/spirit-vale-tools-skills": "^0.2.0",
       },
     },
     "packages/cli": {
       "name": "@spiritvale/cli",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "workspace:*",
+        "@kar-mi/spirit-vale-tools-character": "workspace:*",
         "@kar-mi/spirit-vale-tools-combat": "workspace:*",
         "@kar-mi/spirit-vale-tools-logging": "workspace:*",
         "@kar-mi/spirit-vale-tools-rewards": "workspace:*",
@@ -34,26 +35,26 @@
     },
     "packages/combat": {
       "name": "@kar-mi/spirit-vale-tools-combat",
-      "version": "2.2.2",
+      "version": "3.2.0",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-capture": "^1.2.0",
-        "@kar-mi/spirit-vale-tools-logging": "^0.7.0",
+        "@kar-mi/spirit-vale-tools-capture": "^1.6.0",
+        "@kar-mi/spirit-vale-tools-logging": "^0.8.0",
         "@kar-mi/spirit-vale-tools-metrics": "^0.2.0",
         "@kar-mi/spirit-vale-tools-skills": "^0.2.0",
-        "@kar-mi/spirit-vale-tools-sqlite": "^0.1.4",
+        "@kar-mi/spirit-vale-tools-sqlite": "^0.1.5",
         "@kar-mi/spirit-vale-tools-statuses": "^0.2.2",
       },
     },
     "packages/items": {
       "name": "@kar-mi/spirit-vale-tools-items",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "dependencies": {
         "@kar-mi/spirit-vale-tools-capture": "^1.0.0",
       },
     },
     "packages/logging": {
       "name": "@kar-mi/spirit-vale-tools-logging",
-      "version": "0.7.0",
+      "version": "0.8.0",
     },
     "packages/metrics": {
       "name": "@kar-mi/spirit-vale-tools-metrics",
@@ -61,13 +62,13 @@
     },
     "packages/rewards": {
       "name": "@kar-mi/spirit-vale-tools-rewards",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-capture": "^1.1.0",
-        "@kar-mi/spirit-vale-tools-combat": "^2.2.2",
+        "@kar-mi/spirit-vale-tools-capture": "^1.6.0",
+        "@kar-mi/spirit-vale-tools-combat": "^3.2.0",
         "@kar-mi/spirit-vale-tools-items": "^0.1.5",
-        "@kar-mi/spirit-vale-tools-logging": "^0.7.0",
-        "@kar-mi/spirit-vale-tools-sqlite": "^0.1.4",
+        "@kar-mi/spirit-vale-tools-logging": "^0.8.0",
+        "@kar-mi/spirit-vale-tools-sqlite": "^0.1.5",
       },
     },
     "packages/skills": {
@@ -79,9 +80,9 @@
     },
     "packages/sqlite": {
       "name": "@kar-mi/spirit-vale-tools-sqlite",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "dependencies": {
-        "@kar-mi/spirit-vale-tools-logging": "^0.7.0",
+        "@kar-mi/spirit-vale-tools-logging": "^0.8.0",
       },
     },
     "packages/statuses": {

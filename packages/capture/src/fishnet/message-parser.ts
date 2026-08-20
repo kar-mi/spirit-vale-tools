@@ -1,4 +1,5 @@
 import { applyDecodedFields, decodeFieldRun, tryDecodeFields } from "./field-decoder.ts";
+import { quaternionYaw } from "./quaternion-compression.ts";
 import {
   basePacket,
   classifyPacket,
@@ -94,7 +95,10 @@ export function parseMessage(
       packet.spawnSyncPayload = candidate.syncPayload;
       packet.spawnSyncEntries = decodeSpawnSyncTypes(candidate, options);
       if (candidate.localPosition) packet.spawnLocalPosition = candidate.localPosition;
-      if (candidate.localRotation) packet.spawnLocalRotation = candidate.localRotation;
+      if (candidate.localRotation) {
+        packet.spawnLocalRotation = candidate.localRotation;
+        packet.spawnHeading = quaternionYaw(candidate.localRotation);
+      }
       if (candidate.localScale) packet.spawnLocalScale = candidate.localScale;
       packet.rpcLinkRegistrations = candidate.registrations.map(([linkId, registration]) => ({ linkId, ...registration }));
       return {

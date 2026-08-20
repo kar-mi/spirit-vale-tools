@@ -17,8 +17,8 @@ function spawn(objectId: number, position: readonly [number, number, number]) {
   return packet({ packetName: "objectSpawn", objectId, spawnLocalPosition: position });
 }
 
-function move(objectId: number, axes: { x?: number; y?: number; z?: number }) {
-  return packet({ objectId, networkTransform: { position: axes, consumed: 0 } });
+function move(objectId: number, axes: { x?: number; y?: number; z?: number }, heading?: number) {
+  return packet({ objectId, networkTransform: { position: axes, heading, consumed: 0 } });
 }
 
 describe("FishNetPositionTracker", () => {
@@ -54,6 +54,20 @@ describe("FishNetPositionTracker", () => {
 
     expect(tracker.self()).toEqual({ x: 1, y: 2, z: 3 });
     expect(tracker.consume(move(4, { x: 9 }))[0]?.self).toBe(false);
+  });
+
+  test("seeds a heading from the spawn rotation", () => {
+    const tracker = new FishNetPositionTracker();
+    expect(tracker.consume(packet({ packetName: "objectSpawn", objectId: 1, spawnLocalPosition: [10, 20, 30], spawnHeading: 1.5 })))
+      .toMatchObject([{ position: { x: 10, y: 20, z: 30, heading: 1.5 } }]);
+  });
+
+  test("carries the last known heading forward across an update that omits rotation", () => {
+    const tracker = new FishNetPositionTracker();
+    tracker.consume(spawn(1, [10, 20, 30]));
+    tracker.consume(move(1, { x: 11 }, 0.5));
+
+    expect(tracker.consume(move(1, { x: 12 }))).toMatchObject([{ position: { x: 12, heading: 0.5 } }]);
   });
 
   test("forgets an object once it despawns", () => {

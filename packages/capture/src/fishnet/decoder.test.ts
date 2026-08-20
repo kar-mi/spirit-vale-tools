@@ -157,8 +157,9 @@ function spawnWithTransform(
   scale: readonly [number, number, number] | undefined,
   prefabId = 3,
   collectionId = 1,
+  rotation?: Buffer,
 ): Buffer {
-  const transformFlags = (position ? 0x01 : 0) | (scale ? 0x04 : 0);
+  const transformFlags = (position ? 0x01 : 0) | (rotation ? 0x02 : 0) | (scale ? 0x04 : 0);
   return message(3, Buffer.concat([
     Buffer.from([4]), // instantiated spawn
     packed(objectId),
@@ -167,6 +168,7 @@ function spawnWithTransform(
     packed(-1), // no owner
     Buffer.from([transformFlags]),
     ...(position ? position.map(f32) : []),
+    ...(rotation ? [rotation] : []),
     ...(scale ? scale.map(f32) : []),
     packed(prefabId),
     u32(0), // payload
@@ -727,6 +729,19 @@ describe("FishNet bundles and sessions", () => {
         spawnLocalPosition: [12.5, -3.25, 100.75],
         spawnLocalScale: [2, 2, 2],
       });
+    });
+
+    test("decodes an uncompressed 16-byte spawn rotation and its heading", () => {
+      // 90 degree yaw: [x, y, z, w] = [0, sin(45deg), 0, cos(45deg)].
+      const rotation = Buffer.concat([0, Math.SQRT1_2, 0, Math.SQRT1_2].map(f32));
+      const [packet] = decodeFishNetBundle(
+        tick(4, spawnWithTransform(23, [1, 2, 3], undefined, 3, 1, rotation)),
+        { reliable: true },
+      );
+
+      expect(packet?.spawnLocalRotation?.[1]).toBeCloseTo(Math.SQRT1_2, 5);
+      expect(packet?.spawnLocalRotation?.[3]).toBeCloseTo(Math.SQRT1_2, 5);
+      expect(packet?.spawnHeading! * (180 / Math.PI)).toBeCloseTo(90, 3);
     });
 
     test("omits transform fields the spawn flags say are absent", () => {

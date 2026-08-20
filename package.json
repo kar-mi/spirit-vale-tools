@@ -10,6 +10,7 @@
     "capture:dump": "bun run packages/cli/src/dump.ts",
     "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-only",
     "combat:replay": "bun run packages/cli/src/combat.ts",
+    "direction:debug": "bun run packages/cli/src/direction-debug.ts",
     "release:packages": "bun run build:packages && changeset publish",
     "rewards": "bun run packages/cli/src/rewards.ts",
     "check": "bun run typecheck && bun test",

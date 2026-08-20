@@ -63,6 +63,16 @@ describe("decodeNetworkTransformData", () => {
     expect(update?.rotationBytes).toBe(4);
   });
 
+  test("decodes a 16-byte rotation and its heading", () => {
+    // 90 degree yaw: [x, y, z, w] = [0, sin(45deg), 0, cos(45deg)].
+    const rotation = Buffer.concat([0, Math.SQRT1_2, 0, Math.SQRT1_2].map(f32));
+    const update = decodeNetworkTransformData(segment(Buffer.from([0x41]), i16(500), rotation));
+
+    expect(update?.rotationBytes).toBe(16);
+    expect(update?.rotation?.[1]).toBeCloseTo(Math.SQRT1_2, 5);
+    expect(update?.heading! * (180 / Math.PI)).toBeCloseTo(90, 3);
+  });
+
   test("rejects a rotation whose remaining width is not a packing this build uses", () => {
     expect(decodeNetworkTransformData(segment(Buffer.from([0x41]), i16(500), Buffer.from("aabbcc", "hex")))).toBeUndefined();
   });

@@ -5,6 +5,8 @@ export interface FishNetPosition {
   x: number;
   y: number;
   z: number;
+  /** Yaw (radians, about the world up axis) the object was last known to be facing. */
+  heading?: number;
 }
 
 export interface FishNetPositionEvent {
@@ -80,7 +82,8 @@ export class FishNetPositionTracker {
     if (packet.packetName === "objectSpawn") {
       const spawn = packet.spawnLocalPosition;
       if (!spawn) return [];
-      const position = { x: spawn[0], y: spawn[1], z: spawn[2] };
+      const position: FishNetPosition = { x: spawn[0], y: spawn[1], z: spawn[2] };
+      if (packet.spawnHeading !== undefined) position.heading = packet.spawnHeading;
       this.positions.set(packet.objectId, position);
       return [this.event(packet, packet.objectId, position)];
     }
@@ -94,7 +97,12 @@ export class FishNetPositionTracker {
     };
     // A partial update with no baseline is not a position yet; wait rather than report a hole as 0.
     if (next.x === undefined || next.y === undefined || next.z === undefined) return [];
-    const position = { x: next.x, y: next.y, z: next.z };
+    const position: FishNetPosition = { x: next.x, y: next.y, z: next.z };
+    // Rotation resends the same way position axes do: an update without one means unchanged, so
+    // the last-known heading carries forward. Unlike position axes this never blocks the event —
+    // an object with no heading yet is still a valid position.
+    const heading = update.heading ?? previous?.heading;
+    if (heading !== undefined) position.heading = heading;
     this.positions.set(packet.objectId, position);
     return [this.event(packet, packet.objectId, position)];
   }

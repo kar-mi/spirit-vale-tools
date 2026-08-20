@@ -1,3 +1,4 @@
+import { decodeQuaternion, quaternionYaw, type Quaternion } from "./quaternion-compression.ts";
 import { readSignedPackedWhole } from "./wire-reader.ts";
 
 /**
@@ -35,9 +36,13 @@ export interface DecodedNetworkTransform {
   scale?: NetworkTransformAxes;
   /**
    * Width in bytes of the rotation the update carried, when it carried one. The quaternion packing
-   * is a component setting rather than a wire field, so the rotation itself is left undecoded.
+   * is a component setting rather than a wire field, so this is read off the update itself.
    */
   rotationBytes?: number;
+  /** The rotation as `[x, y, z, w]`, decoded from whichever packing `rotationBytes` names. */
+  rotation?: Quaternion;
+  /** Yaw (radians, about the world up axis) derived from {@link rotation}. */
+  heading?: number;
   /** True when the update also carried a parent NetworkBehaviour reference, which is not decoded. */
   reparented?: boolean;
   /** Bytes consumed from the start of the payload, including the segment's length prefix. */
@@ -78,21 +83,21 @@ function decodeEntry(payload: Buffer, start: number, end: number): Omit<DecodedN
   const position = read.axes;
   offset = read.nextOffset;
 
-  const rotation = (flags & FLAG_ROTATION) !== 0;
+  const hasRotation = (flags & FLAG_ROTATION) !== 0;
   const extended = (flags & FLAG_EXTENDED) !== 0;
 
   // Without the extension byte the rotation is whatever is left, so its packing is known exactly.
   // With one, the rotation width has to be chosen, and only a width that lands the rest of the
   // entry precisely on its end is accepted.
   if (!extended) {
-    if (!rotation) return offset === end ? { position } : undefined;
+    if (!hasRotation) return offset === end ? { position } : undefined;
     const rotationBytes = end - offset;
     if (!isRotationWidth(rotationBytes)) return undefined;
-    return { position, rotationBytes };
+    return { position, ...decodeRotationFields(payload, offset, rotationBytes) };
   }
 
   const candidates: Array<Omit<DecodedNetworkTransform, "consumed">> = [];
-  for (const rotationBytes of rotation ? ROTATION_WIDTHS : [0]) {
+  for (const rotationBytes of hasRotation ? ROTATION_WIDTHS : [0]) {
     const extensionStart = offset + rotationBytes;
     if (extensionStart >= end) continue;
     const extension = decodeExtension(payload, extensionStart, end);
@@ -100,7 +105,7 @@ function decodeEntry(payload: Buffer, start: number, end: number): Omit<DecodedN
     candidates.push({
       position,
       ...(extension.scale ? { scale: extension.scale } : {}),
-      ...(rotationBytes > 0 ? { rotationBytes } : {}),
+      ...(rotationBytes > 0 ? decodeRotationFields(payload, offset, rotationBytes) : {}),
       ...(extension.reparented ? { reparented: true } : {}),
     });
   }
@@ -159,6 +164,18 @@ function hasAxis(axes: NetworkTransformAxes): boolean {
 
 function isRotationWidth(value: number): boolean {
   return (ROTATION_WIDTHS as readonly number[]).includes(value);
+}
+
+/** Decodes the rotation at `offset`, if its width is one this build understands. */
+function decodeRotationFields(
+  payload: Buffer,
+  offset: number,
+  rotationBytes: number,
+): Pick<DecodedNetworkTransform, "rotationBytes" | "rotation" | "heading"> {
+  if (!isRotationWidth(rotationBytes)) return { rotationBytes };
+  const rotationValue = decodeQuaternion(payload, offset, rotationBytes as 4 | 8 | 16);
+  if (!rotationValue) return { rotationBytes };
+  return { rotationBytes, rotation: rotationValue, heading: quaternionYaw(rotationValue) };
 }
 
 /** RPCs whose single `ArraySegment<byte>` parameter carries a NetworkTransform update. */

@@ -108,11 +108,10 @@ export interface DecodedFishNetPacket {
   spawnSyncEntries?: FishNetSpawnSyncEntry[];
   /** World position the object spawned at, when the spawn carries the position flag. */
   spawnLocalPosition?: readonly [number, number, number];
-  /**
-   * Spawn rotation as `[x, y, z, w]`, only for the uncompressed 16-byte quaternion form. The 4- and
-   * 8-byte packings stay absent rather than guessed.
-   */
+  /** Spawn rotation as `[x, y, z, w]`, decoded from whichever quaternion packing the spawn carried. */
   spawnLocalRotation?: readonly [number, number, number, number];
+  /** Yaw (radians, about the world up axis) derived from {@link spawnLocalRotation}. */
+  spawnHeading?: number;
   /** Spawn scale, when the spawn carries the scale flag. */
   spawnLocalScale?: readonly [number, number, number];
   rpcLinkRegistrations?: FishNetRpcLinkRegistration[];
