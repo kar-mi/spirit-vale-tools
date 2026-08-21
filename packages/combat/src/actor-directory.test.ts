@@ -665,7 +665,10 @@ function encodeCharacterDataField(field: FishNetRpcParameter, value: string | nu
     const elements = Array.isArray(value) ? value : [];
     return Buffer.concat([packed(elements.length), ...elements.map((element) => encodeCharacterDataLeaf(field, element))]);
   }
-  if (field.codec) return encodeCharacterDataLeaf(field, value ?? (field.codec === "stringUtf8Packed" ? "" : 0));
+  if (field.codec) {
+    const leaf = typeof value === "string" || typeof value === "number" ? value : undefined;
+    return encodeCharacterDataLeaf(field, leaf ?? (field.codec === "stringUtf8Packed" ? "" : 0));
+  }
   if (field.nullable) return Buffer.from([1]); // null flag: this test helper never populates nested structs
   if (field.fields) return Buffer.concat(field.fields.map((nested) => encodeCharacterDataField(nested, undefined)));
   throw new Error(`don't know how to encode CharacterData field "${field.name}" (${field.typeName ?? "unknown type"})`);
