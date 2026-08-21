@@ -88,7 +88,7 @@ describe("bundled FishNet maps", () => {
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.behaviours).toHaveLength(14);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(331);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(332);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -272,10 +272,32 @@ describe("bundled FishNet maps", () => {
     expect(death?.parameters?.[0]?.fields).toEqual(applyDamage?.parameters?.[0]?.fields);
   });
 
+  /**
+   * A minimal but wire-valid `CharacterData` payload: every string/list/dict absent (-1) or
+   * empty, every nested struct null, every int 0. `Inspect_T`'s `data` parameter is not itself
+   * nullable (no leading null-flag byte - see `character-data-schema.ts`), so a resolution test
+   * needs a payload that actually round-trips through it - arbitrary bytes no longer pass the
+   * content cross-check that `signatureAdmitsPayload` performs once a shape exists.
+   */
+  function emptyCharacterData(): Buffer {
+    const absent = packed(-1); // null string / -1 list-or-dict count
+    const zero = packed(0);
+    const nullStruct = Buffer.from([1]); // FishNet's null flag: 1 = null
+    return Buffer.concat([
+      absent, absent, absent, zero, absent, absent, absent, // uid..name
+      nullStruct, nullStruct, absent, absent, absent, absent, absent, // appearance..archetypes
+      zero, zero, zero, zero, // level..jobExp
+      nullStruct, absent, absent, zero, absent, absent, absent, absent, // state..artifacts
+      nullStruct, absent, nullStruct, // skills, grimoires, inventory
+      zero, zero, zero, zero, zero, // lastLogin..deaths
+      absent, absent, absent, // waypointsUnlocked..waystoneMapId
+      zero, zero, // created, updated
+    ]);
+  }
+
   test("names PlayerController RPCs from prefab metadata when a spawn omits RPC Links", () => {
     // FishNet registers RPC-link ids per connection at spawn, so a capture that joins mid-session
-    // never sees them. The player prefab layout is what recovers the binding — without it the
-    // inspect reply is an anonymous multi-KB targetRpc and only a shape guess could claim it.
+    // never sees them. The player prefab layout is what recovers the binding.
     const map = loadBundledFishNetRpcMap();
     const inspect = map.behaviours
       .find(({ typeName }) => typeName === "PlayerController")?.rpcs
@@ -285,7 +307,7 @@ describe("bundled FishNet maps", () => {
     const decoder = new FishNetSessionDecoder(map);
     const results = decoder.decode(tick(1, Buffer.concat([
       spawnWithoutLinks(12, 0, 4),
-      targetRpc(12, 0, inspect?.wireHash ?? -1, Buffer.alloc(4878, 7)),
+      targetRpc(12, 0, inspect?.wireHash ?? -1, emptyCharacterData()),
     ])), { reliable: true, connectionId: "prefab-inspect" });
 
     expect(results[1]).toMatchObject({

@@ -1,5 +1,5 @@
-import type { DecodedFishNetPacket, FishNetDecodedValue } from "@kar-mi/spirit-vale-tools-capture";
-import { loadBundledFishNetRpcMap } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetRpcParameter } from "@kar-mi/spirit-vale-tools-capture";
+import { characterDataParameter, decodeFieldRun, loadBundledFishNetRpcMap } from "@kar-mi/spirit-vale-tools-capture";
 import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
 export interface FishNetActorIdentity {
@@ -572,30 +572,28 @@ const CHARACTER_RPC_NAMES = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Extracts the display name and UID from a CharacterData DTO.
- * [guild role or empty][display name]. CharacterCallback_T prefixes the DTO with a
- * packed update-type enum; LoadCharacter_T carries the DTO directly, so both offsets
- * are attempted and every field is validated before the name is trusted.
+ * `CharacterData.uid`/`.name`, decoded through the same shared, verified field schema the
+ * `character` package's full decoder uses (`CHARACTER_DATA_FIELDS`) - trimmed to a schema PREFIX
+ * ending right after `name`, since everything this needs is positioned before the expensive
+ * equipment/artifact/skill sections. One shared schema source means a future DTO field change
+ * (like the `AppliedWriteIds` insertion that broke this function's old hand-rolled, two-offset
+ * byte reader) is fixed here for free, rather than needing a second, independently-drifting fix.
+ * CharacterCallback_T prefixes the DTO with a packed update-type enum; LoadCharacter_T carries
+ * the DTO directly, so both offsets are attempted and every field is validated before the name
+ * is trusted.
  */
 function decodeCharacterDataName(payload: Buffer): { displayName: string; uid: string } | undefined {
   for (const skipEnum of [true, false]) {
     try {
       let offset = 0;
       if (skipEnum) offset = readSignedPackedWhole(payload, offset).nextOffset;
-      // Every cap below is a *byte* count, and must match the authoritative DTO reader in
-      // @kar-mi/spirit-vale-tools-character. Sizing them as if they were character counts
-      // silently rejects non-Latin names: Hangul and CJK are three bytes per character, so a
-      // 32-byte name cap truncates identity at ten characters.
-      const lead = readCharacterString(payload, offset, 80);
-      const uid = readCharacterString(payload, lead.nextOffset, 80);
-      if (!GUID_PATTERN.test(uid.value)) continue;
-      const account = readCharacterString(payload, uid.nextOffset, 80);
-      const counter = readSignedPackedWhole(payload, account.nextOffset);
-      const guildId = readCharacterString(payload, counter.nextOffset, 80);
-      if (guildId.value.length > 0 && !GUID_PATTERN.test(guildId.value)) continue;
-      const role = readCharacterString(payload, guildId.nextOffset, 80);
-      const name = readCharacterString(payload, role.nextOffset, 64);
-      if (name.value.trim().length > 0) return { displayName: name.value, uid: uid.value };
+      const run = decodeFieldRun(payload, [characterNameParameter()], offset);
+      const values = new Map(run.fields.map((field) => [field.name, field.value]));
+      const uid = values.get("data.UID");
+      if (typeof uid !== "string" || !GUID_PATTERN.test(uid)) continue;
+      const name = values.get("data.Name");
+      if (typeof name !== "string" || !name.trim() || hasControlCharacters(name)) continue;
+      return { displayName: name, uid };
     } catch {
       // Fall through to the next candidate offset.
     }
@@ -603,15 +601,19 @@ function decodeCharacterDataName(payload: Buffer): { displayName: string; uid: s
   return undefined;
 }
 
-function readCharacterString(
-  payload: Buffer,
-  offset: number,
-  maximumLength: number,
-): { value: string; nextOffset: number } {
-  const length = readSignedPackedWhole(payload, offset);
-  if (length.value < 0 || length.value > maximumLength) throw new Error("implausible CharacterData string");
-  const nextOffset = checkedEnd(payload, length.nextOffset, length.value);
-  const value = new TextDecoder("utf-8", { fatal: true }).decode(payload.subarray(length.nextOffset, nextOffset));
-  if (hasControlCharacters(value)) throw new Error("CharacterData string contains control characters");
-  return { value, nextOffset };
+let cachedCharacterNameParameter: FishNetRpcParameter | undefined;
+
+/**
+ * The bundled `CharacterData` schema sliced to a wire-positional PREFIX ending right after
+ * `Name` - the fields between `Name` and the end (equipment, artifacts, skills, inventory, ...)
+ * are intentionally left undescribed, so `decodeFieldRun` naturally stops decoding once it runs
+ * out of parameters, without spending time on data this lookup never needs.
+ */
+function characterNameParameter(): FishNetRpcParameter {
+  if (cachedCharacterNameParameter) return cachedCharacterNameParameter;
+  const full = characterDataParameter();
+  const fields = full.fields ?? [];
+  const nameIndex = fields.findIndex((field) => field.name === "Name");
+  cachedCharacterNameParameter = { ...full, fields: fields.slice(0, nameIndex + 1) };
+  return cachedCharacterNameParameter;
 }

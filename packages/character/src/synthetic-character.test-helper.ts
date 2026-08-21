@@ -17,6 +17,8 @@ export interface SyntheticCharacterOptions {
   skills?: Array<{ id: string; level: number }>;
   /** `SkillSystemData.Assigned` — the action bar. Must never reach `snapshot.skills`. */
   assigned?: Array<{ id: string; level: number }>;
+  /** `CharacterData.AppliedWriteIds` — a build-later field inserted between `UID` and `AccountId`.*/
+  appliedWriteIds?: string[];
 }
 
 export function syntheticCharacter(
@@ -33,11 +35,13 @@ export function syntheticCharacter(
     grimoires = [],
     skills = [{ id: "Example Skill", level: 3 }],
     assigned = [],
+    appliedWriteIds = [],
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
   bool(out, false);
   string(out, "example-character-id");
+  list(out, appliedWriteIds, (value) => string(out, value));
   string(out, "example-account");
   packed(out, 7);
   string(out, ""); string(out, ""); string(out, characterName);
@@ -90,6 +94,10 @@ export function syntheticCharacter(
     packed(out, 0); string(out, "Fictional Hat"); bool(out, false);
   });
   packed(out, 0); packed(out, 3600); packed(out, 25); packed(out, 3); packed(out, 2);
+  list(out, [], () => undefined); // WaypointsUnlocked.
+  list(out, [], () => undefined); // NpcsSpokenTo.
+  string(out, ""); // WaystoneMapId.
+  packed(out, 0); packed(out, 0); // Created, Updated.
   return Buffer.from(out);
 }
 

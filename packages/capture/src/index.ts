@@ -12,6 +12,9 @@ export {
 } from "./fishnet/decoder.ts";
 export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
 export { findPrefab } from "./fishnet/rpc-resolution.ts";
+export { decodeFieldRun } from "./fishnet/field-decoder.ts";
+export type { FieldDecodeRun } from "./fishnet/field-decoder.ts";
+export { characterDataParameter } from "./fishnet/character-data-schema.ts";
 export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/network-transform-decoder.ts";
 export { resolveBundledMapName } from "./fishnet/map-definitions/index.ts";
 export { compact, count, warnings } from "./text-format.ts";

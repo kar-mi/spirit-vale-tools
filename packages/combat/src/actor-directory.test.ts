@@ -418,6 +418,33 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
+  test("still resolves the local player's name when AppliedWriteIds is non-empty", () => {
+    // AppliedWriteIds sits between UID and AccountId. A build that added this field silently
+    // desynced the old hand-rolled decoder whenever it carried entries — this is the direct
+    // regression case for that bug, this time through the combat package's own decode path.
+    const directory = new FishNetActorDirectory();
+    directory.consume(spawn(1, 71, 30, "PlayerController"));
+    const payload = Buffer.concat([
+      packed(2), packedString(""), packedString(syntheticUid),
+      Buffer.concat([packed(2), packedString("write-1"), packedString("write-2")]),
+      packedString("account-example"), packed(0),
+      packedString(""), packedString("member"), packedString("Fictional Hero"),
+    ]);
+    expect(directory.consume({
+      ...packet(2, "rpcLink", 71),
+      rpcName: "CharacterCallback_T",
+      payload,
+    })).toEqual([{
+      kind: "actorIdentity",
+      operation: "upsert",
+      tick: 2,
+      actorId: 71,
+      displayName: "Fictional Hero",
+      uid: syntheticUid,
+      ownerConnectionId: 30,
+    }]);
+  });
+
   test("names a delta spawn from the UID cache across a map change", () => {
     const directory = new FishNetActorDirectory();
     const fullSpawn = Buffer.concat([
@@ -602,7 +629,7 @@ describe("FishNetActorDirectory", () => {
       ...packet(2, "rpcLink", 40),
       rpcName: "CharacterCallback_T",
       payload: Buffer.concat([
-        packed(2), packedString(""), packedString(syntheticUid), packedString("account-example"), packed(0),
+        packed(2), packedString(""), packedString(syntheticUid), packed(0), packedString("account-example"), packed(0),
         packedString(""), packedString("길드마스터대리"), packedString(koreanName),
       ]),
     });
@@ -613,8 +640,11 @@ describe("FishNetActorDirectory", () => {
 });
 
 const syntheticUid = "00000000-0000-4000-8000-000000000001";
+// AppliedWriteIds (an empty List<string>, `packed(0)`) sits between UID and AccountId - a
+// build-later field insertion that broke the old hand-rolled reader when non-empty; see
+// decoder.ts's/character-data.ts's own regression coverage for that bug specifically.
 const characterCallbackPayload = Buffer.concat([
-  packed(2), packedString(""), packedString(syntheticUid), packedString("account-example"), packed(0),
+  packed(2), packedString(""), packedString(syntheticUid), packed(0), packedString("account-example"), packed(0),
   packedString(""), packedString("member"), packedString("Fictional Hero"),
 ]);
 

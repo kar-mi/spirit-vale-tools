@@ -35,7 +35,8 @@ export const playerSaveDebugRpcs = [
     "parameters": [
       {
         "name": "coins",
-        "typeName": "System.Int64"
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
       }
     ]
   },
@@ -51,6 +52,11 @@ export const playerSaveDebugRpcs = [
   },
   {
     "wireHash": 83,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_UnlockAllGrimoires"
+  },
+  {
+    "wireHash": 84,
     "packetKind": "targetRpc",
     "methodName": "PickupItems_T",
     "parameters": [
