@@ -39,7 +39,6 @@ export function syntheticCharacter(
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
-  bool(out, false);
   string(out, "example-character-id");
   list(out, appliedWriteIds, (value) => string(out, value));
   string(out, "example-account");
