@@ -13,7 +13,10 @@
  * Named scalar grants retain every granter because activation-based timer refreshes
  * need to identify each differently-named skill that grants ComboReady/CastReady.
  *
- * Run: `bun run packages/statuses/scripts/aggregate-durations.ts` from the repo root.
+ * Run: `bun run packages/statuses/scripts/aggregate-durations.ts <path/to/data-mine/data/json>`.
+ * That path is required - this script has no default and no assumption about where a
+ * data-mine-style export lives relative to this repo (that varies per machine/checkout and is
+ * not this repo's concern to hardcode).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -22,8 +25,17 @@ import type { FishNetStatusDefinition, FishNetStatusEffect } from "../src/catalo
 import { StatusDefinitions } from "../src/definitions/statuses.ts";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const DATA_MINE_JSON_DIR = path.resolve(SCRIPT_DIR, "../../../../spirit_vale_data_mine/data/json");
 const OUTPUT_FILE = path.resolve(SCRIPT_DIR, "../src/definitions/statuses.ts");
+
+function resolveDataMineJsonDir(): string {
+  const arg = process.argv[2];
+  if (!arg) {
+    throw new Error(
+      "Usage: bun run packages/statuses/scripts/aggregate-durations.ts <path/to/data-mine/data/json>",
+    );
+  }
+  return path.resolve(process.cwd(), arg);
+}
 
 interface DataMineStatusEffectRow {
   Id: string;
@@ -71,8 +83,8 @@ interface GrantTuple {
   count: number;
 }
 
-function loadJson<T>(fileName: string): T {
-  return JSON.parse(readFileSync(path.join(DATA_MINE_JSON_DIR, fileName), "utf8")) as T;
+function loadJson<T>(dataMineJsonDir: string, fileName: string): T {
+  return JSON.parse(readFileSync(path.join(dataMineJsonDir, fileName), "utf8")) as T;
 }
 
 function collectGrantRows(
@@ -185,8 +197,9 @@ function formatDefinition(definition: FishNetStatusDefinition): string {
 }
 
 function main(): void {
-  const skills = loadJson<DataMineEntry[]>("skills.json");
-  const statuses = loadJson<DataMineEntry[]>("statuses.json");
+  const dataMineJsonDir = resolveDataMineJsonDir();
+  const skills = loadJson<DataMineEntry[]>(dataMineJsonDir, "skills.json");
+  const statuses = loadJson<DataMineEntry[]>(dataMineJsonDir, "statuses.json");
 
   const grants = new Map<string, GrantTuple[]>();
   collectGrants(skills, grants);

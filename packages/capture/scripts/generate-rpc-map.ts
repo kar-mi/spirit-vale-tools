@@ -15,11 +15,10 @@
  * `FishNetPrefabDefinition` for `generated/prefabs.ts` - nothing about prefabs needs hand
  * maintenance either.
  *
- * Usage: `bun run packages/capture/scripts/generate-rpc-map.ts [path/to/rpc-build.json] [path/to/prefab-layouts.json]`
- * Both path arguments are optional; they default to fixed paths next to this repo (see
- * `DEFAULT_INPUT_FILE`/`DEFAULT_PREFAB_LAYOUTS_FILE` below). Passing them explicitly lets this
- * run against a different export location, an archived fingerprinted copy, or a
- * manually-relocated file without editing this script.
+ * Usage: `bun run packages/capture/scripts/generate-rpc-map.ts <path/to/rpc-build.json> <path/to/prefab-layouts.json>`
+ * Both paths are required - this script has no default and no assumption about where a
+ * data-mine-style export lives relative to this repo (that varies per machine/checkout and is
+ * not this repo's concern to hardcode).
  *
  * After running: review the diff under `generated/`, then run the capture package's tests.
  */
@@ -35,9 +34,6 @@ import type {
 } from "../src/fishnet/definitions/rpc-map.ts";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const DATA_MINE_NETWORK_DIR = path.resolve(SCRIPT_DIR, "../../../../spirit_vale_data_mine/data/json/network");
-const DEFAULT_INPUT_FILE = path.join(DATA_MINE_NETWORK_DIR, "rpc-build.json");
-const DEFAULT_PREFAB_LAYOUTS_FILE = path.join(DATA_MINE_NETWORK_DIR, "prefab-layouts.json");
 const GENERATED_DIR = path.resolve(SCRIPT_DIR, "../src/fishnet/rpc-definitions/generated");
 const GAME_BUILD_FILE = path.resolve(SCRIPT_DIR, "../src/game-build.ts");
 
@@ -70,16 +66,18 @@ interface DataMinePrefabLayouts {
   rpcPrefabs: DataMinePrefab[];
 }
 
+const USAGE = "Usage: bun run packages/capture/scripts/generate-rpc-map.ts <path/to/rpc-build.json> <path/to/prefab-layouts.json>";
+
 function resolveInputFile(): string {
   const arg = process.argv[2];
-  if (arg) return path.resolve(process.cwd(), arg);
-  return DEFAULT_INPUT_FILE;
+  if (!arg) throw new Error(USAGE);
+  return path.resolve(process.cwd(), arg);
 }
 
 function resolvePrefabLayoutsFile(): string {
   const arg = process.argv[3];
-  if (arg) return path.resolve(process.cwd(), arg);
-  return DEFAULT_PREFAB_LAYOUTS_FILE;
+  if (!arg) throw new Error(USAGE);
+  return path.resolve(process.cwd(), arg);
 }
 
 function loadWireMap(inputFile: string): DataMineWireMap {
@@ -92,11 +90,12 @@ function loadWireMap(inputFile: string): DataMineWireMap {
 
 /**
  * Joins prefab-layouts.json's wire-safe `rpcPrefabs` component lists with its `prefabs`
- * view's names, keyed by collectionId+prefabId. Returns [] (not an error) when the file is
- * missing, so `generated/prefabs.ts` just ends up empty instead of failing the whole run.
+ * view's names, keyed by collectionId+prefabId.
  */
 function loadPrefabDefinitions(prefabLayoutsFile: string): FishNetPrefabDefinition[] {
-  if (!existsSync(prefabLayoutsFile)) return [];
+  if (!existsSync(prefabLayoutsFile)) {
+    throw new Error(`prefab-layouts.json not found at ${prefabLayoutsFile}. Pass its path as an argument, or export a current one first.`);
+  }
   const parsed = JSON.parse(readFileSync(prefabLayoutsFile, "utf8")) as DataMinePrefabLayouts;
   const namesByKey = new Map<string, string>();
   for (const prefab of parsed.prefabs ?? []) {
@@ -266,7 +265,7 @@ function main(): void {
   console.log(
     `Generated ${wireMap.behaviours.length} behaviours (${totalRpcs} RPCs) and ${wireMap.broadcasts?.length ?? 0} broadcasts from ${inputFile}.`,
   );
-  console.log(`Generated ${prefabs.length} prefabs from ${prefabLayoutsFile}${prefabs.length === 0 ? " (file missing, skipped)" : ""}.`);
+  console.log(`Generated ${prefabs.length} prefabs from ${prefabLayoutsFile}.`);
   console.log(`Build fingerprint: ${wireMap.buildFingerprint}${fingerprintChanged ? " (updated game-build.ts)" : " (unchanged)"}`);
 }
 
