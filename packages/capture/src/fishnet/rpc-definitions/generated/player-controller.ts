@@ -3911,7 +3911,25 @@ export const playerControllerSyncTypes = [
   {
     "index": 5,
     "name": "VisualData",
-    "typeName": "CharacterVisualDto"
+    "typeName": "CharacterVisualDto",
+    "fields": [
+      {
+        "name": "Appearance",
+        "typeName": "CharacterAppearanceDto",
+        "fields": [
+          {
+            "name": "DisplayName",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Archetype",
+            "typeName": "Archetype",
+            "codec": "packedInt32"
+          }
+        ]
+      }
+    ]
   },
   {
     "index": 6,

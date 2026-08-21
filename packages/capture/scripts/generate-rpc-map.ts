@@ -4,17 +4,9 @@
  * current game build, replacing the old manual copy/paste into one 12k+ line pasted file.
  *
  * `generated/` is fully script-owned - it is wiped and rewritten every run, so nothing
- * hand-authored may live there. Two kinds of hand-curated content deliberately sit
- * outside `generated/` and are never touched by this script:
- *   - `syncTypes` overlays (`game/health-component.ts`, `game/skills-component.ts`,
- *     `game/player-controller/index.ts`, `game/loot-drop.ts`) - the RPC export doesn't
- *     carry SyncVar names for most types, so these are hand-verified against captures.
- *   - `game/player-save/*.ts` - PlayerSave's ~120 RPCs are hand-split into 7
- *     feature-area files for readability instead of one flat generated list. This script
- *     verifies that split still covers exactly the same RPCs as the source data on every
- *     run (see `checkPlayerSaveCoverage`) and fails loudly instead of silently
- *     overwriting it when they've drifted - new/changed PlayerSave RPCs must be filed
- *     into the right category file by hand.
+ * hand-authored may live there, and nothing outside it overrides what it produces: every
+ * behaviour's `rpcs`/`syncTypes`, every broadcast, and every prefab layout comes straight from
+ * this script's output with no hand-maintained fallback.
  *
  * Prefab layouts (including `prefabName`, which the `rpc-build.json` export's embedded
  * `prefabs` lacks) are read separately from a `prefab-layouts.json` export: its `rpcPrefabs`
@@ -29,10 +21,9 @@
  * run against a different export location, an archived fingerprinted copy, or a
  * manually-relocated file without editing this script.
  *
- * After running: review the diff under `generated/` (and any `game/player-save/*`
- * coverage failure), then run the capture package's tests.
+ * After running: review the diff under `generated/`, then run the capture package's tests.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import type {
@@ -49,7 +40,6 @@ const DEFAULT_INPUT_FILE = path.join(DATA_MINE_NETWORK_DIR, "rpc-build.json");
 const DEFAULT_PREFAB_LAYOUTS_FILE = path.join(DATA_MINE_NETWORK_DIR, "prefab-layouts.json");
 const GENERATED_DIR = path.resolve(SCRIPT_DIR, "../src/fishnet/rpc-definitions/generated");
 const GAME_BUILD_FILE = path.resolve(SCRIPT_DIR, "../src/game-build.ts");
-const PLAYER_SAVE_DIR = path.resolve(SCRIPT_DIR, "../src/fishnet/rpc-definitions/game/player-save");
 
 interface DataMineBehaviour {
   typeName: string;
@@ -242,38 +232,6 @@ function writeIndexFile(behaviours: DataMineBehaviour[], infos: BehaviourFileInf
   void behaviours;
 }
 
-/**
- * PlayerSave's RPCs are hand-split across game/player-save/*.ts by feature area rather
- * than generated flat. Verify that split still covers exactly the RPCs the source export
- * reports for PlayerSave; report a diff and fail instead of silently drifting.
- */
-function checkPlayerSaveCoverage(behaviours: DataMineBehaviour[]): boolean {
-  const playerSave = behaviours.find((b) => b.typeName === "PlayerSave");
-  if (!playerSave) return true;
-  const sourceKeys = new Set((playerSave.rpcs ?? []).map((rpc) => `${rpc.wireHash}:${rpc.methodName}`));
-
-  const handSplitKeys: string[] = [];
-  for (const fileName of readdirSync(PLAYER_SAVE_DIR)) {
-    if (!fileName.endsWith(".ts") || fileName === "index.ts") continue;
-    const text = readFileSync(path.join(PLAYER_SAVE_DIR, fileName), "utf8");
-    for (const match of text.matchAll(/"wireHash":\s*(\d+)[\s\S]*?"methodName":\s*"([^"]+)"/g)) {
-      handSplitKeys.push(`${match[1]}:${match[2]}`);
-    }
-  }
-  const handSplitKeySet = new Set(handSplitKeys);
-
-  const duplicated = [...new Set(handSplitKeys.filter((k, i) => handSplitKeys.indexOf(k) !== i))];
-  const missing = [...sourceKeys].filter((k) => !handSplitKeySet.has(k));
-  const extra = [...handSplitKeySet].filter((k) => !sourceKeys.has(k));
-  if (missing.length === 0 && extra.length === 0 && duplicated.length === 0) return true;
-
-  console.error("PlayerSave RPC drift between rpc-build.json and game/player-save/*.ts:");
-  if (missing.length > 0) console.error(`  Missing from game/player-save/*.ts (add these): ${missing.join(", ")}`);
-  if (extra.length > 0) console.error(`  No longer in rpc-build.json (remove these): ${extra.join(", ")}`);
-  if (duplicated.length > 0) console.error(`  Listed in more than one player-save file (keep it in exactly one): ${duplicated.join(", ")}`);
-  return false;
-}
-
 function updateGameBuildFingerprint(fingerprint: string): boolean {
   const text = readFileSync(GAME_BUILD_FILE, "utf8");
   const pattern = /(export const CURRENT_GAME_BUILD_FINGERPRINT = ")[^"]+(";)/;
@@ -303,7 +261,6 @@ function main(): void {
   writeIndexFile(wireMap.behaviours, infos);
 
   const fingerprintChanged = updateGameBuildFingerprint(wireMap.buildFingerprint);
-  const playerSaveOk = checkPlayerSaveCoverage(wireMap.behaviours);
 
   const totalRpcs = wireMap.behaviours.reduce((sum, b) => sum + (b.rpcs?.length ?? 0), 0);
   console.log(
@@ -311,8 +268,6 @@ function main(): void {
   );
   console.log(`Generated ${prefabs.length} prefabs from ${prefabLayoutsFile}${prefabs.length === 0 ? " (file missing, skipped)" : ""}.`);
   console.log(`Build fingerprint: ${wireMap.buildFingerprint}${fingerprintChanged ? " (updated game-build.ts)" : " (unchanged)"}`);
-
-  if (!playerSaveOk) process.exit(1);
 }
 
 main();
