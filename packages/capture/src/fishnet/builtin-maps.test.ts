@@ -224,6 +224,34 @@ describe("bundled FishNet maps", () => {
     expect(unsourced[1]?.undecodedPayload).toBeUndefined();
   });
 
+  test("decodes a StatusComponent Data/Level/JobLevel sync bundle from the committed map", () => {
+    // Regression coverage for the gap this fixed: `StatusData` (SyncVar index 0) used to have no
+    // verified field layout, so a real bundle - Data, then Level, then JobLevel - left everything
+    // from Data onward as opaque undecoded bytes. All values below are fabricated for this test.
+    const name = Buffer.from("SyntheticHero", "utf8");
+    const body = Buffer.concat([
+      Buffer.from([0]), packed(name.length), name, packed(3), packed(1), // Data: DisplayName/DisplayClass/Race
+      Buffer.from([1]), packed(88), // Level
+      Buffer.from([2]), packed(42), // JobLevel
+    ]);
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const results = decoder.decode(tick(12, Buffer.concat([
+      spawnWithoutLinks(500, 0, 4), // collectionId 0, prefabId 4 = "Player" (StatusComponent at index 5)
+      syncType(500, 5, body),
+    ])), { reliable: true, connectionId: "synthetic-status" });
+
+    const sync = results.find((packet) => packet.packetName === "syncType");
+    expect(sync).toMatchObject({ networkBehaviourType: "StatusComponent", syncName: "Data" });
+    expect(sync?.decodedFields).toMatchObject([
+      { name: "DisplayName", value: "SyntheticHero" },
+      { name: "DisplayClass", value: 3 },
+      { name: "Race", value: 1 },
+      { name: "Level", value: 88 },
+      { name: "JobLevel", value: 42 },
+    ]);
+    expect(sync?.undecodedPayload).toBeUndefined();
+  });
+
   test("contains verified basic-attack parameter codecs", () => {
     const combat = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "CombatComponent");
     expect(combat?.rpcs.find(({ methodName }) => methodName === "Attack_C")?.parameters).toEqual([
@@ -273,10 +301,11 @@ describe("bundled FishNet maps", () => {
   });
 
   /**
-   * A minimal but wire-valid `CharacterData` payload: every string/list/dict absent (-1) or
-   * empty, every nested struct null, every int 0. `Inspect_T`'s `data` parameter is not itself
-   * nullable (no leading null-flag byte - see `character-data-schema.ts`), so a resolution test
-   * needs a payload that actually round-trips through it - arbitrary bytes no longer pass the
+   * A minimal but wire-valid `CharacterData` payload: present (not null), every string/list/dict
+   * absent (-1) or empty, every nested struct null, every int 0. `CharacterData` is a C# class, so
+   * `Inspect_T`'s `data` parameter carries FishNet's null flag before its fields, same as any
+   * other nested reference-type value (see `character-data-schema.ts`) - a resolution test needs
+   * a payload that actually round-trips through it, since arbitrary bytes no longer pass the
    * content cross-check that `signatureAdmitsPayload` performs once a shape exists.
    */
   function emptyCharacterData(): Buffer {
@@ -284,6 +313,7 @@ describe("bundled FishNet maps", () => {
     const zero = packed(0);
     const nullStruct = Buffer.from([1]); // FishNet's null flag: 1 = null
     return Buffer.concat([
+      Buffer.from([0]), // top-level CharacterData itself: present, not null
       absent, absent, absent, zero, absent, absent, absent, // uid..name
       nullStruct, nullStruct, absent, absent, absent, absent, absent, // appearance..archetypes
       zero, zero, zero, zero, // level..jobExp

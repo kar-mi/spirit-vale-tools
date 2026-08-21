@@ -101,7 +101,24 @@ export const statusComponentSyncTypes = [
   {
     "index": 0,
     "name": "Data",
-    "typeName": "StatusData"
+    "typeName": "StatusData",
+    "fields": [
+      {
+        "name": "DisplayName",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "DisplayClass",
+        "typeName": "Archetype",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "Race",
+        "typeName": "Race",
+        "codec": "packedInt32"
+      }
+    ]
   },
   {
     "index": 1,

@@ -150,8 +150,23 @@ export interface GearStatTotal {
   unresolvedRolls: number;
 }
 
+/**
+ * Lightweight identity signal decoded from `StatusComponent`'s continuously-synced SyncVars
+ * (`Data`/`Level`/`JobLevel`), independent of {@link CharacterSnapshot}. The game currently never
+ * sends the `LoadCharacter_T`/`CharacterCallback_T` RPC that populates a full snapshot (equipment,
+ * artifacts, skills, attributes), so this is the only live source for your own name/level right
+ * now - deliberately not merged into `CharacterSnapshot`, since inventing empty gear/skills for a
+ * character that has some would be misleading. Exp/JobExp have no live SyncVar and are absent here.
+ */
+export interface CharacterIdentity {
+  name: string;
+  level?: number;
+  jobLevel?: number;
+}
+
 export interface CharacterViewState {
   snapshot?: CharacterSnapshot;
+  identity?: CharacterIdentity;
   stats: CharacterStatBreakdown[];
   gearTotals: GearStatTotal[];
   records?: CharacterRecordValues;

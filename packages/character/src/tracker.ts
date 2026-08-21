@@ -2,7 +2,7 @@ import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
 import { decodeCharacterRecordSync } from "./record-decoder.ts";
-import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
+import type { CharacterIdentity, CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 const MAX_PENDING_RECORD_OBJECTS = 4_096;
@@ -15,6 +15,7 @@ const RECORDED_STATS: ReadonlyArray<[string, keyof CharacterRecordValues]> = [
 
 export class FishNetCharacterTracker {
   private snapshot?: CharacterSnapshot;
+  private identity?: CharacterIdentity;
   private unsupportedDetail?: string;
   private currentWeight?: number;
   private localObjectId?: number;
@@ -61,7 +62,11 @@ export class FishNetCharacterTracker {
       if (objectChanged || pending) this.publish();
       return false;
     }
-    if (packet.packetName === "syncType") return this.consumeRecordSync(packet);
+    if (packet.packetName === "syncType") {
+      const identityChanged = this.consumeIdentitySync(packet);
+      const recordChanged = this.consumeRecordSync(packet);
+      return identityChanged || recordChanged;
+    }
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
@@ -75,6 +80,33 @@ export class FishNetCharacterTracker {
     } catch (error) {
       this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
     }
+    this.publish();
+    return true;
+  }
+
+  /**
+   * `StatusComponent`'s `Data`/`Level`/`JobLevel` SyncVars are the only live wire source for your
+   * own name/level right now - the game never sends `LoadCharacter_T`/`CharacterCallback_T` in
+   * practice, which is what a full {@link CharacterSnapshot} needs. This only ever updates
+   * {@link identity}, deliberately never merged into `snapshot`.
+   */
+  private consumeIdentitySync(packet: CapturedFishNetPacket): boolean {
+    if (packet.networkBehaviourType !== "StatusComponent" || !this.isLocalObject(packet) || !packet.decodedFields) return false;
+    let name: string | undefined;
+    let level: number | undefined;
+    let jobLevel: number | undefined;
+    for (const field of packet.decodedFields) {
+      if (field.name === "DisplayName" && typeof field.value === "string") name = field.value;
+      else if (field.name === "Level" && typeof field.value === "number") level = field.value;
+      else if (field.name === "JobLevel" && typeof field.value === "number") jobLevel = field.value;
+    }
+    if (name === undefined && level === undefined && jobLevel === undefined) return false;
+    this.identity = {
+      name: name ?? this.identity?.name ?? "",
+      level: level ?? this.identity?.level,
+      jobLevel: jobLevel ?? this.identity?.jobLevel,
+    };
+    if (!this.identity.name) return false;
     this.publish();
     return true;
   }
@@ -123,6 +155,7 @@ export class FishNetCharacterTracker {
     this.localObjectId = undefined;
     this.localConnectionId = undefined;
     this.pendingRecords.clear();
+    this.identity = undefined;
   }
 
   setCached(snapshot: CharacterSnapshot | undefined): void {
@@ -151,8 +184,10 @@ export class FishNetCharacterTracker {
     const weight = snapshot && this.currentWeight !== undefined
       ? { weight: { current: this.currentWeight, maximum: calculateWeightLimit(snapshot) } }
       : {};
+    const identity = this.identity ? { identity: { ...this.identity } } : {};
     if (this.unsupportedDetail) return {
       ...(snapshot ? { snapshot } : {}),
+      ...identity,
       stats: snapshot ? this.applyRecords(calculateStats(snapshot)) : [],
       gearTotals: snapshot ? calculateGearTotals(snapshot) : [],
       ...records,
@@ -161,6 +196,7 @@ export class FishNetCharacterTracker {
       statusDetail: this.unsupportedDetail,
     };
     if (!snapshot) return {
+      ...identity,
       status: "waiting",
       statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
       stats: [],
@@ -170,6 +206,7 @@ export class FishNetCharacterTracker {
     };
     return {
       snapshot,
+      ...identity,
       stats: this.applyRecords(calculateStats(snapshot)),
       gearTotals: calculateGearTotals(snapshot),
       ...records,

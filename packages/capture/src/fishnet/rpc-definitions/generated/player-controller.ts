@@ -327,6 +327,7 @@ export const playerControllerRpcs = [
       {
         "name": "data",
         "typeName": "CharacterData",
+        "nullable": true,
         "fields": [
           {
             "name": "UID",
@@ -2949,6 +2950,7 @@ export const playerControllerRpcs = [
       {
         "name": "inventory",
         "typeName": "InventoryData",
+        "nullable": true,
         "fields": [
           {
             "name": "Equips",
@@ -3251,6 +3253,7 @@ export const playerControllerRpcs = [
       {
         "name": "storage",
         "typeName": "InventoryData",
+        "nullable": true,
         "fields": [
           {
             "name": "Equips",

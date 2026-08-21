@@ -652,7 +652,10 @@ const syntheticUid = "00000000-0000-4000-8000-000000000001";
  * `overrides` only needs to name the couple of fields a given test actually cares about.
  */
 function encodeCharacterData(overrides: Record<string, string | number | readonly string[]>): Buffer {
-  return Buffer.concat((characterDataParameter().fields ?? []).map((field) => encodeCharacterDataField(field, overrides[field.name])));
+  const schema = characterDataParameter();
+  const nullFlag = schema.nullable ? Buffer.from([0]) : Buffer.alloc(0); // present, not null
+  const fields = Buffer.concat((schema.fields ?? []).map((field) => encodeCharacterDataField(field, overrides[field.name])));
+  return Buffer.concat([nullFlag, fields]);
 }
 
 /** Prefixes an encoded `CharacterData` with `CharacterCallback_T`'s leading update-type enum. */

@@ -16,38 +16,41 @@ function syncPacket(networkBehaviourType: string | undefined, payloadHex: string
 }
 
 describe("decodeCharacterRecordSync", () => {
-  test("decodes current and maximum HP from a captured HealthComponent sync", () => {
-    // Real payload from the local player at full health: both syncvars read 13,236.
-    expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "01e8ce0100e8ce01")))
-      .toEqual({ currentHealth: 13_236, maxHealth: 13_236 });
+  test("decodes current and maximum HP from a HealthComponent sync", () => {
+    // Hand-constructed: index 0 (current) and index 1 (max) both zigzag-varint-encode 1,000.
+    expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "00d00f01d00f")))
+      .toEqual({ currentHealth: 1_000, maxHealth: 1_000 });
   });
 
   test("decodes a current-HP-only sync during combat", () => {
-    // Real payload from a fighting unit: only syncvar 0 (current HP) present.
-    expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "00dcad01")))
-      .toEqual({ currentHealth: 11_118 });
+    // Hand-constructed: only syncvar 0 (current HP), zigzag-varint-encoding 500.
+    expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "00e807")))
+      .toEqual({ currentHealth: 500 });
   });
 
   test("decodes mana from a SkillsComponent sync", () => {
-    expect(decodeCharacterRecordSync(syncPacket("SkillsComponent", "018205008205")))
-      .toEqual({ currentMana: 321, maxMana: 321 });
+    // Hand-constructed: index 1 (max) then index 0 (current), both zigzag-varint-encoding 200.
+    expect(decodeCharacterRecordSync(syncPacket("SkillsComponent", "019003009003")))
+      .toEqual({ currentMana: 200, maxMana: 200 });
   });
 
   test("decodes the move-speed float from a MoveComponent sync", () => {
-    // Real payload: syncvar 1 float 8.925 (base 7.5 with +19% gear).
-    const update = decodeCharacterRecordSync(syncPacket("MoveComponent", "01cdcc0e41"));
-    expect(update?.moveSpeed).toBeCloseTo(8.925, 3);
+    // Hand-constructed: syncvar 1, float32 LE for 10.0.
+    const update = decodeCharacterRecordSync(syncPacket("MoveComponent", "0100002041"));
+    expect(update?.moveSpeed).toBeCloseTo(10.0, 3);
   });
 
   test("skips the MoveComponent state byte before the speed float", () => {
-    const update = decodeCharacterRecordSync(syncPacket("MoveComponent", "000801cdcc0e41"));
-    expect(update?.moveSpeed).toBeCloseTo(8.925, 3);
+    // Hand-constructed: index 0 (state, one byte skipped) then index 1, float32 LE for 10.0.
+    const update = decodeCharacterRecordSync(syncPacket("MoveComponent", "00aa0100002041"));
+    expect(update?.moveSpeed).toBeCloseTo(10.0, 3);
   });
 
   test("ignores unsupported components, truncated payloads, and implausible values", () => {
-    expect(decodeCharacterRecordSync(syncPacket("StatusComponent", "025a01b001000672616b1800"))).toBeUndefined();
-    expect(decodeCharacterRecordSync(syncPacket(undefined, "00dcad01"))).toBeUndefined();
+    expect(decodeCharacterRecordSync(syncPacket("StatusComponent", "0001020304"))).toBeUndefined();
+    expect(decodeCharacterRecordSync(syncPacket(undefined, "00e807"))).toBeUndefined();
     expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "00ff"))).toBeUndefined();
-    expect(decodeCharacterRecordSync(syncPacket("MoveComponent", "01cdcc0ec1"))).toBeUndefined();
+    // Hand-constructed: syncvar 1, float32 LE for -10.0 - negative move speed is implausible.
+    expect(decodeCharacterRecordSync(syncPacket("MoveComponent", "01000020c1"))).toBeUndefined();
   });
 });

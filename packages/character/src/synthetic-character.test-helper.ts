@@ -39,6 +39,7 @@ export function syntheticCharacter(
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
+  bool(out, false); // CharacterData is a class: present, not null.
   string(out, "example-character-id");
   list(out, appliedWriteIds, (value) => string(out, value));
   string(out, "example-account");

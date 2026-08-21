@@ -334,6 +334,40 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
     expect(tracker.state().records).not.toMatchObject({ currentMana: 999, maxMana: 999 });
   });
+
+  test("exposes identity from a StatusComponent Data/Level/JobLevel sync, independent of a full snapshot", () => {
+    // `LoadCharacter_T`/`CharacterCallback_T` (which populate `snapshot`) aren't sent by the live
+    // game right now - `identity` is the only source for your own name/level until that changes.
+    // Fields below are fabricated, matching the shape `applySyncTypeEntries` decodes a real
+    // `StatusData` bundle into (see builtin-maps.test.ts's equivalent wire-level coverage).
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(identityPacket(202, "Synthetic Hero", 88, 42));
+
+    expect(tracker.state().identity).toEqual({ name: "Synthetic Hero", level: 88, jobLevel: 42 });
+    expect(tracker.state().snapshot).toBeUndefined();
+    expect(tracker.state().status).toBe("waiting");
+  });
+
+  test("clears identity when the local object is released", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(identityPacket(202, "Synthetic Hero", 88, 42));
+    expect(tracker.state().identity).toBeDefined();
+
+    tracker.consume({ ...syncPacket(202, "StatusComponent", ""), packetName: "authenticated" } as CapturedFishNetPacket);
+
+    expect(tracker.state().identity).toBeUndefined();
+  });
+
+  test("ignores identity syncs belonging to other players", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+
+    tracker.consume(identityPacket(101, "Someone Else", 5, 5));
+
+    expect(tracker.state().identity).toBeUndefined();
+  });
 });
 
 function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: string): CapturedFishNetPacket {
@@ -364,6 +398,18 @@ function resourcePacket(
 ): CapturedFishNetPacket {
   const packet = syncPacket(objectId, networkBehaviourType, "");
   packet.payload = Buffer.concat([Buffer.from([0]), packed(current), Buffer.from([1]), packed(maximum)]);
+  return packet;
+}
+
+function identityPacket(objectId: number, name: string, level: number, jobLevel: number): CapturedFishNetPacket {
+  const packet = syncPacket(objectId, "StatusComponent", "");
+  (packet as CapturedFishNetPacket & { decodedFields: unknown }).decodedFields = [
+    { name: "DisplayName", typeName: "System.String", codec: "stringUtf8Packed", value: name },
+    { name: "DisplayClass", typeName: "Archetype", codec: "packedInt32", value: 0 },
+    { name: "Race", typeName: "Race", codec: "packedInt32", value: 0 },
+    { name: "Level", typeName: "Int32", codec: "packedInt32", value: level },
+    { name: "JobLevel", typeName: "Int32", codec: "packedInt32", value: jobLevel },
+  ];
   return packet;
 }
 

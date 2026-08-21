@@ -108,6 +108,7 @@ export const playerSaveRpcs = [
       {
         "name": "data",
         "typeName": "CharacterData",
+        "nullable": true,
         "fields": [
           {
             "name": "UID",
@@ -1353,6 +1354,7 @@ export const playerSaveRpcs = [
       {
         "name": "characters",
         "typeName": "System.Collections.Generic.List`1[[CharacterData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "nullable": true,
         "fields": [
           {
             "name": "UID",
@@ -2750,6 +2752,7 @@ export const playerSaveRpcs = [
       {
         "name": "data",
         "typeName": "CharacterData",
+        "nullable": true,
         "fields": [
           {
             "name": "UID",
@@ -4117,6 +4120,7 @@ export const playerSaveRpcs = [
       {
         "name": "artifact",
         "typeName": "ArtifactData",
+        "nullable": true,
         "fields": [
           {
             "name": "Substats",
@@ -4245,6 +4249,7 @@ export const playerSaveRpcs = [
       {
         "name": "skills",
         "typeName": "System.Collections.Generic.List`1[[SkillData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "nullable": true,
         "fields": [
           {
             "name": "Id",
@@ -4530,6 +4535,7 @@ export const playerSaveRpcs = [
       {
         "name": "sync",
         "typeName": "CharacterData",
+        "nullable": true,
         "fields": [
           {
             "name": "UID",
@@ -5806,6 +5812,7 @@ export const playerSaveRpcs = [
       {
         "name": "inventory",
         "typeName": "InventoryData",
+        "nullable": true,
         "fields": [
           {
             "name": "Equips",
@@ -6108,6 +6115,7 @@ export const playerSaveRpcs = [
       {
         "name": "storage",
         "typeName": "InventoryData",
+        "nullable": true,
         "fields": [
           {
             "name": "Equips",
@@ -6423,6 +6431,7 @@ export const playerSaveRpcs = [
       {
         "name": "storage",
         "typeName": "InventoryData",
+        "nullable": true,
         "fields": [
           {
             "name": "Equips",
@@ -7193,6 +7202,7 @@ export const playerSaveRpcs = [
       {
         "name": "equip",
         "typeName": "EquipData",
+        "nullable": true,
         "fields": [
           {
             "name": "Substats",
@@ -7313,6 +7323,7 @@ export const playerSaveRpcs = [
       {
         "name": "data",
         "typeName": "CosmeticData",
+        "nullable": true,
         "fields": [
           {
             "name": "Rarity",
