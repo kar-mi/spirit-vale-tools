@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetActorDirectory } from "./actor-directory.ts";
-import type { DecodedFishNetPacket, FishNetDecodedField, FishNetPacketName } from "@kar-mi/spirit-vale-tools-capture";
+import { characterDataParameter } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedField, FishNetPacketName, FishNetRpcParameter } from "@kar-mi/spirit-vale-tools-capture";
 
 function packet(
   tick: number,
@@ -239,7 +240,7 @@ describe("FishNetActorDirectory", () => {
     const events = directory.consume({
       ...packet(5, "rpcLink", 40),
       rpcName: "CharacterCallback_T",
-      payload: characterCallbackPayload,
+      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Fictional Hero" }),
     });
 
     expect(events).toHaveLength(2);
@@ -405,7 +406,7 @@ describe("FishNetActorDirectory", () => {
     expect(directory.consume({
       ...packet(3, "rpcLink", 62698),
       rpcName: "CharacterCallback_T",
-      payload: characterCallbackPayload,
+      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Fictional Hero" }),
     })).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
@@ -424,12 +425,11 @@ describe("FishNetActorDirectory", () => {
     // regression case for that bug, this time through the combat package's own decode path.
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 71, 30, "PlayerController"));
-    const payload = Buffer.concat([
-      packed(2), packedString(""), packedString(syntheticUid),
-      Buffer.concat([packed(2), packedString("write-1"), packedString("write-2")]),
-      packedString("account-example"), packed(0),
-      packedString(""), packedString("member"), packedString("Fictional Hero"),
-    ]);
+    const payload = characterCallbackPayload({
+      UID: syntheticUid,
+      AppliedWriteIds: ["write-1", "write-2"],
+      Name: "Fictional Hero",
+    });
     expect(directory.consume({
       ...packet(2, "rpcLink", 71),
       rpcName: "CharacterCallback_T",
@@ -481,7 +481,7 @@ describe("FishNetActorDirectory", () => {
     directory.consume({
       ...packet(2, "rpcLink", 62698),
       rpcName: "CharacterCallback_T",
-      payload: characterCallbackPayload,
+      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Fictional Hero" }),
     });
     directory.consume(packet(3, "authenticated"));
 
@@ -628,10 +628,11 @@ describe("FishNetActorDirectory", () => {
     const events = directory.consume({
       ...packet(2, "rpcLink", 40),
       rpcName: "CharacterCallback_T",
-      payload: Buffer.concat([
-        packed(2), packedString(""), packedString(syntheticUid), packed(0), packedString("account-example"), packed(0),
-        packedString(""), packedString("길드마스터대리"), packedString(koreanName),
-      ]),
+      payload: characterCallbackPayload({
+        UID: syntheticUid,
+        GuildRankId: "길드마스터대리",
+        Name: koreanName,
+      }),
     });
 
     expect(events).toMatchObject([{ operation: "upsert", actorId: 40, displayName: koreanName }]);
@@ -640,13 +641,45 @@ describe("FishNetActorDirectory", () => {
 });
 
 const syntheticUid = "00000000-0000-4000-8000-000000000001";
-// AppliedWriteIds (an empty List<string>, `packed(0)`) sits between UID and AccountId - a
-// build-later field insertion that broke the old hand-rolled reader when non-empty; see
-// decoder.ts's/character-data.ts's own regression coverage for that bug specifically.
-const characterCallbackPayload = Buffer.concat([
-  packed(2), packedString(""), packedString(syntheticUid), packed(0), packedString("account-example"), packed(0),
-  packedString(""), packedString("member"), packedString("Fictional Hero"),
-]);
+
+/**
+ * Encodes a `CharacterData` payload from the bundled RPC map's own field schema
+ * (`characterDataParameter()`) rather than a hand-counted byte sequence. Every field not named
+ * in `overrides` gets a schema-appropriate empty value (absent string, zero int, empty list, null
+ * struct), so this stays correct however many fields `CharacterData` carries or in what order -
+ * a hand-rolled byte sequence went stale exactly this way once before, when a build inserted
+ * `AppliedWriteIds` between `UID` and `AccountId` and silently desynced every field after it.
+ * `overrides` only needs to name the couple of fields a given test actually cares about.
+ */
+function encodeCharacterData(overrides: Record<string, string | number | readonly string[]>): Buffer {
+  return Buffer.concat((characterDataParameter().fields ?? []).map((field) => encodeCharacterDataField(field, overrides[field.name])));
+}
+
+/** Prefixes an encoded `CharacterData` with `CharacterCallback_T`'s leading update-type enum. */
+function characterCallbackPayload(overrides: Record<string, string | number | readonly string[]> = {}, updateType = 2): Buffer {
+  return Buffer.concat([packed(updateType), encodeCharacterData(overrides)]);
+}
+
+function encodeCharacterDataField(field: FishNetRpcParameter, value: string | number | readonly string[] | undefined): Buffer {
+  if (field.repeated || field.dictionaryKey) {
+    const elements = Array.isArray(value) ? value : [];
+    return Buffer.concat([packed(elements.length), ...elements.map((element) => encodeCharacterDataLeaf(field, element))]);
+  }
+  if (field.codec) return encodeCharacterDataLeaf(field, value ?? (field.codec === "stringUtf8Packed" ? "" : 0));
+  if (field.nullable) return Buffer.from([1]); // null flag: this test helper never populates nested structs
+  if (field.fields) return Buffer.concat(field.fields.map((nested) => encodeCharacterDataField(nested, undefined)));
+  throw new Error(`don't know how to encode CharacterData field "${field.name}" (${field.typeName ?? "unknown type"})`);
+}
+
+function encodeCharacterDataLeaf(field: FishNetRpcParameter, value: string | number | undefined): Buffer {
+  switch (field.codec) {
+    case "stringUtf8Packed": return packedString(typeof value === "string" ? value : "");
+    case "boolean": return Buffer.from([typeof value === "number" && value !== 0 ? 1 : 0]);
+    case "packedInt32":
+    case "packedInt64": return packed(typeof value === "number" ? value : 0);
+    default: throw new Error(`don't know how to encode CharacterData field "${field.name}" with codec "${field.codec ?? "none"}"`);
+  }
+}
 
 function section(componentIndex: number, data: Buffer): Buffer {
   const header = Buffer.alloc(5);
