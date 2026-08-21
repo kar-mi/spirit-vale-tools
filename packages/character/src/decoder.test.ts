@@ -34,20 +34,6 @@ describe("decodeCharacterRpcPayload", () => {
     expect(() => decodeCharacterRpcPayload(syntheticCharacter(false).subarray(0, 12), false)).toThrow();
   });
 
-  test("decodes correctly when AppliedWriteIds is non-empty", () => {
-    // AppliedWriteIds sits between UID and AccountId. A build that added this field silently
-    // desynced the old hand-rolled decoder whenever it carried entries — this is the direct
-    // regression case for that bug.
-    const decoded = decodeCharacterRpcPayload(
-      syntheticCharacter(true, true, "Example Hero", { appliedWriteIds: ["write-1", "write-2"] }),
-      true,
-    );
-    expect(decoded.snapshot.name).toBe("Example Hero");
-    expect(decoded.snapshot.attributes).toEqual({ STR: 60, VIT: 30, AGI: 10, DEX: 20, INT: 5, LUK: 15 });
-    expect(decoded.snapshot.equipment[0]).toMatchObject({ itemId: "Example Sword", refine: 5 });
-    expect(decoded.currentWeight).toBe(71);
-  });
-
   test("does not substitute equipped weight when a callback omits inventory history", () => {
     const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, false), true);
 

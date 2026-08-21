@@ -335,12 +335,6 @@ export const playerControllerRpcs = [
             "codec": "stringUtf8Packed"
           },
           {
-            "name": "AppliedWriteIds",
-            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
-            "repeated": true,
-            "codec": "stringUtf8Packed"
-          },
-          {
             "name": "AccountId",
             "typeName": "System.String",
             "codec": "stringUtf8Packed"
@@ -348,7 +342,7 @@ export const playerControllerRpcs = [
           {
             "name": "Version",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "GuildId",
@@ -1502,12 +1496,12 @@ export const playerControllerRpcs = [
           {
             "name": "LastLogin",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "Playtime",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "MonsterKills",

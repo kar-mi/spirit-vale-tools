@@ -314,7 +314,9 @@ describe("bundled FishNet maps", () => {
     const nullStruct = Buffer.from([1]); // FishNet's null flag: 1 = null
     return Buffer.concat([
       Buffer.from([0]), // top-level CharacterData itself: present, not null
-      absent, absent, absent, zero, absent, absent, absent, // uid..name
+      // AppliedWriteIds is no longer serialized on the wire (see extract.py's `"Omitted"` kind) -
+      // no byte for it here.
+      absent, absent, zero, absent, absent, absent, // uid, accountId, version..name
       nullStruct, nullStruct, absent, absent, absent, absent, absent, // appearance..archetypes
       zero, zero, zero, zero, // level..jobExp
       nullStruct, absent, absent, zero, absent, absent, absent, absent, // state..artifacts

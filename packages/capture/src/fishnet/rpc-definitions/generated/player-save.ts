@@ -116,12 +116,6 @@ export const playerSaveRpcs = [
             "codec": "stringUtf8Packed"
           },
           {
-            "name": "AppliedWriteIds",
-            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
-            "repeated": true,
-            "codec": "stringUtf8Packed"
-          },
-          {
             "name": "AccountId",
             "typeName": "System.String",
             "codec": "stringUtf8Packed"
@@ -129,7 +123,7 @@ export const playerSaveRpcs = [
           {
             "name": "Version",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "GuildId",
@@ -1283,12 +1277,12 @@ export const playerSaveRpcs = [
           {
             "name": "LastLogin",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "Playtime",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "MonsterKills",
@@ -1362,12 +1356,6 @@ export const playerSaveRpcs = [
             "codec": "stringUtf8Packed"
           },
           {
-            "name": "AppliedWriteIds",
-            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
-            "repeated": true,
-            "codec": "stringUtf8Packed"
-          },
-          {
             "name": "AccountId",
             "typeName": "System.String",
             "codec": "stringUtf8Packed"
@@ -1375,7 +1363,7 @@ export const playerSaveRpcs = [
           {
             "name": "Version",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "GuildId",
@@ -2529,12 +2517,12 @@ export const playerSaveRpcs = [
           {
             "name": "LastLogin",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "Playtime",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "MonsterKills",
@@ -2760,12 +2748,6 @@ export const playerSaveRpcs = [
             "codec": "stringUtf8Packed"
           },
           {
-            "name": "AppliedWriteIds",
-            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
-            "repeated": true,
-            "codec": "stringUtf8Packed"
-          },
-          {
             "name": "AccountId",
             "typeName": "System.String",
             "codec": "stringUtf8Packed"
@@ -2773,7 +2755,7 @@ export const playerSaveRpcs = [
           {
             "name": "Version",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "GuildId",
@@ -3927,12 +3909,12 @@ export const playerSaveRpcs = [
           {
             "name": "LastLogin",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "Playtime",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "MonsterKills",
@@ -4543,12 +4525,6 @@ export const playerSaveRpcs = [
             "codec": "stringUtf8Packed"
           },
           {
-            "name": "AppliedWriteIds",
-            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
-            "repeated": true,
-            "codec": "stringUtf8Packed"
-          },
-          {
             "name": "AccountId",
             "typeName": "System.String",
             "codec": "stringUtf8Packed"
@@ -4556,7 +4532,7 @@ export const playerSaveRpcs = [
           {
             "name": "Version",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "GuildId",
@@ -5710,12 +5686,12 @@ export const playerSaveRpcs = [
           {
             "name": "LastLogin",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "Playtime",
             "typeName": "System.Int64",
-            "codec": "packedInt32"
+            "codec": "packedInt64"
           },
           {
             "name": "MonsterKills",

@@ -180,7 +180,7 @@ function readCharacterHistory(
       dictionaryValues(inventory, "Consumables", (item) => { inventoryWeight += readStackableCount(item); });
       dictionaryValues(inventory, "Cosmetics", () => undefined);
     }
-    const playtimeSeconds = leafNumber(data, "Playtime", 0);
+    const playtimeSeconds = leafInt64Number(data, "Playtime", 0);
     const monsterKills = leafNumber(data, "MonsterKills", 0);
     const bossKills = leafNumber(data, "BossKills", 0);
     const deaths = leafNumber(data, "Deaths", 0);
@@ -402,6 +402,15 @@ function leafString(node: FieldNode | undefined, key: string): string | null {
 function leafNumber(node: FieldNode | undefined, key: string, fallback: number): number {
   const value = leaf(node, key);
   return typeof value === "number" ? value : fallback;
+}
+
+/** `packedInt64` fields decode to a decimal string (precision-safe for currency); a play-time
+ * count in seconds never approaches that range, so converting to `number` here is safe. */
+function leafInt64Number(node: FieldNode | undefined, key: string, fallback: number): number {
+  const value = leaf(node, key);
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && /^-?\d+$/.test(value)) return Number(value);
+  return fallback;
 }
 
 function listLength(node: FieldNode | undefined, key: string): number {

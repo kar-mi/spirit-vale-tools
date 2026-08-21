@@ -17,8 +17,6 @@ export interface SyntheticCharacterOptions {
   skills?: Array<{ id: string; level: number }>;
   /** `SkillSystemData.Assigned` — the action bar. Must never reach `snapshot.skills`. */
   assigned?: Array<{ id: string; level: number }>;
-  /** `CharacterData.AppliedWriteIds` — a build-later field inserted between `UID` and `AccountId`.*/
-  appliedWriteIds?: string[];
 }
 
 export function syntheticCharacter(
@@ -35,13 +33,13 @@ export function syntheticCharacter(
     grimoires = [],
     skills = [{ id: "Example Skill", level: 3 }],
     assigned = [],
-    appliedWriteIds = [],
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
   bool(out, false); // CharacterData is a class: present, not null.
   string(out, "example-character-id");
-  list(out, appliedWriteIds, (value) => string(out, value));
+  // AppliedWriteIds is no longer serialized on the wire (see extract.py's `"Omitted"` kind in
+  // spirit_vale_data_mine) - no bytes written for it here, matching the corrected schema.
   string(out, "example-account");
   packed(out, 7);
   string(out, ""); string(out, ""); string(out, characterName);
