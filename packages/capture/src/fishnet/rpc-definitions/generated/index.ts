@@ -4,19 +4,19 @@
  */
 import type { FishNetBehaviourDefinition } from "../../definitions/rpc-map.ts";
 import { baseUnitControllerRpcs } from "./base-unit-controller.ts";
-import { combatComponentRpcs } from "./combat-component.ts";
+import { combatComponentRpcs, combatComponentSyncTypes } from "./combat-component.ts";
 import { networkAnimatorRpcs } from "./engine/network-animator.ts";
 import { predictedOwnerRpcs } from "./engine/predicted-owner.ts";
 import { networkTransformRpcs } from "./engine/network-transform.ts";
-import { healthComponentRpcs } from "./health-component.ts";
+import { healthComponentRpcs, healthComponentSyncTypes } from "./health-component.ts";
 import { lootDropRpcs, lootDropSyncTypes } from "./loot-drop.ts";
-import { monsterControllerRpcs } from "./monster-controller.ts";
-import { moveComponentRpcs } from "./move-component.ts";
-import { playerControllerRpcs } from "./player-controller.ts";
+import { monsterControllerRpcs, monsterControllerSyncTypes } from "./monster-controller.ts";
+import { moveComponentRpcs, moveComponentSyncTypes } from "./move-component.ts";
+import { playerControllerRpcs, playerControllerSyncTypes } from "./player-controller.ts";
 import { playerSaveRpcs } from "./player-save.ts";
-import { skillsComponentRpcs } from "./skills-component.ts";
-import { statusComponentRpcs } from "./status-component.ts";
-import { summoningComponentRpcs } from "./summoning-component.ts";
+import { skillsComponentRpcs, skillsComponentSyncTypes } from "./skills-component.ts";
+import { statusComponentRpcs, statusComponentSyncTypes } from "./status-component.ts";
+import { summoningComponentRpcs, summoningComponentSyncTypes } from "./summoning-component.ts";
 
 export { GENERATED_BROADCASTS } from "./broadcasts.ts";
 export { GENERATED_PREFAB_DEFINITIONS } from "./prefabs.ts";
@@ -24,17 +24,17 @@ export { GENERATED_BUILD_FINGERPRINT, GENERATED_METADATA_VERSION, GENERATED_BEHA
 
 export const GENERATED_BEHAVIOURS = [
   { typeName: "BaseUnitController", rpcs: baseUnitControllerRpcs },
-  { typeName: "CombatComponent", rpcs: combatComponentRpcs },
+  { typeName: "CombatComponent", rpcs: combatComponentRpcs, syncTypes: combatComponentSyncTypes },
   { typeName: "FishNet.Component.Animating.NetworkAnimator", rpcs: networkAnimatorRpcs },
   { typeName: "FishNet.Component.Ownership.PredictedOwner", rpcs: predictedOwnerRpcs },
   { typeName: "FishNet.Component.Transforming.NetworkTransform", rpcs: networkTransformRpcs },
-  { typeName: "HealthComponent", rpcs: healthComponentRpcs },
+  { typeName: "HealthComponent", rpcs: healthComponentRpcs, syncTypes: healthComponentSyncTypes },
   { typeName: "LootDrop", rpcs: lootDropRpcs, syncTypes: lootDropSyncTypes },
-  { typeName: "MonsterController", rpcs: monsterControllerRpcs },
-  { typeName: "MoveComponent", rpcs: moveComponentRpcs },
-  { typeName: "PlayerController", rpcs: playerControllerRpcs },
+  { typeName: "MonsterController", rpcs: monsterControllerRpcs, syncTypes: monsterControllerSyncTypes },
+  { typeName: "MoveComponent", rpcs: moveComponentRpcs, syncTypes: moveComponentSyncTypes },
+  { typeName: "PlayerController", rpcs: playerControllerRpcs, syncTypes: playerControllerSyncTypes },
   { typeName: "PlayerSave", rpcs: playerSaveRpcs },
-  { typeName: "SkillsComponent", rpcs: skillsComponentRpcs },
-  { typeName: "StatusComponent", rpcs: statusComponentRpcs },
-  { typeName: "SummoningComponent", rpcs: summoningComponentRpcs },
+  { typeName: "SkillsComponent", rpcs: skillsComponentRpcs, syncTypes: skillsComponentSyncTypes },
+  { typeName: "StatusComponent", rpcs: statusComponentRpcs, syncTypes: statusComponentSyncTypes },
+  { typeName: "SummoningComponent", rpcs: summoningComponentRpcs, syncTypes: summoningComponentSyncTypes },
 ] as const satisfies readonly FishNetBehaviourDefinition[];
