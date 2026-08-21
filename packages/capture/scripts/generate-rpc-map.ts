@@ -203,11 +203,10 @@ function writePrefabsFile(prefabs: FishNetPrefabDefinition[]): void {
   writeGeneratedFile("prefabs", content);
 }
 
-function writeManifestFile(wireMap: DataMineWireMap, typeNames: readonly string[]): void {
+function writeManifestFile(wireMap: DataMineWireMap): void {
   let content = GENERATED_HEADER;
   content += `export const GENERATED_BUILD_FINGERPRINT = ${JSON.stringify(wireMap.buildFingerprint)};\n`;
   content += `export const GENERATED_METADATA_VERSION = ${wireMap.metadataVersion};\n`;
-  content += `export const GENERATED_BEHAVIOUR_TYPE_NAMES = ${formatJsonLiteral(typeNames)} as const;\n`;
   writeGeneratedFile("manifest", content);
 }
 
@@ -220,7 +219,7 @@ function writeIndexFile(behaviours: DataMineBehaviour[], infos: BehaviourFileInf
   }
   content += `\nexport { GENERATED_BROADCASTS } from "./broadcasts.ts";\n`;
   content += `export { GENERATED_PREFAB_DEFINITIONS } from "./prefabs.ts";\n`;
-  content += `export { GENERATED_BUILD_FINGERPRINT, GENERATED_METADATA_VERSION, GENERATED_BEHAVIOUR_TYPE_NAMES } from "./manifest.ts";\n\n`;
+  content += `export { GENERATED_BUILD_FINGERPRINT, GENERATED_METADATA_VERSION } from "./manifest.ts";\n\n`;
   content += `export const GENERATED_BEHAVIOURS = [\n`;
   for (const info of infos) {
     const syncTypesField = info.syncTypesVar ? `, syncTypes: ${info.syncTypesVar}` : "";
@@ -253,10 +252,7 @@ function main(): void {
   wireMap.behaviours.forEach((behaviour, i) => writeBehaviourFile(behaviour, infos[i]!));
   writeBroadcastsFile(wireMap.broadcasts ?? []);
   writePrefabsFile(prefabs);
-  writeManifestFile(
-    wireMap,
-    wireMap.behaviours.map((b) => b.typeName),
-  );
+  writeManifestFile(wireMap);
   writeIndexFile(wireMap.behaviours, infos);
 
   const fingerprintChanged = updateGameBuildFingerprint(wireMap.buildFingerprint);

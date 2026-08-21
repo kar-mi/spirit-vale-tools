@@ -91,7 +91,7 @@ export class WindowsTargetTracker {
   }
 }
 
-export class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
+class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
   async snapshot(processName: string, protocols: readonly CaptureProtocol[]): Promise<{
     processIds: number[];
     endpoints: OwnedEndpoint[];

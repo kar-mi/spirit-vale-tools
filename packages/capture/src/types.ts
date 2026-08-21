@@ -21,7 +21,7 @@ export interface CaptureConfig {
   fishNetRpcMap?: FishNetRpcMap;
 }
 
-export interface CapturedPacketBase {
+interface CapturedPacketBase {
   timestampTicks: bigint;
   capturedAt: Date;
   interfaceIndex: number;

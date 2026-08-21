@@ -20,7 +20,7 @@ import { summoningComponentRpcs, summoningComponentSyncTypes } from "./summoning
 
 export { GENERATED_BROADCASTS } from "./broadcasts.ts";
 export { GENERATED_PREFAB_DEFINITIONS } from "./prefabs.ts";
-export { GENERATED_BUILD_FINGERPRINT, GENERATED_METADATA_VERSION, GENERATED_BEHAVIOUR_TYPE_NAMES } from "./manifest.ts";
+export { GENERATED_BUILD_FINGERPRINT, GENERATED_METADATA_VERSION } from "./manifest.ts";
 
 export const GENERATED_BEHAVIOURS = [
   { typeName: "BaseUnitController", rpcs: baseUnitControllerRpcs },

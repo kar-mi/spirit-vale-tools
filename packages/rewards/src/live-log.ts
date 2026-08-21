@@ -102,7 +102,7 @@ export class RewardLogFollower {
 }
 
 /** Watcher tuning shared by both session followers in this package. */
-export type RewardSessionFollowerTuning =
+type RewardSessionFollowerTuning =
   Pick<LiveLogSessionFollowerOptions<RewardLogFollower, RewardLogBatch>, "fallbackPollMs" | "debounceMs" | "persistent">;
 
 export class RewardSessionLogFollower {

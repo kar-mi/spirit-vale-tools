@@ -213,7 +213,7 @@ export interface FishNetCombatSummonEvent {
  * only counts `kind: "heal"`, so a separate kind keeps it out structurally instead of by a flag
  * somebody has to remember.
  */
-export interface FishNetCombatFullHealEvent {
+interface FishNetCombatFullHealEvent {
   kind: "fullHeal";
   rpc: "FullHeal_C";
   tick: number;

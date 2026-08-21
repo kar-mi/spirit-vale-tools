@@ -11,7 +11,7 @@ import { takeDirtyFrom } from "../reducers/timeline.ts";
 import { COMBAT_DOMAIN_NAME } from "./domain.ts";
 
 /** Table discriminator for the three meters sharing the actor/skill/target/timeline tables. */
-export type StoredMeter = "dps" | "tanked" | "healing";
+type StoredMeter = "dps" | "tanked" | "healing";
 
 const METER_KINDS: readonly { meter: StoredMeter; kind: MeterKind }[] = [
   { meter: "tanked", kind: "tanked" },

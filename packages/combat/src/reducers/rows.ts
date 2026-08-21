@@ -210,7 +210,7 @@ export function actorRowId(actor: ActorAggregate): string {
   return `actor:${actor.actorId}`;
 }
 
-export function mergeActors(actors: readonly ActorAggregate[]): ActorAggregate[] {
+function mergeActors(actors: readonly ActorAggregate[]): ActorAggregate[] {
   const merged = new Map<string, ActorAggregate>();
   for (const actor of actors) {
     if (actor.damage <= 0) continue;
@@ -302,7 +302,7 @@ function rebase(series: { originMs: number; widthMs: number; buckets: number[] }
   series.originMs = originMs;
 }
 
-export function compareRows(
+function compareRows(
   left: { damage: number; sourceLabel?: string; displayName?: string },
   right: { damage: number; sourceLabel?: string; displayName?: string },
 ): number {
@@ -310,7 +310,7 @@ export function compareRows(
     || (left.sourceLabel ?? left.displayName ?? "").localeCompare(right.sourceLabel ?? right.displayName ?? "");
 }
 
-export function perSecond(damage: number, durationMs: number): number {
+function perSecond(damage: number, durationMs: number): number {
   return damage / (durationMs / 1_000);
 }
 

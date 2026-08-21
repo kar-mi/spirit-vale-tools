@@ -4,19 +4,3 @@
  */
 export const GENERATED_BUILD_FINGERPRINT = "d8c3d98122064edd87c515bbc42ea8503f716e13d1139864b7cc2ec262a8b57d";
 export const GENERATED_METADATA_VERSION = 31;
-export const GENERATED_BEHAVIOUR_TYPE_NAMES = [
-  "BaseUnitController",
-  "CombatComponent",
-  "FishNet.Component.Animating.NetworkAnimator",
-  "FishNet.Component.Ownership.PredictedOwner",
-  "FishNet.Component.Transforming.NetworkTransform",
-  "HealthComponent",
-  "LootDrop",
-  "MonsterController",
-  "MoveComponent",
-  "PlayerController",
-  "PlayerSave",
-  "SkillsComponent",
-  "StatusComponent",
-  "SummoningComponent"
-] as const;

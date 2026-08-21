@@ -4,7 +4,7 @@ import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent, FishNetCombatEv
 import { ANALYSIS_BUCKET_MS, addToSeries, createSeries } from "./timeline.ts";
 import type { BucketSeries } from "./timeline.ts";
 
-export const DEFAULT_IDLE_GAP_MS = 30_000;
+const DEFAULT_IDLE_GAP_MS = 30_000;
 export const DEFAULT_MINIMUM_DURATION_MS = 1_000;
 /**
  * Current DPS is an exponentially-weighted rate rather than a flat window of recent hits. A window
@@ -541,7 +541,7 @@ export function createActor(
   };
 }
 
-export function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
+function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
   if (event.kind !== "damage" && event.kind !== "death") return false;
   if (event.team !== 0
     || event.actorId === event.targetId
@@ -550,7 +550,7 @@ export function isCountedDamage(event: FishNetCombatEvent): event is FishNetComb
   return event.kind === "damage" || !event.duplicatesDamageEvent;
 }
 
-export function isCountedKill(event: FishNetCombatEvent): event is FishNetCombatDeathEvent {
+function isCountedKill(event: FishNetCombatEvent): event is FishNetCombatDeathEvent {
   return event.kind === "death"
     && event.team === 0
     && event.actorId !== event.targetId
@@ -568,6 +568,6 @@ export function isPositiveHit(event: FishNetCombatDamageEvent | FishNetCombatDea
     && (event.kind === "damage" || !event.duplicatesDamageEvent);
 }
 
-export function isMobTarget(identities: ReadonlyMap<number, unknown>, actorId: number, targetId: number): boolean {
+function isMobTarget(identities: ReadonlyMap<number, unknown>, actorId: number, targetId: number): boolean {
   return targetId >= 0 && targetId !== actorId && !identities.has(targetId);
 }

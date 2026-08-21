@@ -14,7 +14,7 @@ export type FishNetItemSubstatGroup =
   | "Ranged"
   | "Artifact";
 
-export interface FishNetItemEffectTarget {
+interface FishNetItemEffectTarget {
   readonly kind: "element" | "skill" | "status";
   readonly id: string;
 }

@@ -1,7 +1,7 @@
 import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
 import { checkedEnd, readSignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
-export interface FishNetEffectDisplay {
+interface FishNetEffectDisplay {
   statusId: string;
   /**
    * Seconds left on the status. The wire counts this down in real time and resets it on
