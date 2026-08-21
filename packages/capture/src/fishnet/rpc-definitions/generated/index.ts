@@ -13,7 +13,7 @@ import { lootDropRpcs, lootDropSyncTypes } from "./loot-drop.ts";
 import { monsterControllerRpcs, monsterControllerSyncTypes } from "./monster-controller.ts";
 import { moveComponentRpcs, moveComponentSyncTypes } from "./move-component.ts";
 import { playerControllerRpcs, playerControllerSyncTypes } from "./player-controller.ts";
-import { playerSaveRpcs } from "./player-save.ts";
+import { playerSaveRpcs, playerSaveSyncTypes } from "./player-save.ts";
 import { skillsComponentRpcs, skillsComponentSyncTypes } from "./skills-component.ts";
 import { statusComponentRpcs, statusComponentSyncTypes } from "./status-component.ts";
 import { summoningComponentRpcs, summoningComponentSyncTypes } from "./summoning-component.ts";
@@ -33,7 +33,7 @@ export const GENERATED_BEHAVIOURS = [
   { typeName: "MonsterController", rpcs: monsterControllerRpcs, syncTypes: monsterControllerSyncTypes },
   { typeName: "MoveComponent", rpcs: moveComponentRpcs, syncTypes: moveComponentSyncTypes },
   { typeName: "PlayerController", rpcs: playerControllerRpcs, syncTypes: playerControllerSyncTypes },
-  { typeName: "PlayerSave", rpcs: playerSaveRpcs },
+  { typeName: "PlayerSave", rpcs: playerSaveRpcs, syncTypes: playerSaveSyncTypes },
   { typeName: "SkillsComponent", rpcs: skillsComponentRpcs, syncTypes: skillsComponentSyncTypes },
   { typeName: "StatusComponent", rpcs: statusComponentRpcs, syncTypes: statusComponentSyncTypes },
   { typeName: "SummoningComponent", rpcs: summoningComponentRpcs, syncTypes: summoningComponentSyncTypes },

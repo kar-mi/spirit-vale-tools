@@ -106,22 +106,26 @@ export const statusComponentSyncTypes = [
   {
     "index": 1,
     "name": "Level",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 2,
     "name": "JobLevel",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 3,
     "name": "BodyElement",
-    "typeName": "Element"
+    "typeName": "Element",
+    "codec": "packedInt32"
   },
   {
     "index": 4,
     "name": "WeaponElement",
-    "typeName": "Element"
+    "typeName": "Element",
+    "codec": "packedInt32"
   },
   {
     "index": 5,

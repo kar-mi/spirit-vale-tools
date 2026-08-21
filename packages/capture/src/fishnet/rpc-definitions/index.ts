@@ -1,8 +1,5 @@
 import type { FishNetBehaviourDefinition, FishNetRpcDefinition, FishNetRpcMap, FishNetSyncTypeDefinition } from "../definitions/rpc-map.ts";
-import { HealthComponentRpcDefinition } from "./game/health-component.ts";
 import { PlayerControllerRpcDefinition } from "./game/player-controller/index.ts";
-import { SkillsComponentRpcDefinition } from "./game/skills-component.ts";
-import { LootDropRpcDefinition } from "./game/loot-drop.ts";
 import { PlayerSaveRpcDefinition } from "./game/player-save/index.ts";
 import {
   GENERATED_BEHAVIOURS,
@@ -12,17 +9,14 @@ import {
   GENERATED_PREFAB_DEFINITIONS,
 } from "./generated/index.ts";
 
-// The data-mine's SyncVar extraction resolves an index/type but not always a meaningful name
-// (or, for structured DTOs like PlayerController's VisualData, not the nested field shape).
-// These are hand-verified per index against captures (see each file's docstring) and layered
-// onto the generated syncTypes below by index - a generated entry only gets replaced at the
-// specific indexes named here, so newly-discovered indexes a future build adds still come
-// through ungated.
+// The data-mine's SyncVar extraction resolves a nested DTO's index/type but not its field shape:
+// promoting a type into its `_STRUCTURED_LAYOUTS` registry requires every one of the type's own
+// fields to be verified, not just the one(s) a consumer actually needs (`PlayerController`'s
+// `VisualData` is a `CharacterVisualDto` with 4 fields; only `Appearance` has ever been verified,
+// covering the display name/archetype `combat`'s actor identity depends on). Every other
+// behaviour's syncTypes now come straight from the generated data with no override.
 const SYNC_TYPE_OVERRIDES: ReadonlyMap<string, readonly FishNetSyncTypeDefinition[]> = new Map<string, readonly FishNetSyncTypeDefinition[]>([
-  [HealthComponentRpcDefinition.typeName, HealthComponentRpcDefinition.syncTypes],
   [PlayerControllerRpcDefinition.typeName, PlayerControllerRpcDefinition.syncTypes],
-  [SkillsComponentRpcDefinition.typeName, SkillsComponentRpcDefinition.syncTypes],
-  [LootDropRpcDefinition.typeName, LootDropRpcDefinition.syncTypes],
 ] as const);
 
 function mergeSyncTypes(

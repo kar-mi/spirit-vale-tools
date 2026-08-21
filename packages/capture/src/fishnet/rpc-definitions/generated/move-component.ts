@@ -62,6 +62,7 @@ export const moveComponentSyncTypes = [
   {
     "index": 1,
     "name": "MoveSpeed",
-    "typeName": "Single"
+    "typeName": "Single",
+    "codec": "float32"
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];

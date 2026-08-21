@@ -43,6 +43,7 @@ export const combatComponentSyncTypes = [
   {
     "index": 2,
     "name": "SessionReady",
-    "typeName": "Boolean"
+    "typeName": "Boolean",
+    "codec": "boolean"
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];

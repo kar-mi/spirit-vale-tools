@@ -183,21 +183,25 @@ export const healthComponentSyncTypes = [
   {
     "index": 0,
     "name": "healthSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 1,
     "name": "maxHealthSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 2,
     "name": "barrierSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 3,
     "name": "overhealSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];

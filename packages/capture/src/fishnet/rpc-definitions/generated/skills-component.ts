@@ -285,12 +285,14 @@ export const skillsComponentSyncTypes = [
   {
     "index": 0,
     "name": "manaSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 1,
     "name": "maxManaSync",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 2,

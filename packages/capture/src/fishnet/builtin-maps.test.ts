@@ -329,8 +329,8 @@ describe("bundled FishNet maps", () => {
       packetName: "syncType",
       networkBehaviourType: "HealthComponent",
       syncIndex: 0,
-      syncName: "CurrentHealth",
-      decodedFields: [{ name: "CurrentHealth", value: 417 }],
+      syncName: "healthSync",
+      decodedFields: [{ name: "healthSync", value: 417 }],
     });
   });
 

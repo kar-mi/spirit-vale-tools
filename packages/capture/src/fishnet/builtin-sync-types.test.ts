@@ -4,36 +4,29 @@ import { loadBundledFishNetRpcMap } from "./builtin-maps.ts";
 import { findSyncType } from "./rpc-resolution.ts";
 
 /**
- * `HealthComponent` index 0/1 and `SkillsComponent` index 0/1 keep hand-verified names instead of
- * the data-mine's raw reflected field names: index 0 reconciles against accumulated damage and
- * healing on ~91% of updates in a live capture, index 1 is written alongside it on spawn and on a
- * full restore, and mana mirrors the layout. `packages/character/src/record-decoder.ts` has read
- * all four positionally for some time and would go quiet if the indexes ever moved, so pin them
- * here too. Every other index below (including `HealthComponent` 2/3 and `SkillsComponent` 2) is
- * the data-mine's own extracted name, not hand-verified against captures.
+ * All syncTypes below are the data-mine's own extracted names (the raw reflected field name),
+ * not hand-curated - `packages/capture/src/fishnet/rpc-definitions/game/` no longer carries a
+ * hand-rolled fallback for any of them. `packages/character/src/record-decoder.ts` reads
+ * `HealthComponent`/`SkillsComponent`'s first two indexes positionally, not by name, so a
+ * generator-driven rename here (e.g. `healthSync` instead of a hand-chosen `CurrentHealth`)
+ * cannot desync it - only the index pinned below matters.
  */
 describe("bundled syncvar names", () => {
   const map = loadBundledFishNetRpcMap();
 
   test.each([
-    ["HealthComponent", 0, "CurrentHealth"],
-    ["HealthComponent", 1, "MaxHealth"],
-    ["SkillsComponent", 0, "CurrentMana"],
-    ["SkillsComponent", 1, "MaxMana"],
-  ])("%s syncvar %i is %s (hand-verified)", (behaviour, index, name) => {
-    expect(findSyncType(map, behaviour as string, index as number)).toMatchObject({
-      name,
-      codec: "packedInt32",
-    });
-  });
-
-  test.each([
+    ["HealthComponent", 0, "healthSync"],
+    ["HealthComponent", 1, "maxHealthSync"],
     ["HealthComponent", 2, "barrierSync"],
     ["HealthComponent", 3, "overhealSync"],
+    ["SkillsComponent", 0, "manaSync"],
+    ["SkillsComponent", 1, "maxManaSync"],
     ["SkillsComponent", 2, "BondSync"],
     ["CombatComponent", 0, "CombatData"],
     ["CombatComponent", 1, "SpeedRank"],
     ["CombatComponent", 2, "SessionReady"],
+    ["PlayerSave", 0, "PlayerIdSync"],
+    ["PlayerSave", 1, "ArenaRating"],
   ])("%s syncvar %i is %s (data-mine extracted)", (behaviour, index, name) => {
     expect(findSyncType(map, behaviour as string, index as number)).toMatchObject({ name });
   });

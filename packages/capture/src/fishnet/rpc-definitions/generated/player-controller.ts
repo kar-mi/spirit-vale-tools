@@ -3881,27 +3881,32 @@ export const playerControllerSyncTypes = [
   {
     "index": 0,
     "name": "ChatRoomActive",
-    "typeName": "Boolean"
+    "typeName": "Boolean",
+    "codec": "boolean"
   },
   {
     "index": 1,
     "name": "ChatRoomTitle",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 2,
     "name": "ChatRoomLocked",
-    "typeName": "Boolean"
+    "typeName": "Boolean",
+    "codec": "boolean"
   },
   {
     "index": 3,
     "name": "ChatRoomCount",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 4,
     "name": "ChatRoomMax",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 5,
@@ -3911,71 +3916,85 @@ export const playerControllerSyncTypes = [
   {
     "index": 6,
     "name": "Archetype",
-    "typeName": "Archetype"
+    "typeName": "Archetype",
+    "codec": "packedInt32"
   },
   {
     "index": 7,
     "name": "Title",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 8,
     "name": "ChatBubble",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 9,
     "name": "Badge",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 10,
     "name": "PartyId",
-    "typeName": "Int32"
+    "typeName": "Int32",
+    "codec": "packedInt32"
   },
   {
     "index": 11,
     "name": "TotalThreat",
-    "typeName": "Single"
+    "typeName": "Single",
+    "codec": "float32"
   },
   {
     "index": 12,
     "name": "IsGm",
-    "typeName": "Boolean"
+    "typeName": "Boolean",
+    "codec": "boolean"
   },
   {
     "index": 13,
     "name": "GuildName",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 14,
     "name": "GuildRankName",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 15,
     "name": "GuildEmblemId",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 16,
     "name": "GuildNameColor",
-    "typeName": "String"
+    "typeName": "String",
+    "codec": "stringUtf8Packed"
   },
   {
     "index": 17,
     "name": "ChatMutedUntil",
-    "typeName": "Int64"
+    "typeName": "Int64",
+    "codec": "packedInt64"
   },
   {
     "index": 18,
     "name": "GmRooted",
-    "typeName": "Boolean"
+    "typeName": "Boolean",
+    "codec": "boolean"
   },
   {
     "index": 19,
     "name": "JailedUntil",
-    "typeName": "Int64"
+    "typeName": "Int64",
+    "codec": "packedInt64"
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];
