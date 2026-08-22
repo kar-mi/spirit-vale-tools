@@ -154,8 +154,7 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       errorBuffer.fill(0);
 
       check(api.symbols.pcap_setnonblock(handle, 1, errorBuffer), handle, api, "enable nonblocking capture");
-      const session = new LiveNpcapSession(api, handle, device, dataLink);
-      return session;
+      return new LiveNpcapSession(api, handle, device, dataLink);
     } catch (error) {
       api.symbols.pcap_close(handle);
       throw error;
@@ -200,48 +199,28 @@ class LiveNpcapSession implements NpcapSession {
   ) {  }
 
   nextPacket(): NpcapPacket | undefined {
-
-
     if (this.closed) return undefined;
     const headerPointer = new Uint8Array(8);
     const dataPointer = new Uint8Array(8);
-
     const result = this.api.symbols.pcap_next_ex(this.handle, headerPointer, dataPointer);
-
     if (result === 0) return undefined;
-
     if (result < 0) throw new Error(`Npcap capture failed: ${pcapError(this.api, this.handle)}`);
-
     const header = pointerFromBuffer(headerPointer);
-
     const data = pointerFromBuffer(dataPointer);
-
     if (!header || !data) throw new Error("Npcap returned an invalid packet pointer");
-
     const {
       seconds,
       microseconds,
       capturedLength,
       originalLength
     } = readPcapHeader(header);
-
     const capturedAt = new Date(seconds * 1_000 + Math.floor(microseconds / 1_000));
-
-    const timestampTicks = BigInt(seconds) * 10_000_000n + BigInt(microseconds) * 10n;
-
-    const ab = toArrayBuffer(data, 0, capturedLength);
-    const b = new Uint8Array(ab, 0, capturedLength);
-
-    const d = Buffer.from(b); // this line segfaults...
-
-    const returnValue = {
+    return {
       capturedAt,
-      timestampTicks: timestampTicks,
-      data: d,
+      timestampTicks: BigInt(seconds) * 10_000_000n + BigInt(microseconds) * 10n,
+      data: Buffer.from(new Uint8Array(toArrayBuffer(data, 0, capturedLength), 0, capturedLength)),
       originalLength,
     };
-
-    return returnValue;
   }
 
   close(): void {
