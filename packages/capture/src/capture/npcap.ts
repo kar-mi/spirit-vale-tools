@@ -325,17 +325,21 @@ function npcapDllPath(): string {
     case "win32": return path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "Npcap", "wpcap.dll");
     case "linux": {
       const candidates = [
-        //process.env.LIBPCAP_PATH, // user override
-        //"libpcap.so",
-        //"libpcap.so.1",
-        //"/usr/lib/libpcap.so",
-        "/nix/store/lhqzqnb3r8wclslpchwwam9k12w7w58f-libpcap-1.10.6-lib/lib/libpcap.so" // hardcoded for my machine, TODO: remove.
+        process.env.LIBPCAP_PATH ?? "", // user specified override
+        "libpcap.so", // the dynamic linker should search the cwd & $PATH
+        "libpcap.so.1", // fallbacks
+        "/usr/lib/libpcap.so",
       ].filter(Boolean);
       for (const path of candidates) {
         try {
-          // try dlopen; catch and continue
+          // check that it exists, and can be dlopened.
+          console.log("Trying lib path: ", path);
+          const lib = dlopen(path, { pcap_lib_version: { args: [], returns: FFIType.cstring } });
+          console.log("Found lib:", path, lib, lib.symbols.pcap_lib_version()); // "libpcap version 1.10.6 (64-bit time_t, with TPACKET_V3)"
           return path;
-        } catch { /* … */ }
+        } catch (err) {
+          console.log("Tried to open lib, but failed: ", path, err);
+        }
       }
       throw new Error("libpcap not found.");
     }
