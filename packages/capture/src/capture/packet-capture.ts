@@ -159,9 +159,7 @@ export class PacketCapture extends EventEmitter {
         if (!captured) break;
         const ipPacket = extractIpPacket(captured.data, this.session.dataLink);
         if (!ipPacket) continue;
-
         const provisionalDirection = inferDirection(ipPacket, this.session.device);
-
         const packet = parseTransportPacket(ipPacket, {
           capturedAt: captured.capturedAt,
           timestampTicks: captured.timestampTicks,
