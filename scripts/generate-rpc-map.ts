@@ -34,8 +34,8 @@ import type {
 } from "../packages/capture/src/fishnet/definitions/rpc-map.ts";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const GENERATED_DIR = path.resolve(SCRIPT_DIR, "../src/fishnet/rpc-definitions/generated");
-const GAME_BUILD_FILE = path.resolve(SCRIPT_DIR, "../src/game-build.ts");
+const GENERATED_DIR = path.resolve(SCRIPT_DIR, "../packages/capture/src/fishnet/rpc-definitions/generated");
+const GAME_BUILD_FILE = path.resolve(SCRIPT_DIR, "../packages/capture/src/game-build.ts");
 
 interface DataMineBehaviour {
   typeName: string;

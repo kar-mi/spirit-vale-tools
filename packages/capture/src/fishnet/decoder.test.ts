@@ -994,13 +994,19 @@ describe("FishNet bundles and sessions", () => {
       });
     });
 
-    test("retains only one generation across successive re-authentications", () => {
+    test("survives a back-to-back re-authentication burst before any repopulation", () => {
       const { decoder, context } = decoderWithLink("quarantine-generations");
       decoder.decode(tick(3, authenticated()), context);
+      // A second re-auth arrives before anything re-registers link 900. It must merge into the
+      // existing quarantine rather than replace it with the still-empty live tables, or the first
+      // re-auth's still-useful generation would be lost.
       decoder.decode(tick(4, authenticated()), context);
-      // The first re-auth quarantined link 900; the second retired that empty generation over the
-      // top of it, so the original suspects are gone rather than accumulating forever.
-      expect(decoder.decode(tick(5, linked(900, source)), context)[0]).toMatchObject({ linkResolved: false });
+      expect(decoder.decode(tick(5, linked(900, source)), context)[0]).toMatchObject({
+        linkResolved: true,
+        objectId: 80,
+        rpcName: "SyntheticApplyDamage",
+        rpcResolution: "recovered",
+      });
     });
 
     test("keeps connections isolated - quarantine never leaks across sockets", () => {
