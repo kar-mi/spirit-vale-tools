@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 3.3.2
+
+### Patch Changes
+
+- Updated dependencies [6258350]
+  - @kar-mi/spirit-vale-tools-capture@2.0.0
+  - @kar-mi/spirit-vale-tools-skills@0.2.1
+  - @kar-mi/spirit-vale-tools-statuses@0.2.3
+
 ## 3.3.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-items
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [6258350]
+  - @kar-mi/spirit-vale-tools-capture@2.0.0
+
 ## 0.1.7
 
 ### Patch Changes

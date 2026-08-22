@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [6258350]
+  - @kar-mi/spirit-vale-tools-capture@2.0.0
+  - @kar-mi/spirit-vale-tools-items@0.1.8
+  - @kar-mi/spirit-vale-tools-skills@0.2.1
+
 ## 0.4.2
 
 ### Patch Changes

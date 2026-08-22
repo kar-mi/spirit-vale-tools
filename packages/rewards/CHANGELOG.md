@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [6258350]
+  - @kar-mi/spirit-vale-tools-capture@2.0.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.2
+  - @kar-mi/spirit-vale-tools-items@0.1.8
+
 ## 1.2.0
 
 ### Minor Changes
