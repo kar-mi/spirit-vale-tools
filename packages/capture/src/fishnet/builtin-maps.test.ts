@@ -87,7 +87,7 @@ describe("bundled FishNet maps", () => {
 
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
-    expect(map.behaviours).toHaveLength(14);
+    expect(map.behaviours).toHaveLength(15);
     expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(332);
     expect(map.broadcasts).toHaveLength(6);
 
@@ -104,7 +104,7 @@ describe("bundled FishNet maps", () => {
   test("contains collision-free component layouts for verified instantiated prefabs", () => {
     const map = loadBundledFishNetRpcMap();
     const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
-    expect(map.prefabs).toHaveLength(5);
+    expect(map.prefabs).toHaveLength(6);
 
     const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
     expect(new Set(prefabKeys).size).toBe(prefabKeys.length);

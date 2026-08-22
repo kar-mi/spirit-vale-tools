@@ -42,6 +42,8 @@ export type {
   FishNetMonsterLevels,
   FishNetMonsterSpawn,
 } from "./fishnet/monster-directory.ts";
+export { decodeBossGravestone } from "./fishnet/boss-gravestone.ts";
+export type { BossGravestone } from "./fishnet/boss-gravestone.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,
