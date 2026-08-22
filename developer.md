@@ -6,7 +6,7 @@ reward tooling.
 
 ## Requirements
 
-- Bun 1.3 or newer.
+- Bun 1.4 or newer.
 - Access to the `@kar-mi` packages on GitHub Packages.
 - For live packet capture, Windows and a compatible Npcap installation. Capture
   uses Npcap in non-promiscuous mode and must run in a Bun process, not a

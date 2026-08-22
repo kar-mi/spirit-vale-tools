@@ -2,7 +2,7 @@ import { appendFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promis
 import path from "node:path";
 
 import { describe, expect, test } from "bun:test";
-import type { Database } from "bun:sqlite";
+import { Database } from "bun:sqlite";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { deleteReadModel, openReadModel, readModelPath } from "./index.ts";
@@ -49,7 +49,7 @@ function request(sourcePath: string, overrides: Partial<IndexStreamRequest> = {}
     domain: "synthetic",
     sourcePath,
     apply(records, database) {
-      // query() statements are cached and finalized by the connection; prepare() would leak them.
+      // Domain operations share Bun's connection-owned query cache.
       const insert = database.query(
         "insert or replace into synthetic_events (session_id, stream, sequence, type, value) values ($sessionId, $stream, $sequence, $type, $value)",
       );
@@ -175,6 +175,29 @@ describe("read model lifecycle", () => {
       const exact = model.bigintStatement("select coins from synthetic_coins where id = 1").get() as { coins: bigint };
       expect(exact.coins).toBe(9007199254740993n);
       model.close();
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  test("force-closes direct query and prepare statements before deleting the cache directory", async () => {
+    const context = await fixture();
+    try {
+      const model = await context.open();
+      const queries = Array.from({ length: Database.MAX_QUERY_CACHE_SIZE + 1 }, (_, index) =>
+        model.database.query(`select ${index} as value`));
+      const prepared = model.database.prepare("select 1 as value");
+
+      expect(queries.at(-1)?.get()).toEqual({ value: Database.MAX_QUERY_CACHE_SIZE });
+      expect(prepared.get()).toEqual({ value: 1 });
+
+      const cacheDirectory = path.dirname(model.path);
+      model.close();
+      expect(() => queries[0]!.get()).toThrow("Database has closed");
+      expect(() => prepared.get()).toThrow("Database has closed");
+
+      await rm(cacheDirectory, { recursive: true, force: true });
+      expect(await Bun.file(cacheDirectory).exists()).toBe(false);
     } finally {
       await context.cleanup();
     }

@@ -235,10 +235,10 @@ export class JsonLinesLogger {
 /**
  * Creates a directory, tolerating one that is already there.
  *
- * `fs.mkdir` with `recursive: true` is specified not to fail on an existing directory, but Bun on
- * Windows breaks that for exactly the relative forms a bare `--output name.jsonl` produces: `"."`
- * raises EEXIST and `"./"` raises ENOENT. Probing first keeps those paths working; EEXIST is still
- * swallowed afterwards so a directory created concurrently is not treated as a failure.
+ * `fs.mkdir` with `recursive: true` is specified not to fail on an existing directory, but Bun
+ * 1.4.0 on Windows still breaks that for exactly the relative forms a bare `--output name.jsonl`
+ * produces: `"."` raises EEXIST and `"./"` raises ENOENT. Probing first keeps those paths working;
+ * EEXIST is still swallowed afterwards so a concurrently created directory is not a failure.
  */
 async function ensureDirectory(directory: string): Promise<void> {
   try {

@@ -180,11 +180,7 @@ function consume(
   }
 }
 
-/**
- * Writes through `model.statement`, not `database.query`. Both hit the same connection, but only the
- * former is finalized by `close()`; statements left in Bun's own cache keep the database file open
- * on Windows, which blocks deleting the cache directory.
- */
+/** Writes through the model's statement cache so repeated indexing reuses prepared SQL. */
 function writeEncounter(
   model: ReadModel,
   sessionId: string,
@@ -568,10 +564,8 @@ interface ActorRow {
 /**
  * Rebuilds the encounter left open by an earlier pass so indexing continues rather than restarts.
  *
- * Reads go through the model's statement cache rather than `database.query`, so `close()` finalizes
- * them. A statement left in Bun's own cache keeps the database file open on Windows, which blocks
- * deleting the cache directory — and a long-lived model that re-indexes a live session resumes here
- * on every pass.
+ * Reads go through the model's statement cache so a long-lived model that re-indexes a live session
+ * can resume here on every pass without repeatedly preparing the same SQL.
  */
 function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggregate | undefined {
   const database = statements(model);
@@ -670,8 +664,7 @@ function loadMeterAggregate(
   open: EncounterAggregate,
   meter: StoredMeter,
 ): EncounterAggregate {
-  // Through the model's statement cache, not `database.query`: statements left in Bun's own cache
-  // keep the database file open on Windows and block deleting the cache directory.
+  // Reuse the model's statement cache across incremental indexing passes.
   const database = statements(model);
   const aggregate: EncounterAggregate = {
     id: open.id,

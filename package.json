@@ -19,12 +19,12 @@
     "version:packages": "changeset version"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14",
+    "@types/bun": "^1.4.0",
     "@changesets/cli": "^2.29.8",
     "typescript": "^7.0.2"
   },
   "engines": {
-    "bun": ">=1.3.0"
+    "bun": ">=1.4.0"
   },
-  "packageManager": "bun@1.3.14"
+  "packageManager": "bun@1.4.0"
 }

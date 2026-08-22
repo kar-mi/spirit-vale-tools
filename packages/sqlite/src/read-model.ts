@@ -85,9 +85,9 @@ export async function openReadModel(options: OpenReadModelOptions): Promise<Read
   const openedWith = rebuilds[0];
 
   // Bun allocates BEGIN/COMMIT/ROLLBACK statements per transaction wrapper, so build one wrapper for
-  // the connection's lifetime and route every call through it. Creating a wrapper per operation
-  // leaks those statements and keeps the file open after close(). Re-entering the same wrapper is
-  // what lets Bun nest with a savepoint, so a domain may safely start a transaction of its own.
+  // the connection's lifetime and route every call through it instead of repeatedly preparing them.
+  // Re-entering the same wrapper is what lets Bun nest with a savepoint, so a domain may safely start
+  // a transaction of its own.
   let pending: (() => unknown) | undefined;
   const runPending = database.transaction(() => pending!());
 
@@ -133,10 +133,9 @@ export async function openReadModel(options: OpenReadModelOptions): Promise<Read
     close() {
       for (const statement of statements.values()) statement.finalize();
       statements.clear();
-      // Statements a domain prepared through database.query() live in Bun's own cache and would
-      // otherwise keep the file open, which blocks deleting the cache directory on Windows.
-      clearQueryCache(database);
-      database.close();
+      // Force-finalize anything prepared directly through the exposed Database too. Bun 1.4 owns
+      // query() statements, while close(true) also finalizes outstanding prepare() statements.
+      database.close(true);
     },
   };
   return model;
@@ -189,8 +188,7 @@ function configure(database: Database): void {
 /** Releases the file handle without masking whatever error prompted the close. */
 function closeQuietly(database: Database): void {
   try {
-    clearQueryCache(database);
-    database.close();
+    database.close(true);
   } catch {
     // The handle is being discarded; a failure here has nothing left to report to.
   }
@@ -223,24 +221,11 @@ function applyDomains(database: Database, domains: readonly ReadModelDomain[], r
 }
 
 /**
- * `Statement.safeIntegers()` exists at runtime but is absent from bun-types 1.3.14's declarations.
+ * `Statement.safeIntegers()` exists at runtime but is absent from bun-types 1.4.0's declarations.
  * The bigint round-trip test in this package fails if that ever stops being true.
  */
 interface SafeIntegerStatement {
   safeIntegers(enabled: boolean): void;
-}
-
-/**
- * `Database.clearQueryCache()` is likewise runtime-only in bun-types 1.3.14. Without it, statements
- * a domain prepared through `database.query()` keep the file open, and the tests that delete the
- * cache directory fail on Windows.
- */
-interface CachedQueryDatabase {
-  clearQueryCache(): void;
-}
-
-function clearQueryCache(database: Database): void {
-  (database as unknown as CachedQueryDatabase).clearQueryCache();
 }
 
 function cached(statements: Map<string, Statement>, sql: string, bigints: boolean, database: Database): Statement {

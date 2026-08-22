@@ -10,7 +10,7 @@ packages that consume decoded events, see [Packet Routing](packet-routing.md).
 ## Prerequisites
 
 - Windows 10 or 11 x64
-- Bun 1.3 or newer for development
+- Bun 1.4 or newer for development
 - A current Npcap installation from [npcap.com](https://npcap.com/#download)
 
 To run live capture without elevation, install Npcap with **Restrict Npcap

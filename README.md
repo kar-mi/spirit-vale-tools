@@ -28,7 +28,7 @@ public API examples.
 
 ## Development
 
-[Bun 1.3 or newer](https://bun.sh/) is required.
+[Bun 1.4 or newer](https://bun.sh/) is required.
 
 ```powershell
 bun install

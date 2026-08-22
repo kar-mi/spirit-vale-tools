@@ -71,9 +71,9 @@ so it is cheap to call repeatedly and resumes across process restarts.
 - Use `model.bigintStatement(...)` for 64-bit values such as reward coins. A
   plain read rounds anything past `Number.MAX_SAFE_INTEGER`.
 - Prefer `model.statement(...)` / `model.bigintStatement(...)` for your own reads.
-  They are cached for the model's lifetime and finalized by `close()`. Statements
-  prepared directly with `database.query()` or `database.prepare()` are not, and
-  on Windows an outstanding one keeps the database file open after `close()`,
-  which blocks deleting the cache directory.
+  They reuse one prepared statement for the model's lifetime and provide the
+  per-statement bigint mode. Direct `database.query()` / `database.prepare()`
+  access remains available for advanced cases; `model.close()` force-finalizes
+  every outstanding statement.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.
