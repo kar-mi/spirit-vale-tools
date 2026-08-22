@@ -162,20 +162,34 @@ function effectsFromStats(stats: DataMineStat[]): { effects: OutputEffect[]; ref
 }
 
 /**
- * Cards aren't refinable: each stat's magnitude lives in whichever of `Value`/`ValueLv` is
- * non-zero (which one varies per stat type), and both fold into a single `effects` list rather
- * than being split into base/refine like equipment and gems.
+ * Cards aren't refinable, and each stat's magnitude lives in whichever of `Value`/`ValueLv` is
+ * non-zero (which one varies per stat type) - so in general both fold into a single `effects`
+ * list rather than being split into base/refine like equipment and gems.
+ *
+ * The one known exception: the "Delivery Robot" card's weight-limit bonus (stat type 101)
+ * scales with its *equipped gear's* refine level when socketed, so it belongs in
+ * `refineEffects` like a normal refine-scaling stat. This is a deliberate game-design fact with
+ * no signal in items.json to derive it from (its stat entry is structurally identical to the
+ * "Nozzle Robot" card's non-scaling weight bonus) - see the items package's v0.1.6 changelog
+ * entry ("Correctly scale socketed card effects with their equipped gear's refine level").
  */
-function effectsForCards(stats: DataMineStat[]): OutputEffect[] {
+const CARD_REFINE_STAT_TYPES: Record<string, Set<number>> = {
+  "Delivery Robot": new Set([101]),
+};
+
+function effectsForCards(id: string, stats: DataMineStat[]): { effects: OutputEffect[]; refineEffects: OutputEffect[] } {
   const effects: OutputEffect[] = [];
+  const refineEffects: OutputEffect[] = [];
+  const refineTypes = CARD_REFINE_STAT_TYPES[id];
   for (const stat of stats) {
     const magnitude = stat.Value.Value !== 0 ? stat.Value.Value : stat.Value.ValueLv;
     if (magnitude === 0) continue;
     const target = targetFor(stat.Name, stat.Value.ValueStr);
     const value = roundValue(magnitude);
-    effects.push(target ? { type: stat.Type, value, target } : { type: stat.Type, value });
+    const entry = target ? { type: stat.Type, value, target } : { type: stat.Type, value };
+    (refineTypes?.has(stat.Type) ? refineEffects : effects).push(entry);
   }
-  return effects;
+  return { effects, refineEffects };
 }
 
 /** Artifact `fullSet`/`individualBySlot` entries use `value` as the magnitude. */
@@ -232,8 +246,8 @@ function buildOutputItem(
 
   if (raw.itemType === 4) {
     // card
-    const effects = effectsForCards(raw.config?.Stats ?? []);
-    if (effects.length > 0) item.effects = effects;
+    const { effects, refineEffects } = effectsForCards(raw.id, raw.config?.Stats ?? []);
+    withEffects(item, effects, refineEffects);
     return item;
   }
 

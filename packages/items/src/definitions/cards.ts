@@ -705,7 +705,7 @@ export class CardItemDefinitions {
       "itemType": 4,
       "id": "Delivery Robot",
       "displayName": "Delivery Robot Card",
-      "effects": [
+      "refineEffects": [
         {
           "type": 101,
           "value": 100
