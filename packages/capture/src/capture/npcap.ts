@@ -48,26 +48,40 @@ export class SystemNpcapRuntime implements NpcapRuntime {
 
   async status(): Promise<NpcapStatus> {
     if (this.readyStatus) return this.readyStatus;
-    if (process.platform !== "win32") {
-      return { availability: "error", detail: "Npcap capture is supported only on Windows" };
+    switch (process.platform) {
+      case "win32": break;
+      case "linux": break;
+      default: return { availability: "error", detail: `${expectedCaptureLibraryName()} capture is supported only on Windows & linux.` };
     }
     const dllPath = npcapDllPath();
     if (!existsSync(dllPath)) {
-      return { availability: "missing", detail: "Npcap is not installed" };
+      return { availability: "missing", detail: `${expectedCaptureLibraryName()} (dllPath: ${dllPath}) is not found, please install it and make sure it's avaliable.` };
     }
     if (await isAdminOnlyInstall()) {
       return {
         availability: "admin-only",
-        detail: "Npcap is installed for administrators only; reinstall it with that restriction unchecked",
+        detail: `${expectedCaptureLibraryName()} is installed for administrators only; reinstall it with that restriction unchecked`,
       };
     }
     try {
       const api = this.load();
       const version = String(api.symbols.pcap_lib_version());
-      if (!version.toLowerCase().includes("npcap")) {
-        return { availability: "error", detail: "The loaded packet capture library is not Npcap" };
+      switch (process.platform) {
+        case "win32":
+          if (!version.toLowerCase().includes("npcap")) {
+            return { availability: "error", detail: "The loaded packet capture library is not Npcap" };
+          }
+          break;
+        case "linux":
+          if (!version.toLowerCase().includes("pcap")) {
+            return { availability: "error", detail: `The loaded packet capture library is not libpcap, instead got: '${version}'.` };
+          }
+          break;
+        default:
+          throw new Error("Platform not supported.");
       }
-      this.readyStatus = { availability: "ready", detail: "Npcap is ready", version };
+
+      this.readyStatus = { availability: "ready", detail: `${version} is ready`, version };
       return this.readyStatus;
     } catch (error) {
       return { availability: "error", detail: errorMessage(error) };
@@ -125,20 +139,33 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       check(api.symbols.pcap_set_immediate_mode(handle, 1), handle, api, "enable immediate mode");
       const activated = api.symbols.pcap_activate(handle);
       if (activated < 0) throw new Error(`Npcap could not activate ${device.description}: ${pcapError(api, handle)}`);
+      console.log(`Activated: ${activated}`);
       const dataLink = api.symbols.pcap_datalink(handle);
+      console.log(`dataLink: ${dataLink}`);
       const program = new Uint8Array(16);
+
+      console.log(`api.symbols.pcap_compile(handle, program, cString(filter), 1, 0xffff_ffff)...`);
       if (api.symbols.pcap_compile(handle, program, cString(filter), 1, 0xffff_ffff) !== 0) {
         throw new Error(`Npcap rejected BPF filter "${filter}": ${pcapError(api, handle)}`);
       }
+
       try {
+        console.log(`api.symbols.pcap_setfilter(handle, program)...`);
         check(api.symbols.pcap_setfilter(handle, program), handle, api, "apply BPF filter");
       } finally {
+        console.log(`api.symbols.pcap_freecode(program)...`);
         api.symbols.pcap_freecode(program);
       }
       errorBuffer.fill(0);
+
+      console.log(`api.symbols.pcap_setnonblock(handle, 1, errorBuffer)...`);
       check(api.symbols.pcap_setnonblock(handle, 1, errorBuffer), handle, api, "enable nonblocking capture");
-      return new LiveNpcapSession(api, handle, device, dataLink);
+      console.log(`const session = new LiveNpcapSession(api, handle, device, dataLink)...`);
+      const session = new LiveNpcapSession(api, handle, device, dataLink);
+      console.log(`return session;`);
+      return session;
     } catch (error) {
+      console.log(`api.symbols.pcap_close(handle)...`);
       api.symbols.pcap_close(handle);
       throw error;
     }
@@ -179,29 +206,66 @@ class LiveNpcapSession implements NpcapSession {
     private readonly handle: Pointer,
     readonly device: NpcapDevice,
     readonly dataLink: number,
-  ) {}
+  ) {
+    console.log("LiveNpcapSession(constructor)");
+  }
 
   nextPacket(): NpcapPacket | undefined {
+
+    console.log("LiveNpcapSession.nextPacket()");
+
     if (this.closed) return undefined;
     const headerPointer = new Uint8Array(8);
     const dataPointer = new Uint8Array(8);
+
+    console.log("const result = this.api.symbols.pcap_next_ex(this.handle, headerPointer, dataPointer);");
     const result = this.api.symbols.pcap_next_ex(this.handle, headerPointer, dataPointer);
+    console.log("result = ", result);
+
     if (result === 0) return undefined;
+
     if (result < 0) throw new Error(`Npcap capture failed: ${pcapError(this.api, this.handle)}`);
+
+    console.log("pointerFromBuffer(headerPointer);");
     const header = pointerFromBuffer(headerPointer);
+    console.log("header", header);
+
+    console.log("pointerFromBuffer(dataPointer);");
     const data = pointerFromBuffer(dataPointer);
+    console.log("data", data);
+
     if (!header || !data) throw new Error("Npcap returned an invalid packet pointer");
-    const seconds = read.i32(header, 0);
-    const microseconds = read.i32(header, 4);
-    const capturedLength = read.u32(header, 8);
-    const originalLength = read.u32(header, 12);
+
+    const {
+      seconds,
+      microseconds,
+      capturedLength,
+      originalLength
+    } = readPcapHeader(header);
+
     const capturedAt = new Date(seconds * 1_000 + Math.floor(microseconds / 1_000));
-    return {
+
+    console.log("timestampTicks...");
+    const timestampTicks = BigInt(seconds) * 10_000_000n + BigInt(microseconds) * 10n;
+
+    const ab = toArrayBuffer(data, 0, capturedLength);
+    const b = new Uint8Array(ab, 0, capturedLength);
+
+    console.log("data...");
+    const d = Buffer.from(b); // this line segfaults...
+    console.log("data... This segfaults...");
+
+    console.log("LiveNpcapSession.nextPacket() ReturnValue...");
+    const returnValue = {
       capturedAt,
-      timestampTicks: BigInt(seconds) * 10_000_000n + BigInt(microseconds) * 10n,
-      data: Buffer.from(new Uint8Array(toArrayBuffer(data, 0, capturedLength), 0, capturedLength)),
+      timestampTicks: timestampTicks,
+      data: d,
       originalLength,
     };
+
+    console.log("LiveNpcapSession.nextPacket() RETURN");
+
+    return returnValue;
   }
 
   close(): void {
@@ -209,6 +273,31 @@ class LiveNpcapSession implements NpcapSession {
     this.closed = true;
     this.api.symbols.pcap_close(this.handle);
   }
+}
+
+function readPcapHeader(header: Pointer): {
+  seconds: number;
+  microseconds: number;
+  capturedLength: number;
+  originalLength: number;
+} {
+  if (process.platform === "win32") {
+    // Windows / Npcap: 32-bit timeval
+    return {
+      seconds: read.i32(header, 0),
+      microseconds: read.i32(header, 4),
+      capturedLength: read.u32(header, 8),
+      originalLength: read.u32(header, 12),
+    };
+  }
+
+  // Linux (and typically macOS) LP64: 64-bit timeval
+  return {
+    seconds: Number(read.i64(header, 0)),
+    microseconds: Number(read.i64(header, 8)),
+    capturedLength: read.u32(header, 16),
+    originalLength: read.u32(header, 20),
+  };
 }
 
 interface NpcapSymbols {
@@ -281,21 +370,54 @@ function readCStringBuffer(buffer: Uint8Array): string {
 }
 
 function npcapDllPath(): string {
-  return path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "Npcap", "wpcap.dll");
+  switch (process.platform) {
+    case "win32": return path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "Npcap", "wpcap.dll");
+    case "linux": {
+      const candidates = [
+        //process.env.LIBPCAP_PATH, // user override
+        //"libpcap.so",
+        //"libpcap.so.1",
+        //"/usr/lib/libpcap.so",
+        "/nix/store/lhqzqnb3r8wclslpchwwam9k12w7w58f-libpcap-1.10.6-lib/lib/libpcap.so" // hardcoded for my machine, TODO: remove.
+      ].filter(Boolean);
+      for (const path of candidates) {
+        try {
+          // try dlopen; catch and continue
+          return path;
+        } catch { /* … */ }
+      }
+      throw new Error("libpcap not found.");
+    }
+    default: throw new Error(`${process.platform} Platform not supported.`);
+  }
+}
+
+function expectedCaptureLibraryName(): string {
+  switch (process.platform) {
+    case "win32": return "Npcap";
+    case "linux": return "libpcap";
+    default: throw new Error(`${process.platform} Platform not supported.`);
+  }
 }
 
 async function isAdminOnlyInstall(): Promise<boolean> {
-  try {
-    const child = Bun.spawn({
-      cmd: ["reg.exe", "query", "HKLM\\SYSTEM\\CurrentControlSet\\Services\\npcap\\Parameters", "/v", "AdminOnly"],
-      stdout: "pipe",
-      stderr: "ignore",
-      windowsHide: true,
-    });
-    const output = await new Response(child.stdout).text();
-    return await child.exited === 0 && /AdminOnly\s+REG_DWORD\s+0x1\b/i.test(output);
-  } catch {
-    return false;
+  switch (process.platform) {
+    case "win32": {
+      try {
+        const child = Bun.spawn({
+          cmd: ["reg.exe", "query", "HKLM\\SYSTEM\\CurrentControlSet\\Services\\npcap\\Parameters", "/v", "AdminOnly"],
+          stdout: "pipe",
+          stderr: "ignore",
+          windowsHide: true,
+        });
+        const output = await new Response(child.stdout).text();
+        return await child.exited === 0 && /AdminOnly\s+REG_DWORD\s+0x1\b/i.test(output);
+      } catch {
+        return false;
+      }
+    }
+    case "linux": return false; // TODO: check if running as root/sudo or user is member of a group with CAP_NET_RAW & CAP_NET_ADMIN permissions.
+    default: throw new Error(`${process.platform} Platform not supported.`);
   }
 }
 

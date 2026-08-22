@@ -88,15 +88,26 @@ export class PacketCapture extends EventEmitter {
   }
 
   async start(config: CaptureConfig = {}): Promise<void> {
+
+    console.log(`start(config: CaptureConfig = {}): config = `, config);
+
     if (this._state !== "stopped") throw new Error(`cannot start capture while it is ${this._state}`);
-    if (this.platform !== "win32") throw new Error("live packet capture is supported only on Windows");
+
+    switch (this.platform) {
+      case "win32": break; // supported
+      case "linux": break; // newly supported
+      default: throw new Error("live packet capture is not implemented for this platform.");
+    }
+
     const protocols = config.protocols ?? ["tcp", "udp"];
     if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
       throw new Error("protocols must contain tcp, udp, or both");
     }
+
     const targetProcessName = config.targetProcessName?.trim();
     if (config.targetProcessName !== undefined && !targetProcessName) throw new Error("targetProcessName must not be empty");
     this._state = "starting";
+
     try {
       const decodeFishNet = config.decodeFishNet ?? false;
       this.decodeFishNet = decodeFishNet;
@@ -109,12 +120,24 @@ export class PacketCapture extends EventEmitter {
       const resolved = await resolveCaptureDevice(devices, config.deviceName);
       if (!resolved.device) throw new Error("Npcap did not report a usable network adapter");
       const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
+
+      console.log("this.session = await this.runtime.open(resolved.device, filter);");
       this.session = await this.runtime.open(resolved.device, filter);
+
+      console.log("this.session = ", this.session);
+
       if (!supportsDataLink(this.session.dataLink)) {
         throw new Error(`Npcap adapter uses unsupported data-link type ${this.session.dataLink}`);
       }
+
+      console.log("if (resolved.detail)");
       if (resolved.detail) this.emitSafely("warning", resolved.detail);
+
+      console.log("if (targetProcessName) = ", targetProcessName);
       if (targetProcessName) {
+
+        console.log("this.target = new WindowsTargetTracker(...);");
+
         this.target = new WindowsTargetTracker(
           targetProcessName,
           protocols,
@@ -122,20 +145,38 @@ export class PacketCapture extends EventEmitter {
           this.targetProvider,
           (message) => this.emitSafely("warning", message),
         );
+
+        console.log("await this.target.start();...");
+
         await this.target.start();
       }
+
+      console.log(`this._state = "running";`);
+
       this._state = "running";
       this.pollTimer = setInterval(() => void this.poll(), POLL_INTERVAL_MS);
+
+      console.log(`this.emitSafely("started");`);
       this.emitSafely("started");
+      console.log(`Emitted...`);
+
     } catch (error) {
+      console.log(`} catch (error) {`, error);
+
       this.closeResources();
       this.resetDecoder();
       this._state = "stopped";
       throw toError(error);
     }
+
+    console.log(`Started...`);
   }
 
   async stop(): Promise<void> {
+
+    console.log(`PacketCapture.stop()`);
+
+
     if (this._state === "stopped") return;
     this._state = "stopping";
     this.closeResources();
@@ -145,16 +186,30 @@ export class PacketCapture extends EventEmitter {
   }
 
   private poll(): void {
+
+    console.log(`PacketCapture.poll()`, this.polling, this._state, this.session);
+    console.log(`if (this.polling || this._state !== "running" || !this.session)`, this.polling, this._state, this.session);
+
     if (this.polling || this._state !== "running" || !this.session) return;
     this.polling = true;
     try {
+      console.log(`this.flushPending(); ASDF`);
       this.flushPending();
+      console.log(`END this.flushPending(); ASDF`);
+
       for (let index = 0; index < MAX_POLL_BATCH; index += 1) {
+
+        console.log(`const captured = this.session.nextPacket();`);
         const captured = this.session.nextPacket();
         if (!captured) break;
+        console.log(`const ipPacket = extractIpPacket(captured.data, this.session.dataLink);`);
         const ipPacket = extractIpPacket(captured.data, this.session.dataLink);
         if (!ipPacket) continue;
+
+        console.log(`const provisionalDirection = inferDirection(ipPacket, this.session.device);`);
         const provisionalDirection = inferDirection(ipPacket, this.session.device);
+
+        console.log(`const packet = parseTransportPacket(ipPacket, { ... });`);
         const packet = parseTransportPacket(ipPacket, {
           capturedAt: captured.capturedAt,
           timestampTicks: captured.timestampTicks,
@@ -163,7 +218,10 @@ export class PacketCapture extends EventEmitter {
           loopback: this.session.device.loopback,
         });
         if (!packet) continue;
+
+        console.log(`packet.truncated ||= captured.originalLength > captured.data.length;`);
         packet.truncated ||= captured.originalLength > captured.data.length;
+
         if (!this.target) this.emitTransportPacket(packet);
         else {
           const direction = this.target.classify(packet);
@@ -177,6 +235,7 @@ export class PacketCapture extends EventEmitter {
         }
       }
     } catch (error) {
+      console.log(`const failure = toError(error);`);
       const failure = toError(error);
       if (this.listenerCount("error") > 0) this.emitSafely("error", failure);
       else console.error("[spiritvale-capture]", failure);
@@ -187,10 +246,19 @@ export class PacketCapture extends EventEmitter {
   }
 
   private flushPending(): void {
-    if (!this.target || this.pending.length === 0) return;
+    console.log(`PacketCapture.flushPending()`);
+    console.log(`if (!this.target || this.pending.length === 0)`, this.target, this.pending.length);
+
+    if (!this.target || this.pending.length === 0) {  console.log(`flushPending() EARLY RETURN`); return; }
+
+    console.log(`const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;`);
+
     const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
     const remaining: PendingPacket[] = [];
     for (const candidate of this.pending) {
+
+      console.log(`candidate`, candidate);
+
       if (candidate.observedAt < cutoff) continue;
       const direction = this.target.classify(candidate.packet);
       if (!direction) remaining.push(candidate);
@@ -198,11 +266,19 @@ export class PacketCapture extends EventEmitter {
         candidate.packet.direction = direction;
         this.emitTransportPacket(candidate.packet);
       }
+
+      console.log(`END candidate`);
+
     }
     this.pending = remaining;
+
+    console.log(`END PacketCapture.flushPending()`);
   }
 
   private emitTransportPacket(packet: CapturedTransportPacket): void {
+
+    console.log(`PacketCapture.emitTransportPacket()`);
+
     if (packet.protocol === "tcp") this.emitSafely("packet", packet);
     else this.emitSafely("udpPacket", packet);
     this.emitSafely("transportPacket", packet);
@@ -210,6 +286,9 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitLiteNetLibPackets(packet: CapturedUdpPacket): void {
+
+    console.log(`PacketCapture.emitLiteNetLibPackets()`);
+
     try {
       for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
         const captured = { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket;
@@ -223,6 +302,9 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
+
+    console.log(`PacketCapture.emitFishNetPacket()`);
+
     const { property, payload } = packet.packet;
     const udp = packet.udpPacket;
     const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
@@ -251,6 +333,10 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitSafely(event: string, ...args: unknown[]): boolean {
+
+    console.log(`PacketCapture.emitSafely()`);
+
+
     const listeners = this.rawListeners(event);
     for (const listener of listeners) {
       try {
@@ -265,6 +351,8 @@ export class PacketCapture extends EventEmitter {
   }
 
   private closeResources(): void {
+    console.log(`PacketCapture.closeResources()`);
+
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = undefined;
     this.target?.stop();
@@ -275,6 +363,10 @@ export class PacketCapture extends EventEmitter {
   }
 
   private resetDecoder(): void {
+
+    console.log(`PacketCapture.resetDecoder()`);
+
+
     this.decodeLiteNetLib = false;
     this.decodeFishNet = false;
     this.fishNetRpcMap = undefined;
@@ -284,6 +376,10 @@ export class PacketCapture extends EventEmitter {
 }
 
 function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "outbound" {
+
+  console.log(`PacketCapture.inferDirection()`);
+
+
   if ((ipPacket[0]! >> 4) === 4 && ipPacket.length >= 20) {
     const source = `${ipPacket[12]}.${ipPacket[13]}.${ipPacket[14]}.${ipPacket[15]}`;
     if (device.addresses.includes(source)) return "outbound";
@@ -295,5 +391,9 @@ function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "out
 }
 
 function toError(value: unknown): Error {
+
+  console.log(`PacketCapture.toError()`);
+
+
   return value instanceof Error ? value : new Error(String(value));
 }
