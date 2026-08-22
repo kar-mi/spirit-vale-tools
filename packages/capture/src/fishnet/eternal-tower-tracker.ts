@@ -32,12 +32,12 @@ const FLOOR_TITLE_PATTERN = /^(.*)\nFloor\s+(\d+)$/;
  * which is the mechanism this tracker follows instead.
  *
  * Deliberately does not reset on `authenticated`/`disconnect`, unlike the old tracker: a capture
- * spanning a mid-run crash and reload showed the client re-authenticate seven times while remaining
- * on the same floor, and neither DrawTitle nor ClientInstancedMapReady repeated on any of those
- * reconnects - the server does not re-announce a floor the client is merely reattaching to. Treating
- * a reconnect as "left the tower" would make the overlay lose floor knowledge exactly when a crash
- * recovery makes it most valuable. Floor/tower state is instead only cleared by positive evidence of
- * actually leaving: a `ClientInstancedMapReady` whose `bindingSlot` is not `"et"`.
+ * spanning a mid-run crash and reload showed the client re-authenticate on the same floor at least
+ * once with neither DrawTitle nor ClientInstancedMapReady repeating - the server does not
+ * re-announce a floor the client is merely reattaching to. Treating a reconnect as "left the tower"
+ * would make the overlay lose floor knowledge exactly when a crash recovery makes it most valuable.
+ * Floor/tower state is instead only cleared by positive evidence of actually leaving: a
+ * `ClientInstancedMapReady` whose `bindingSlot` is not `"et"`.
  *
  * Caveat: the title string was composed in a single fixed locale (English, "Floor N") in every
  * capture available. If the server localizes this banner per client, a non-English client's floor

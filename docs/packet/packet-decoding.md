@@ -202,12 +202,11 @@ confirms the instanced map the client is bound to and carries its instance id
 - discriminated from an ordinary instanced map by `bindingSlot === "et"`.
 
 The tracker does not reset on `authenticated`/`disconnect`. A capture spanning
-a mid-run crash and reload showed the client re-authenticate seven times
-while remaining on the same floor, with neither RPC repeating on any of those
-reconnects - the server does not re-announce a floor the client is merely
-reattaching to. Floor/tower state is instead only cleared by positive
-evidence of leaving: a `ClientInstancedMapReady` whose `bindingSlot` is not
-`"et"`.
+a mid-run crash and reload showed the client re-authenticate on the same
+floor at least once with neither RPC repeating - the server does not
+re-announce a floor the client is merely reattaching to. Floor/tower state is
+instead only cleared by positive evidence of leaving: a
+`ClientInstancedMapReady` whose `bindingSlot` is not `"et"`.
 
 Caveat: the title string was composed in a single fixed locale (English,
 "Floor N") in every capture available. If the server localizes this banner
