@@ -31,27 +31,19 @@ export class WindowsTargetTracker {
     private readonly provider: TargetSnapshotProvider = new CommandTargetSnapshotProvider(),
     private readonly onWarning: (message: string) => void = () => {},
     private readonly refreshIntervalMs = TARGET_REFRESH_INTERVAL_MS,
-  ) {
-    console.log("WindowsTargetTracker(constructor)");
-  }
+  ) {  }
 
   async start(): Promise<void> {
-    console.log("WindowsTargetTracker.start()");
-
     await this.refresh();
     this.timer = setInterval(() => void this.refresh(), this.refreshIntervalMs);
   }
 
   stop(): void {
-    console.log("WindowsTargetTracker.stop()");
-
     if (this.timer) clearInterval(this.timer);
     this.timer = undefined;
   }
 
   classify(packet: CapturedTransportPacket): "inbound" | "outbound" | undefined {
-    console.log("WindowsTargetTracker.classify(packet) packet =", packet);
-
     const source = this.matches(packet.protocol, packet.sourceIP, packet.sourcePort);
     const destination = this.matches(packet.protocol, packet.destinationIP, packet.destinationPort);
     if (source && !destination) return "outbound";
@@ -60,17 +52,12 @@ export class WindowsTargetTracker {
   }
 
   private matches(protocol: CaptureProtocol, address: string, port: number): boolean {
-    console.log("WindowsTargetTracker.matches(...) ... ", protocol, address, port);
-
     return this.endpointKeys.has(endpointKey(protocol, address, port))
       || this.endpointKeys.has(endpointKey(protocol, "0.0.0.0", port))
       || this.endpointKeys.has(endpointKey(protocol, "::", port));
   }
 
   private async refresh(): Promise<void> {
-
-    console.log("WindowsTargetTracker.refresh()");
-
     if (this.refreshing) return;
     this.refreshing = true;
     try {
@@ -148,8 +135,6 @@ export class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
     processName: string,
     protocols: readonly CaptureProtocol[],
   ) {
-    console.log("snapshotLinux()", processName, protocols);
-
     const processIds = await findLinuxPids(processName);
     if (processIds.length === 0) return { processIds, endpoints: [] };
 
@@ -164,7 +149,6 @@ export class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
       endpoints: outputs.flat().filter((e) => selected.has(e.processId)),
     };
 
-    console.log("snapshotLinux() returns = ", returnValue);
     return returnValue;
   }
 }

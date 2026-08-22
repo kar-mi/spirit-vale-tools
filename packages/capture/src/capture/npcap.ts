@@ -139,33 +139,24 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       check(api.symbols.pcap_set_immediate_mode(handle, 1), handle, api, "enable immediate mode");
       const activated = api.symbols.pcap_activate(handle);
       if (activated < 0) throw new Error(`Npcap could not activate ${device.description}: ${pcapError(api, handle)}`);
-      console.log(`Activated: ${activated}`);
       const dataLink = api.symbols.pcap_datalink(handle);
-      console.log(`dataLink: ${dataLink}`);
       const program = new Uint8Array(16);
 
-      console.log(`api.symbols.pcap_compile(handle, program, cString(filter), 1, 0xffff_ffff)...`);
       if (api.symbols.pcap_compile(handle, program, cString(filter), 1, 0xffff_ffff) !== 0) {
         throw new Error(`Npcap rejected BPF filter "${filter}": ${pcapError(api, handle)}`);
       }
 
       try {
-        console.log(`api.symbols.pcap_setfilter(handle, program)...`);
         check(api.symbols.pcap_setfilter(handle, program), handle, api, "apply BPF filter");
       } finally {
-        console.log(`api.symbols.pcap_freecode(program)...`);
         api.symbols.pcap_freecode(program);
       }
       errorBuffer.fill(0);
 
-      console.log(`api.symbols.pcap_setnonblock(handle, 1, errorBuffer)...`);
       check(api.symbols.pcap_setnonblock(handle, 1, errorBuffer), handle, api, "enable nonblocking capture");
-      console.log(`const session = new LiveNpcapSession(api, handle, device, dataLink)...`);
       const session = new LiveNpcapSession(api, handle, device, dataLink);
-      console.log(`return session;`);
       return session;
     } catch (error) {
-      console.log(`api.symbols.pcap_close(handle)...`);
       api.symbols.pcap_close(handle);
       throw error;
     }
@@ -206,33 +197,24 @@ class LiveNpcapSession implements NpcapSession {
     private readonly handle: Pointer,
     readonly device: NpcapDevice,
     readonly dataLink: number,
-  ) {
-    console.log("LiveNpcapSession(constructor)");
-  }
+  ) {  }
 
   nextPacket(): NpcapPacket | undefined {
 
-    console.log("LiveNpcapSession.nextPacket()");
 
     if (this.closed) return undefined;
     const headerPointer = new Uint8Array(8);
     const dataPointer = new Uint8Array(8);
 
-    console.log("const result = this.api.symbols.pcap_next_ex(this.handle, headerPointer, dataPointer);");
     const result = this.api.symbols.pcap_next_ex(this.handle, headerPointer, dataPointer);
-    console.log("result = ", result);
 
     if (result === 0) return undefined;
 
     if (result < 0) throw new Error(`Npcap capture failed: ${pcapError(this.api, this.handle)}`);
 
-    console.log("pointerFromBuffer(headerPointer);");
     const header = pointerFromBuffer(headerPointer);
-    console.log("header", header);
 
-    console.log("pointerFromBuffer(dataPointer);");
     const data = pointerFromBuffer(dataPointer);
-    console.log("data", data);
 
     if (!header || !data) throw new Error("Npcap returned an invalid packet pointer");
 
@@ -245,25 +227,19 @@ class LiveNpcapSession implements NpcapSession {
 
     const capturedAt = new Date(seconds * 1_000 + Math.floor(microseconds / 1_000));
 
-    console.log("timestampTicks...");
     const timestampTicks = BigInt(seconds) * 10_000_000n + BigInt(microseconds) * 10n;
 
     const ab = toArrayBuffer(data, 0, capturedLength);
     const b = new Uint8Array(ab, 0, capturedLength);
 
-    console.log("data...");
     const d = Buffer.from(b); // this line segfaults...
-    console.log("data... This segfaults...");
 
-    console.log("LiveNpcapSession.nextPacket() ReturnValue...");
     const returnValue = {
       capturedAt,
       timestampTicks: timestampTicks,
       data: d,
       originalLength,
     };
-
-    console.log("LiveNpcapSession.nextPacket() RETURN");
 
     return returnValue;
   }

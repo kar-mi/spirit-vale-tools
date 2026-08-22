@@ -193,23 +193,17 @@ export class PacketCapture extends EventEmitter {
     if (this.polling || this._state !== "running" || !this.session) return;
     this.polling = true;
     try {
-      console.log(`this.flushPending(); ASDF`);
       this.flushPending();
-      console.log(`END this.flushPending(); ASDF`);
 
       for (let index = 0; index < MAX_POLL_BATCH; index += 1) {
 
-        console.log(`const captured = this.session.nextPacket();`);
         const captured = this.session.nextPacket();
         if (!captured) break;
-        console.log(`const ipPacket = extractIpPacket(captured.data, this.session.dataLink);`);
         const ipPacket = extractIpPacket(captured.data, this.session.dataLink);
         if (!ipPacket) continue;
 
-        console.log(`const provisionalDirection = inferDirection(ipPacket, this.session.device);`);
         const provisionalDirection = inferDirection(ipPacket, this.session.device);
 
-        console.log(`const packet = parseTransportPacket(ipPacket, { ... });`);
         const packet = parseTransportPacket(ipPacket, {
           capturedAt: captured.capturedAt,
           timestampTicks: captured.timestampTicks,
@@ -219,7 +213,6 @@ export class PacketCapture extends EventEmitter {
         });
         if (!packet) continue;
 
-        console.log(`packet.truncated ||= captured.originalLength > captured.data.length;`);
         packet.truncated ||= captured.originalLength > captured.data.length;
 
         if (!this.target) this.emitTransportPacket(packet);
@@ -235,7 +228,6 @@ export class PacketCapture extends EventEmitter {
         }
       }
     } catch (error) {
-      console.log(`const failure = toError(error);`);
       const failure = toError(error);
       if (this.listenerCount("error") > 0) this.emitSafely("error", failure);
       else console.error("[spiritvale-capture]", failure);
@@ -246,19 +238,11 @@ export class PacketCapture extends EventEmitter {
   }
 
   private flushPending(): void {
-    console.log(`PacketCapture.flushPending()`);
-    console.log(`if (!this.target || this.pending.length === 0)`, this.target, this.pending.length);
 
-    if (!this.target || this.pending.length === 0) {  console.log(`flushPending() EARLY RETURN`); return; }
-
-    console.log(`const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;`);
-
+    if (!this.target || this.pending.length === 0) { return; }
     const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
     const remaining: PendingPacket[] = [];
     for (const candidate of this.pending) {
-
-      console.log(`candidate`, candidate);
-
       if (candidate.observedAt < cutoff) continue;
       const direction = this.target.classify(candidate.packet);
       if (!direction) remaining.push(candidate);
@@ -266,19 +250,11 @@ export class PacketCapture extends EventEmitter {
         candidate.packet.direction = direction;
         this.emitTransportPacket(candidate.packet);
       }
-
-      console.log(`END candidate`);
-
     }
     this.pending = remaining;
-
-    console.log(`END PacketCapture.flushPending()`);
   }
 
   private emitTransportPacket(packet: CapturedTransportPacket): void {
-
-    console.log(`PacketCapture.emitTransportPacket()`);
-
     if (packet.protocol === "tcp") this.emitSafely("packet", packet);
     else this.emitSafely("udpPacket", packet);
     this.emitSafely("transportPacket", packet);
@@ -286,9 +262,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitLiteNetLibPackets(packet: CapturedUdpPacket): void {
-
-    console.log(`PacketCapture.emitLiteNetLibPackets()`);
-
     try {
       for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
         const captured = { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket;
@@ -302,9 +275,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
-
-    console.log(`PacketCapture.emitFishNetPacket()`);
-
     const { property, payload } = packet.packet;
     const udp = packet.udpPacket;
     const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
@@ -333,10 +303,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private emitSafely(event: string, ...args: unknown[]): boolean {
-
-    console.log(`PacketCapture.emitSafely()`);
-
-
     const listeners = this.rawListeners(event);
     for (const listener of listeners) {
       try {
@@ -351,8 +317,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private closeResources(): void {
-    console.log(`PacketCapture.closeResources()`);
-
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = undefined;
     this.target?.stop();
@@ -363,10 +327,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private resetDecoder(): void {
-
-    console.log(`PacketCapture.resetDecoder()`);
-
-
     this.decodeLiteNetLib = false;
     this.decodeFishNet = false;
     this.fishNetRpcMap = undefined;
@@ -376,10 +336,6 @@ export class PacketCapture extends EventEmitter {
 }
 
 function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "outbound" {
-
-  console.log(`PacketCapture.inferDirection()`);
-
-
   if ((ipPacket[0]! >> 4) === 4 && ipPacket.length >= 20) {
     const source = `${ipPacket[12]}.${ipPacket[13]}.${ipPacket[14]}.${ipPacket[15]}`;
     if (device.addresses.includes(source)) return "outbound";
@@ -391,9 +347,5 @@ function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "out
 }
 
 function toError(value: unknown): Error {
-
-  console.log(`PacketCapture.toError()`);
-
-
   return value instanceof Error ? value : new Error(String(value));
 }
