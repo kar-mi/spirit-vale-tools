@@ -16,6 +16,8 @@ jobs:
           bun-version: 1.4.0
       - name: Install Bun dependencies
         run: bun install --frozen-lockfile
+      - name: Check dependency deduplication
+        run: bun dedupe --check
       - name: Typecheck Bun package
         run: bun run typecheck
       - name: Test Bun package
