@@ -95,16 +95,13 @@ export class PacketCapture extends EventEmitter {
       case "linux": break; // newly supported
       default: throw new Error("live packet capture is not implemented for this platform.");
     }
-
     const protocols = config.protocols ?? ["tcp", "udp"];
     if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
       throw new Error("protocols must contain tcp, udp, or both");
     }
-
     const targetProcessName = config.targetProcessName?.trim();
     if (config.targetProcessName !== undefined && !targetProcessName) throw new Error("targetProcessName must not be empty");
     this._state = "starting";
-
     try {
       const decodeFishNet = config.decodeFishNet ?? false;
       this.decodeFishNet = decodeFishNet;
@@ -117,7 +114,6 @@ export class PacketCapture extends EventEmitter {
       const resolved = await resolveCaptureDevice(devices, config.deviceName);
       if (!resolved.device) throw new Error("Npcap did not report a usable network adapter");
       const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
-
       this.session = await this.runtime.open(resolved.device, filter);
       if (!supportsDataLink(this.session.dataLink)) {
         throw new Error(`Npcap adapter uses unsupported data-link type ${this.session.dataLink}`);
@@ -158,9 +154,7 @@ export class PacketCapture extends EventEmitter {
     this.polling = true;
     try {
       this.flushPending();
-
       for (let index = 0; index < MAX_POLL_BATCH; index += 1) {
-
         const captured = this.session.nextPacket();
         if (!captured) break;
         const ipPacket = extractIpPacket(captured.data, this.session.dataLink);
@@ -176,9 +170,7 @@ export class PacketCapture extends EventEmitter {
           loopback: this.session.device.loopback,
         });
         if (!packet) continue;
-
         packet.truncated ||= captured.originalLength > captured.data.length;
-
         if (!this.target) this.emitTransportPacket(packet);
         else {
           const direction = this.target.classify(packet);
@@ -202,7 +194,7 @@ export class PacketCapture extends EventEmitter {
   }
 
   private flushPending(): void {
-    if (!this.target || this.pending.length === 0) { return; }
+    if (!this.target || this.pending.length === 0) return;
     const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
     const remaining: PendingPacket[] = [];
     for (const candidate of this.pending) {

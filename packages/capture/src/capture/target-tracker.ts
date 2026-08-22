@@ -31,7 +31,7 @@ export class WindowsTargetTracker {
     private readonly provider: TargetSnapshotProvider = new CommandTargetSnapshotProvider(),
     private readonly onWarning: (message: string) => void = () => {},
     private readonly refreshIntervalMs = TARGET_REFRESH_INTERVAL_MS,
-  ) {  }
+  ) {}
 
   async start(): Promise<void> {
     await this.refresh();

@@ -80,7 +80,6 @@ export class SystemNpcapRuntime implements NpcapRuntime {
         default:
           throw new Error("Platform not supported.");
       }
-
       this.readyStatus = { availability: "ready", detail: `${version} is ready`, version };
       return this.readyStatus;
     } catch (error) {
@@ -141,18 +140,15 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       if (activated < 0) throw new Error(`Npcap could not activate ${device.description}: ${pcapError(api, handle)}`);
       const dataLink = api.symbols.pcap_datalink(handle);
       const program = new Uint8Array(16);
-
       if (api.symbols.pcap_compile(handle, program, cString(filter), 1, 0xffff_ffff) !== 0) {
         throw new Error(`Npcap rejected BPF filter "${filter}": ${pcapError(api, handle)}`);
       }
-
       try {
         check(api.symbols.pcap_setfilter(handle, program), handle, api, "apply BPF filter");
       } finally {
         api.symbols.pcap_freecode(program);
       }
       errorBuffer.fill(0);
-
       check(api.symbols.pcap_setnonblock(handle, 1, errorBuffer), handle, api, "enable nonblocking capture");
       return new LiveNpcapSession(api, handle, device, dataLink);
     } catch (error) {
@@ -196,7 +192,7 @@ class LiveNpcapSession implements NpcapSession {
     private readonly handle: Pointer,
     readonly device: NpcapDevice,
     readonly dataLink: number,
-  ) {  }
+  ) {}
 
   nextPacket(): NpcapPacket | undefined {
     if (this.closed) return undefined;
