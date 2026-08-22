@@ -35,7 +35,6 @@ export type {
 export {
   FishNetMonsterDirectory,
   decodeMonsterSpawn,
-  decodeMonsterSync,
 } from "./fishnet/monster-directory.ts";
 export type {
   FishNetMonsterDirectoryChange,

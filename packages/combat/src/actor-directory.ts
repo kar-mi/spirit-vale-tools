@@ -1,6 +1,6 @@
 import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetRpcParameter } from "@kar-mi/spirit-vale-tools-capture";
 import { characterDataParameter, decodeFieldRun, loadBundledFishNetRpcMap } from "@kar-mi/spirit-vale-tools-capture";
-import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
+import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
 export interface FishNetActorIdentity {
   readonly actorId: number;
@@ -112,7 +112,6 @@ export class FishNetActorDirectory {
           actorId: packet.objectId,
           displayName: embeddedIdentity.displayName,
           ...(embeddedIdentity.archetype === undefined ? {} : { archetype: embeddedIdentity.archetype }),
-          ...(embeddedIdentity.uid === undefined ? {} : { uid: embeddedIdentity.uid }),
         };
         this.identitySources.set(packet.objectId, next);
         this.sourceRevisions.set(packet.objectId, this.nextSourceRevision++);
@@ -286,18 +285,15 @@ export class FishNetActorDirectory {
     this.options.onLocalIdentity?.(next);
   }
 
-  /** Names a spawn from embedded VisualData, falling back to the UID cache for delta spawns. */
-  private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number; uid?: string } | undefined {
-    const embedded = decodeSpawnIdentity(packet);
-    const uid = packet.spawnSyncPayload && hasPlayerControllerEvidence(packet)
-      ? scanSpawnUid(packet.spawnSyncPayload)
-      : undefined;
-    if (embedded) {
-      if (uid !== undefined) this.learnUidIdentity(uid, embedded);
-      return uid === undefined ? embedded : { ...embedded, uid };
-    }
-    const learned = uid === undefined ? undefined : this.uidIdentities.get(uid);
-    return learned ? { ...learned, uid } : undefined;
+  /**
+   * Names a spawn from its embedded VisualData. There is no structural (or, empirically, ever
+   * observed) source for a character's uid on a routine spawn - the datamine's full SyncType
+   * catalog has no GUID-shaped field on any behaviour, and a scan for one across several real
+   * captures never matched. A uid is only actually learned from `CharacterCallback_T` (self or an
+   * explicit inspect, see `CHARACTER_RPC_NAMES` below) or seeded externally via `knownIdentities`.
+   */
+  private resolveSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype?: number } | undefined {
+    return decodeSpawnIdentity(packet);
   }
 
   private learnUidIdentity(uid: string, identity: { displayName: string; archetype?: number }): void {
@@ -483,10 +479,15 @@ const PLAYER_PREFAB_KEYS: ReadonlySet<string> = new Set(
 );
 
 function decodeSpawnIdentity(packet: DecodedFishNetPacket): { displayName: string; archetype: number } | undefined {
-  const payload = packet.spawnSyncPayload;
-  if (!payload || payload.length < 4) return undefined;
   if (!hasPlayerControllerEvidence(packet)) return undefined;
-  return scanSpawnIdentity(payload);
+  const entry = packet.spawnSyncEntries?.find(
+    (candidate) => candidate.networkBehaviourType === "PlayerController" && candidate.index === VISUAL_DATA_SYNC_INDEX,
+  );
+  if (!entry) return undefined;
+  const displayName = entry.fields.find((field) => field.name === "Appearance.DisplayName")?.value;
+  const archetype = entry.fields.find((field) => field.name === "Appearance.Archetype")?.value;
+  if (typeof displayName !== "string" || displayName.length === 0 || !Number.isInteger(archetype)) return undefined;
+  return { displayName, archetype: archetype as number };
 }
 
 function hasIdentityBehaviourEvidence(packet: DecodedFishNetPacket): boolean {
@@ -504,59 +505,6 @@ function hasPlayerControllerEvidence(packet: DecodedFishNetPacket): boolean {
 function isCurrentPlayerPrefab(packet: DecodedFishNetPacket): boolean {
   if (packet.spawnCollectionId === undefined || packet.spawnPrefabId === undefined) return false;
   return PLAYER_PREFAB_KEYS.has(`${packet.spawnCollectionId}:${packet.spawnPrefabId}`);
-}
-
-/** Scan packed strings for a GUID UID in spawn state; accept only one unambiguous match. */
-function scanSpawnUid(payload: Buffer): string | undefined {
-  const matches = new Set<string>();
-  for (let offset = 0; offset < payload.length - 1; offset += 1) {
-    try {
-      const length = readSignedPackedWhole(payload, offset);
-      if (length.value < 8 || length.value > 80) continue;
-      const end = checkedEnd(payload, length.nextOffset, length.value);
-      const candidate = new TextDecoder("utf-8", { fatal: true }).decode(payload.subarray(length.nextOffset, end));
-      if (GUID_PATTERN.test(candidate)) matches.add(candidate);
-    } catch { /* not a packed string */ }
-  }
-  return matches.size === 1 ? matches.values().next().value : undefined;
-}
-
-/**
- * The spawn SyncType area is written per behaviour as [componentIndex][writtenCount] followed by
- * writtenCount entries of [syncIndex][codec-encoded value]. Entry sizes depend on codecs the rpc
- * map does not describe, so the area cannot be walked structurally. Instead, anchor on the
- * VisualData sync index byte and validate that a well-formed display name and archetype follow;
- * the result is used only when every match agrees on a single identity.
- */
-function scanSpawnIdentity(payload: Buffer): { displayName: string; archetype: number } | undefined {
-  const identities = new Map<string, { displayName: string; archetype: number }>();
-  for (let offset = 0; offset < payload.length - 2; offset += 1) {
-    if (payload[offset] !== VISUAL_DATA_SYNC_INDEX) continue;
-    const identity = readVisualDataAt(payload, offset + 1, payload.length);
-    if (identity) identities.set(JSON.stringify([identity.displayName, identity.archetype]), identity);
-  }
-  return identities.size === 1 ? identities.values().next().value : undefined;
-}
-
-function readVisualDataAt(
-  payload: Buffer,
-  offset: number,
-  end: number,
-): { displayName: string; archetype: number } | undefined {
-  try {
-    const length = readSignedPackedWhole(payload, offset);
-    if (length.value < 1 || length.value > 128) return undefined;
-    const nameEnd = checkedEnd(payload, length.nextOffset, length.value);
-    if (nameEnd > end) return undefined;
-    const displayName = new TextDecoder("utf-8", { fatal: true }).decode(payload.subarray(length.nextOffset, nameEnd));
-    if (!displayName.trim() || hasControlCharacters(displayName)) return undefined;
-    const archetype = readSignedPackedWhole(payload, nameEnd);
-    if (archetype.value < 0 || archetype.value > 1_000 || archetype.nextOffset > end) return undefined;
-    return { displayName, archetype: archetype.value };
-  } catch {
-    // Other spawn state may contain the same byte values without being VisualData.
-    return undefined;
-  }
 }
 
 function hasControlCharacters(value: string): boolean {

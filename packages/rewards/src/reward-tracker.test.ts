@@ -135,18 +135,24 @@ describe("mob reward tracker", () => {
 
   test("identifies map-load mobs from initial SyncTypes embedded in their spawn", () => {
     const tracker = new FishNetMobRewardTracker({ catalog, correlationWindowTicks: 5 });
-    const spawnSyncPayload = Buffer.concat([
-      Buffer.from([3, 1, 7]), // behaviour index, written count, SyncType index
-      string("training-mob"), packed(2), packed(0), packed(1), Buffer.from([0, 1]),
-    ]);
     tracker.consume({
       tick: 1,
       packetId: 3,
       packetName: "objectSpawn",
-      raw: spawnSyncPayload,
+      raw: Buffer.alloc(0),
       payload: Buffer.alloc(0),
       objectId: 52,
-      spawnSyncPayload,
+      spawnSyncEntries: [{
+        index: 0,
+        name: "Data",
+        componentIndex: 3,
+        networkBehaviourType: "MonsterController",
+        fields: [
+          { name: "Id", typeName: "System.String", codec: "stringUtf8Packed", value: "training-mob" },
+          { name: "Level", typeName: "System.Int32", codec: "packedInt32", value: 2 },
+          { name: "Rank", typeName: "MonsterRank", codec: "packedInt32", value: 0 },
+        ],
+      }],
     });
     tracker.consume(experience(2, 0, 1, 0, 1, 0n));
     tracker.consume(death(3, 52));
@@ -217,8 +223,16 @@ describe("mob reward tracker", () => {
 });
 
 function monsterSync(tick: number, objectId: number): DecodedFishNetPacket {
-  const payload = Buffer.concat([Buffer.from([7]), string("training-mob"), packed(2), packed(0), packed(1), Buffer.from([0, 1])]);
-  return { tick, packetId: 1, packetName: "syncType", raw: payload, payload, syncPayload: payload, syncIndex: 7, objectId, networkBehaviourType: "MonsterController" };
+  const payload = Buffer.alloc(0);
+  return {
+    tick, packetId: 1, packetName: "syncType", raw: payload, payload,
+    syncIndex: 0, syncName: "Data", objectId, networkBehaviourType: "MonsterController",
+    decodedFields: [
+      { name: "Id", typeName: "System.String", codec: "stringUtf8Packed", value: "training-mob" },
+      { name: "Level", typeName: "System.Int32", codec: "packedInt32", value: 2 },
+      { name: "Rank", typeName: "MonsterRank", codec: "packedInt32", value: 0 },
+    ],
+  };
 }
 
 function experience(tick: number, xp: number, level: number, jobXp: number, jobLevel: number, coins: bigint): DecodedFishNetPacket {

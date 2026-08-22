@@ -8,7 +8,6 @@
  */
 
 import type { DecodedFishNetPacket, FishNetDecodedValue } from "./types.ts";
-import { checkedEnd, readSignedPackedWhole } from "./wire-reader.ts";
 
 export interface FishNetMonsterSpawn {
   mobId: string;
@@ -48,9 +47,7 @@ export class FishNetMonsterDirectory {
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
       const removed = this.objects.delete(packet.objectId);
-      const spawned = packet.spawnSyncPayload
-        ? decodeMonsterSpawn(packet.spawnSyncPayload, this.levels)
-        : undefined;
+      const spawned = decodeMonsterSpawn(packet, this.levels);
       return spawned
         ? this.set(packet.objectId, spawned)
         : removed ? { operation: "remove", objectId: packet.objectId } : undefined;
@@ -59,11 +56,10 @@ export class FishNetMonsterDirectory {
       || (packet.networkBehaviourType !== undefined && packet.networkBehaviourType !== "MonsterController")) {
       return undefined;
     }
-    const raw = decodeMonsterSync(packet.payload);
-    const mobId = stringField(packet, ["Data.Id", "Monster.Id", "Id"]) ?? raw?.mobId;
-    const level = numberField(packet, ["Data.Level", "Monster.Level", "Level"]) ?? raw?.level;
+    const mobId = stringField(packet, ["Data.Id", "Monster.Id", "Id"]);
+    const level = numberField(packet, ["Data.Level", "Monster.Level", "Level"]);
     if (!mobId || level === undefined || !this.levels.get(mobId)) return undefined;
-    const rank = numberField(packet, ["Data.Rank", "Monster.Rank", "Rank"]) ?? raw?.rank;
+    const rank = numberField(packet, ["Data.Rank", "Monster.Rank", "Rank"]);
     return this.set(packet.objectId, { mobId, level, ...(rank === undefined ? {} : { rank }) });
   }
 
@@ -86,56 +82,23 @@ export class FishNetMonsterDirectory {
   }
 }
 
-export function decodeMonsterSync(payload: Buffer): { mobId: string; level: number; rank: number } | undefined {
-  try {
-    if (payload.length < 2) return undefined;
-    let offset = 1; // SyncType index.
-    const length = readSignedPackedWhole(payload, offset);
-    if (length.value <= 0) return undefined;
-    const end = checkedEnd(payload, length.nextOffset, length.value);
-    const mobId = payload.toString("utf8", length.nextOffset, end);
-    offset = end;
-    const level = readSignedPackedWhole(payload, offset);
-    const rank = readSignedPackedWhole(payload, level.nextOffset);
-    const team = readSignedPackedWhole(payload, rank.nextOffset);
-    if (level.value < 1 || level.value > 1_000 || rank.value < 0 || team.value < 0) return undefined;
-    return { mobId, level: level.value, rank: rank.value };
-  } catch {
-    return undefined;
-  }
-}
-
+/**
+ * Reads a monster's identity from its spawn's embedded `Data` (`MonsterDto`) SyncType entry,
+ * decoded structurally from the rpc map rather than scanned for.
+ */
 export function decodeMonsterSpawn(
-  payload: Buffer,
+  packet: DecodedFishNetPacket,
   levels: FishNetMonsterLevels,
-): { mobId: string; level: number; rank: number } | undefined {
-  const matches = new Map<string, { mobId: string; level: number; rank: number; exactLevel: boolean }>();
-  for (let offset = 0; offset < payload.length; offset += 1) {
-    try {
-      const length = readSignedPackedWhole(payload, offset);
-      if (length.value < 1 || length.value > 200) continue;
-      const end = checkedEnd(payload, length.nextOffset, length.value);
-      const mobId = payload.toString("utf8", length.nextOffset, end);
-      const definition = levels.get(mobId);
-      if (!definition) continue;
-      const level = readSignedPackedWhole(payload, end);
-      const rank = readSignedPackedWhole(payload, level.nextOffset);
-      const team = readSignedPackedWhole(payload, rank.nextOffset);
-      if (level.value < 1 || level.value > 1_000 || rank.value < 0 || rank.value > 100 || team.value < 0 || team.value > 100) continue;
-      matches.set(`${mobId}|${level.value}|${rank.value}`, {
-        mobId,
-        level: level.value,
-        rank: rank.value,
-        exactLevel: level.value === definition.level,
-      });
-    } catch {
-      // Arbitrary offsets are expected not to begin a packed string.
-    }
-  }
-  const values = [...matches.values()];
-  const exact = values.filter((value) => value.exactLevel);
-  const selected = exact.length === 1 ? exact[0] : values.length === 1 ? values[0] : undefined;
-  return selected ? { mobId: selected.mobId, level: selected.level, rank: selected.rank } : undefined;
+): { mobId: string; level: number; rank?: number } | undefined {
+  const entry = packet.spawnSyncEntries?.find(
+    (candidate) => candidate.networkBehaviourType === "MonsterController" && candidate.name === "Data",
+  );
+  if (!entry) return undefined;
+  const mobId = entry.fields.find((field) => field.name === "Id")?.value;
+  const level = entry.fields.find((field) => field.name === "Level")?.value;
+  const rank = entry.fields.find((field) => field.name === "Rank")?.value;
+  if (typeof mobId !== "string" || !mobId || typeof level !== "number" || !levels.get(mobId)) return undefined;
+  return { mobId, level, ...(typeof rank === "number" ? { rank } : {}) };
 }
 
 function field(packet: DecodedFishNetPacket, names: readonly string[]): FishNetDecodedValue | undefined {

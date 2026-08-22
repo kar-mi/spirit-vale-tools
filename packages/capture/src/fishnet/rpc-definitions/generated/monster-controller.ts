@@ -183,6 +183,28 @@ export const monsterControllerSyncTypes = [
   {
     "index": 0,
     "name": "Data",
-    "typeName": "MonsterDto"
+    "typeName": "MonsterDto",
+    "fields": [
+      {
+        "name": "Id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "Level",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "Rank",
+        "typeName": "MonsterRank",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "Team",
+        "typeName": "CombatTeam",
+        "codec": "packedInt32"
+      }
+    ]
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];

@@ -2,7 +2,24 @@ import { describe, expect, test } from "bun:test";
 
 import { FishNetActorDirectory } from "./actor-directory.ts";
 import { characterDataParameter } from "@kar-mi/spirit-vale-tools-capture";
-import type { DecodedFishNetPacket, FishNetDecodedField, FishNetPacketName, FishNetRpcParameter } from "@kar-mi/spirit-vale-tools-capture";
+import type {
+  DecodedFishNetPacket,
+  FishNetDecodedField,
+  FishNetPacketName,
+  FishNetRpcParameter,
+  FishNetSpawnSyncEntry,
+} from "@kar-mi/spirit-vale-tools-capture";
+
+/** The `spawnSyncEntries` a real decode would produce for a PlayerController's VisualData sync. */
+function visualSpawnEntries(displayName: string, archetype = 2, componentIndex = 0): FishNetSpawnSyncEntry[] {
+  return [{
+    index: 5,
+    name: "VisualData",
+    componentIndex,
+    networkBehaviourType: "PlayerController",
+    fields: visual(displayName, archetype),
+  }];
+}
 
 function packet(
   tick: number,
@@ -39,6 +56,7 @@ function spawn(
   ownerConnectionId: number,
   networkBehaviourType: string,
   spawnSyncPayload?: Buffer,
+  spawnSyncEntries?: FishNetSpawnSyncEntry[],
 ): DecodedFishNetPacket {
   return {
     ...packet(tick, "objectSpawn", objectId),
@@ -52,6 +70,7 @@ function spawn(
       networkBehaviourType,
     }],
     ...(spawnSyncPayload === undefined ? {} : { spawnSyncPayload }),
+    ...(spawnSyncEntries === undefined ? {} : { spawnSyncEntries }),
   };
 }
 
@@ -60,10 +79,11 @@ function prefabSpawn(
   objectId: number,
   ownerConnectionId: number,
   prefabId: number,
-  spawnSyncPayload: Buffer,
+  spawnSyncPayload: Buffer | undefined,
+  spawnSyncEntries?: FishNetSpawnSyncEntry[],
 ): DecodedFishNetPacket {
   return {
-    ...spawn(tick, objectId, ownerConnectionId, "UnrecognizedComponent", spawnSyncPayload),
+    ...spawn(tick, objectId, ownerConnectionId, "UnrecognizedComponent", spawnSyncPayload, spawnSyncEntries),
     rpcLinkRegistrations: [],
     spawnType: "instantiated",
     spawnCollectionId: 0,
@@ -251,13 +271,8 @@ describe("FishNetActorDirectory", () => {
 
   test("reads a player identity from map-load SyncTypes embedded in the spawn", () => {
     const directory = new FishNetActorDirectory();
-    const embeddedVisual = Buffer.concat([
-      Buffer.from([0, 1, 5]), // component index, written SyncType count, VisualData index
-      packedString("Mapload Ranger"),
-      packed(6),
-    ]);
 
-    expect(directory.consume(spawn(1, 60, 12, "PlayerController", embeddedVisual))).toEqual([{
+    expect(directory.consume(spawn(1, 60, 12, "PlayerController", undefined, visualSpawnEntries("Mapload Ranger", 6)))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -278,14 +293,9 @@ describe("FishNetActorDirectory", () => {
   });
 
   test("uses the verified player prefab when a spawn omits RPC-link registrations", () => {
-    const embeddedVisual = Buffer.concat([
-      Buffer.from([0, 1, 5]),
-      packedString("Prefab Ranger"),
-      packed(8),
-    ]);
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 62, 14, 4, embeddedVisual))).toEqual([{
+    expect(directory.consume(prefabSpawn(1, 62, 14, 4, undefined, visualSpawnEntries("Prefab Ranger", 8)))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -313,14 +323,9 @@ describe("FishNetActorDirectory", () => {
   test("names a PlayerClone spawn so its damage is not stranded on an anonymous actor", () => {
     // A clone is a second network object under the owner's connection and deals damage under its
     // own AttackerId. Excluding it left that damage on an unnamed actor keyed by object id.
-    const embeddedVisual = Buffer.concat([
-      Buffer.from([0, 1, 5]),
-      packedString("Mirror Ranger"),
-      packed(8),
-    ]);
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 64, 16, 1, embeddedVisual))).toEqual([{
+    expect(directory.consume(prefabSpawn(1, 64, 16, 1, undefined, visualSpawnEntries("Mirror Ranger", 8)))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -333,12 +338,7 @@ describe("FishNetActorDirectory", () => {
 
   test("gives a clone its owner's identity so both fold into one meter row", () => {
     const directory = new FishNetActorDirectory();
-    const embeddedVisual = Buffer.concat([
-      Buffer.from([0, 1, 5]),
-      packedString("Owner Ranger"),
-      packed(8),
-    ]);
-    directory.consume(prefabSpawn(1, 70, 21, 4, embeddedVisual));
+    directory.consume(prefabSpawn(1, 70, 21, 4, undefined, visualSpawnEntries("Owner Ranger", 8)));
 
     // The clone spawns under the same owner connection carrying no identity of its own.
     const events = directory.consume(prefabSpawn(2, 71, 21, 1, Buffer.alloc(0)));
@@ -355,16 +355,20 @@ describe("FishNetActorDirectory", () => {
     expect(directory.get(71)?.displayName).toBe(directory.get(70)?.displayName);
   });
 
-  test("reads a player identity from length-delimited spawn SyncType sections", () => {
+  test("finds the VisualData entry regardless of where it sits among a spawn's SyncType sections", () => {
+    // A spawn commonly reports SyncTypes for several of its behaviours in one bundle; VisualData
+    // need not be first, or on componentIndex 0.
     const directory = new FishNetActorDirectory();
-    const visualData = Buffer.concat([Buffer.from([5]), packedString("Section Ranger"), packed(9)]);
-    const movementData = Buffer.from([2, 0x10, 0x20, 0x30]);
-    const embedded = Buffer.concat([
-      section(1, movementData), // non-player component section skipped by the walk
-      section(0, visualData),
-    ]);
+    const movementEntry: FishNetSpawnSyncEntry = {
+      index: 2,
+      name: "Position",
+      componentIndex: 1,
+      networkBehaviourType: "MoveComponent",
+      fields: [{ name: "Position", typeName: "UnityEngine.Vector3", codec: "vector3", value: [1, 2, 3] }],
+    };
+    const entries = [movementEntry, ...visualSpawnEntries("Section Ranger", 9)];
 
-    expect(directory.consume(spawn(1, 61, 13, "PlayerController", embedded))).toEqual([{
+    expect(directory.consume(spawn(1, 61, 13, "PlayerController", undefined, entries))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -372,30 +376,6 @@ describe("FishNetActorDirectory", () => {
       displayName: "Section Ranger",
       archetype: 9,
       ownerConnectionId: 13,
-    }]);
-  });
-
-  test("reads a player identity from a synthetic full-state spawn payload", () => {
-    // Synthetic payload containing unrelated bytes before VisualData.
-    // VisualData (index 5) sits mid-payload after entries with codecs the rpc map cannot skip.
-    const captured = Buffer.concat([
-      Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]),
-      Buffer.from([5]),
-      packedString("Synthetic Ranger"),
-      packed(14),
-      Buffer.from([0x11, 0x22, 0x33]),
-    ]);
-
-    const directory = new FishNetActorDirectory();
-    const events = directory.consume(spawn(1, 476, 265, "PlayerController", captured));
-    expect(events).toEqual([{
-      kind: "actorIdentity",
-      operation: "upsert",
-      tick: 1,
-      actorId: 476,
-      displayName: "Synthetic Ranger",
-      archetype: 14,
-      ownerConnectionId: 265,
     }]);
   });
 
@@ -445,59 +425,6 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
-  test("names a delta spawn from the UID cache across a map change", () => {
-    const directory = new FishNetActorDirectory();
-    const fullSpawn = Buffer.concat([
-      Buffer.from([0, 2, 5]), // component index, written SyncType count, VisualData index
-      packedString("Delta Ranger"),
-      packed(6),
-      Buffer.from([7]), // synthetic UID entry sync index
-      packedString(syntheticUid),
-    ]);
-    expect(directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn))).toMatchObject([
-      { operation: "upsert", actorId: 60, displayName: "Delta Ranger", archetype: 6 },
-    ]);
-
-    directory.consume(packet(2, "authenticated"));
-
-    // Synthetic delta spawn with no VisualData, carrying only the UID.
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString(syntheticUid)]);
-    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
-      kind: "actorIdentity",
-      operation: "upsert",
-      tick: 3,
-      actorId: 70,
-      displayName: "Delta Ranger",
-      uid: syntheticUid,
-      archetype: 6,
-      ownerConnectionId: 44,
-    }]);
-  });
-
-  test("names a delta spawn from a UID learned via CharacterCallback_T", () => {
-    const directory = new FishNetActorDirectory();
-    directory.setLocalIdentity({ displayName: "Fictional Hero", archetype: 12 });
-    directory.consume(spawn(1, 62698, 21, "PlayerController"));
-    directory.consume({
-      ...packet(2, "rpcLink", 62698),
-      rpcName: "CharacterCallback_T",
-      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Fictional Hero" }),
-    });
-    directory.consume(packet(3, "authenticated"));
-
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1, 0, 6]), packedString(syntheticUid)]);
-    expect(directory.consume(spawn(4, 71, 30, "PlayerController", deltaSpawn))).toEqual([{
-      kind: "actorIdentity",
-      operation: "upsert",
-      tick: 4,
-      actorId: 71,
-      displayName: "Fictional Hero",
-      uid: syntheticUid,
-      archetype: 12,
-      ownerConnectionId: 30,
-    }]);
-  });
-
   test("uses the cached local archetype for an actor discovered through serverRpc", () => {
     const directory = new FishNetActorDirectory({
       localIdentity: { displayName: "Fictional Hero", archetype: 12 },
@@ -515,64 +442,40 @@ describe("FishNetActorDirectory", () => {
     }]);
   });
 
-  test("leaves empty delta spawns unnamed but keeps the UID cache across reset", () => {
+  test("leaves a spawn with no VisualData unnamed", () => {
+    // A spawn's dirty SyncType list can omit VisualData entirely (already synced, unchanged) - there
+    // is no other structural source for identity on a spawn, so it stays unnamed until some other
+    // signal (a fresh VisualData resync, CharacterCallback_T, or owner-based propagation) names it.
     const directory = new FishNetActorDirectory();
-    const fullSpawn = Buffer.concat([
-      Buffer.from([0, 1, 5]),
-      packedString("Delta Ranger"),
-      packed(6),
-      packedString(syntheticUid),
-    ]);
-    directory.consume(spawn(1, 60, 12, "PlayerController", fullSpawn));
-
-    // Empty synthetic delta spawn: nothing to name from.
-    expect(directory.consume(spawn(2, 61, 13, "PlayerController", Buffer.from("0101000603010108", "hex"))))
+    expect(directory.consume(spawn(1, 61, 13, "PlayerController", undefined, [])))
       .toEqual([]);
-
-    directory.reset();
-    // The UID cache survives reset(), so a later delta spawn for the same character still resolves.
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString(syntheticUid)]);
-    expect(directory.consume(spawn(3, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
-      kind: "actorIdentity",
-      operation: "upsert",
-      tick: 3,
-      actorId: 70,
-      displayName: "Delta Ranger",
-      uid: syntheticUid,
-      archetype: 6,
-      ownerConnectionId: 44,
-    }]);
+    expect(directory.get(61)).toBeUndefined();
   });
 
-  test("seeds the UID cache from knownIdentities and reports newly learned identities", () => {
+  test("reports a newly learned identity via CharacterCallback_T but not an unchanged re-seed", () => {
     const learned: { uid: string; displayName: string; archetype?: number }[] = [];
     const directory = new FishNetActorDirectory({
-      knownIdentities: [{ uid: syntheticUid, displayName: "Delta Ranger", archetype: 6 }],
+      knownIdentities: [{ uid: syntheticUid, displayName: "Delta Ranger" }],
       onIdentityLearned: (identity) => learned.push(identity),
     });
 
-    const deltaSpawn = Buffer.concat([Buffer.from([1, 1]), packedString(syntheticUid)]);
-    expect(directory.consume(spawn(1, 70, 44, "PlayerController", deltaSpawn))).toEqual([{
-      kind: "actorIdentity",
-      operation: "upsert",
-      tick: 1,
-      actorId: 70,
-      displayName: "Delta Ranger",
-      uid: syntheticUid,
-      archetype: 6,
-      ownerConnectionId: 44,
-    }]);
-    // Resolving from the seeded cache does not re-learn an unchanged identity.
+    // Re-learning the exact identity already seeded via knownIdentities does not re-report it.
+    directory.consume(spawn(1, 70, 44, "PlayerController"));
+    directory.consume({
+      ...packet(2, "rpcLink", 70),
+      rpcName: "CharacterCallback_T",
+      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Delta Ranger" }),
+    });
     expect(learned).toEqual([]);
 
-    const fullSpawn = Buffer.concat([
-      Buffer.from([0, 1, 5]),
-      packedString("Delta Ranger"),
-      packed(9),
-      packedString(syntheticUid),
-    ]);
-    directory.consume(spawn(2, 71, 45, "PlayerController", fullSpawn));
-    expect(learned).toEqual([{ uid: syntheticUid, displayName: "Delta Ranger", archetype: 9 }]);
+    // A changed display name for the same uid is reported.
+    directory.consume(spawn(3, 71, 45, "PlayerController"));
+    directory.consume({
+      ...packet(4, "rpcLink", 71),
+      rpcName: "CharacterCallback_T",
+      payload: characterCallbackPayload({ UID: syntheticUid, Name: "Renamed Ranger" }),
+    });
+    expect(learned).toEqual([{ uid: syntheticUid, displayName: "Renamed Ranger" }]);
   });
 
   test("snapshots every currently known identity without mutating the directory", () => {
@@ -685,13 +588,6 @@ function encodeCharacterDataLeaf(field: FishNetRpcParameter, value: string | num
     case "packedInt64": return packed(typeof value === "number" ? value : 0);
     default: throw new Error(`don't know how to encode CharacterData field "${field.name}" with codec "${field.codec ?? "none"}"`);
   }
-}
-
-function section(componentIndex: number, data: Buffer): Buffer {
-  const header = Buffer.alloc(5);
-  header.writeUInt8(componentIndex, 0);
-  header.writeUInt32LE(data.length, 1);
-  return Buffer.concat([header, data]);
 }
 
 function packedString(value: string): Buffer {
