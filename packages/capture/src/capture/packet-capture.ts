@@ -88,9 +88,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   async start(config: CaptureConfig = {}): Promise<void> {
-
-    console.log(`start(config: CaptureConfig = {}): config = `, config);
-
     if (this._state !== "stopped") throw new Error(`cannot start capture while it is ${this._state}`);
 
     switch (this.platform) {
@@ -121,23 +118,12 @@ export class PacketCapture extends EventEmitter {
       if (!resolved.device) throw new Error("Npcap did not report a usable network adapter");
       const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
 
-      console.log("this.session = await this.runtime.open(resolved.device, filter);");
       this.session = await this.runtime.open(resolved.device, filter);
-
-      console.log("this.session = ", this.session);
-
       if (!supportsDataLink(this.session.dataLink)) {
         throw new Error(`Npcap adapter uses unsupported data-link type ${this.session.dataLink}`);
       }
-
-      console.log("if (resolved.detail)");
       if (resolved.detail) this.emitSafely("warning", resolved.detail);
-
-      console.log("if (targetProcessName) = ", targetProcessName);
       if (targetProcessName) {
-
-        console.log("this.target = new WindowsTargetTracker(...);");
-
         this.target = new WindowsTargetTracker(
           targetProcessName,
           protocols,
@@ -145,38 +131,20 @@ export class PacketCapture extends EventEmitter {
           this.targetProvider,
           (message) => this.emitSafely("warning", message),
         );
-
-        console.log("await this.target.start();...");
-
         await this.target.start();
       }
-
-      console.log(`this._state = "running";`);
-
       this._state = "running";
       this.pollTimer = setInterval(() => void this.poll(), POLL_INTERVAL_MS);
-
-      console.log(`this.emitSafely("started");`);
       this.emitSafely("started");
-      console.log(`Emitted...`);
-
     } catch (error) {
-      console.log(`} catch (error) {`, error);
-
       this.closeResources();
       this.resetDecoder();
       this._state = "stopped";
       throw toError(error);
     }
-
-    console.log(`Started...`);
   }
 
   async stop(): Promise<void> {
-
-    console.log(`PacketCapture.stop()`);
-
-
     if (this._state === "stopped") return;
     this._state = "stopping";
     this.closeResources();
@@ -186,10 +154,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private poll(): void {
-
-    console.log(`PacketCapture.poll()`, this.polling, this._state, this.session);
-    console.log(`if (this.polling || this._state !== "running" || !this.session)`, this.polling, this._state, this.session);
-
     if (this.polling || this._state !== "running" || !this.session) return;
     this.polling = true;
     try {
@@ -238,7 +202,6 @@ export class PacketCapture extends EventEmitter {
   }
 
   private flushPending(): void {
-
     if (!this.target || this.pending.length === 0) { return; }
     const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
     const remaining: PendingPacket[] = [];
