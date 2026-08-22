@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [04bf95c]
+  - @kar-mi/spirit-vale-tools-capture@2.1.0
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.3
+
 ## 1.2.1
 
 ### Patch Changes

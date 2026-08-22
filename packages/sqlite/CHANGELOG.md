@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-sqlite
 
+## 0.2.0
+
+### Minor Changes
+
+- 04bf95c: Require Bun 1.4 or newer. The SQLite read model now relies on Bun 1.4's statement ownership and
+  force-close behavior to release every outstanding database handle immediately on Windows.
+
 ## 0.1.5
 
 ### Patch Changes
