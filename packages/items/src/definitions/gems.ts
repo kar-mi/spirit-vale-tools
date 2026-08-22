@@ -1106,7 +1106,7 @@ export class GemItemDefinitions {
       "refineEffects": [
         {
           "type": 177,
-          "value": 0.30000001192092896
+          "value": 0.3
         }
       ]
     },

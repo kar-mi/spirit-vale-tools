@@ -1666,6 +1666,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Chest_ContentCreator",
+      "displayName": "Content Creator Top"
+    },
+    {
+      "itemType": 6,
       "id": "Chest_Cuervo_F",
       "displayName": "Cuervo Female Top"
     },
@@ -1721,6 +1726,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Chest_Kaeru",
+      "displayName": "Kaeru Top"
+    },
+    {
+      "itemType": 6,
       "id": "Chest_Priest_F",
       "displayName": "Priest Female Top"
     },
@@ -1758,6 +1768,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Chest_Transparent",
       "displayName": "Transparent Top"
+    },
+    {
+      "itemType": 6,
+      "id": "Chest_Umbra_Knight",
+      "displayName": "Umbral Knight Armor"
     },
     {
       "itemType": 6,
@@ -1923,6 +1938,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Cyclops Minion",
       "displayName": "Cyclopling Pet"
+    },
+    {
+      "itemType": 6,
+      "id": "Dagger_Gunblade_Chonky",
+      "displayName": "Dagger GunBlade"
     },
     {
       "itemType": 6,
@@ -2221,6 +2241,126 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "EchoAxe",
+      "displayName": "Duskbreaker"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoBook",
+      "displayName": "Dusktome"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoChest_Atk",
+      "displayName": "Dusk Armor"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoChest_Matk",
+      "displayName": "Dusk Robe"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFeet_Atk",
+      "displayName": "Dusk Boots"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFeet_Matk",
+      "displayName": "Dusk Shoes"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoGatling",
+      "displayName": "Duskbringer"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoLauncher",
+      "displayName": "Duskscourge"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoLegs_Atk",
+      "displayName": "Dusk Greaves"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoLegs_Matk",
+      "displayName": "Dusk Leggings"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Force",
+      "displayName": "Mask of Force"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Life",
+      "displayName": "Mask of Life"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Magic",
+      "displayName": "Mask of Magic"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Pierce",
+      "displayName": "Mask of Piercing"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Pierce_",
+      "displayName": "Perfect Mask of Piercing"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Power",
+      "displayName": "Mask of Power"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Range",
+      "displayName": "Mask of Precision"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Range_",
+      "displayName": "Perfect Mask of Precision"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Recovery",
+      "displayName": "Mask of Recovery"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoMask_Speed",
+      "displayName": "Mask of Speed"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoScythe",
+      "displayName": "Duskharvest"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoShield",
+      "displayName": "Duskbulwark"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoShuriken",
+      "displayName": "Duskedge"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoStaff",
+      "displayName": "Duskmire"
+    },
+    {
+      "itemType": 6,
       "id": "Eclipse Kunai",
       "displayName": "Eclipse Kunai"
     },
@@ -2436,6 +2576,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Feet_ContentCreator",
+      "displayName": "Content Creator Shoes"
+    },
+    {
+      "itemType": 6,
       "id": "Feet_Cuervo",
       "displayName": "Cuervo Shoes"
     },
@@ -2496,6 +2641,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Feet_Kaeru",
+      "displayName": "Kaeru Shoes"
+    },
+    {
+      "itemType": 6,
       "id": "Feet_Luk",
       "displayName": "Fate Shoes"
     },
@@ -2543,6 +2693,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Feet_Transparent",
       "displayName": "Transparent Shoes"
+    },
+    {
+      "itemType": 6,
+      "id": "Feet_Umbra_Knight",
+      "displayName": "Umbral Knight Boots"
     },
     {
       "itemType": 6,
@@ -2856,6 +3011,31 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Gunslinger_1",
+      "displayName": "Loadout Rhythm"
+    },
+    {
+      "itemType": 6,
+      "id": "Gunslinger_2",
+      "displayName": "Opportunist"
+    },
+    {
+      "itemType": 6,
+      "id": "Gunslinger_3",
+      "displayName": "Grenadier's Codex"
+    },
+    {
+      "itemType": 6,
+      "id": "Gunslinger_4",
+      "displayName": "Blinding Escape"
+    },
+    {
+      "itemType": 6,
+      "id": "Gunslinger_5",
+      "displayName": "Desperado Barrage"
+    },
+    {
+      "itemType": 6,
       "id": "Hands_Angel_F",
       "displayName": "Angel Female Gloves"
     },
@@ -2898,6 +3078,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Hands_Transparent",
       "displayName": "Transparent Gloves"
+    },
+    {
+      "itemType": 6,
+      "id": "Hands_Umbra_Knight",
+      "displayName": "Umbral Knight Bracers"
     },
     {
       "itemType": 6,
@@ -2968,6 +3153,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Head_CatEars",
       "displayName": "Cat Ears"
+    },
+    {
+      "itemType": 6,
+      "id": "Head_ContentCreator",
+      "displayName": "Content Creator Hat"
     },
     {
       "itemType": 6,
@@ -3061,6 +3251,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Head_Kaeru",
+      "displayName": "Kaeru Hat"
+    },
+    {
+      "itemType": 6,
       "id": "Head_MajesticHorn",
       "displayName": "Majestic Horns"
     },
@@ -3133,6 +3328,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Head_TurtleChampion",
       "displayName": "Turtle Champion Visor"
+    },
+    {
+      "itemType": 6,
+      "id": "Head_Umbra_Knight",
+      "displayName": "Umbral Knight Helm"
     },
     {
       "itemType": 6,
@@ -3496,6 +3696,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Legs_ContentCreator",
+      "displayName": "Content Creator Pants"
+    },
+    {
+      "itemType": 6,
       "id": "Legs_Cuervo_F",
       "displayName": "Cuervo Female Pants"
     },
@@ -3588,6 +3793,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Legs_Transparent",
       "displayName": "Transparent Pants"
+    },
+    {
+      "itemType": 6,
+      "id": "Legs_Umbra_Knight",
+      "displayName": "Umbral Knight Greaves"
     },
     {
       "itemType": 6,
@@ -4426,6 +4636,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Priest_9",
+      "displayName": "Dark Priest"
+    },
+    {
+      "itemType": 6,
       "id": "Pumpkin Head",
       "displayName": "Jack-o'-lantern"
     },
@@ -4871,28 +5086,43 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Shield_Murphy",
+      "displayName": "Shield of Faith"
+    },
+    {
+      "itemType": 6,
       "id": "Shield_Umbra",
       "displayName": "Umbra Shield"
     },
     {
       "itemType": 6,
       "id": "Shinobi_1",
-      "displayName": "Silent Execution"
+      "displayName": "Mirror Image"
     },
     {
       "itemType": 6,
       "id": "Shinobi_2",
-      "displayName": "Sealed Fate"
+      "displayName": "Tools of the Trade"
     },
     {
       "itemType": 6,
       "id": "Shinobi_3",
-      "displayName": "Honed Technique"
+      "displayName": "Chain Step"
     },
     {
       "itemType": 6,
       "id": "Shinobi_4",
-      "displayName": "Phantom Manuscript"
+      "displayName": "Blitz Release"
+    },
+    {
+      "itemType": 6,
+      "id": "Shinobi_5",
+      "displayName": "Spiral Lock"
+    },
+    {
+      "itemType": 6,
+      "id": "Shinobi_6",
+      "displayName": "Fated Finish"
     },
     {
       "itemType": 6,
@@ -4988,11 +5218,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Solar Spear",
       "displayName": "Solar Spear"
-    },
-    {
-      "itemType": 6,
-      "id": "Solaris Blade",
-      "displayName": "Solaris Blade"
     },
     {
       "itemType": 6,
@@ -5301,8 +5526,18 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Sword_BaguetteJambon-Beurre",
+      "displayName": "Baguette Jambon-Beurre"
+    },
+    {
+      "itemType": 6,
       "id": "Sword_GladysSword",
       "displayName": "Gladys Sword"
+    },
+    {
+      "itemType": 6,
+      "id": "Sword_TheDragonThrone",
+      "displayName": "The Dragon Throne"
     },
     {
       "itemType": 6,
@@ -5386,6 +5621,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Title_ContentCreator",
+      "displayName": "Content Creator"
+    },
+    {
+      "itemType": 6,
       "id": "Title_Duo",
       "displayName": "Duo"
     },
@@ -5401,6 +5641,16 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Title_GameMaster",
+      "displayName": "Game Master"
+    },
+    {
+      "itemType": 6,
+      "id": "Title_LeadArtist",
+      "displayName": "Lead Artist"
+    },
+    {
+      "itemType": 6,
       "id": "Title_MountDesigner",
       "displayName": "Mount Designer"
     },
@@ -5413,6 +5663,16 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Title_PetDesigner",
       "displayName": "Pet Designer"
+    },
+    {
+      "itemType": 6,
+      "id": "Title_Playtester",
+      "displayName": "Playtester"
+    },
+    {
+      "itemType": 6,
+      "id": "Title_Speedrunner",
+      "displayName": "Speedrunner"
     },
     {
       "itemType": 6,

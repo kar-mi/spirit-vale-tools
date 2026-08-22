@@ -496,6 +496,11 @@ export class JunkItemDefinitions {
     },
     {
       "itemType": 0,
+      "id": "Fractured Heart",
+      "displayName": "Fractured Heart"
+    },
+    {
+      "itemType": 0,
       "id": "Fur",
       "displayName": "Fur"
     },
@@ -1178,6 +1183,11 @@ export class JunkItemDefinitions {
       "itemType": 0,
       "id": "Soldalite Piece",
       "displayName": "Soldalite Piece"
+    },
+    {
+      "itemType": 0,
+      "id": "Soul Fragment",
+      "displayName": "Soul Fragment"
     },
     {
       "itemType": 0,

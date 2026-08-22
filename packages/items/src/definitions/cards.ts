@@ -705,7 +705,7 @@ export class CardItemDefinitions {
       "itemType": 4,
       "id": "Delivery Robot",
       "displayName": "Delivery Robot Card",
-      "refineEffects": [
+      "effects": [
         {
           "type": 101,
           "value": 100
@@ -2372,7 +2372,12 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareBerserker",
-      "displayName": "Umbral Berserker Card",
+      "displayName": "Umbral Berserker Card"
+    },
+    {
+      "itemType": 4,
+      "id": "NightmareBerserkerBoss",
+      "displayName": "Echo Berserker Card",
       "effects": [
         {
           "type": 193,
@@ -2382,13 +2387,13 @@ export class CardItemDefinitions {
     },
     {
       "itemType": 4,
-      "id": "NightmareBerserkerBoss",
-      "displayName": "Echo Berserker Card"
+      "id": "NightmareGunslinger",
+      "displayName": "Umbral Gunslinger Card"
     },
     {
       "itemType": 4,
-      "id": "NightmareGunslinger",
-      "displayName": "Umbral Gunslinger Card",
+      "id": "NightmareGunslingerBoss",
+      "displayName": "Echo Gunslinger Card",
       "effects": [
         {
           "type": 195,
@@ -2403,11 +2408,6 @@ export class CardItemDefinitions {
           "value": 1
         }
       ]
-    },
-    {
-      "itemType": 4,
-      "id": "NightmareGunslingerBoss",
-      "displayName": "Echo Gunslinger Card"
     },
     {
       "itemType": 4,
@@ -2438,7 +2438,12 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareNecromancer",
-      "displayName": "Umbral Necromancer Card",
+      "displayName": "Umbral Necromancer Card"
+    },
+    {
+      "itemType": 4,
+      "id": "NightmareNecromancerBoss",
+      "displayName": "Echo Necromancer Card",
       "effects": [
         {
           "type": 194,
@@ -2448,13 +2453,13 @@ export class CardItemDefinitions {
     },
     {
       "itemType": 4,
-      "id": "NightmareNecromancerBoss",
-      "displayName": "Echo Necromancer Card"
+      "id": "NightmarePaladin",
+      "displayName": "Umbral Paladin Card"
     },
     {
       "itemType": 4,
-      "id": "NightmarePaladin",
-      "displayName": "Umbral Paladin Card",
+      "id": "NightmarePaladinBoss",
+      "displayName": "Echo Paladin Card",
       "effects": [
         {
           "type": 139,
@@ -2468,13 +2473,13 @@ export class CardItemDefinitions {
     },
     {
       "itemType": 4,
-      "id": "NightmarePaladinBoss",
-      "displayName": "Echo Paladin Card"
+      "id": "NightmarePriest",
+      "displayName": "Umbral Priest Card"
     },
     {
       "itemType": 4,
-      "id": "NightmarePriest",
-      "displayName": "Umbral Priest Card",
+      "id": "NightmarePriestBoss",
+      "displayName": "Echo Priest Card",
       "effects": [
         {
           "type": 67,
@@ -2485,11 +2490,6 @@ export class CardItemDefinitions {
           "value": -2
         }
       ]
-    },
-    {
-      "itemType": 4,
-      "id": "NightmarePriestBoss",
-      "displayName": "Echo Priest Card"
     },
     {
       "itemType": 4,
@@ -2539,7 +2539,12 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareShinobi",
-      "displayName": "Umbral Shinobi Card",
+      "displayName": "Umbral Shinobi Card"
+    },
+    {
+      "itemType": 4,
+      "id": "NightmareShinobiBoss",
+      "displayName": "Echo Shinobi Card",
       "effects": [
         {
           "type": 182,
@@ -2550,11 +2555,6 @@ export class CardItemDefinitions {
           "value": 2
         }
       ]
-    },
-    {
-      "itemType": 4,
-      "id": "NightmareShinobiBoss",
-      "displayName": "Echo Shinobi Card"
     },
     {
       "itemType": 4,
@@ -2585,7 +2585,12 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareWizard",
-      "displayName": "Umbral Wizard Card",
+      "displayName": "Umbral Wizard Card"
+    },
+    {
+      "itemType": 4,
+      "id": "NightmareWizardBoss",
+      "displayName": "Echo Wizard Card",
       "effects": [
         {
           "type": 48,
@@ -2596,11 +2601,6 @@ export class CardItemDefinitions {
           "value": 2
         }
       ]
-    },
-    {
-      "itemType": 4,
-      "id": "NightmareWizardBoss",
-      "displayName": "Echo Wizard Card"
     },
     {
       "itemType": 4,
@@ -3708,7 +3708,7 @@ export class CardItemDefinitions {
       "effects": [
         {
           "type": 49,
-          "value": 17,
+          "value": 15,
           "target": {
             "kind": "skill",
             "id": "TetraVortex"
