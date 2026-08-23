@@ -1,7 +1,8 @@
-export { loadBundledMobRewardCatalog, mobDefinitionsById, queryMobRewardCatalog } from "./catalog.ts";
+export { loadBundledMobRewardCatalog, mobDefinitionsById, mobIdentityDefinitionsById, queryMobRewardCatalog } from "./catalog.ts";
 export type {
   MobDropCategory,
   MobDropDefinition,
+  MobIdentityDefinition,
   MobRewardCatalog,
   MobRewardCatalogQuery,
   MobRewardDefinition,

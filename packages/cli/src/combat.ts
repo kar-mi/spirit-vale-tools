@@ -9,19 +9,18 @@ import {
   FishNetCombatTracker,
   MeterReducer,
   renderEncounter,
-  replayCombatCapture,
+  replayCombatCaptures,
 } from "@kar-mi/spirit-vale-tools-combat";
 import type { EncounterAggregate } from "@kar-mi/spirit-vale-tools-combat";
-import { mobDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
+import { mobIdentityDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
 
-function option(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index >= 0 ? Bun.argv[index + 1] : undefined;
+function options(name: string): string[] {
+  return Bun.argv.flatMap((argument, index) => argument === name && Bun.argv[index + 1] ? [Bun.argv[index + 1]!] : []);
 }
 
-const input = option("--input");
-if (!input) throw new Error("--input <capture.jsonl> is required; it must be a raw capture (capture:dump), not a --combat-only log");
-const fishNetBuildFingerprint = option("--fishnet-build");
+const inputs = options("--input");
+if (inputs.length === 0) throw new Error("at least one --input <capture.jsonl> is required; inputs are replayed in order");
+const fishNetBuildFingerprint = options("--fishnet-build")[0];
 const semanticMap = fishNetBuildFingerprint
   && BUNDLED_GAME_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === fishNetBuildFingerprint)
   ? loadBundledFishNetSemanticMap(fishNetBuildFingerprint)
@@ -39,12 +38,12 @@ const reducer = new DamageReducer({
 });
 
 let lastObservedAtMs = 0;
-const result = await replayCombatCapture(input, {
+const result = await replayCombatCaptures(inputs, {
   directory: new FishNetActorDirectory(),
   tracker: new FishNetCombatTracker({
     ...(fishNetBuildFingerprint === undefined ? {} : { buildFingerprint: fishNetBuildFingerprint }),
     ...(semanticMap === undefined ? {} : { semanticMap }),
-    monsterCatalog: mobDefinitionsById(),
+    monsterCatalog: mobIdentityDefinitionsById(),
     bossCatalog: CURRENT_BOSS_SKILL_NAMES,
   }),
   onEvent: (event, observedAtMs) => {

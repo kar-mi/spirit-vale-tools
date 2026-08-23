@@ -6,7 +6,7 @@ import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
 import { CURRENT_BOSS_SKILL_NAMES, FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
 import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
-import { mobDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
+import { mobIdentityDefinitionsById } from "@kar-mi/spirit-vale-tools-rewards";
 import {
   domainEventData,
   fishNetPacketData,
@@ -48,7 +48,7 @@ const combatTracker = combatOnly
       buildFingerprint: fishNetBuildFingerprint,
       semanticMap,
       // Names each hit's target from its spawn packet.
-      monsterCatalog: mobDefinitionsById(),
+      monsterCatalog: mobIdentityDefinitionsById(),
       bossCatalog: CURRENT_BOSS_SKILL_NAMES,
     })
   : undefined;

@@ -92,7 +92,7 @@ export class FishNetActorDirectory {
 
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
       const observedPlayerActor = this.observedPlayerActors.has(packet.objectId);
-      const events = this.removeObject(packet.objectId, packet.tick);
+      const events = this.removeObject(packet.objectId, packet.tick, true);
       if (observedPlayerActor) this.observedPlayerActors.add(packet.objectId);
       const ownerConnectionId = validOwner(packet.ownerConnectionId);
       const identityEligible = hasIdentityBehaviourEvidence(packet) || observedPlayerActor;
@@ -101,6 +101,11 @@ export class FishNetActorDirectory {
         identityEligible,
       });
       if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, packet.objectId);
+      if (hasMonsterIdentityEvidence(packet)) {
+        events.push(...this.clearPlayerIdentity(packet.objectId, packet.tick));
+        events.push(...this.refreshOwner(ownerConnectionId, packet.tick, true));
+        return events;
+      }
       const embeddedIdentity = this.resolveSpawnIdentity(packet);
       if (embeddedIdentity) {
         const next: FishNetActorIdentity = {
@@ -114,12 +119,12 @@ export class FishNetActorDirectory {
         if (object) object.identityEligible = true;
         if (ownerConnectionId === undefined) events.push(...this.reconcile(packet.objectId, next, packet.tick));
       }
-      events.push(...this.refreshOwner(ownerConnectionId, packet.tick));
+      events.push(...this.refreshOwner(ownerConnectionId, packet.tick, true));
       return events;
     }
 
     if (packet.packetName === "objectDespawn" && packet.objectId !== undefined) {
-      return this.removeObject(packet.objectId, packet.tick);
+      return this.removeObject(packet.objectId, packet.tick, true);
     }
 
     if (packet.packetName === "ownershipChange" && packet.objectId !== undefined) {
@@ -138,6 +143,10 @@ export class FishNetActorDirectory {
         },
         packet.tick,
       );
+    }
+
+    if (packet.objectId !== undefined && hasMonsterIdentityEvidence(packet)) {
+      return this.clearPlayerIdentity(packet.objectId, packet.tick);
     }
 
     if (packet.objectId !== undefined && packet.rpcName !== undefined && CHARACTER_RPC_NAMES.has(packet.rpcName)) {
@@ -297,16 +306,16 @@ export class FishNetActorDirectory {
     current.ownerConnectionId = ownerConnectionId;
     this.objects.set(actorId, current);
     if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, actorId);
-    const events = this.refreshOwner(previousOwner, tick);
+    const events = this.refreshOwner(previousOwner, tick, true);
     if (ownerConnectionId === undefined) {
       events.push(...this.reconcile(actorId, this.identitySources.get(actorId), tick));
     } else {
-      events.push(...this.refreshOwner(ownerConnectionId, tick));
+      events.push(...this.refreshOwner(ownerConnectionId, tick, true));
     }
     return events;
   }
 
-  private removeObject(actorId: number, tick: number): FishNetActorIdentityEvent[] {
+  private removeObject(actorId: number, tick: number, retainIdentity = false): FishNetActorIdentityEvent[] {
     const object = this.objects.get(actorId);
     const ownerConnectionId = object?.ownerConnectionId;
     if (ownerConnectionId !== undefined) this.removeOwnerObject(ownerConnectionId, actorId);
@@ -314,12 +323,27 @@ export class FishNetActorDirectory {
     this.observedPlayerActors.delete(actorId);
     this.identitySources.delete(actorId);
     this.sourceRevisions.delete(actorId);
-    const events = this.reconcile(actorId, undefined, tick);
-    events.push(...this.refreshOwner(ownerConnectionId, tick));
+    const events = retainIdentity ? [] : this.reconcile(actorId, undefined, tick);
+    events.push(...this.refreshOwner(ownerConnectionId, tick, retainIdentity));
     return events;
   }
 
-  private refreshOwner(ownerConnectionId: number | undefined, tick: number): FishNetActorIdentityEvent[] {
+  private clearPlayerIdentity(actorId: number, tick: number): FishNetActorIdentityEvent[] {
+    this.observedPlayerActors.delete(actorId);
+    this.identitySources.delete(actorId);
+    this.sourceRevisions.delete(actorId);
+    const object = this.objects.get(actorId);
+    if (object) object.identityEligible = false;
+    const events = this.reconcile(actorId, undefined, tick);
+    events.push(...this.refreshOwner(object?.ownerConnectionId, tick, true));
+    return events;
+  }
+
+  private refreshOwner(
+    ownerConnectionId: number | undefined,
+    tick: number,
+    retainExistingWhenSourceMissing = false,
+  ): FishNetActorIdentityEvent[] {
     if (ownerConnectionId === undefined) return [];
     const objectIds = this.ownerObjects.get(ownerConnectionId);
     if (!objectIds) return [];
@@ -333,6 +357,7 @@ export class FishNetActorDirectory {
         revision = candidateRevision;
       }
     }
+    if (!source && retainExistingWhenSourceMissing) return [];
     if (source && source.archetype === undefined) {
       const sourceDisplayName = source.displayName;
       let classSource: FishNetActorIdentity | undefined;
@@ -438,6 +463,24 @@ function mergeLocalIdentity(
 
 function decodedField(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {
   return packet.decodedFields?.find((field) => field.name === name)?.value;
+}
+
+/** True only for a structurally decoded MonsterController.Data identity from the RPC map. */
+function hasMonsterIdentityEvidence(packet: DecodedFishNetPacket): boolean {
+  if (packet.packetName === "objectSpawn") {
+    const entry = packet.spawnSyncEntries?.find(
+      (candidate) => candidate.networkBehaviourType === "MonsterController" && candidate.name === "Data",
+    );
+    const mobId = entry?.fields.find((field) => field.name === "Id")?.value;
+    return typeof mobId === "string" && mobId.length > 0;
+  }
+  if (packet.packetName !== "syncType"
+    || packet.networkBehaviourType !== "MonsterController"
+    || (packet.syncName !== "Data" && packet.syncIndex !== 0)) return false;
+  const mobId = decodedField(packet, "Data.Id")
+    ?? decodedField(packet, "Monster.Id")
+    ?? decodedField(packet, "Id");
+  return typeof mobId === "string" && mobId.length > 0;
 }
 
 const VISUAL_DATA_SYNC_INDEX = 5;

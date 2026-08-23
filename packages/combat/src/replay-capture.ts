@@ -35,8 +35,18 @@ export async function replayCombatCapture(
   path: string,
   options: CombatCaptureReplayOptions,
 ): Promise<CombatCaptureReplayResult> {
+  return replayCombatCaptures([path], options);
+}
+
+/** Replays ordered capture-file splits through one FishNet decoder and one identity lifetime. */
+export async function replayCombatCaptures(
+  paths: readonly string[],
+  options: CombatCaptureReplayOptions,
+): Promise<CombatCaptureReplayResult> {
   const replay = new CombatCaptureReplay(options);
-  for await (const line of readLines(Bun.file(path).stream())) replay.consumeLine(line);
+  for (const path of paths) {
+    for await (const line of readLines(Bun.file(path).stream())) replay.consumeLine(line);
+  }
   return replay.result();
 }
 

@@ -112,20 +112,18 @@ describe("FishNetActorDirectory", () => {
     expect(directory.get(41)).toEqual({ actorId: 41, displayName: "Briar Stone", archetype: 4 });
   });
 
-  test("emits changes and removes stale identities on despawn or object reuse", () => {
+  test("keeps an identity across despawn and object reuse until authoritative identity evidence replaces it", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(packet(1, "syncType", 40, visual("Aster Vale")));
     expect(directory.consume(packet(2, "syncType", 40, visual("Aster Dawn", 3))))
       .toMatchObject([{ operation: "upsert", displayName: "Aster Dawn", archetype: 3 }]);
-    expect(directory.consume(packet(3, "objectDespawn", 40))).toEqual([
-      { kind: "actorIdentity", operation: "remove", tick: 3, actorId: 40 },
-    ]);
-    expect(directory.get(40)).toBeUndefined();
+    expect(directory.consume(packet(3, "objectDespawn", 40))).toEqual([]);
+    expect(directory.get(40)).toMatchObject({ displayName: "Aster Dawn" });
 
-    directory.consume(packet(4, "syncType", 40, visual("Cedar North")));
-    expect(directory.consume(packet(5, "objectSpawn", 40))).toEqual([
-      { kind: "actorIdentity", operation: "remove", tick: 5, actorId: 40 },
-    ]);
+    expect(directory.consume(packet(4, "objectSpawn", 40))).toEqual([]);
+    expect(directory.get(40)).toMatchObject({ displayName: "Aster Dawn" });
+    expect(directory.consume(packet(5, "syncType", 40, visual("Cedar North"))))
+      .toMatchObject([{ operation: "upsert", actorId: 40, displayName: "Cedar North" }]);
   });
 
   test("ignores incomplete identities and resets connection state", () => {
@@ -226,20 +224,15 @@ describe("FishNetActorDirectory", () => {
     expect(directory.get(140)).toBeUndefined();
   });
 
-  test("does not leak an old identity when an observed combat actor ID is reused", () => {
+  test("replaces a retained identity when a reused actor receives a new owner's direct identity", () => {
     const directory = new FishNetActorDirectory();
     directory.consume(spawn(1, 40, 7, "PlayerController"));
     directory.consume(spawn(2, 140, 7, "UnrecognizedComponent"));
     directory.consume(packet(3, "syncType", 40, visual("Aster Vale")));
     directory.observePlayerActor(140, 4);
 
-    expect(directory.consume(spawn(5, 140, 8, "UnrecognizedComponent"))).toEqual([{
-      kind: "actorIdentity",
-      operation: "remove",
-      tick: 5,
-      actorId: 140,
-    }]);
-    expect(directory.get(140)).toBeUndefined();
+    expect(directory.consume(spawn(5, 140, 8, "UnrecognizedComponent"))).toEqual([]);
+    expect(directory.get(140)).toMatchObject({ displayName: "Aster Vale" });
 
     directory.consume(spawn(6, 50, 8, "PlayerController"));
     directory.consume(packet(7, "syncType", 50, visual("Briar Stone", 4)));
@@ -490,12 +483,8 @@ describe("FishNetActorDirectory", () => {
     directory.consume(spawn(2, 140, 7, "SkillsComponent"));
     directory.consume(packet(3, "syncType", 40, visual("Aster Vale")));
 
-    expect(directory.consume(ownership(4, 140, 8))).toEqual([{
-      kind: "actorIdentity",
-      operation: "remove",
-      tick: 4,
-      actorId: 140,
-    }]);
+    expect(directory.consume(ownership(4, 140, 8))).toEqual([]);
+    expect(directory.get(140)).toMatchObject({ displayName: "Aster Vale" });
 
     directory.consume(spawn(5, 50, 8, "PlayerController"));
     expect(directory.consume(packet(6, "syncType", 50, visual("Briar Stone", 4))))
@@ -504,10 +493,20 @@ describe("FishNetActorDirectory", () => {
         { operation: "upsert", actorId: 50, displayName: "Briar Stone", ownerConnectionId: 8 },
       ]);
 
-    expect(directory.consume(packet(7, "objectDespawn", 50))).toEqual([
-      { kind: "actorIdentity", operation: "remove", tick: 7, actorId: 50 },
-      { kind: "actorIdentity", operation: "remove", tick: 7, actorId: 140 },
+    expect(directory.consume(packet(7, "objectDespawn", 50))).toEqual([]);
+    expect(directory.get(50)).toMatchObject({ displayName: "Briar Stone" });
+    expect(directory.get(140)).toMatchObject({ displayName: "Briar Stone" });
+  });
+
+  test("clears a retained player identity when direct MonsterController.Data identifies the reused actor", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(packet(1, "syncType", 40, visual("Aster Vale")));
+    directory.consume(packet(2, "objectDespawn", 40));
+
+    expect(directory.consume(monsterSync(3, 40, "NightmareShadow"))).toEqual([
+      { kind: "actorIdentity", operation: "remove", tick: 3, actorId: 40 },
     ]);
+    expect(directory.get(40)).toBeUndefined();
   });
 
   test("decodes non-Latin display names past the old 32-byte cap", () => {
@@ -581,4 +580,19 @@ function packed(value: number): Buffer {
   while (encoded >= 0x80n) { bytes.push(Number(encoded & 0x7fn) | 0x80); encoded >>= 7n; }
   bytes.push(Number(encoded));
   return Buffer.from(bytes);
+}
+
+function monsterSync(tick: number, objectId: number, mobId: string): DecodedFishNetPacket {
+  return {
+    tick,
+    packetId: 1,
+    packetName: "syncType",
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    objectId,
+    networkBehaviourType: "MonsterController",
+    syncIndex: 0,
+    syncName: "Data",
+    decodedFields: [{ name: "Id", codec: "stringUtf8Packed", value: mobId }],
+  };
 }
