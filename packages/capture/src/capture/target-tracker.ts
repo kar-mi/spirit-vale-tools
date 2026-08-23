@@ -245,8 +245,8 @@ function parseSs(output: string, protocol: CaptureProtocol): OwnedEndpoint[] {
     endpoints.push({
       processId,
       protocol,
-      localAddress: parsed.host,
-      localPort: parsed.port,
+      address: parsed.host,
+      port: parsed.port,
     });
   }
   return endpoints;
@@ -257,7 +257,7 @@ function splitHostPort(value: string): { host: string; port: number } | null {
   if (value.startsWith("[")) {
     const m = value.match(/^\[([^\]]+)\]:(\d+)$/);
     if (!m) return null;
-    return { host: m[1], port: Number(m[2]) };
+    return { host: m[1] ?? "", port: Number(m[2]) };
   }
   const idx = value.lastIndexOf(":");
   if (idx <= 0) return null;
