@@ -33,7 +33,7 @@ To run live capture without elevation, give bun `CAP_NET_RAW` &
 # setcap: Set capabilities
 # cap_net_raw: Allows raw and packet sockets (required for packet capture).
 # cap_net_admin: Allows network interface configuration and administration.
-# +ep: = Adds the capabilities to the Effective and Permitted sets.
+# +ep: Adds the capabilities to the Effective and Permitted sets.
 # $(which bun): Specify which executable gets the permission, if you have more then 1 bun executable for example, or wish to create a wrapper, you may want to change this.
 sudo setcap 'cap_net_raw,cap_net_admin=+ep' $(which bun)
 
@@ -62,7 +62,7 @@ sudo capsh --caps="cap_net_raw,cap_net_admin+ep" \
 
 NixOS wrapper example:
 
-```
+```nix
 nixosConfigurations.yourhostname = nixpkgs.lib.nixosSystem {
   # …
   modules = [
