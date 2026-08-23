@@ -99,7 +99,7 @@ export class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
     switch (process.platform) {
       case "win32": return this.snapshotWindows(processName, protocols);
       case "linux": return this.snapshotLinux(processName, protocols);
-      default: throw new Error("Platform not implemented."); return { processIds: [], endpoints: [] };
+      default: throw new Error("Platform not implemented."); // return { processIds: [], endpoints: [] };
     }
   }
 
