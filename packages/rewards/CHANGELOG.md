@@ -1,5 +1,15 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies [813bce6]
+  - @kar-mi/spirit-vale-tools-capture@2.3.0
+  - @kar-mi/spirit-vale-tools-logging@0.9.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.5
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.1
+
 ## 1.3.0
 
 ### Minor Changes
