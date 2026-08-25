@@ -4,15 +4,29 @@ import type { FishNetMarketEvent, FishNetMarketItem, FishNetMarketListing } from
 
 export function marketEventLogData(event: FishNetMarketEvent): JsonObject {
   return JSON.parse(JSON.stringify(event, (key, value) => {
-    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype") return undefined;
+    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype"
+      || key === "compatibilityFingerprint" || key === "payloadSchemaVersion") return undefined;
     return typeof value === "bigint" ? value.toString() : value;
   })) as JsonObject;
+}
+
+/** Collects unique item-payload metadata for one session-level `market.metadata` record. */
+export function marketLogMetadataData(value: unknown): JsonObject | undefined {
+  const compatibilityFingerprints = new Set<string>();
+  const payloadSchemaVersions = new Set<number>();
+  collectItemMetadata(value, compatibilityFingerprints, payloadSchemaVersions);
+  if (compatibilityFingerprints.size === 0 && payloadSchemaVersions.size === 0) return undefined;
+  return {
+    compatibilityFingerprints: [...compatibilityFingerprints].sort(),
+    payloadSchemaVersions: [...payloadSchemaVersions].sort((left, right) => left - right),
+  };
 }
 
 export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | undefined {
   if (!isRecord(value) || !Number.isSafeInteger(value["tick"]) || typeof value["kind"] !== "string") return undefined;
   const revived = reviveBigInts(value);
   if (revived === INVALID || !isRecord(revived)) return undefined;
+  normalizeRedactedItemMetadata(revived);
   const tick = value["tick"] as number;
   switch (value["kind"]) {
     case "searchRequest": {
@@ -131,4 +145,28 @@ function normalizeRedactedStall(value: unknown): void {
   if (!Object.hasOwn(value, "accountId")) value["accountId"] = null;
   if (!Object.hasOwn(value, "visualSnapshotJson")) value["visualSnapshotJson"] = null;
   if (!Object.hasOwn(value, "archetype")) value["archetype"] = null;
+}
+
+function normalizeRedactedItemMetadata(value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const entry of value) normalizeRedactedItemMetadata(entry);
+    return;
+  }
+  if (!isRecord(value)) return;
+  if (Object.hasOwn(value, "itemId") && Object.hasOwn(value, "itemType") && Object.hasOwn(value, "quantity")) {
+    if (!Object.hasOwn(value, "compatibilityFingerprint")) value["compatibilityFingerprint"] = null;
+    if (!Object.hasOwn(value, "payloadSchemaVersion")) value["payloadSchemaVersion"] = null;
+  }
+  for (const entry of Object.values(value)) normalizeRedactedItemMetadata(entry);
+}
+
+function collectItemMetadata(value: unknown, fingerprints: Set<string>, versions: Set<number>): void {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectItemMetadata(entry, fingerprints, versions);
+    return;
+  }
+  if (!isRecord(value)) return;
+  if (typeof value["compatibilityFingerprint"] === "string") fingerprints.add(value["compatibilityFingerprint"]);
+  if (Number.isSafeInteger(value["payloadSchemaVersion"])) versions.add(value["payloadSchemaVersion"] as number);
+  for (const entry of Object.values(value)) collectItemMetadata(entry, fingerprints, versions);
 }

@@ -4,6 +4,7 @@ import type { JsonLinesLogger, JsonObject } from "@kar-mi/spirit-vale-tools-logg
 import {
   FishNetMarketTracker,
   marketEventLogData,
+  marketLogMetadataData,
   parseFishNetMarketStatExpression,
   replayMarketCapture,
 } from "@kar-mi/spirit-vale-tools-market";
@@ -61,10 +62,12 @@ const session = await createLogSession({
   onWriteError: ({ stream, error }) => console.error(`[logging error] ${stream}: ${error.message}`),
 });
 const logger = session.logger("market");
+let metadataLogged = false;
 console.error(`logging market session ${session.id}`);
 
 if (input) {
   const replay = await replayMarketCapture(input, tracker);
+  emitMetadataOnce(logger, tracker.snapshot());
   emitSummary(tracker, query, logger, { ...replay });
   await session.close();
 } else {
@@ -79,7 +82,10 @@ async function runLive(market: FishNetMarketTracker, marketQuery: FishNetMarketQ
   capture.on("fishNetPacket", (packet) => {
     try {
       const events = market.consume(packet);
-      for (const event of events) output.log("market.event", marketEventLogData(event));
+      for (const event of events) {
+        emitMetadataOnce(output, event);
+        output.log("market.event", marketEventLogData(event));
+      }
       if (events.length > 0) report(market, marketQuery);
     } catch (error) {
       const message = `skipped market payload: ${error instanceof Error ? error.message : String(error)}`;
@@ -125,7 +131,16 @@ function report(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery): 
 
 function jsonObject(value: unknown): JsonObject {
   return JSON.parse(JSON.stringify(value, (key, entry) => {
-    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype") return undefined;
+    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype"
+      || key === "compatibilityFingerprint" || key === "payloadSchemaVersion") return undefined;
     return typeof entry === "bigint" ? entry.toString() : entry;
   })) as JsonObject;
+}
+
+function emitMetadataOnce(output: JsonLinesLogger, value: unknown): void {
+  if (metadataLogged) return;
+  const metadata = marketLogMetadataData(value);
+  if (!metadata) return;
+  output.log("market.metadata", metadata);
+  metadataLogged = true;
 }

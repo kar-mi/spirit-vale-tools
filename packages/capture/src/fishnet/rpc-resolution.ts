@@ -224,7 +224,7 @@ export function eliminateByPayloadShape(
       if (rpc.packetKind !== packetName || !hashes.has(rpc.wireHash)) continue;
       const fit = tryDecodeFields(payload, rpc.parameters);
       if (fit.undecodable) return undefined;
-      if (fit.complete && fit.consumed === payload.length) fitting.add(typeName);
+      if (fit.complete && (fit.consumed === payload.length || admitsVerifiedPrefix(rpc.parameters))) fitting.add(typeName);
     }
   }
   return fitting.size === 1 ? [...fitting][0] : undefined;
@@ -245,7 +245,13 @@ export function eliminateByPayloadShape(
  */
 function signatureAdmitsPayload(lookup: RpcLookup, payload: Buffer): boolean {
   const fit = tryDecodeFields(payload, lookup.parameters);
-  return fit.undecodable || (fit.complete && fit.consumed === payload.length);
+  return fit.undecodable || (fit.complete
+    && (fit.consumed === payload.length || admitsVerifiedPrefix(lookup.parameters)));
+}
+
+/** Only a final top-level parameter may own an intentionally incomplete structured prefix. */
+function admitsVerifiedPrefix(parameters: readonly FishNetRpcParameter[] | undefined): boolean {
+  return parameters?.at(-1)?.prefix === true;
 }
 
 /** True when `applyRpcLookup` refused a match it was handed. Callers must not learn bindings from it. */

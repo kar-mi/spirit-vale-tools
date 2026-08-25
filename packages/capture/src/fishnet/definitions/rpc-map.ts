@@ -10,6 +10,8 @@ export interface FishNetRpcParameter {
   readonly codec?: FishNetWireCodec;
   /** Ordered fields for a generated structured writer. Leaf fields carry codecs. */
   readonly fields?: readonly FishNetRpcParameter[];
+  /** The fields are a verified leading prefix; additional trailing bytes remain explicitly undecoded. */
+  readonly prefix?: boolean;
   /** This field is a `List<T>`/array: a packed signed count, then that many elements, each shaped by this same parameter's `codec`/`nullable`/`fields`. */
   readonly repeated?: boolean;
   readonly dictionaryKey?: "stringUtf8Packed";

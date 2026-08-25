@@ -302,12 +302,14 @@ describe("bundled FishNet maps", () => {
 
   test("decodes deterministic market search and stall-status prefixes", () => {
     const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
-    const request = Buffer.concat([
+    const requestPrefix = Buffer.concat([
       Buffer.from([0]), // nullable DTO is present
       string("Synthetic Ore"),
       string("synthetic-cursor"),
       packed(25),
     ]);
+    const trailingRequestFields = Buffer.from([0x7f, 0x55]);
+    const request = Buffer.concat([requestPrefix, trailingRequestFields]);
     const stallStatus = Buffer.concat([
       Buffer.from([0, 1]), // nullable DTO is present; stall is active
       string("synthetic-character"),
@@ -332,7 +334,7 @@ describe("bundled FishNet maps", () => {
         { name: "dto.PageSize", value: 25 },
       ],
     });
-    expect(results[1]?.undecodedPayload).toBeUndefined();
+    expect(results[1]?.undecodedPayload).toEqual(trailingRequestFields);
     expect(results[2]).toMatchObject({
       packetName: "targetRpc",
       networkBehaviourType: "PlayerController",
@@ -347,6 +349,26 @@ describe("bundled FishNet maps", () => {
       ],
     });
     expect(results[2]?.undecodedPayload).toBeUndefined();
+
+    const lateAttach = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(14,
+      serverRpc(777, 0, 72, request)), { reliable: true, connectionId: "synthetic-market-late-attach" });
+    expect(lateAttach[0]).toMatchObject({
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_S",
+      rpcResolution: "verified",
+    });
+    expect(lateAttach[0]?.undecodedPayload).toEqual(trailingRequestFields);
+
+    const lateResponse = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(15,
+      targetRpc(778, 0, 73, string("{\"Success\":true,\"Listings\":[]}"))),
+    { reliable: true, connectionId: "synthetic-market-late-response" });
+    expect(lateResponse[0]).toMatchObject({
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_T",
+      rpcResolution: "verified",
+      decodedFields: [{ name: "pageJson", value: "{\"Success\":true,\"Listings\":[]}" }],
+    });
+    expect(lateResponse[0]?.undecodedPayload).toBeUndefined();
   });
 
   test("uses the verified Damage layout for death events", () => {

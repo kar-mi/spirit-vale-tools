@@ -2104,7 +2104,8 @@ export const playerControllerRpcs = [
             "typeName": "System.Int32",
             "codec": "packedInt32"
           }
-        ]
+        ],
+        "prefix": true
       }
     ]
   },

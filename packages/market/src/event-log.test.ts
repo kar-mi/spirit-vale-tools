@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { marketEventLogData, parseMarketEventLogData } from "./event-log.ts";
+import { marketEventLogData, marketLogMetadataData, parseMarketEventLogData } from "./event-log.ts";
 import type { FishNetMarketEvent } from "./market.ts";
 
 describe("market event log codec", () => {
@@ -31,9 +31,16 @@ describe("market event log codec", () => {
 
     const logged = marketEventLogData(event);
     expect(JSON.stringify(logged)).not.toContain("sellerAccountId");
+    expect(JSON.stringify(logged)).not.toContain("compatibilityFingerprint");
+    expect(JSON.stringify(logged)).not.toContain("payloadSchemaVersion");
     expect(JSON.stringify(logged)).toContain("Fictional Merchant");
+    expect(marketLogMetadataData(event)).toEqual({
+      compatibilityFingerprints: ["synthetic"],
+      payloadSchemaVersions: [1],
+    });
     expect(parseMarketEventLogData(logged)).toMatchObject({
-      page: { listings: [{ sellerAccountId: null, sellerDisplayName: "Fictional Merchant" }] },
+      page: { listings: [{ sellerAccountId: null, sellerDisplayName: "Fictional Merchant",
+        item: { compatibilityFingerprint: null, payloadSchemaVersion: null } }] },
     });
   });
 

@@ -39,6 +39,8 @@ Serialized market events retain `sellerDisplayName` for presentation but omit
 `sellerAccountId`. A decoded log event represents the omitted identifier as
 `null`. Stall events likewise omit `accountId` and `visualSnapshotJson`; the
 derived `archetype` is omitted as well. Decoded logs represent these redacted
-stall fields as `null`.
+stall fields as `null`. Item `compatibilityFingerprint` and
+`payloadSchemaVersion` values are emitted once in a `market.metadata` record,
+then omitted from individual listings and represented as `null` when decoded.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

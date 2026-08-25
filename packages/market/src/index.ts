@@ -11,7 +11,7 @@ export { MarketLogFollower, MarketSessionLogFollower } from "./live-log.ts";
 export type { MarketLogBatch, MarketLogStatus, MarketSessionLogFollowerOptions } from "./live-log.ts";
 export { decodeMarketCaptureJsonLines, replayMarketCapture } from "./replay.ts";
 export type { MarketReplayResult } from "./replay.ts";
-export { marketEventLogData, parseMarketEventLogData } from "./event-log.ts";
+export { marketEventLogData, marketLogMetadataData, parseMarketEventLogData } from "./event-log.ts";
 export {
   FISHNET_MARKET_STAT_NAMES,
   fishNetMarketStatName,
