@@ -3,7 +3,10 @@ import type { JsonObject } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetMarketEvent, FishNetMarketItem, FishNetMarketListing } from "./market.ts";
 
 export function marketEventLogData(event: FishNetMarketEvent): JsonObject {
-  return JSON.parse(JSON.stringify(event, (_key, value) => typeof value === "bigint" ? value.toString() : value)) as JsonObject;
+  return JSON.parse(JSON.stringify(event, (key, value) => {
+    if (key === "sellerAccountId") return undefined;
+    return typeof value === "bigint" ? value.toString() : value;
+  })) as JsonObject;
 }
 
 export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | undefined {
@@ -18,6 +21,7 @@ export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | un
     }
     case "searchPage": {
       const page = revived["page"];
+      if (isRecord(page)) normalizeRedactedSellerIds(page["listings"]);
       if (!isRecord(page) || typeof page["success"] !== "boolean" || !Number.isSafeInteger(page["code"])
         || !nullableString(page["message"]) || !nullableString(page["nextCursor"]) || typeof page["hasMore"] !== "boolean"
         || !Array.isArray(page["listings"]) || !page["listings"].every(validListing)) return undefined;
@@ -25,6 +29,7 @@ export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | un
     }
     case "overview": {
       const overview = revived["overview"];
+      if (isRecord(overview)) normalizeRedactedSellerIds(overview["ownListings"]);
       if (!isRecord(overview) || typeof overview["pendingCoins"] !== "bigint" || typeof overview["mailboxHasMore"] !== "boolean"
         || typeof overview["transactionsHaveMore"] !== "boolean" || typeof overview["ownListingsHaveMore"] !== "boolean"
         || !Number.isSafeInteger(overview["code"]) || !Number.isSafeInteger(overview["reason"]) || !nullableString(overview["message"])
@@ -46,8 +51,11 @@ export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | un
       ? { kind: "stallUpsert", tick, stall: revived["stall"] as Extract<FishNetMarketEvent, { kind: "stallUpsert" }>["stall"] } : undefined;
     case "stallRemove": return nullableString(revived["accountId"])
       ? { kind: "stallRemove", tick, accountId: revived["accountId"] as string | null } : undefined;
-    case "stallListings": return nullableListingArray(revived["listings"])
-      ? { kind: "stallListings", tick, listings: revived["listings"] as Array<FishNetMarketListing | null> | null } : undefined;
+    case "stallListings": {
+      normalizeRedactedSellerIds(revived["listings"]);
+      return nullableListingArray(revived["listings"])
+        ? { kind: "stallListings", tick, listings: revived["listings"] as Array<FishNetMarketListing | null> | null } : undefined;
+    }
     case "collectResult": return typeof revived["success"] === "boolean" && nullableString(revived["message"])
       ? { kind: "collectResult", tick, success: revived["success"], message: revived["message"] as string | null } : undefined;
     default: return undefined;
@@ -95,4 +103,12 @@ function nullableListingArray(value: unknown): boolean {
 }
 function nullableObjectArray(value: unknown): boolean {
   return value === null || (Array.isArray(value) && value.every((entry) => entry === null || isRecord(entry)));
+}
+
+/** Logged listings intentionally omit seller account identifiers; restore the model's neutral value on read. */
+function normalizeRedactedSellerIds(value: unknown): void {
+  if (!Array.isArray(value)) return;
+  for (const entry of value) {
+    if (isRecord(entry) && !Object.hasOwn(entry, "sellerAccountId")) entry["sellerAccountId"] = null;
+  }
 }

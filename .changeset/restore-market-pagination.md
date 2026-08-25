@@ -8,4 +8,5 @@ Restore market search, stall tracking, event logs, live following, and capture
 replay with the current vending contracts. Add deterministic search-request and
 stall-status field layouts to the supported FishNet map and register the market
 log stream. The restored market API intentionally excludes the former SQLite
-history and indexed read-model interfaces.
+history and indexed read-model interfaces. Market event logs omit seller account
+identifiers while retaining seller display names.

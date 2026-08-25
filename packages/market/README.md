@@ -35,4 +35,8 @@ or by iterating it (`MarketSessionLogFollower.watch()`), which wakes on a
 filesystem event instead of a timer and yields only batches that carry
 something. Call `close()` when done.
 
+Serialized market events retain `sellerDisplayName` for presentation but omit
+`sellerAccountId`. A decoded log event represents the omitted identifier as
+`null`.
+
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

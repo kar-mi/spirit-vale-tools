@@ -16,4 +16,24 @@ describe("market event log codec", () => {
     expect(parseMarketEventLogData({ kind: "searchRequest", tick: 1, request: { pageSize: "many" } })).toBeUndefined();
     expect(parseMarketEventLogData({ kind: "stallStatus", tick: 1, status: { expiresAt: "invalid" } })).toBeUndefined();
   });
+
+  test("omits seller account identifiers while retaining display names", () => {
+    const listing = {
+      listingId: "listing-example", sellerAccountId: "account-example", sellerDisplayName: "Fictional Merchant",
+      itemDisplayName: "Fictional Blade", item: { itemId: "item-example", instanceId: "instance-example", itemType: 3,
+        quantity: 1, payloadJson: null, payloadSchemaVersion: 1, compatibilityFingerprint: "synthetic" },
+      initialQuantity: 1, availableQuantity: 1, soldQuantity: 0, unitPrice: 25n, status: 1, version: 2n,
+      createdAt: 10n, updatedAt: 11n, expiresAt: 12n,
+    };
+    const event: FishNetMarketEvent = { kind: "searchPage", tick: 5, page: {
+      success: true, code: 0, message: null, listings: [listing], nextCursor: null, hasMore: false,
+    } };
+
+    const logged = marketEventLogData(event);
+    expect(JSON.stringify(logged)).not.toContain("sellerAccountId");
+    expect(JSON.stringify(logged)).toContain("Fictional Merchant");
+    expect(parseMarketEventLogData(logged)).toMatchObject({
+      page: { listings: [{ sellerAccountId: null, sellerDisplayName: "Fictional Merchant" }] },
+    });
+  });
 });
