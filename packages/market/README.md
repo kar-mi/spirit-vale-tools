@@ -37,6 +37,8 @@ something. Call `close()` when done.
 
 Serialized market events retain `sellerDisplayName` for presentation but omit
 `sellerAccountId`. A decoded log event represents the omitted identifier as
-`null`.
+`null`. Stall events likewise omit `accountId` and `visualSnapshotJson`; the
+derived `archetype` is omitted as well. Decoded logs represent these redacted
+stall fields as `null`.
 
 See the [package guide](https://github.com/kar-mi/spirit-vale-tools/blob/main/docs/packages.md) for registry setup and usage.

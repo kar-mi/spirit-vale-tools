@@ -4,7 +4,7 @@ import type { FishNetMarketEvent, FishNetMarketItem, FishNetMarketListing } from
 
 export function marketEventLogData(event: FishNetMarketEvent): JsonObject {
   return JSON.parse(JSON.stringify(event, (key, value) => {
-    if (key === "sellerAccountId") return undefined;
+    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype") return undefined;
     return typeof value === "bigint" ? value.toString() : value;
   })) as JsonObject;
 }
@@ -45,12 +45,20 @@ export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | un
         || !Number.isSafeInteger(status["totalSpots"])) return undefined;
       return { kind: "stallStatus", tick, status: status as unknown as Extract<FishNetMarketEvent, { kind: "stallStatus" }>["status"] };
     }
-    case "stalls": return nullableObjectArray(revived["stalls"])
-      ? { kind: "stalls", tick, stalls: revived["stalls"] as Extract<FishNetMarketEvent, { kind: "stalls" }>["stalls"] } : undefined;
-    case "stallUpsert": return revived["stall"] === null || isRecord(revived["stall"])
-      ? { kind: "stallUpsert", tick, stall: revived["stall"] as Extract<FishNetMarketEvent, { kind: "stallUpsert" }>["stall"] } : undefined;
-    case "stallRemove": return nullableString(revived["accountId"])
-      ? { kind: "stallRemove", tick, accountId: revived["accountId"] as string | null } : undefined;
+    case "stalls": {
+      normalizeRedactedStalls(revived["stalls"]);
+      return nullableObjectArray(revived["stalls"])
+        ? { kind: "stalls", tick, stalls: revived["stalls"] as Extract<FishNetMarketEvent, { kind: "stalls" }>["stalls"] } : undefined;
+    }
+    case "stallUpsert": {
+      normalizeRedactedStall(revived["stall"]);
+      return revived["stall"] === null || isRecord(revived["stall"])
+        ? { kind: "stallUpsert", tick, stall: revived["stall"] as Extract<FishNetMarketEvent, { kind: "stallUpsert" }>["stall"] } : undefined;
+    }
+    case "stallRemove": {
+      const accountId = revived["accountId"] === undefined ? null : revived["accountId"];
+      return nullableString(accountId) ? { kind: "stallRemove", tick, accountId } : undefined;
+    }
     case "stallListings": {
       normalizeRedactedSellerIds(revived["listings"]);
       return nullableListingArray(revived["listings"])
@@ -111,4 +119,16 @@ function normalizeRedactedSellerIds(value: unknown): void {
   for (const entry of value) {
     if (isRecord(entry) && !Object.hasOwn(entry, "sellerAccountId")) entry["sellerAccountId"] = null;
   }
+}
+
+function normalizeRedactedStalls(value: unknown): void {
+  if (!Array.isArray(value)) return;
+  for (const entry of value) normalizeRedactedStall(entry);
+}
+
+function normalizeRedactedStall(value: unknown): void {
+  if (!isRecord(value)) return;
+  if (!Object.hasOwn(value, "accountId")) value["accountId"] = null;
+  if (!Object.hasOwn(value, "visualSnapshotJson")) value["visualSnapshotJson"] = null;
+  if (!Object.hasOwn(value, "archetype")) value["archetype"] = null;
 }

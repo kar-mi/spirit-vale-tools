@@ -125,7 +125,7 @@ function report(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery): 
 
 function jsonObject(value: unknown): JsonObject {
   return JSON.parse(JSON.stringify(value, (key, entry) => {
-    if (key === "sellerAccountId") return undefined;
+    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype") return undefined;
     return typeof entry === "bigint" ? entry.toString() : entry;
   })) as JsonObject;
 }

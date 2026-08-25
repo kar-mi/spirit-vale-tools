@@ -17,6 +17,17 @@ test("market log follower reconstructs paginated state and lifecycle", async () 
   await appendFile(logPath, `${record(2, "market.event", marketEventLogData({ kind: "searchRequest", tick: 1, request: { query: null, cursor: null, pageSize: 20 } }))}\n`);
   await appendFile(logPath, `${record(3, "market.event", marketEventLogData({ kind: "searchPage", tick: 2, page: { success: true, code: 0, message: "ok", listings: [], nextCursor: null, hasMore: false } }))}\n`);
   expect(await follower.poll()).toMatchObject({ status: "ready", invalidLines: 0, snapshot: { search: { pageSize: 20, hasMore: false } } });
+
+  await appendFile(logPath, `${record(4, "market.event", marketEventLogData({ kind: "stallUpsert", tick: 3, stall: {
+    stallId: "stall-example", accountId: "account-example", characterId: "character-example",
+    mapId: "map-example", slotId: "slot-example", expiresAt: 12n, hiredAt: 10n,
+    shopName: "Fictional Shop", characterName: "Fictional Merchant", archetype: 2,
+    status: 1, version: 3n, visualSnapshotJson: "{\"Equips\":[]}",
+  } }))}\n`);
+  expect(await follower.poll()).toMatchObject({
+    status: "ready",
+    snapshot: { stalls: [{ stallId: "stall-example", accountId: null, visualSnapshotJson: null, archetype: null }] },
+  });
 });
 
 function record(sequence: number, type: string, data: Record<string, unknown>): string {

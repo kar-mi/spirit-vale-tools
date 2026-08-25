@@ -36,4 +36,23 @@ describe("market event log codec", () => {
       page: { listings: [{ sellerAccountId: null, sellerDisplayName: "Fictional Merchant" }] },
     });
   });
+
+  test("omits stall account and visual snapshot data", () => {
+    const event: FishNetMarketEvent = { kind: "stallUpsert", tick: 6, stall: {
+      stallId: "stall-example", accountId: "account-example", characterId: "character-example",
+      mapId: "map-example", slotId: "slot-example", expiresAt: 12n, hiredAt: 10n,
+      shopName: "Fictional Shop", characterName: "Fictional Merchant", archetype: 2,
+      status: 1, version: 3n, visualSnapshotJson: "{\"Equips\":[]}",
+    } };
+
+    const logged = marketEventLogData(event);
+    expect(JSON.stringify(logged)).not.toContain("accountId");
+    expect(JSON.stringify(logged)).not.toContain("visualSnapshotJson");
+    expect(JSON.stringify(logged)).not.toContain("archetype");
+    expect(parseMarketEventLogData(logged)).toMatchObject({
+      stall: { accountId: null, visualSnapshotJson: null, archetype: null, characterName: "Fictional Merchant" },
+    });
+    expect(parseMarketEventLogData(marketEventLogData({ kind: "stallRemove", tick: 7, accountId: "account-example" })))
+      .toEqual({ kind: "stallRemove", tick: 7, accountId: null });
+  });
 });

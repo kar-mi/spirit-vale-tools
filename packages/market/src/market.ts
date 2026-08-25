@@ -32,7 +32,7 @@ export interface FishNetMarketOverview {
 export interface FishNetMarketStall {
   stallId: string | null; accountId: string | null; characterId: string | null; mapId: string | null;
   slotId: string | null; expiresAt: bigint; hiredAt: bigint; shopName: string | null;
-  characterName: string | null; archetype: number; status: number; version: bigint; visualSnapshotJson: string | null;
+  characterName: string | null; archetype: number | null; status: number; version: bigint; visualSnapshotJson: string | null;
 }
 export interface FishNetMarketStallStatus {
   hasActiveStall: boolean; characterId: string | null; expiresAt: bigint; occupiedCount: number; totalSpots: number;
@@ -191,7 +191,7 @@ function parseTransactionDto(value: unknown): FishNetMarketSale {
 function parseStallDto(value: unknown): FishNetMarketStall {
   if (!isRecord(value)) throw new FishNetProtocolError("invalid vending stall JSON");
   const visualSnapshotJson = nullableJsonString(value["VisualSnapshotJson"]);
-  let archetype = 0;
+  let archetype: number | null = null;
   if (visualSnapshotJson !== null) try { const visual: unknown = JSON.parse(visualSnapshotJson); if (isRecord(visual) && Number.isSafeInteger(visual["Archetype"])) archetype = visual["Archetype"] as number; } catch { /* Optional display metadata. */ }
   return { stallId: nullableJsonString(value["StallId"]), accountId: nullableJsonString(value["AccountId"]), characterId: nullableJsonString(value["CharacterId"]),
     mapId: nullableJsonString(value["MapId"]), slotId: nullableJsonString(value["SlotId"]), expiresAt: jsonTimestamp(value["ExpiresAt"], "stall expiry"),
@@ -252,7 +252,7 @@ export class FishNetMarketTracker {
       case "stallStatus": this.stallStatus = event.status ?? undefined; return event;
       case "stalls": this.stalls.clear(); for (const stall of event.stalls ?? []) if (stall) this.upsertStall(stall); return event;
       case "stallUpsert": if (event.stall) this.upsertStall(event.stall); return event;
-      case "stallRemove": if (event.accountId !== null) this.stalls.delete(event.accountId); return event;
+      case "stallRemove": if (event.accountId !== null) this.stalls.delete(`account:${event.accountId}`); return event;
       case "stallListings": for (const listing of event.listings ?? []) if (listing) this.upsert(listing); return event;
       case "collectResult": this.awaitingCollectOverview = event.success; return event;
     }
@@ -262,7 +262,7 @@ export class FishNetMarketTracker {
     ...(this.overview ? { overview: this.overview } : {}), ...(this.lastBalanceDelta === undefined ? {} : { lastBalanceDelta: this.lastBalanceDelta }),
     ...(this.lastCollectedAmount === undefined ? {} : { lastCollectedAmount: this.lastCollectedAmount }) }; }
   query(query: FishNetMarketQuery = {}): FishNetMarketListingView[] {
-    const views = [...this.listings.values()].map((listing): FishNetMarketListingView => { const stall = listing.sellerAccountId === null ? undefined : this.stalls.get(listing.sellerAccountId);
+    const views = [...this.listings.values()].map((listing): FishNetMarketListingView => { const stall = listing.sellerAccountId === null ? undefined : this.stalls.get(`account:${listing.sellerAccountId}`);
       return { ...listing, displayName: resolveFishNetMarketListingDisplayName(listing, this.itemDirectory), shopName: stall?.shopName ?? null,
         mapId: stall?.mapId ?? null, stats: parseFishNetMarketStats(listing.item.payloadJson, catalogItemType(listing.item.itemType), listing.item.itemId) }; });
     return queryFishNetMarketListings(views, query);
@@ -270,7 +270,10 @@ export class FishNetMarketTracker {
   reset(): void { this.listings.clear(); this.stalls.clear(); this.pendingSearches.length = 0; this.search = undefined; this.stallStatus = undefined;
     this.overview = undefined; this.lastBalanceDelta = undefined; this.lastCollectedAmount = undefined; this.awaitingCollectOverview = false; }
   private upsert(listing: FishNetMarketListing): void { this.listings.set(marketListingKey(listing), listing); }
-  private upsertStall(stall: FishNetMarketStall): void { if (stall.accountId !== null) this.stalls.set(stall.accountId, stall); }
+  private upsertStall(stall: FishNetMarketStall): void {
+    const key = stall.accountId !== null ? `account:${stall.accountId}` : stall.stallId !== null ? `stall:${stall.stallId}` : undefined;
+    if (key !== undefined) this.stalls.set(key, stall);
+  }
 }
 
 export function marketListingKey(listing: Pick<FishNetMarketListing, "listingId" | "sellerAccountId" | "unitPrice"> & { item: Pick<FishNetMarketItem, "itemId" | "instanceId"> }): string {
