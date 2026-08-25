@@ -1,7 +1,7 @@
 # Developer guide
 
 Spirit Vale Tools publishes reusable Bun packages through GitHub Packages. Use
-them to build your own capture, replay, catalog, combat, character, or
+them to build your own capture, replay, catalog, combat, character, market, or
 reward tooling.
 
 ## Requirements
@@ -46,6 +46,7 @@ bun add @kar-mi/spirit-vale-tools-statuses
 bun add @kar-mi/spirit-vale-tools-combat
 bun add @kar-mi/spirit-vale-tools-character
 bun add @kar-mi/spirit-vale-tools-rewards
+bun add @kar-mi/spirit-vale-tools-market
 ```
 
 The package manager installs the packages' declared dependencies. You do not
@@ -62,6 +63,7 @@ installed automatically this way; they are not a supported public API.
 | `@kar-mi/spirit-vale-tools-combat` | Combat tracking, DPS calculation, logs, and replay. |
 | `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation. |
 | `@kar-mi/spirit-vale-tools-rewards` | Reward decoding, mob tracking, trends, and replay. |
+| `@kar-mi/spirit-vale-tools-market` | Market search, stall tracking, filtering, logs, and replay. |
 
 ## Import APIs
 
@@ -93,6 +95,7 @@ import { loadBundledStatusCatalog, resolveFishNetStatus } from "@kar-mi/spirit-v
 import { FishNetCombatTracker, LiveCombatService } from "@kar-mi/spirit-vale-tools-combat";
 import { calculateCharacterStats, decodeCharacterRpcPayload } from "@kar-mi/spirit-vale-tools-character";
 import { FishNetMobRewardTracker, queryMobRewardCatalog } from "@kar-mi/spirit-vale-tools-rewards";
+import { FishNetMarketTracker, replayMarketCapture } from "@kar-mi/spirit-vale-tools-market";
 ```
 
 Consult each package's README and TypeScript declarations for its complete API

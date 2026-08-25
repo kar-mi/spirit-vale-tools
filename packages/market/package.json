@@ -1,0 +1,24 @@
+{
+  "name": "@kar-mi/spirit-vale-tools-market",
+  "version": "1.1.1",
+  "description": "Spirit Vale market decoding and replay utilities.",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm --external '@kar-mi/spirit-vale-tools-*' && bunx tsc --project ./tsconfig.build.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@kar-mi/spirit-vale-tools-capture": "^2.2.0",
+    "@kar-mi/spirit-vale-tools-items": "^0.1.9",
+    "@kar-mi/spirit-vale-tools-logging": "^0.8.0"
+  }
+}

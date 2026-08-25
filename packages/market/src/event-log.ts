@@ -1,0 +1,98 @@
+import { decimal, isRecord, nullableString } from "@kar-mi/spirit-vale-tools-logging";
+import type { JsonObject } from "@kar-mi/spirit-vale-tools-logging";
+import type { FishNetMarketEvent, FishNetMarketItem, FishNetMarketListing } from "./market.ts";
+
+export function marketEventLogData(event: FishNetMarketEvent): JsonObject {
+  return JSON.parse(JSON.stringify(event, (_key, value) => typeof value === "bigint" ? value.toString() : value)) as JsonObject;
+}
+
+export function parseMarketEventLogData(value: unknown): FishNetMarketEvent | undefined {
+  if (!isRecord(value) || !Number.isSafeInteger(value["tick"]) || typeof value["kind"] !== "string") return undefined;
+  const revived = reviveBigInts(value);
+  if (revived === INVALID || !isRecord(revived)) return undefined;
+  const tick = value["tick"] as number;
+  switch (value["kind"]) {
+    case "searchRequest": {
+      const request = revived["request"];
+      return validSearchRequest(request) ? { kind: "searchRequest", tick, request } : undefined;
+    }
+    case "searchPage": {
+      const page = revived["page"];
+      if (!isRecord(page) || typeof page["success"] !== "boolean" || !Number.isSafeInteger(page["code"])
+        || !nullableString(page["message"]) || !nullableString(page["nextCursor"]) || typeof page["hasMore"] !== "boolean"
+        || !Array.isArray(page["listings"]) || !page["listings"].every(validListing)) return undefined;
+      return { kind: "searchPage", tick, page: page as unknown as Extract<FishNetMarketEvent, { kind: "searchPage" }>["page"] };
+    }
+    case "overview": {
+      const overview = revived["overview"];
+      if (!isRecord(overview) || typeof overview["pendingCoins"] !== "bigint" || typeof overview["mailboxHasMore"] !== "boolean"
+        || typeof overview["transactionsHaveMore"] !== "boolean" || typeof overview["ownListingsHaveMore"] !== "boolean"
+        || !Number.isSafeInteger(overview["code"]) || !Number.isSafeInteger(overview["reason"]) || !nullableString(overview["message"])
+        || !nullableObjectArray(overview["mailboxItems"]) || !nullableObjectArray(overview["transactions"])
+        || !nullableListingArray(overview["ownListings"])) return undefined;
+      return { kind: "overview", tick, overview: overview as unknown as Extract<FishNetMarketEvent, { kind: "overview" }>["overview"] };
+    }
+    case "stallStatus": {
+      const status = revived["status"];
+      if (status === null) return { kind: "stallStatus", tick, status: null };
+      if (!isRecord(status) || typeof status["hasActiveStall"] !== "boolean" || !nullableString(status["characterId"])
+        || typeof status["expiresAt"] !== "bigint" || !Number.isSafeInteger(status["occupiedCount"])
+        || !Number.isSafeInteger(status["totalSpots"])) return undefined;
+      return { kind: "stallStatus", tick, status: status as unknown as Extract<FishNetMarketEvent, { kind: "stallStatus" }>["status"] };
+    }
+    case "stalls": return nullableObjectArray(revived["stalls"])
+      ? { kind: "stalls", tick, stalls: revived["stalls"] as Extract<FishNetMarketEvent, { kind: "stalls" }>["stalls"] } : undefined;
+    case "stallUpsert": return revived["stall"] === null || isRecord(revived["stall"])
+      ? { kind: "stallUpsert", tick, stall: revived["stall"] as Extract<FishNetMarketEvent, { kind: "stallUpsert" }>["stall"] } : undefined;
+    case "stallRemove": return nullableString(revived["accountId"])
+      ? { kind: "stallRemove", tick, accountId: revived["accountId"] as string | null } : undefined;
+    case "stallListings": return nullableListingArray(revived["listings"])
+      ? { kind: "stallListings", tick, listings: revived["listings"] as Array<FishNetMarketListing | null> | null } : undefined;
+    case "collectResult": return typeof revived["success"] === "boolean" && nullableString(revived["message"])
+      ? { kind: "collectResult", tick, success: revived["success"], message: revived["message"] as string | null } : undefined;
+    default: return undefined;
+  }
+}
+
+const INVALID = Symbol("invalid");
+const BIGINT_KEYS = new Set(["unitPrice", "version", "createdAt", "updatedAt", "expiresAt", "pendingCoins", "sellerProceeds", "completedAt"]);
+
+function reviveBigInts(value: unknown, key = ""): unknown | typeof INVALID {
+  if (BIGINT_KEYS.has(key)) return decimal(value) ? BigInt(value) : INVALID;
+  if (Array.isArray(value)) {
+    const result = value.map((entry) => reviveBigInts(entry));
+    return result.includes(INVALID) ? INVALID : result;
+  }
+  if (!isRecord(value)) return value;
+  const result: Record<string, unknown> = {};
+  for (const [name, entry] of Object.entries(value)) {
+    const revived = reviveBigInts(entry, name);
+    if (revived === INVALID) return INVALID;
+    result[name] = revived;
+  }
+  return result;
+}
+
+function validSearchRequest(value: unknown): value is Extract<FishNetMarketEvent, { kind: "searchRequest" }>["request"] {
+  return isRecord(value) && nullableString(value["query"]) && nullableString(value["cursor"]) && Number.isSafeInteger(value["pageSize"]);
+}
+function validItem(value: unknown): value is FishNetMarketItem {
+  return isRecord(value) && nullableString(value["itemId"]) && nullableString(value["instanceId"])
+    && Number.isSafeInteger(value["itemType"]) && Number.isSafeInteger(value["quantity"])
+    && nullableString(value["payloadJson"]) && (value["payloadSchemaVersion"] === null || Number.isSafeInteger(value["payloadSchemaVersion"]))
+    && nullableString(value["compatibilityFingerprint"]);
+}
+function validListing(value: unknown): value is FishNetMarketListing {
+  return isRecord(value) && nullableString(value["listingId"]) && nullableString(value["sellerAccountId"])
+    && nullableString(value["sellerDisplayName"]) && nullableString(value["itemDisplayName"]) && validItem(value["item"])
+    && Number.isSafeInteger(value["initialQuantity"]) && Number.isSafeInteger(value["availableQuantity"])
+    && Number.isSafeInteger(value["soldQuantity"]) && typeof value["unitPrice"] === "bigint"
+    && Number.isSafeInteger(value["status"]) && typeof value["version"] === "bigint"
+    && typeof value["createdAt"] === "bigint" && typeof value["updatedAt"] === "bigint" && typeof value["expiresAt"] === "bigint";
+}
+function nullableListingArray(value: unknown): boolean {
+  return value === null || (Array.isArray(value) && value.every((entry) => entry === null || validListing(entry)));
+}
+function nullableObjectArray(value: unknown): boolean {
+  return value === null || (Array.isArray(value) && value.every((entry) => entry === null || isRecord(entry)));
+}

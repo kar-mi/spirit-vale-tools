@@ -2086,7 +2086,25 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "dto",
-        "typeName": "PlayerController+VendingSearchRequestDto"
+        "typeName": "PlayerController+VendingSearchRequestDto",
+        "nullable": true,
+        "fields": [
+          {
+            "name": "Query",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Cursor",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "PageSize",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          }
+        ]
       }
     ]
   },
@@ -2131,7 +2149,35 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "dto",
-        "typeName": "VendingStallStatusDto"
+        "typeName": "VendingStallStatusDto",
+        "nullable": true,
+        "fields": [
+          {
+            "name": "HasActiveStall",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          },
+          {
+            "name": "CharacterId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "ExpiresAt",
+            "typeName": "System.Int64",
+            "codec": "packedInt64"
+          },
+          {
+            "name": "OccupiedCount",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "TotalSpots",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          }
+        ]
       }
     ]
   },

@@ -66,6 +66,14 @@ function targetRpc(objectId: number, componentIndex: number, hash: number, paylo
   ]));
 }
 
+function serverRpc(objectId: number, componentIndex: number, hash: number, payload: Buffer): Buffer {
+  const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
+  return message(8, Buffer.concat([
+    packed(objectId), Buffer.from([1, componentIndex]),
+    packed(wireHash.length + payload.length), wireHash, payload,
+  ]));
+}
+
 function syncType(objectId: number, componentIndex: number, body: Buffer): Buffer {
   return message(7, Buffer.concat([
     packed(objectId), Buffer.from([1, componentIndex]), u32(body.length), body,
@@ -290,6 +298,55 @@ describe("bundled FishNet maps", () => {
         ],
       }],
     });
+  });
+
+  test("decodes deterministic market search and stall-status prefixes", () => {
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const request = Buffer.concat([
+      Buffer.from([0]), // nullable DTO is present
+      string("Synthetic Ore"),
+      string("synthetic-cursor"),
+      packed(25),
+    ]);
+    const stallStatus = Buffer.concat([
+      Buffer.from([0, 1]), // nullable DTO is present; stall is active
+      string("synthetic-character"),
+      packed(123_456),
+      packed(3),
+      packed(8),
+    ]);
+    const results = decoder.decode(tick(13, Buffer.concat([
+      spawnWithoutLinks(501, 0, 3),
+      serverRpc(501, 0, 72, request),
+      targetRpc(501, 0, 77, stallStatus),
+    ])), { reliable: true, connectionId: "synthetic-market" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "serverRpc",
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_S",
+      rpcResolution: "verified",
+      decodedFields: [
+        { name: "dto.Query", value: "Synthetic Ore" },
+        { name: "dto.Cursor", value: "synthetic-cursor" },
+        { name: "dto.PageSize", value: 25 },
+      ],
+    });
+    expect(results[1]?.undecodedPayload).toBeUndefined();
+    expect(results[2]).toMatchObject({
+      packetName: "targetRpc",
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendingStallStatus_T",
+      rpcResolution: "verified",
+      decodedFields: [
+        { name: "dto.HasActiveStall", value: true },
+        { name: "dto.CharacterId", value: "synthetic-character" },
+        { name: "dto.ExpiresAt", value: "123456" },
+        { name: "dto.OccupiedCount", value: 3 },
+        { name: "dto.TotalSpots", value: 8 },
+      ],
+    });
+    expect(results[2]?.undecodedPayload).toBeUndefined();
   });
 
   test("uses the verified Damage layout for death events", () => {
