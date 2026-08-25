@@ -88,7 +88,7 @@ describe("bundled FishNet maps", () => {
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
     expect(map.behaviours).toHaveLength(15);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(332);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(337);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -120,8 +120,8 @@ describe("bundled FishNet maps", () => {
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
     expect(component(0, 0)).toBe("LootDrop");
-    expect(component(1, 1)).toBe("MoveComponent");
-    expect(component(2, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(1, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(2, 0)).toBe("BossGraveStone");
     expect(component(4, 2)).toBe("HealthComponent");
     expect(component(4, 5)).toBe("StatusComponent");
     expect(component(5, 3)).toBe("HealthComponent");
@@ -136,10 +136,13 @@ describe("bundled FishNet maps", () => {
     const withPlayerController = map.prefabs
       ?.filter(({ components }) => components.some(({ typeName }) => typeName === "PlayerController"));
     expect(withPlayerController?.map(({ collectionId, prefabId, prefabName }) =>
-      `${collectionId}:${prefabId}:${prefabName}`)).toEqual(["0:1:PlayerClone", "0:4:Player"]);
+      `${collectionId}:${prefabId}:${prefabName}`)).toEqual(["0:3:Player", "0:4:PlayerClone"]);
   });
 
-  test("decodes the build-derived Eternal Tower run prefix on the real player prefab", () => {
+  test("resolves the build-derived Eternal Tower run RPC on the real player prefab", () => {
+    // This build's rpc-build.json leaves EternalTowerClientState ("match") without resolved
+    // fields - unlike the prior build, where they'd already been recovered - so the method
+    // resolves but its payload stays undecoded until a future export fills the struct in.
     const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
     const run = Buffer.concat([
       Buffer.from([0]),
@@ -150,19 +153,15 @@ describe("bundled FishNet maps", () => {
     ]);
     const results = decoder.decode(tick(9, Buffer.concat([
       spawnWithoutLinks(70, 0, 4),
-      targetRpc(70, 0, 95, run),
+      targetRpc(70, 0, 97, run),
     ])), { reliable: true, connectionId: "synthetic-tower" });
 
     expect(results[1]).toMatchObject({
       networkBehaviourType: "PlayerController",
       rpcName: "ETUpdateRun",
-      decodedFields: [
-        { name: "match.InstanceId", value: 17 },
-        { name: "match.PartyId", value: 23 },
-        { name: "match.State", value: 2 },
-        { name: "match.Floor", value: 42 },
-      ],
+      rpcResolution: "verified",
     });
+    expect(results[1]?.decodedFields).toBeUndefined();
   });
 
   test("decodes the verified Damage writer layout from the committed map", () => {

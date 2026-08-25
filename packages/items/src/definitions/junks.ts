@@ -336,6 +336,11 @@ export class JunkItemDefinitions {
     },
     {
       "itemType": 0,
+      "id": "Corrupted Core",
+      "displayName": "Corrupted Core"
+    },
+    {
+      "itemType": 0,
       "id": "Cosmetic Converter",
       "displayName": "Cosmetic Converter"
     },
@@ -493,11 +498,6 @@ export class JunkItemDefinitions {
       "itemType": 0,
       "id": "Foxtail",
       "displayName": "Foxtail"
-    },
-    {
-      "itemType": 0,
-      "id": "Fractured Heart",
-      "displayName": "Fractured Heart"
     },
     {
       "itemType": 0,

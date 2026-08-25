@@ -16,36 +16,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Acolyte_1",
-      "displayName": "Scripture of Mercy"
-    },
-    {
-      "itemType": 6,
-      "id": "Acolyte_2",
-      "displayName": "Radiant Strikes"
-    },
-    {
-      "itemType": 6,
-      "id": "Acolyte_3",
-      "displayName": "Radiant Judgment"
-    },
-    {
-      "itemType": 6,
-      "id": "Acolyte_4",
-      "displayName": "Gospel of Grace"
-    },
-    {
-      "itemType": 6,
-      "id": "Acolyte_5",
-      "displayName": "Lightweaver"
-    },
-    {
-      "itemType": 6,
-      "id": "Acolyte_6",
-      "displayName": "Sacred Rhythm"
-    },
-    {
-      "itemType": 6,
       "id": "Adventurer's Kit",
       "displayName": "Adventurer's Kit"
     },
@@ -281,6 +251,36 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Back_DawnWingsHeavenly",
+      "displayName": "Heavenly Dawn Wings"
+    },
+    {
+      "itemType": 6,
+      "id": "Back_DawnWingsHellfire",
+      "displayName": "Hellfire Dawn Wings"
+    },
+    {
+      "itemType": 6,
+      "id": "Back_DawnWingsPhantom",
+      "displayName": "Phantom Dawn Wings"
+    },
+    {
+      "itemType": 6,
+      "id": "Back_DawnWingsPinkRose",
+      "displayName": "Pink Rose Dawn Wings"
+    },
+    {
+      "itemType": 6,
+      "id": "Back_DawnWingsSolarFlare",
+      "displayName": "Solar Flare Dawn Wings"
+    },
+    {
+      "itemType": 6,
+      "id": "Back_DawnWingsSunset",
+      "displayName": "Sunset Dawn Wings"
+    },
+    {
+      "itemType": 6,
       "id": "Back_Demonic",
       "displayName": "Demonic Back"
     },
@@ -431,26 +431,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Berserker_1",
-      "displayName": "War Cry"
-    },
-    {
-      "itemType": 6,
-      "id": "Berserker_2",
-      "displayName": "Crimson Frenzy"
-    },
-    {
-      "itemType": 6,
-      "id": "Berserker_3",
-      "displayName": "Slaughter Instinct"
-    },
-    {
-      "itemType": 6,
-      "id": "Berserker_4",
-      "displayName": "Executioner"
-    },
-    {
-      "itemType": 6,
       "id": "BerserkFeet",
       "displayName": "Direwolf Shoes"
     },
@@ -518,6 +498,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Bloom Ring",
       "displayName": "Bloom Ring"
+    },
+    {
+      "itemType": 6,
+      "id": "Bloomroot",
+      "displayName": "Bloomroot"
     },
     {
       "itemType": 6,
@@ -1646,6 +1631,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "ChatBubble_Kaeru",
+      "displayName": "Kaeru"
+    },
+    {
+      "itemType": 6,
       "id": "Chest_AcademyF",
       "displayName": "Academy Female Top"
     },
@@ -1727,7 +1717,7 @@ export class CosmeticItemDefinitions {
     {
       "itemType": 6,
       "id": "Chest_Kaeru",
-      "displayName": "Kaeru Top"
+      "displayName": "Kaeru Overalls"
     },
     {
       "itemType": 6,
@@ -1943,6 +1933,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Dagger_Gunblade_Chonky",
       "displayName": "Dagger GunBlade"
+    },
+    {
+      "itemType": 6,
+      "id": "Dagger_kotachi",
+      "displayName": "Silent Fate, Kodachi"
     },
     {
       "itemType": 6,
@@ -2241,6 +2236,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Earthspire",
+      "displayName": "Earthspire"
+    },
+    {
+      "itemType": 6,
       "id": "EchoAxe",
       "displayName": "Duskbreaker"
     },
@@ -2258,6 +2258,46 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "EchoChest_Matk",
       "displayName": "Dusk Robe"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Force",
+      "displayName": "Wing Ears of Force"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Life",
+      "displayName": "Wing Ears of Life"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Magic",
+      "displayName": "Wing Ears of Magic"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Pierce",
+      "displayName": "Wing Ears of Piercing"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Power",
+      "displayName": "Wing Ears of Power"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Range",
+      "displayName": "Wing Ears of Precision"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Recovery",
+      "displayName": "Wing Ears of Recovery"
+    },
+    {
+      "itemType": 6,
+      "id": "EchoFace_Speed",
+      "displayName": "Wing Ears of Speed"
     },
     {
       "itemType": 6,
@@ -2288,56 +2328,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "EchoLegs_Matk",
       "displayName": "Dusk Leggings"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Force",
-      "displayName": "Mask of Force"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Life",
-      "displayName": "Mask of Life"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Magic",
-      "displayName": "Mask of Magic"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Pierce",
-      "displayName": "Mask of Piercing"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Pierce_",
-      "displayName": "Perfect Mask of Piercing"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Power",
-      "displayName": "Mask of Power"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Range",
-      "displayName": "Mask of Precision"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Range_",
-      "displayName": "Perfect Mask of Precision"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Recovery",
-      "displayName": "Mask of Recovery"
-    },
-    {
-      "itemType": 6,
-      "id": "EchoMask_Speed",
-      "displayName": "Mask of Speed"
     },
     {
       "itemType": 6,
@@ -3011,31 +3001,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Gunslinger_1",
-      "displayName": "Loadout Rhythm"
-    },
-    {
-      "itemType": 6,
-      "id": "Gunslinger_2",
-      "displayName": "Opportunist"
-    },
-    {
-      "itemType": 6,
-      "id": "Gunslinger_3",
-      "displayName": "Grenadier's Codex"
-    },
-    {
-      "itemType": 6,
-      "id": "Gunslinger_4",
-      "displayName": "Blinding Escape"
-    },
-    {
-      "itemType": 6,
-      "id": "Gunslinger_5",
-      "displayName": "Desperado Barrage"
-    },
-    {
-      "itemType": 6,
       "id": "Hands_Angel_F",
       "displayName": "Angel Female Gloves"
     },
@@ -3088,6 +3053,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Happy Chipper Hat",
       "displayName": "Happy Chipper Hat"
+    },
+    {
+      "itemType": 6,
+      "id": "Harbringer",
+      "displayName": "Harbringer"
     },
     {
       "itemType": 6,
@@ -3256,8 +3226,18 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Head_Kraken",
+      "displayName": "Kraken"
+    },
+    {
+      "itemType": 6,
       "id": "Head_MajesticHorn",
       "displayName": "Majestic Horns"
+    },
+    {
+      "itemType": 6,
+      "id": "Head_OrcKing",
+      "displayName": "Orc King"
     },
     {
       "itemType": 6,
@@ -3288,6 +3268,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Head_ScorpionKing",
       "displayName": "Scorpion Crown"
+    },
+    {
+      "itemType": 6,
+      "id": "Head_SeraphinArbiter",
+      "displayName": "Arbiter"
     },
     {
       "itemType": 6,
@@ -3341,6 +3326,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Head_Warchief",
+      "displayName": "Warchief"
+    },
+    {
+      "itemType": 6,
       "id": "Head_Werewolf",
       "displayName": "Werewolf Hood"
     },
@@ -3368,6 +3358,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Head_Xmas_M_Red",
       "displayName": "Red Christmas Hat"
+    },
+    {
+      "itemType": 6,
+      "id": "Head_ZombieOrc",
+      "displayName": "Orc Zombie"
     },
     {
       "itemType": 6,
@@ -3563,36 +3558,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Knife",
       "displayName": "Knife"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_1",
-      "displayName": "Breaking Advance"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_2",
-      "displayName": "Sweeping Order"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_3",
-      "displayName": "Lightning Stance"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_4",
-      "displayName": "Rescuing Throw"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_5",
-      "displayName": "Iron Response"
-    },
-    {
-      "itemType": 6,
-      "id": "Knight_6",
-      "displayName": "Vanguard Doctrine"
     },
     {
       "itemType": 6,
@@ -3816,6 +3781,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Leviathan",
+      "displayName": "Leviathan"
+    },
+    {
+      "itemType": 6,
       "id": "Life Staff",
       "displayName": "Life Staff"
     },
@@ -3856,6 +3826,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Mace_FryingPan",
+      "displayName": "Frying Pan"
+    },
+    {
+      "itemType": 6,
       "id": "Mace_GladysMace",
       "displayName": "Gladys Mace"
     },
@@ -3873,36 +3848,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Mage Plate",
       "displayName": "Mage Plate"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_1",
-      "displayName": "Elementalist"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_2",
-      "displayName": "Spellshot"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_3",
-      "displayName": "Blink Step"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_4",
-      "displayName": "Ley Pulse"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_5",
-      "displayName": "Frostglass"
-    },
-    {
-      "itemType": 6,
-      "id": "Mage_6",
-      "displayName": "Combustion"
     },
     {
       "itemType": 6,
@@ -4081,13 +4026,28 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Mount_AngelDevilHands",
+      "displayName": "Armonia"
+    },
+    {
+      "itemType": 6,
       "id": "Mount_AngelLion",
       "displayName": "Angel Lion"
     },
     {
       "itemType": 6,
+      "id": "Mount_AnimeChick",
+      "displayName": "Mommy-Chan"
+    },
+    {
+      "itemType": 6,
       "id": "Mount_BananaDuck",
       "displayName": "Banana Duck"
+    },
+    {
+      "itemType": 6,
+      "id": "Mount_Dahbees",
+      "displayName": "Refubeespa"
     },
     {
       "itemType": 6,
@@ -4173,6 +4133,16 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Mount_IceFox",
       "displayName": "Polarian"
+    },
+    {
+      "itemType": 6,
+      "id": "Mount_Island",
+      "displayName": "Skyland Sanctuary"
+    },
+    {
+      "itemType": 6,
+      "id": "Mount_Raijin",
+      "displayName": "Raiga-The Stormbreaker"
     },
     {
       "itemType": 6,
@@ -4326,26 +4296,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Paladin_1",
-      "displayName": "Resolute Pose"
-    },
-    {
-      "itemType": 6,
-      "id": "Paladin_2",
-      "displayName": "Crushing Advance"
-    },
-    {
-      "itemType": 6,
-      "id": "Paladin_3",
-      "displayName": "Sacred Bastion"
-    },
-    {
-      "itemType": 6,
-      "id": "Paladin_4",
-      "displayName": "Divine Retribution"
-    },
-    {
-      "itemType": 6,
       "id": "Parrying Knife",
       "displayName": "Parrying Knife"
     },
@@ -4411,6 +4361,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Pet_Cubeman",
+      "displayName": "Cubeman"
+    },
+    {
+      "itemType": 6,
       "id": "Pet_DemonicImp",
       "displayName": "Demonic Imp"
     },
@@ -4468,6 +4423,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Pet_HybridBunny",
       "displayName": "Hybrid Bunny"
+    },
+    {
+      "itemType": 6,
+      "id": "Pet_MoneyMan",
+      "displayName": "Bobby"
     },
     {
       "itemType": 6,
@@ -4593,51 +4553,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Potions",
       "displayName": "Potions"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_1",
-      "displayName": "Veil of the Exorcist"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_2",
-      "displayName": "Martyr's Oath"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_3",
-      "displayName": "Exorcist's Brand"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_4",
-      "displayName": "Eclipsing Aegis"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_5",
-      "displayName": "Overflowing Grace"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_6",
-      "displayName": "Resurrection Pact"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_7",
-      "displayName": "Purity"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_8",
-      "displayName": "Sanctuary Doctrine"
-    },
-    {
-      "itemType": 6,
-      "id": "Priest_9",
-      "displayName": "Dark Priest"
     },
     {
       "itemType": 6,
@@ -4801,31 +4716,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Rogue_1",
-      "displayName": "Silent Circle"
-    },
-    {
-      "itemType": 6,
-      "id": "Rogue_2",
-      "displayName": "Shadow Trail"
-    },
-    {
-      "itemType": 6,
-      "id": "Rogue_3",
-      "displayName": "Venom Bloom"
-    },
-    {
-      "itemType": 6,
-      "id": "Rogue_4",
-      "displayName": "Shadow Dance"
-    },
-    {
-      "itemType": 6,
-      "id": "Rogue_5",
-      "displayName": "Hidden Strikes"
-    },
-    {
-      "itemType": 6,
       "id": "Round Glasses",
       "displayName": "Round Glasses"
     },
@@ -4981,31 +4871,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Scout_1",
-      "displayName": "Chain Reaction"
-    },
-    {
-      "itemType": 6,
-      "id": "Scout_2",
-      "displayName": "Hunting Ground"
-    },
-    {
-      "itemType": 6,
-      "id": "Scout_3",
-      "displayName": "Skirmisher's Flow"
-    },
-    {
-      "itemType": 6,
-      "id": "Scout_4",
-      "displayName": "Suppressing Shot"
-    },
-    {
-      "itemType": 6,
-      "id": "Scout_5",
-      "displayName": "Eagle Eye"
-    },
-    {
-      "itemType": 6,
       "id": "Scrapfang",
       "displayName": "Scrapfang"
     },
@@ -5091,38 +4956,18 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Shield_SterlightSilverguard",
+      "displayName": "Sterlight Silver Guard"
+    },
+    {
+      "itemType": 6,
+      "id": "Shield_Talapat",
+      "displayName": "Talapat"
+    },
+    {
+      "itemType": 6,
       "id": "Shield_Umbra",
       "displayName": "Umbra Shield"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_1",
-      "displayName": "Mirror Image"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_2",
-      "displayName": "Tools of the Trade"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_3",
-      "displayName": "Chain Step"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_4",
-      "displayName": "Blitz Release"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_5",
-      "displayName": "Spiral Lock"
-    },
-    {
-      "itemType": 6,
-      "id": "Shinobi_6",
-      "displayName": "Fated Finish"
     },
     {
       "itemType": 6,
@@ -5221,6 +5066,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Solaris Blade",
+      "displayName": "Solaris Blade"
+    },
+    {
+      "itemType": 6,
       "id": "Sonic Shoes",
       "displayName": "Sonic Shoes"
     },
@@ -5248,6 +5098,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Spear_GladysSpear",
       "displayName": "Gladys Spear"
+    },
+    {
+      "itemType": 6,
+      "id": "Spear_Umbra",
+      "displayName": "Umbra Spear"
     },
     {
       "itemType": 6,
@@ -5328,6 +5183,21 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Staff of Eternis",
       "displayName": "Staff of Eternis"
+    },
+    {
+      "itemType": 6,
+      "id": "Staff_SkullStaff",
+      "displayName": "Skull Staff"
+    },
+    {
+      "itemType": 6,
+      "id": "Staff_Umbra",
+      "displayName": "Umbra Staff"
+    },
+    {
+      "itemType": 6,
+      "id": "Staff_Xier",
+      "displayName": "Lunar Demon Staff"
     },
     {
       "itemType": 6,
@@ -5426,36 +5296,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Summoner_1",
-      "displayName": "Alpha Surge"
-    },
-    {
-      "itemType": 6,
-      "id": "Summoner_2",
-      "displayName": "Hexwell Current"
-    },
-    {
-      "itemType": 6,
-      "id": "Summoner_3",
-      "displayName": "Banishment Well"
-    },
-    {
-      "itemType": 6,
-      "id": "Summoner_4",
-      "displayName": "Resonant Wind"
-    },
-    {
-      "itemType": 6,
-      "id": "Summoner_5",
-      "displayName": "Blessed Resonance"
-    },
-    {
-      "itemType": 6,
-      "id": "Summoner_6",
-      "displayName": "Soul Chains"
-    },
-    {
-      "itemType": 6,
       "id": "Sun Disc",
       "displayName": "Sun Disc"
     },
@@ -5536,8 +5376,18 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Sword_SterlightSilverblade",
+      "displayName": "Sterlight Silver Blade"
+    },
+    {
+      "itemType": 6,
       "id": "Sword_TheDragonThrone",
       "displayName": "The Dragon Throne"
+    },
+    {
+      "itemType": 6,
+      "id": "Sword_TwinFlameRakshasa",
+      "displayName": "Twin Flame Rakshasa"
     },
     {
       "itemType": 6,
@@ -5568,6 +5418,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Tempest Staff",
       "displayName": "Tempest Staff"
+    },
+    {
+      "itemType": 6,
+      "id": "Temporal Codex",
+      "displayName": "Temporal Codex"
     },
     {
       "itemType": 6,
@@ -5856,31 +5711,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Warrior_1",
-      "displayName": "Bloodtrail"
-    },
-    {
-      "itemType": 6,
-      "id": "Warrior_2",
-      "displayName": "Breakjaw"
-    },
-    {
-      "itemType": 6,
-      "id": "Warrior_3",
-      "displayName": "Warmaw"
-    },
-    {
-      "itemType": 6,
-      "id": "Warrior_4",
-      "displayName": "Bloodprice"
-    },
-    {
-      "itemType": 6,
-      "id": "Warrior_5",
-      "displayName": "Warpath"
-    },
-    {
-      "itemType": 6,
       "id": "Wasteland Cleaver",
       "displayName": "Wasteland Cleaver"
     },
@@ -5913,31 +5743,6 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Water Shield",
       "displayName": "Frostspire Guard"
-    },
-    {
-      "itemType": 6,
-      "id": "Weaver_1",
-      "displayName": "Weave of Counter"
-    },
-    {
-      "itemType": 6,
-      "id": "Weaver_2",
-      "displayName": "Weave of Guardian"
-    },
-    {
-      "itemType": 6,
-      "id": "Weaver_3",
-      "displayName": "Weave of Arcana"
-    },
-    {
-      "itemType": 6,
-      "id": "Weaver_4",
-      "displayName": "Weave of Fury"
-    },
-    {
-      "itemType": 6,
-      "id": "Weaver_5",
-      "displayName": "Weave of Marksman"
     },
     {
       "itemType": 6,
@@ -6046,41 +5851,6 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
-      "id": "Wizard_1",
-      "displayName": "Jupiter's Wrath"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_2",
-      "displayName": "Voltaic Overdraw"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_3",
-      "displayName": "Eye of the Storm"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_4",
-      "displayName": "Stonewake"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_5",
-      "displayName": "Focused Amplification"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_6",
-      "displayName": "Mana Surge"
-    },
-    {
-      "itemType": 6,
-      "id": "Wizard_7",
-      "displayName": "Arcane Barrier"
-    },
-    {
-      "itemType": 6,
       "id": "Wizardry Hat",
       "displayName": "Wizardry Hat"
     },
@@ -6103,6 +5873,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Worker's Cap",
       "displayName": "Worker's Cap"
+    },
+    {
+      "itemType": 6,
+      "id": "Worldsplitter",
+      "displayName": "Worldsplitter"
     },
     {
       "itemType": 6,

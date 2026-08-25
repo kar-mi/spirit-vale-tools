@@ -48,6 +48,8 @@ export function syntheticCharacter(
   bool(out, false);
   float(out, 1); float(out, 1); string(out, "Example Town");
   bool(out, false); float(out, 0); float(out, 0); float(out, 0);
+  string(out, ""); // InstancedMapReturnMapId.
+  bool(out, false); float(out, 0); float(out, 0); float(out, 0); // InstancedMapReturnPosition.
   list(out, [], () => undefined); packed(out, 0); list(out, [], () => undefined); list(out, [], () => undefined);
   list(out, [60, 30, 10, 20, 5, 15], (value) => packed(out, value));
   list(out, [0], () => {

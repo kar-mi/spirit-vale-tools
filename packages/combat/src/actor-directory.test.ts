@@ -316,7 +316,7 @@ describe("FishNetActorDirectory", () => {
     // A clone is a second network object under the owner's connection and deals damage under its own AttackerId.
     const directory = new FishNetActorDirectory();
 
-    expect(directory.consume(prefabSpawn(1, 64, 16, 1, undefined, visualSpawnEntries("Mirror Ranger", 8)))).toEqual([{
+    expect(directory.consume(prefabSpawn(1, 64, 16, 4, undefined, visualSpawnEntries("Mirror Ranger", 8)))).toEqual([{
       kind: "actorIdentity",
       operation: "upsert",
       tick: 1,
@@ -332,7 +332,7 @@ describe("FishNetActorDirectory", () => {
     directory.consume(prefabSpawn(1, 70, 21, 4, undefined, visualSpawnEntries("Owner Ranger", 8)));
 
     // The clone spawns under the same owner connection carrying no identity of its own.
-    const events = directory.consume(prefabSpawn(2, 71, 21, 1, Buffer.alloc(0)));
+    const events = directory.consume(prefabSpawn(2, 71, 21, 3, Buffer.alloc(0)));
 
     expect(events).toEqual([{
       kind: "actorIdentity",

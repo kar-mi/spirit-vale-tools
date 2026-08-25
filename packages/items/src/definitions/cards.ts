@@ -2361,23 +2361,41 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareAcolyte",
-      "displayName": "Umbral Acolyte Card",
+      "displayName": "Echo Acolyte Card",
       "effects": [
         {
-          "type": 211,
-          "value": 10
+          "type": 67,
+          "value": 5
+        },
+        {
+          "type": 119,
+          "value": 5
         }
       ]
     },
     {
       "itemType": 4,
       "id": "NightmareBerserker",
-      "displayName": "Umbral Berserker Card"
+      "displayName": "Echo Berserker Card",
+      "effects": [
+        {
+          "type": 98,
+          "value": 5
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "IronWill"
+          }
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareBerserkerBoss",
-      "displayName": "Echo Berserker Card",
+      "displayName": "Echo Berserker Master Card",
       "effects": [
         {
           "type": 193,
@@ -2388,12 +2406,22 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareGunslinger",
-      "displayName": "Umbral Gunslinger Card"
+      "displayName": "Echo Gunslinger Card",
+      "effects": [
+        {
+          "type": 9,
+          "value": 1
+        },
+        {
+          "type": 9,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareGunslingerBoss",
-      "displayName": "Echo Gunslinger Card",
+      "displayName": "Echo Gunslinger Master Card",
       "effects": [
         {
           "type": 195,
@@ -2412,18 +2440,18 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareKnight",
-      "displayName": "Umbral Knight Card",
+      "displayName": "Echo Knight Card",
       "effects": [
         {
           "type": 192,
-          "value": 25
+          "value": 10
         }
       ]
     },
     {
       "itemType": 4,
       "id": "NightmareMage",
-      "displayName": "Umbral Mage Card",
+      "displayName": "Echo Mage Card",
       "effects": [
         {
           "type": 10,
@@ -2438,12 +2466,22 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareNecromancer",
-      "displayName": "Umbral Necromancer Card"
+      "displayName": "Echo Necromancer Card",
+      "effects": [
+        {
+          "type": 135,
+          "value": 5
+        },
+        {
+          "type": 231,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareNecromancerBoss",
-      "displayName": "Echo Necromancer Card",
+      "displayName": "Echo Necromancer Master Card",
       "effects": [
         {
           "type": 194,
@@ -2454,12 +2492,30 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmarePaladin",
-      "displayName": "Umbral Paladin Card"
+      "displayName": "Echo Paladin Card",
+      "effects": [
+        {
+          "type": 53,
+          "value": 10,
+          "target": {
+            "kind": "element",
+            "id": "Neutral"
+          }
+        },
+        {
+          "type": 60,
+          "value": 1
+        },
+        {
+          "type": 141,
+          "value": 10
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmarePaladinBoss",
-      "displayName": "Echo Paladin Card",
+      "displayName": "Echo Paladin Master Card",
       "effects": [
         {
           "type": 139,
@@ -2474,12 +2530,22 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmarePriest",
-      "displayName": "Umbral Priest Card"
+      "displayName": "Echo Priest Card",
+      "effects": [
+        {
+          "type": 10,
+          "value": 1
+        },
+        {
+          "type": 148,
+          "value": 1
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmarePriestBoss",
-      "displayName": "Echo Priest Card",
+      "displayName": "Echo Priest Master Card",
       "effects": [
         {
           "type": 67,
@@ -2494,7 +2560,7 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareRogue",
-      "displayName": "Umbral Rogue Card",
+      "displayName": "Echo Rogue Card",
       "effects": [
         {
           "type": 63,
@@ -2509,7 +2575,7 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareScout",
-      "displayName": "Umbral Scout Card",
+      "displayName": "Echo Scout Card",
       "effects": [
         {
           "type": 9,
@@ -2539,12 +2605,30 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareShinobi",
-      "displayName": "Umbral Shinobi Card"
+      "displayName": "Echo Shinobi Card",
+      "effects": [
+        {
+          "type": 63,
+          "value": 5
+        },
+        {
+          "type": 64,
+          "value": 5
+        },
+        {
+          "type": 65,
+          "value": 5
+        },
+        {
+          "type": 121,
+          "value": 5
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareShinobiBoss",
-      "displayName": "Echo Shinobi Card",
+      "displayName": "Echo Shinobi Master Card",
       "effects": [
         {
           "type": 182,
@@ -2559,7 +2643,7 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareSummoner",
-      "displayName": "Umbral Summoner Card",
+      "displayName": "Echo Summoner Card",
       "effects": [
         {
           "type": 135,
@@ -2570,7 +2654,7 @@ export class CardItemDefinitions {
     {
       "itemType": 4,
       "id": "NightmareWarrior",
-      "displayName": "Umbral Warrior Card",
+      "displayName": "Echo Warrior Card",
       "effects": [
         {
           "type": 52,
@@ -2584,13 +2668,117 @@ export class CardItemDefinitions {
     },
     {
       "itemType": 4,
+      "id": "NightmareWeaver",
+      "displayName": "Echo Weaver Card",
+      "effects": [
+        {
+          "type": 6,
+          "value": 1
+        },
+        {
+          "type": 69,
+          "value": 3
+        },
+        {
+          "type": 70,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "itemType": 4,
+      "id": "NightmareWeaverBoss",
+      "displayName": "Echo Weaver Master Card",
+      "effects": [
+        {
+          "type": 130,
+          "value": 1
+        },
+        {
+          "type": 185,
+          "value": 1
+        },
+        {
+          "type": 32,
+          "value": 1
+        },
+        {
+          "type": 90,
+          "value": -10
+        },
+        {
+          "type": 34,
+          "value": 1
+        },
+        {
+          "type": 26,
+          "value": 50,
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
+        }
+      ]
+    },
+    {
+      "itemType": 4,
       "id": "NightmareWizard",
-      "displayName": "Umbral Wizard Card"
+      "displayName": "Echo Wizard Card",
+      "effects": [
+        {
+          "type": 218,
+          "value": 5,
+          "target": {
+            "kind": "status",
+            "id": "Slow"
+          }
+        },
+        {
+          "type": 218,
+          "value": 5,
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
+        },
+        {
+          "type": 218,
+          "value": 5,
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
+        },
+        {
+          "type": 211,
+          "value": 10,
+          "target": {
+            "kind": "status",
+            "id": "Slow"
+          }
+        },
+        {
+          "type": 211,
+          "value": 10,
+          "target": {
+            "kind": "status",
+            "id": "Frozen"
+          }
+        },
+        {
+          "type": 211,
+          "value": 10,
+          "target": {
+            "kind": "status",
+            "id": "Stun"
+          }
+        }
+      ]
     },
     {
       "itemType": 4,
       "id": "NightmareWizardBoss",
-      "displayName": "Echo Wizard Card",
+      "displayName": "Echo Wizard Master Card",
       "effects": [
         {
           "type": 48,

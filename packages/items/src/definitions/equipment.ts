@@ -1841,6 +1841,52 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Bloomroot",
+      "displayName": "Bloomroot",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        },
+        {
+          "type": 10,
+          "value": 25
+        },
+        {
+          "type": 64,
+          "value": 15
+        },
+        {
+          "type": 60,
+          "value": 1
+        },
+        {
+          "type": 62,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 9,
+          "value": 0.5
+        },
+        {
+          "type": 10,
+          "value": 2.5
+        },
+        {
+          "type": 67,
+          "value": 1
+        },
+        {
+          "type": 182,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
       "id": "Blue Shell",
       "displayName": "Blue Shell",
       "weight": 10,
@@ -2804,6 +2850,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 142,
           "value": 25
+        },
+        {
+          "type": 231,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -3182,6 +3232,10 @@ export class EquipmentItemDefinitions {
           "value": 3
         },
         {
+          "type": 231,
+          "value": 1
+        },
+        {
           "type": 6,
           "value": 1
         }
@@ -3219,6 +3273,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         },
         {
           "type": 49,
@@ -3272,6 +3330,10 @@ export class EquipmentItemDefinitions {
           "value": 3
         },
         {
+          "type": 231,
+          "value": 1
+        },
+        {
           "type": 67,
           "value": 10
         },
@@ -3321,6 +3383,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -3376,6 +3442,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         },
         {
           "type": 42,
@@ -3447,6 +3517,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         },
         {
           "type": 42,
@@ -5072,6 +5146,76 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Earthspire",
+      "displayName": "Earthspire",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 9,
+          "value": 5
+        },
+        {
+          "type": 10,
+          "value": 30
+        },
+        {
+          "type": 64,
+          "value": 15
+        },
+        {
+          "type": 49,
+          "value": 15,
+          "target": {
+            "kind": "skill",
+            "id": "Earthquake"
+          }
+        },
+        {
+          "type": 104,
+          "value": -3,
+          "target": {
+            "kind": "skill",
+            "id": "Earthquake"
+          }
+        },
+        {
+          "type": 110,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "Earthquake"
+          }
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 9,
+          "value": 0.5
+        },
+        {
+          "type": 10,
+          "value": 3
+        },
+        {
+          "type": 49,
+          "value": 2,
+          "target": {
+            "kind": "skill",
+            "id": "Earthquake"
+          }
+        },
+        {
+          "type": 39,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "NPC_Knockback"
+          }
+        }
+      ]
+    },
+    {
+      "itemType": 2,
       "id": "EchoAxe",
       "displayName": "Duskbreaker",
       "weight": 0,
@@ -5083,6 +5227,14 @@ export class EquipmentItemDefinitions {
         {
           "type": 52,
           "value": 10
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "IronWill"
+          }
         }
       ],
       "refineEffects": [
@@ -5125,6 +5277,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -5240,6 +5396,558 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "EchoFace_Force",
+      "displayName": "Wing Ears of Force",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 15,
+          "value": 5
+        },
+        {
+          "type": 52,
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Force_",
+      "displayName": "Perfect Wing Ears of Force",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 15,
+          "value": 1
+        },
+        {
+          "type": 52,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Life",
+      "displayName": "Wing Ears of Life",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": 5
+        },
+        {
+          "type": 58,
+          "value": -5
+        },
+        {
+          "type": 103,
+          "value": -5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Life_",
+      "displayName": "Perfect Wing Ears of Life",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 71,
+          "value": 1
+        },
+        {
+          "type": 58,
+          "value": -1
+        },
+        {
+          "type": 103,
+          "value": -1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Magic",
+      "displayName": "Wing Ears of Magic",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 48,
+          "value": 5
+        },
+        {
+          "type": 64,
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Magic_",
+      "displayName": "Perfect Wing Ears of Magic",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 48,
+          "value": 1
+        },
+        {
+          "type": 64,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Pierce",
+      "displayName": "Wing Ears of Piercing",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 193,
+          "value": 5
+        },
+        {
+          "type": 194,
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Pierce_",
+      "displayName": "Perfect Wing Ears of Piercing",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 193,
+          "value": 1
+        },
+        {
+          "type": 194,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Power",
+      "displayName": "Wing Ears of Power",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 47,
+          "value": 5
+        },
+        {
+          "type": 98,
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Power_",
+      "displayName": "Perfect Wing Ears of Power",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 47,
+          "value": 1
+        },
+        {
+          "type": 98,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Range",
+      "displayName": "Wing Ears of Precision",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 102,
+          "value": 5
+        },
+        {
+          "type": 25,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Range_",
+      "displayName": "Perfect Wing Ears of Precision",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 25,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 102,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Recovery",
+      "displayName": "Wing Ears of Recovery",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 67,
+          "value": 5
+        },
+        {
+          "type": 182,
+          "value": 5
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Recovery_",
+      "displayName": "Perfect Wing Ears of Recovery",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 67,
+          "value": 1
+        },
+        {
+          "type": 182,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Speed",
+      "displayName": "Wing Ears of Speed",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 63,
+          "value": 5
+        },
+        {
+          "type": 80,
+          "value": 10
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "itemType": 2,
+      "id": "EchoFace_Speed_",
+      "displayName": "Perfect Wing Ears of Speed",
+      "weight": 0,
+      "effects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        }
+      ],
+      "refineEffects": [
+        {
+          "type": 11,
+          "value": 1
+        },
+        {
+          "type": 12,
+          "value": 1
+        },
+        {
+          "type": 63,
+          "value": 1
+        },
+        {
+          "type": 80,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "itemType": 2,
       "id": "EchoFeet_Atk",
       "displayName": "Dusk Boots",
       "weight": 0,
@@ -5329,11 +6037,11 @@ export class EquipmentItemDefinitions {
           "value": 1
         },
         {
-          "type": 42,
+          "type": 223,
           "value": 1,
           "target": {
-            "kind": "skill",
-            "id": "EnchantHoly"
+            "kind": "status",
+            "id": "Stagger"
           }
         },
         {
@@ -5343,12 +6051,24 @@ export class EquipmentItemDefinitions {
             "kind": "skill",
             "id": "EnchantShadow"
           }
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "EnchantHoly"
+          }
         }
       ],
       "refineEffects": [
         {
           "type": 9,
           "value": 12
+        },
+        {
+          "type": 15,
+          "value": 1
         }
       ]
     },
@@ -5387,7 +6107,7 @@ export class EquipmentItemDefinitions {
           "value": 5,
           "target": {
             "kind": "skill",
-            "id": "FreezeGrenade"
+            "id": "FrozenGround"
           }
         }
       ],
@@ -5484,558 +6204,6 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
-      "id": "EchoMask_Force",
-      "displayName": "Mask of Force",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 15,
-          "value": 5
-        },
-        {
-          "type": 52,
-          "value": 5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Force_",
-      "displayName": "Perfect Mask of Force",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 15,
-          "value": 1
-        },
-        {
-          "type": 52,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Life",
-      "displayName": "Mask of Life",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 71,
-          "value": 5
-        },
-        {
-          "type": 58,
-          "value": -5
-        },
-        {
-          "type": 103,
-          "value": -5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Life_",
-      "displayName": "Perfect Mask of Life",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 71,
-          "value": 1
-        },
-        {
-          "type": 58,
-          "value": -1
-        },
-        {
-          "type": 103,
-          "value": -1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Magic",
-      "displayName": "Mask of Magic",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 48,
-          "value": 5
-        },
-        {
-          "type": 64,
-          "value": 5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Magic_",
-      "displayName": "Perfect Mask of Magic",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 48,
-          "value": 1
-        },
-        {
-          "type": 64,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Pierce",
-      "displayName": "Mask of Piercing",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 193,
-          "value": 5
-        },
-        {
-          "type": 194,
-          "value": 5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Pierce_",
-      "displayName": "Perfect Mask of Piercing",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 193,
-          "value": 1
-        },
-        {
-          "type": 194,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Power",
-      "displayName": "Mask of Power",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 47,
-          "value": 5
-        },
-        {
-          "type": 98,
-          "value": 5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Power_",
-      "displayName": "Perfect Mask of Power",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 47,
-          "value": 1
-        },
-        {
-          "type": 98,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Range",
-      "displayName": "Mask of Precision",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 102,
-          "value": 5
-        },
-        {
-          "type": 25,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Range_",
-      "displayName": "Perfect Mask of Precision",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 25,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 102,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Recovery",
-      "displayName": "Mask of Recovery",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 67,
-          "value": 5
-        },
-        {
-          "type": 182,
-          "value": 5
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Recovery_",
-      "displayName": "Perfect Mask of Recovery",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 67,
-          "value": 1
-        },
-        {
-          "type": 182,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Speed",
-      "displayName": "Mask of Speed",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 63,
-          "value": 5
-        },
-        {
-          "type": 80,
-          "value": 10
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ]
-    },
-    {
-      "itemType": 2,
-      "id": "EchoMask_Speed_",
-      "displayName": "Perfect Mask of Speed",
-      "weight": 0,
-      "effects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        }
-      ],
-      "refineEffects": [
-        {
-          "type": 11,
-          "value": 1
-        },
-        {
-          "type": 12,
-          "value": 1
-        },
-        {
-          "type": 63,
-          "value": 1
-        },
-        {
-          "type": 80,
-          "value": 2
-        }
-      ]
-    },
-    {
-      "itemType": 2,
       "id": "EchoScythe",
       "displayName": "Duskharvest",
       "weight": 0,
@@ -6043,6 +6211,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 9,
           "value": 40
+        },
+        {
+          "type": 10,
+          "value": 20
         },
         {
           "type": 98,
@@ -6057,6 +6229,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 9,
           "value": 4
+        },
+        {
+          "type": 10,
+          "value": 2
         },
         {
           "type": 69,
@@ -6089,6 +6265,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 85,
           "value": 30
+        },
+        {
+          "type": 229,
+          "value": 15
         }
       ],
       "refineEffects": [
@@ -6165,6 +6345,14 @@ export class EquipmentItemDefinitions {
         {
           "type": 64,
           "value": 15
+        },
+        {
+          "type": 42,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "BloodMagic"
+          }
         }
       ],
       "refineEffects": [
@@ -6181,8 +6369,8 @@ export class EquipmentItemDefinitions {
           "value": 2
         },
         {
-          "type": 72,
-          "value": 1
+          "type": 71,
+          "value": 2
         }
       ]
     },
@@ -6801,6 +6989,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         },
         {
           "type": 43,
@@ -9232,11 +9424,11 @@ export class EquipmentItemDefinitions {
       "effects": [
         {
           "type": 9,
-          "value": 25
+          "value": 20
         },
         {
           "type": 10,
-          "value": 25
+          "value": 40
         },
         {
           "type": 98,
@@ -9274,11 +9466,11 @@ export class EquipmentItemDefinitions {
       "refineEffects": [
         {
           "type": 9,
-          "value": 2.5
+          "value": 2
         },
         {
           "type": 10,
-          "value": 2.5
+          "value": 4
         },
         {
           "type": 49,
@@ -12096,6 +12288,10 @@ export class EquipmentItemDefinitions {
           "value": 3
         },
         {
+          "type": 231,
+          "value": 1
+        },
+        {
           "type": 69,
           "value": 10
         },
@@ -13050,6 +13246,10 @@ export class EquipmentItemDefinitions {
           "value": 3
         },
         {
+          "type": 231,
+          "value": 1
+        },
+        {
           "type": 43,
           "value": 2,
           "target": {
@@ -13076,16 +13276,20 @@ export class EquipmentItemDefinitions {
           "value": 2.5
         },
         {
-          "type": 175,
-          "value": 1
-        },
-        {
           "type": 46,
           "value": 2,
           "target": {
             "kind": "element",
             "id": "Undead"
           }
+        },
+        {
+          "type": 135,
+          "value": 1
+        },
+        {
+          "type": 175,
+          "value": 1
         }
       ],
       "substatGroup": "Magic"
@@ -14965,8 +15169,16 @@ export class EquipmentItemDefinitions {
           "value": 10
         },
         {
+          "type": 119,
+          "value": 25
+        },
+        {
           "type": 98,
           "value": 5
+        },
+        {
+          "type": 60,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -14981,10 +15193,6 @@ export class EquipmentItemDefinitions {
             "kind": "status",
             "id": "Rage"
           }
-        },
-        {
-          "type": 75,
-          "value": 5
         }
       ],
       "substatGroup": "Melee"
@@ -15205,11 +15413,7 @@ export class EquipmentItemDefinitions {
       "effects": [
         {
           "type": 9,
-          "value": 30
-        },
-        {
-          "type": 10,
-          "value": 10
+          "value": 45
         },
         {
           "type": 98,
@@ -15251,11 +15455,7 @@ export class EquipmentItemDefinitions {
       "refineEffects": [
         {
           "type": 9,
-          "value": 3
-        },
-        {
-          "type": 10,
-          "value": 1
+          "value": 4.5
         },
         {
           "type": 15,
@@ -17100,7 +17300,7 @@ export class EquipmentItemDefinitions {
       "effects": [
         {
           "type": 9,
-          "value": 25
+          "value": 30
         },
         {
           "type": 10,
@@ -17114,7 +17314,7 @@ export class EquipmentItemDefinitions {
       "refineEffects": [
         {
           "type": 9,
-          "value": 2.5
+          "value": 3
         },
         {
           "type": 10,
@@ -18090,11 +18290,11 @@ export class EquipmentItemDefinitions {
       "effects": [
         {
           "type": 9,
-          "value": 25
+          "value": 30
         },
         {
           "type": 10,
-          "value": 25
+          "value": 30
         },
         {
           "type": 98,
@@ -18109,22 +18309,18 @@ export class EquipmentItemDefinitions {
           }
         },
         {
-          "type": 106,
-          "value": 2,
-          "target": {
-            "kind": "skill",
-            "id": "CorpseExplosion"
-          }
+          "type": 148,
+          "value": 3
         }
       ],
       "refineEffects": [
         {
           "type": 9,
-          "value": 2.5
+          "value": 3
         },
         {
           "type": 10,
-          "value": 2.5
+          "value": 3
         },
         {
           "type": 49,
@@ -18450,6 +18646,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 76,
           "value": 25
+        },
+        {
+          "type": 231,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -19978,6 +20178,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 148,
           "value": 3
+        },
+        {
+          "type": 231,
+          "value": 1
         }
       ],
       "refineEffects": [

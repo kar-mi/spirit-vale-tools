@@ -9,7 +9,7 @@ import {
 test("loads a complete build-scoped item catalog", () => {
   const catalog = loadBundledItemCatalog();
   expect(catalog.buildFingerprint).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
-  expect(countByType(catalog.items)).toEqual([282, 31, 688, 45, 327, 129, 1224]);
+  expect(countByType(catalog.items)).toEqual([282, 31, 690, 45, 329, 129, 1179]);
   expect(catalog.items.every((item) => item.id.length > 0 && item.displayName.length > 0)).toBe(true);
   expect(new Set(catalog.items.map((item) => `${item.itemType}|${item.id}`)).size).toBe(catalog.items.length);
 
