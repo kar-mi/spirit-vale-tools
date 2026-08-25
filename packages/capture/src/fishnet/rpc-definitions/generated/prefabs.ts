@@ -19,7 +19,29 @@ export const GENERATED_PREFAB_DEFINITIONS = [
   {
     "collectionId": 0,
     "prefabId": 1,
-    "prefabName": "PlayerClone",
+    "prefabName": "SkillInstance",
+    "components": [
+      {
+        "index": 1,
+        "typeName": "FishNet.Component.Transforming.NetworkTransform"
+      }
+    ]
+  },
+  {
+    "collectionId": 0,
+    "prefabId": 2,
+    "prefabName": "BossGravestone",
+    "components": [
+      {
+        "index": 0,
+        "typeName": "BossGraveStone"
+      }
+    ]
+  },
+  {
+    "collectionId": 0,
+    "prefabId": 3,
+    "prefabName": "Player",
     "components": [
       {
         "index": 0,
@@ -61,30 +83,8 @@ export const GENERATED_PREFAB_DEFINITIONS = [
   },
   {
     "collectionId": 0,
-    "prefabId": 2,
-    "prefabName": "SkillInstance",
-    "components": [
-      {
-        "index": 1,
-        "typeName": "FishNet.Component.Transforming.NetworkTransform"
-      }
-    ]
-  },
-  {
-    "collectionId": 0,
-    "prefabId": 3,
-    "prefabName": "BossGravestone",
-    "components": [
-      {
-        "index": 0,
-        "typeName": "BossGraveStone"
-      }
-    ]
-  },
-  {
-    "collectionId": 0,
     "prefabId": 4,
-    "prefabName": "Player",
+    "prefabName": "PlayerClone",
     "components": [
       {
         "index": 0,

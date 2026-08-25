@@ -83,68 +83,11 @@ export const baseUnitControllerRpcs = [
         "name": "instanceId",
         "typeName": "System.Int32",
         "codec": "packedInt32"
-      },
-      {
-        "name": "instancedMapAdmissionId",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      },
-      {
-        "name": "instancedMapFlowId",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
       }
     ]
   },
   {
     "wireHash": 6,
-    "packetKind": "serverRpc",
-    "methodName": "ClientInstancedMapReady",
-    "parameters": [
-      {
-        "name": "mapId",
-        "typeName": "System.Int32",
-        "codec": "packedInt32"
-      },
-      {
-        "name": "localMapInstanceId",
-        "typeName": "System.Int32",
-        "codec": "packedInt32"
-      },
-      {
-        "name": "instancedMapFlowId",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      },
-      {
-        "name": "instancedMapId",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      },
-      {
-        "name": "hostEpoch",
-        "typeName": "System.Int64",
-        "codec": "packedInt64"
-      },
-      {
-        "name": "admissionId",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      },
-      {
-        "name": "bindingSlot",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      },
-      {
-        "name": "bindingToken",
-        "typeName": "System.String",
-        "codec": "stringUtf8Packed"
-      }
-    ]
-  },
-  {
-    "wireHash": 7,
     "packetKind": "observersRpc",
     "methodName": "SyncInstanceState",
     "parameters": [
