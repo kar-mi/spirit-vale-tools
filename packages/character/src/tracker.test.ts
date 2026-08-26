@@ -247,6 +247,66 @@ describe("FishNetCharacterTracker", () => {
     });
   });
 
+  test("rekeys a buffered physical spawn without promoting it before logical-object proof", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume({
+      ...syncPacket(202, "PlayerController", ""),
+      packetName: "objectSpawn",
+      spawnSyncEntries: [spawnEntry("SkillsComponent", "maxManaSync", 240)],
+    } as CapturedFishNetPacket);
+
+    tracker.rekeyPendingObject("test-connection", 202, -1);
+    expect(tracker.state().records).toBeUndefined();
+    tracker.consume(pinPacket(-1));
+
+    expect(tracker.state().records).toMatchObject({ maxMana: 240 });
+  });
+
+  test("normalizes a regen plateau only after consecutive increases and a quiet window", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_000));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_050));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_100));
+    expect(tracker.state().records?.normalizedMaxMp).toBeUndefined();
+
+    timing.advance(2_249);
+    expect(tracker.state().records?.normalizedMaxMp).toBeUndefined();
+    timing.advance(1);
+    expect(tracker.state().records).toMatchObject({ currentMana: 1_100, normalizedMaxMp: 1_100 });
+  });
+
+  test("does not normalize a single heal increase as maximum health", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 500));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 750));
+
+    timing.advance(10_000);
+    expect(tracker.state().records?.normalizedMaxHp).toBeUndefined();
+  });
+
+  test("authoritative maxima override and cancel regen normalization", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 700));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 710));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 720));
+    tracker.consume(resourcePacket(202, "HealthComponent", 720, 1_000));
+
+    timing.advance(10_000);
+    expect(tracker.state().records).toMatchObject({ maxHealth: 1_000, normalizedMaxHp: 1_000 });
+  });
+
   test("clears server-synced resources when the local object changes", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(pinPacket(101));
@@ -434,6 +494,16 @@ function identityPacket(objectId: number, name: string, level: number, jobLevel:
   return packet;
 }
 
+function currentResourcePacket(
+  objectId: number,
+  networkBehaviourType: "HealthComponent" | "SkillsComponent",
+  current: number,
+): CapturedFishNetPacket {
+  const packet = syncPacket(objectId, networkBehaviourType, "");
+  packet.payload = Buffer.concat([Buffer.from([0]), packed(current)]);
+  return packet;
+}
+
 function spawnEntry(networkBehaviourType: string, name: string, value: number) {
   return {
     componentIndex: 0,
@@ -453,4 +523,34 @@ function packed(value: number): Buffer {
   }
   bytes.push(Number(encoded));
   return Buffer.from(bytes);
+}
+
+class ManualTiming {
+  private nowMs = 0;
+  private nextId = 1;
+  private callbacks = new Map<number, { at: number; callback: () => void }>();
+
+  options() {
+    return {
+      now: () => this.nowMs,
+      schedule: (callback: () => void, delayMs: number): unknown => {
+        const id = this.nextId++;
+        this.callbacks.set(id, { at: this.nowMs + delayMs, callback });
+        return id;
+      },
+      cancel: (handle: unknown) => this.callbacks.delete(handle as number),
+    };
+  }
+
+  advance(milliseconds: number): void {
+    this.nowMs += milliseconds;
+    while (true) {
+      const due = [...this.callbacks]
+        .filter(([, timer]) => timer.at <= this.nowMs)
+        .sort(([, left], [, right]) => left.at - right.at)[0];
+      if (!due) return;
+      this.callbacks.delete(due[0]);
+      due[1].callback();
+    }
+  }
 }

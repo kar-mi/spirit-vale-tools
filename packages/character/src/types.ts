@@ -110,8 +110,12 @@ export interface CharacterStatBreakdown {
 /** Server-actual values synced for the local player's unit components. */
 export interface CharacterRecordValues {
   currentHealth?: number;
+  /** Effective HP ceiling: authoritative `maxHealth` when present, otherwise a settled regen inference. */
+  normalizedMaxHp?: number;
   maxHealth?: number;
   currentMana?: number;
+  /** Effective MP ceiling: authoritative `maxMana` when present, otherwise a settled regen inference. */
+  normalizedMaxMp?: number;
   maxMana?: number;
   moveSpeed?: number;
   updatedAt?: string;
