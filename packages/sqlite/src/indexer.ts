@@ -18,12 +18,7 @@ interface SourceInfo {
   fingerprint?: string;
 }
 
-/**
- * Indexes whatever the source has gained since the recorded byte offset, rebuilding the stream from
- * scratch when the source was truncated, replaced, or rewound.
- *
- * The source is only ever read: nothing here writes to, renames, or deletes a canonical log.
- */
+/** Indexes whatever the source has gained since the recorded byte offset, rebuilding the stream from scratch when the source was truncated, replaced, or rewound. */
 export async function indexStream(
   database: Database,
   request: IndexStreamRequest,
@@ -47,8 +42,6 @@ export async function indexStream(
   }
 
   // Everything already consumed and the file untouched since: nothing to read, nothing to verify.
-  // Comparing the offset rather than the recorded size matters because a pass that stopped early —
-  // an apply that threw, or a trailing partial line — must be resumed, not skipped as complete.
   if (row && row.byte_offset === size && row.source_modified_at === modifiedAt) {
     return unchanged(request, row, { missing: false });
   }
@@ -99,8 +92,6 @@ async function indexFrom(
   transaction: Transactional,
   allowRegression = true,
 ): Promise<PassResult> {
-  // Bounding bytes per read is what bounds each transaction: the reader's offset is only guaranteed
-  // to sit on a record boundary between reads, so that is the only safe place to commit.
   const reader = new JsonlTailReader(request.sourcePath, { startOffset: start.byteOffset, maxReadBytes: batchBytes });
   let recordsIndexed = 0;
   let invalidLines = 0;
@@ -129,8 +120,7 @@ async function indexFrom(
       }
       if (record.sequence <= lastSequence) {
         if (allowRegression) return { recordsIndexed, invalidLines, ...start, regressed: true };
-        // Already re-read from byte 0, so a still-rewound record is anomalous data, not a stale
-        // offset. Skipping it keeps the pass moving instead of rebuilding forever.
+        // Already re-read from byte 0, so a still-rewound record is anomalous data, not a stale offset.
         invalidLines += 1;
         continue;
       }
@@ -209,8 +199,7 @@ function writeProgress(database: Database, request: IndexStreamRequest, position
       fingerprint: source.fingerprint ?? "",
       byteOffset: position.byteOffset,
       lastSequence: position.lastSequence,
-      // The log can grow while a pass runs; recording a size below the offset would look like a
-      // truncation on the next call.
+      // The log can grow while a pass runs; recording a size below the offset would look like a truncation on the next call.
       size: Math.max(source.size, position.byteOffset),
       modifiedAt: source.modifiedAt,
       indexedAt: new Date().toISOString(),

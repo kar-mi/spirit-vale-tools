@@ -1,20 +1,6 @@
 import type { FishNetStatusDefinition } from "../catalog.ts";
 
-/**
- * Hand-ported from the Spirit Vale data-mine's statuses.json. A status's own
- * duration is aggregated from every other status/skill definition that grants it,
- * since the raw data declares durations on the granter, not the granted status.
- * Regenerate this file's effects via scripts/aggregate-durations.ts whenever the
- * data-mine's skills.json/statuses.json changes; when multiple granters disagree
- * (e.g. Stun ranges 1s-3s across 15 skills), effects[0] is the most common value.
- * isDebuff also applies manual overrides on top of the source data, which only marks
- * 8/185 statuses as debuffs and misses obvious ones like Stun/Blind/Silence/Slow.
- *
- * Known limitation: this does not account for the target's status-resist stat. The
- * game has a statusResist formula (see spirit_vale_data_mine/data/json/formulas.json)
- * but it is undecoded (no formula, no variables) as of this writing, so durations here
- * are an estimate/upper-bound - they may run longer than the real in-game expiry.
- */
+/** Hand-ported from the Spirit Vale data-mine's statuses.json. */
 export class StatusDefinitions {
   private constructor() {}
 

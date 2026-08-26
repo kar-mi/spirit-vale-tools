@@ -33,7 +33,6 @@ describe("FishNetStatusDirectory", () => {
   });
 
   test("classifies hard-CC and negative-stat statuses as debuffs despite the source data's isDebuff flag", () => {
-    // The data-mine's own isDebuff field only marks 8/185 statuses true and misses these entirely.
     for (const id of ["Stun", "Blind", "Silence", "Slow", "Frozen", "Curse", "ArmorBreak", "Weaken", "Vulnerability"]) {
       expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: true });
     }
@@ -83,22 +82,15 @@ describe("statusDurationSeconds", () => {
   });
 
   test("resolves durations for statuses ported via the data-mine aggregation script", () => {
-    // These previously had no duration data at all (empty `effects`), which meant the
-    // overlay's countdown UI silently never rendered for them - see aggregate-durations.ts.
     for (const id of ["Stun", "Rage", "Bleeding", "Frozen"]) {
       const duration = statusDurationSeconds(resolveFishNetStatus(id), 1);
       expect(duration).not.toBeUndefined();
       expect(duration).toBeGreaterThan(0);
     }
-    // Spinning does resolve now, but the data-mine's own source row for it is a genuine
-    // 0-duration entry (Cyclone grants it with Duration 0 / DurationLv 0) - not a bug here.
     expect(statusDurationSeconds(resolveFishNetStatus("Spinning"), 1)).toBe(0);
   });
 
   test("resolves ComboReady/CastReady from their dedicated scalar fields, not StatusEffects rows", () => {
-    // These have no StatusEffects/SelfStatusEffects rows at all - their duration lives in
-    // a same-named scalar field on the granting skill (e.g. ComboReady: { Value: 4 }).
-    // See NAMED_SCALAR_DURATION_FIELDS in aggregate-durations.ts.
     for (const id of ["ComboReady", "CastReady"]) {
       expect(statusDurationSeconds(resolveFishNetStatus(id), 1)).toBe(4);
     }
@@ -118,10 +110,6 @@ describe("statusDurationSeconds", () => {
   });
 
   test("leaves explicit toggles and placeholder-duration buffs without computed timers", () => {
-    // Might is actively re-applied/stacked, Fury is explicitly toggled, and
-    // Berserk/HighGuard/Elusive are stances/short procs whose data-mine "1s" is a
-    // placeholder rather than a real timer. See NO_DURATION_OVERRIDE_IDS and the
-    // flat-1s-buff rule in aggregate-durations.ts.
     for (const id of ["Might", "Fury", "Berserk", "HighGuard", "Elusive"]) {
       expect(statusDurationSeconds(resolveFishNetStatus(id), 1)).toBeUndefined();
     }

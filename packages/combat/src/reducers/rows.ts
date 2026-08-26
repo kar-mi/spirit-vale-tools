@@ -13,11 +13,7 @@ export interface RenderOptions {
 
 const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 
-/**
- * Renders an aggregate into an encounter snapshot. Every derived figure lives here — per-skill rows,
- * timeline buckets, crit rates, contribution shares, the personal row — so the live service, the
- * history read model and a whole-log replay all report identically from the same aggregates.
- */
+/** Renders an aggregate into an encounter snapshot. */
 export function renderEncounter(
   encounter: EncounterAggregate,
   options: RenderOptions = {},
@@ -149,10 +145,7 @@ function actorRow(
   };
 }
 
-/**
- * Every unidentified actor renders as its own row, so they would otherwise share one label. The
- * lowest actor id is stable across snapshots, unlike a position in the damage-sorted list.
- */
+/** Every unidentified actor renders as its own row, so they would otherwise share one label. */
 function unidentifiedLabel(actor: ActorAggregate): string {
   return `Unidentified (${Math.min(...actor.actorIds)})`;
 }
@@ -210,7 +203,7 @@ export function actorRowId(actor: ActorAggregate): string {
   return `actor:${actor.actorId}`;
 }
 
-export function mergeActors(actors: readonly ActorAggregate[]): ActorAggregate[] {
+function mergeActors(actors: readonly ActorAggregate[]): ActorAggregate[] {
   const merged = new Map<string, ActorAggregate>();
   for (const actor of actors) {
     if (actor.damage <= 0) continue;
@@ -302,7 +295,7 @@ function rebase(series: { originMs: number; widthMs: number; buckets: number[] }
   series.originMs = originMs;
 }
 
-export function compareRows(
+function compareRows(
   left: { damage: number; sourceLabel?: string; displayName?: string },
   right: { damage: number; sourceLabel?: string; displayName?: string },
 ): number {
@@ -310,7 +303,7 @@ export function compareRows(
     || (left.sourceLabel ?? left.displayName ?? "").localeCompare(right.sourceLabel ?? right.displayName ?? "");
 }
 
-export function perSecond(damage: number, durationMs: number): number {
+function perSecond(damage: number, durationMs: number): number {
   return damage / (durationMs / 1_000);
 }
 

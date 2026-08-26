@@ -91,11 +91,8 @@ export class WindowsTargetTracker {
   }
 }
 
-export class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
-  async snapshot(
-    processName: string,
-    protocols: readonly CaptureProtocol[],
-  ): Promise<{ processIds: number[]; endpoints: OwnedEndpoint[] }> {
+class CommandTargetSnapshotProvider implements TargetSnapshotProvider {
+  async snapshot(processName: string, protocols: readonly CaptureProtocol[]): Promise<{
     switch (process.platform) {
       case "win32": return this.snapshotWindows(processName, protocols);
       case "linux": return this.snapshotLinux(processName, protocols);

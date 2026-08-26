@@ -1,7 +1,4 @@
-/**
- * Options exist so the positional/chaos/qualifier fields can be exercised. Every default
- * reproduces the original payload byte for byte, so existing callers are unaffected.
- */
+/** Options exist so the positional/chaos/qualifier fields can be exercised. */
 export interface SyntheticCharacterOptions {
   /** `EquipData.ChaosType` on the worn weapon. -1 = no chaos substat. */
   chaosType?: number;
@@ -36,7 +33,7 @@ export function syntheticCharacter(
   } = options;
   const out: number[] = [];
   if (update) packed(out, 4);
-  bool(out, false);
+  bool(out, false); // CharacterData is a class: present, not null.
   string(out, "example-character-id");
   string(out, "example-account");
   packed(out, 7);
@@ -51,6 +48,8 @@ export function syntheticCharacter(
   bool(out, false);
   float(out, 1); float(out, 1); string(out, "Example Town");
   bool(out, false); float(out, 0); float(out, 0); float(out, 0);
+  string(out, ""); // InstancedMapReturnMapId.
+  bool(out, false); float(out, 0); float(out, 0); float(out, 0); // InstancedMapReturnPosition.
   list(out, [], () => undefined); packed(out, 0); list(out, [], () => undefined); list(out, [], () => undefined);
   list(out, [60, 30, 10, 20, 5, 15], (value) => packed(out, value));
   list(out, [0], () => {
@@ -90,6 +89,10 @@ export function syntheticCharacter(
     packed(out, 0); string(out, "Fictional Hat"); bool(out, false);
   });
   packed(out, 0); packed(out, 3600); packed(out, 25); packed(out, 3); packed(out, 2);
+  list(out, [], () => undefined); // WaypointsUnlocked.
+  list(out, [], () => undefined); // NpcsSpokenTo.
+  string(out, ""); // WaystoneMapId.
+  packed(out, 0); packed(out, 0); // Created, Updated.
   return Buffer.from(out);
 }
 

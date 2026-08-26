@@ -14,15 +14,6 @@ export interface EwmaSeriesOptions {
   stepMs?: number;
 }
 
-/**
- * Reconstructs a `RateTracker`'s `perSecond` at regular intervals by replaying its bucketed
- * timeline, so a chart can show the same rate over time that the tracker reports as a single
- * number. Buckets before the visible range seed the estimator, so the left edge continues smoothly
- * instead of restarting from zero.
- *
- * Defaulting `tauSeconds` to the tracker's own default is what keeps the two in step; pass the same
- * override to both if a tracker is constructed with a custom time constant.
- */
 export function ewmaSeries(
   buckets: readonly TimelineBucket[],
   range: { start: number; end: number },

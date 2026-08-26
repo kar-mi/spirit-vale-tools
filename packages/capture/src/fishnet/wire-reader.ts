@@ -47,18 +47,31 @@ export function readSignedPackedWhole(buffer: Buffer, start: number): { value: n
   return { value, nextOffset: decoded.nextOffset };
 }
 
+/**
+ * FishNet's `Reader.ReadNetworkObject`/`ReadNetworkBehaviourId` sentinel for "no object" is the
+ * literal value 65535 (`ushort.MaxValue`) on the *decoded* signed value, not -1 - confirmed against
+ * this build's `FishNet.Runtime.dll` disassembly (`Reader.ReadNetworkObject`,
+ * `Reader.ReadNetworkBehaviourId`). A decoded value of -1 is an ordinary (if unusual) object id, not
+ * a null marker.
+ */
+const NO_OBJECT_SENTINEL = 0xffff;
+
 export function readNetworkObjectReference(buffer: Buffer, start: number): NetworkObjectReference {
   const object = readSignedPackedWhole(buffer, start);
-  if (object.value === -1) return { objectId: object.value, spawned: false, nextOffset: object.nextOffset };
+  if (object.value === NO_OBJECT_SENTINEL) return { objectId: object.value, spawned: false, nextOffset: object.nextOffset };
   requireBytes(buffer, object.nextOffset, 1, "network object spawned flag");
+  // Real FishNet branches on this byte being exactly 1 ("spawned"); every other value - not just 0 -
+  // takes the "not spawned" path (the id is then treated as a prefab id instead of a live object id).
+  // There is no invalid-flag case to reject here.
   const flag = buffer[object.nextOffset];
-  if (flag !== 0 && flag !== 1) throw new FishNetProtocolError("invalid network object spawned flag");
   return { objectId: object.value, spawned: flag === 1, nextOffset: object.nextOffset + 1 };
 }
 
 export function readNetworkBehaviourHeader(buffer: Buffer, start: number): NetworkBehaviourHeader {
+  // `ReadNetworkBehaviour` reads the component index unconditionally after the object reference -
+  // an unspawned (prefab-only) reference is not an error here, just an object this decoder can't
+  // resolve to a live spawn; the RPC still has a real component index and hash to read.
   const reference = readNetworkObjectReference(buffer, start);
-  if (!reference.spawned) throw new FishNetProtocolError("RPC object is not spawned");
   requireBytes(buffer, reference.nextOffset, 1, "network behaviour component");
   return {
     objectId: reference.objectId,

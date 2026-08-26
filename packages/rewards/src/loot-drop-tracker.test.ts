@@ -2,8 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { DecodedFishNetPacket, FishNetRpcMap } from "@kar-mi/spirit-vale-tools-capture";
 import { FishNetLootDropTracker } from "./loot-drop-tracker.ts";
 
-/** Deliberately places LootDrop on a prefab id other than the current build's, so the tracker
- * cannot pass by matching a hardcoded number. */
+/** Deliberately places LootDrop on a prefab id other than the current build's, so the tracker cannot pass by matching a hardcoded number. */
 const map: FishNetRpcMap = {
   buildFingerprint: "synthetic-loot-build",
   metadataVersion: 31,

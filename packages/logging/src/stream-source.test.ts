@@ -81,16 +81,13 @@ describe("log stream source", () => {
     const subscription = subscribe(directory);
     expect((await subscription.poll()).current?.sessionId).toBe(first.id);
 
-    // Removing the watched directory invalidates its watcher. Recreating it models a missed
-    // notification around atomic pointer replacement without relying on platform-specific timing.
+    // Removing the watched directory invalidates its watcher.
     await rm(path.join(directory, "current"), { recursive: true, force: true });
     const second = await createLogSession({ producer: "stream-source-test", streams: ["combat"], logDirectory: directory });
     second.logger("combat").log("combat.event", { kind: "damage", tick: 2, actorId: 7, targetId: 8, value: 20 });
     await second.close();
 
-    // Losing the directory can first publish the brief no-pointer state, and the pointer can be
-    // discovered before the session's data is flushed to it. Keep reading until both the session
-    // switch and its one payload line have shown up, even if they arrive in separate batches.
+    // Losing the directory can first publish the brief no-pointer state, and the pointer can be discovered before the session's data is flushed to it.
     let changedSession = false;
     let sessionId: string | undefined;
     let lines: string[] = [];

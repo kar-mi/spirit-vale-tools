@@ -190,20 +190,30 @@ together by display name.
 
 ### Eternal Tower state
 
-The current build's `PlayerController` map includes the generated nullable
-prefix of `ETUpdateRun(EternalTowerRun)`: `InstanceId`, `PartyId`, `State`, and
-`Floor`. The remaining dictionary, timer, and party fields stay in
-`undecodedPayload` until their generated collection serializers are mapped.
-`ETAdvanceFloor` independently exposes its packed `floor` and `finished`
-values.
+`ETUpdateRun`/`ETAdvanceFloor` (`PlayerController` wireHash 95/96) are still
+present in the generated rpc map, scraped from the live assembly, and their RPC
+links are registered for spawned PlayerController components. That proves the
+methods still exist in the build, but not that the server calls them. Observed
+Eternal Tower captures contain no invocation of either method, whether resolved,
+unresolved, or malformed.
+`FishNetEternalTowerTracker` instead follows the mechanism the client-side
+IL actually exercises: `PlayerController.DrawTitle`, a targetRpc that
+broadcasts a title banner (`"<tower name>\nFloor <n>"`, e.g. `"The Echoing
+Spire\nFloor 12"`), and `PlayerController.ClientInstancedMapReady`, which
+confirms the instanced map the client is bound to and carries its instance id
+- discriminated from an ordinary instanced map by `bindingSlot === "et"`.
 
-`FishNetEternalTowerTracker` combines those target RPCs into a state snapshot.
-It does not treat the outbound `ETEnter` or `ETLeave` server RPCs as proof of a
-transition. Its phase values correspond to the game enum (`none`, `accept`,
-`inRun`, `ending`, `finished`). `inTower` is true for `inRun`, `ending`, and
-`finished`; `active` is true for `accept`, `inRun`, and `ending`. This preserves
-the completed-but-not-yet-exited interval instead of reporting that the player
-has already left.
+The tracker does not reset on `authenticated`/`disconnect`. A capture spanning
+a mid-run crash and reload showed the client re-authenticate on the same
+floor at least once with neither RPC repeating - the server does not
+re-announce a floor the client is merely reattaching to. Floor/tower state is
+instead only cleared by positive evidence of leaving: a
+`ClientInstancedMapReady` whose `bindingSlot` is not `"et"`.
+
+Caveat: the title string was composed in a single fixed locale (English,
+"Floor N") in every capture available. If the server localizes this banner
+per client, a non-English client's floor would fail to parse - there is no
+numeric-only floor field on the wire to fall back to.
 
 ## NetworkTransform updates
 

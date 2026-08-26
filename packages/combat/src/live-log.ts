@@ -138,10 +138,7 @@ export class DpsSessionLogFollower {
     });
   }
 
-  /**
-   * Follows the stream without polling: the returned follower wakes on a watcher event and yields
-   * only batches that carry something.
-   */
+  /** Follows the stream without polling: the returned follower wakes on a watcher event and yields only batches that carry something. */
   static watch(logDirectory?: string, options: DpsSessionLogFollowerOptions = {}): DpsSessionLogFollower {
     return new DpsSessionLogFollower(logDirectory, options.ticksPerSecond ?? 30, options);
   }

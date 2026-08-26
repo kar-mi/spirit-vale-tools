@@ -1,5 +1,85 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 2.4.0
+
+### Minor Changes
+
+- 0dc8425: Decode complete player spawn SyncTypes from generated build mappings, including visual, movement, combat, health, and mana state.
+
+  Expose spawn-embedded character resources safely after local-object proof, and add authoritative-first `normalizedMaxHp` and `normalizedMaxMp` values that can infer a missing maximum from a settled regeneration sequence.
+
+## 2.3.0
+
+### Minor Changes
+
+- 813bce6: Restore market search, stall tracking, event logs, live following, and capture
+  replay with the current vending contracts. Add deterministic search-request and
+  stall-status field layouts to the supported FishNet map, including explicit
+  verified-prefix handling for late-attach search requests, and register the market
+  log stream. The restored market API intentionally excludes the former SQLite
+  history and indexed read-model interfaces. Market event logs omit seller account
+  identifiers while retaining seller display names, and omit stall account and
+  visual-snapshot and archetype data. Item compatibility fingerprints and payload
+  schema versions are recorded once as market metadata instead of repeated on
+  every listing.
+
+## 2.2.0
+
+### Minor Changes
+
+- 3079aba: Regenerated the bundled FishNet RPC map, prefab layouts, and static map-name table from a fresh game-build export (build fingerprint `866d79aa379d16d...`), and added `scripts/generate-map-names.ts` so the map-name table (`fishnet/map-definitions/current-build.ts`) is now build-derived like the RPC map instead of hand-pasted.
+
+  Picks up real build changes: `Player`/`PlayerClone`/`Monster`/`BossGravestone`/`SkillInstance` prefab IDs were reassigned, `CharacterData`'s `CharacterStateData` gained `InstancedMapReturnMapId`/`InstancedMapReturnPosition`, several RPC wire hashes shifted (e.g. `FullHeal_C` 31→30, `ETUpdateRun` 95→97), and the static map catalog grew from 54 to 56 entries. `EternalTowerClientState` (the `match` parameter of `ETUpdateRun`) has no resolved fields in this build's export, unlike the prior build - the RPC still resolves by name, but its payload is left undecoded until a future export fills the struct in.
+
+  The item catalog (`packages/items/src/definitions/*.ts`) is also regenerated against the same build: equipment/card/cosmetic counts shifted, and the "Echo" relic set was renamed `EchoMask_*` → `EchoFace_*` plus two new items (`Bloomroot`, `Earthspire`) - all carried over with a `weight: 0` placeholder pending manual review, per the generator's existing NEEDS REVIEW convention.
+
+## 2.1.1
+
+### Patch Changes
+
+- 697afa6: `decodeBossGravestone` now reads the marker's `_killInfo` from a standalone SyncType as well as from a spawn's `spawnSyncEntries`.
+
+  Creating a gravestone spawns the object carrying none of its fields and sends them straight after in a SyncType on the same object; only a marker already standing carries them in the spawn. Reading spawn entries alone therefore resolved every gravestone except the one the player had just made.
+
+  Callers offering only `objectSpawn` packets see no behaviour change, but should now offer SyncTypes too.
+
+## 2.1.0
+
+### Minor Changes
+
+- 04bf95c: Require Bun 1.4 or newer. The SQLite read model now relies on Bun 1.4's statement ownership and
+  force-close behavior to release every outstanding database handle immediately on Windows.
+
+## 2.0.0
+
+### Major Changes
+
+- 6258350: Rebuild Eternal Tower state from the `DrawTitle` and `ClientInstancedMapReady` RPCs, exposing the tower name, floor, and instance information when available. This replaces the previous phase-based tracker: `FishNetEternalTowerPhase` is no longer exported.
+
+  Decode monster state and spawn SyncTypes from the bundled RPC map rather than heuristic scans of raw payload bytes. `decodeMonsterSync` is no longer exported; consume the decoded packet fields and `spawnSyncEntries` instead.
+
+## 1.9.0
+
+### Minor Changes
+
+- ff7e85b: `decodeBossGravestone` now reads the boss's kill info from the bundled RPC map's own field schema instead of byte-scanning the spawn payload's tail for three plausible strings and a timestamp. `BossGraveStone`'s `SyncVar<BossKillInfo>` was never resolved into the wire map before, so this is a data-mine extraction fix as much as a decode one: `KillTime`/`KillerName`/`BossName`/`BossId` are now generated fields like any other SyncType, decoded automatically into a spawn's `spawnSyncEntries` the same way `LootDrop`'s `Dto`/`Lock` already are.
+
+  `decodeBossGravestone`'s signature changes accordingly, from `(payload: Buffer, nowMs: number)` to `(packet: DecodedFishNetPacket)` — it now looks up the `BossGraveStone` entry in `packet.spawnSyncEntries` instead of taking a raw payload and an observation time to bound a plausible decode.
+
+  `scripts/generate-rpc-map.ts` also had a path bug fixed: it was resolving `generated/` and `game-build.ts` relative to its own location as if it lived under `packages/capture/scripts/`, when it has lived at the repo-root `scripts/` since it was added. Running it wrote a stray `src/` at the repo root instead of updating `packages/capture/src/`.
+
+## 1.8.0
+
+### Minor Changes
+
+- c4ed2e8: Decode `CharacterData` payloads through the bundled RPC map's own field schema instead of hand-rolled, positionally-hardcoded byte readers. The old readers silently misaligned every field after a build inserted `AppliedWriteIds` into `CharacterData`, and separately truncated non-Latin display names sized as if a character were always one byte. `character`'s `decodeCharacterRpcPayload` and `combat`'s actor-name resolution now both decode through `decodeFieldRun`/`characterDataParameter()`, so they can't drift from the game build's real field layout again.
+
+  `capture` gains the schema-decoding building blocks this relies on (`decodeFieldRun`, `characterDataParameter`, and `repeated`/`dictionaryKey` array and dictionary support in the field decoder), and its bundled FishNet RPC map is now regenerated from the game build via `packages/capture/scripts/generate-rpc-map.ts` instead of hand-pasted, split into one file per network behaviour instead of one 12k+ line file.
+
+  The bundled map's `syncTypes` also gained many previously-unextracted SyncVars now that the map is build-derived instead of hand-verified per behaviour: `HealthComponent` gained `barrierSync`/`overhealSync` (indexes 2/3, alongside `healthSync`/`maxHealthSync`), `SkillsComponent` gained `BondSync` (alongside `manaSync`/`maxManaSync`), `PlayerSave` gained `PlayerIdSync`/`ArenaRating`, and `CombatComponent`/`MonsterController`/`MoveComponent`/`PlayerController`/`StatusComponent`/`SummoningComponent` now carry SyncVar metadata they previously had none of at all (`PlayerController` alone gained 19 - chat room state, guild info, party ID, GM/jail flags, and more). `PlayerController.VisualData`'s nested `Appearance` field (display name/archetype, load-bearing for `combat`'s actor identity) also now resolves automatically instead of through a hand-verified override.
+
+  The entire hand-rolled `game/` overlay directory - per-behaviour `syncTypes` overrides and PlayerSave's 7-file hand split alike - is gone. `rpc-definitions/index.ts` assembles `FISHNET_RPC_MAP` directly from generated output with no override layer of any kind; every RPC, broadcast, prefab, and SyncVar the package ships now traces to exactly one generated source. Field names that were previously hand-chosen (`CurrentHealth`/`MaxHealth`/`CurrentMana`/`MaxMana`) are now the build's own reflected names (`healthSync`/`maxHealthSync`/`manaSync`/`maxManaSync`); nothing reads them by string, only positionally, so this is not a breaking rename in practice.
+
 ## 1.7.0
 
 ### Minor Changes

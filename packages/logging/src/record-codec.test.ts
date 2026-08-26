@@ -56,8 +56,7 @@ describe("log record encoding", () => {
   });
 
   test("decodes a v2 record without a header, because nothing downstream reads those fields", () => {
-    // An incremental pass resuming from a byte offset never sees the header line, so a record has
-    // to decode without it. `recordedAt` is what consumers actually use, and it survives.
+    // An incremental pass resuming from a byte offset never sees the header line, so a record has to decode without it.
     const line = encodeLogRecord(3, Date.parse("2026-08-07T00:39:10.719Z"), "combat.event", V1_LINE.data);
     expect(parseLogRecord(JSON.parse(line))).toMatchObject({
       sequence: 3,

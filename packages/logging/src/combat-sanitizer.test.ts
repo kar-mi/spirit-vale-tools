@@ -25,8 +25,7 @@ describe("combat log sanitizer", () => {
       action: "applied", remainingSeconds: 12.5, stacks: 3,
       fields: { statusId: "Bleed" }, payloadBytes: 4,
     });
-    // Both are protocol values, not user data. Without them a replayed status has no expiry and no
-    // way to tell which feed produced it.
+    // Both are protocol values, not user data.
     expect(value).toEqual({
       kind: "status", rpc: "ApplyEffectDisplays_O", tick: 1, actorId: 2, statusId: "Bleed",
       action: "applied", remainingSeconds: 12.5, stacks: 3,
@@ -38,8 +37,7 @@ describe("combat log sanitizer", () => {
       kind: "activation", tick: 1, actorId: 2, sourceId: "FlowState", sourceLabel: "Flow State",
       phase: "interrupt", rpc: "ToggleEnd_C", payloadBytes: 8, fields: { private: "payload" },
     });
-    // `consumeActivation` returns early on an interrupt or a cancel. Dropping this made a replayed
-    // interrupt look like a successful cast and extend the buff, which live capture never did.
+    // `consumeActivation` returns early on an interrupt or a cancel.
     expect(value).toMatchObject({ kind: "activation", phase: "interrupt" });
   });
 

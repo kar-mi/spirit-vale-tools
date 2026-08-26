@@ -1,14 +1,9 @@
 import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
 import type { FishNetCombatEvent } from "../combat-tracker.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, createActor, isPositiveHit, positiveTau, recordHit } from "./damage.ts";
-import type { ActorAggregate, CombatIdentity, EncounterAggregate } from "./damage.ts";
+import type { CombatIdentity, EncounterAggregate } from "./damage.ts";
 
-/**
- * Which side of an encounter a meter measures.
- *
- * `tanked` groups incoming damage by the party member taking it; `healing` groups restored health by
- * the healer who caused it.
- */
+/** Which side of an encounter a meter measures. */
 export type MeterKind = "tanked" | "healing";
 
 export interface MeterReducerOptions {
@@ -18,16 +13,6 @@ export interface MeterReducerOptions {
   maxTimelineBuckets?: number;
 }
 
-/**
- * Accumulates one encounter's tanked damage or healing into the same {@link ActorAggregate}s the
- * damage reducer builds, so {@link renderEncounter} yields the same detail for all three meters —
- * per-skill rows, timeline buckets, crit rates, contribution shares and the personal row.
- *
- * Encounter boundaries stay owned by `DamageReducer`: outgoing party damage is what defines an
- * encounter, and this only follows the encounter it is told about. Like the damage reducer it keeps
- * bucket series and an O(1) current-rate estimator rather than individual hits, so retention is
- * bounded by the bucket cap rather than by how long the fight runs.
- */
 export class MeterReducer {
   readonly kind: MeterKind;
   current?: EncounterAggregate;
@@ -72,11 +57,7 @@ export class MeterReducer {
     this.current = undefined;
   }
 
-  /**
-   * Keeps a display name current on a row that is already accumulating. Identities usually arrive
-   * before the hits they name, but a party member seen only mid-encounter would otherwise stay
-   * "Unidentified" for the rest of it.
-   */
+  /** Keeps a display name current on a row that is already accumulating. */
   consumeIdentity(event: FishNetActorIdentityEvent): void {
     if (!this.current || event.operation !== "upsert") return;
     const actor = this.current.activeActors.get(event.actorId);
@@ -137,10 +118,7 @@ function tankedHit(
   identities: ReadonlyMap<number, CombatIdentity>,
 ): MeterHit | undefined {
   if (event.kind !== "damage" && event.kind !== "death") return undefined;
-  // Team zero is the party's outgoing damage, which the DPS meter owns. A reflected hit is the
-  // exception: a boss's NPC_SpellGuard sends the caster's own damage back at them, so it arrives on
-  // the party's team and attributed to the victim themselves, but it is damage they really took.
-  // A victim the directory knows as a party member is counted whatever the hit looks like.
+  // Team zero is the party's outgoing damage, which the DPS meter owns.
   const identity = identities.get(event.targetId);
   const reflected = event.team === 0 && event.actorId === event.targetId;
   const incoming = event.team !== 0 && event.actorId !== event.targetId;
@@ -157,13 +135,7 @@ function tankedHit(
   };
 }
 
-/**
- * Restored health, credited to the healer.
- *
- * A heal with no resolved healer is credited to the recipient's own output, matching how the game
- * presents self-healing. A heal whose credited actor has no known identity is left out: those are
- * monster self-heals, which do not belong on a party meter.
- */
+/** Restored health, credited to the healer. */
 function healingHit(
   event: FishNetCombatEvent,
   identities: ReadonlyMap<number, CombatIdentity>,

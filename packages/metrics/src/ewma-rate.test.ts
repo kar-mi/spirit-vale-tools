@@ -31,8 +31,6 @@ test("a steady stream converges to its true rate", () => {
   // 100 damage every 100ms is 1000 damage per second.
   for (let atMs = 0; atMs <= 60_000; atMs += 100) rate.record(100, atMs);
 
-  // Discrete impulses land slightly high against the continuous limit — a 100ms cadence overshoots
-  // by (dt/tau) / (1 - e^{-dt/tau}), about 2% here — so compare within a few percent, not exactly.
   expect(rate.rateAt(60_000)).toBeWithin(970, 1_030);
 });
 
@@ -42,8 +40,7 @@ test("ramp-up correction removes the cold-start bias that would otherwise under-
 
   // One time constant in, the uncorrected estimate is about 63% (1 - 1/e) of the true 1000/s.
   expect(rate.rateAt(2_500)).toBeWithin(630, 680);
-  // Dividing by that same factor recovers it — the analogue of a window dividing by elapsed time
-  // rather than by its full width.
+  // Dividing by that same factor recovers it — the analogue of a window dividing by elapsed time rather than by its full width.
   expect(rate.rateAt(2_500, { fromMs: 0 })).toBeWithin(1_000, 1_060);
 });
 

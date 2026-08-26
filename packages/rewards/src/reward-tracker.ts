@@ -24,12 +24,7 @@ export interface FishNetConfirmedMobKill {
   jobExperience: number;
   coins: bigint;
   drops: RewardItem[];
-  /**
-   * Whether a reward was pinned to this kill. Rewards arrive as coalesced state updates, so when
-   * several mobs die inside one correlation window none of them can claim it — the kill is still
-   * real and still counted, but its experience, coins and drops are zero and the reward is reported
-   * separately as an unmatched event.
-   */
+  /** Whether a reward was pinned to this kill. */
   attributed: boolean;
 }
 
@@ -71,11 +66,7 @@ interface PendingKill {
   damaged: boolean;
 }
 
-/**
- * Targets our side has damaged, retained only until they die. Bounded because a session sees far
- * more damaged targets than it kills — anything we damaged but never finished off would otherwise
- * accumulate for the whole session.
- */
+/** Targets our side has damaged, retained only until they die. */
 const MAX_DAMAGED_TARGETS = 4_096;
 
 /** Names the monsters {@link FishNetMonsterDirectory} identifies, using the bundled reward catalog. */
@@ -138,8 +129,7 @@ export class FishNetMobRewardTracker {
     const events = this.finalizeBefore(packet.tick - this.correlationWindowTicks);
     this.mobs.consume(packet);
     for (const event of this.combat.consume(packet)) {
-      // Team 0 is our side's outgoing damage. A mob dying nearby that we never hit is someone
-      // else's kill, and at max level no experience arrives to tell the two apart.
+      // Team 0 is our side's outgoing damage.
       if (event.kind === "damage" && event.team === 0 && event.value > 0) {
         this.rememberDamagedTarget(event.targetId);
         continue;

@@ -12,10 +12,7 @@ export interface Page<T> {
   nextCursor?: string;
 }
 
-/**
- * Which meter to read an encounter as: outgoing party damage, incoming damage grouped by the party
- * member taking it, or restored health grouped by the healer. All three render identically.
- */
+/** Which meter to read an encounter as: outgoing party damage, incoming damage grouped by the party member taking it, or restored health grouped by the healer. */
 export type StoredMeter = "dps" | "tanked" | "healing";
 
 export interface GetEncounterOptions extends RenderOptions {
@@ -108,11 +105,7 @@ interface DeathHitRow {
 
 const DEFAULT_LIMIT = 50;
 
-/**
- * Paged reads over the indexed combat history.
- *
- * Encounters are loaded one at a time; nothing here materialises a whole session.
- */
+/** Paged reads over the indexed combat history. */
 export class CombatHistoryStore {
   constructor(private readonly model: ReadModel) {}
 
@@ -127,8 +120,7 @@ export class CombatHistoryStore {
   listEncounters(query: ListEncountersQuery): Page<CombatEncounterSummary> {
     const limit = Math.max(1, query.limit ?? DEFAULT_LIMIT);
     const cursor = decodeCursor(query.cursor);
-    // Keyset pagination on (started_at_ms, encounter_id): a live session appending encounters
-    // cannot shift rows between pages the way an offset would.
+    // Keyset pagination on (started_at_ms, encounter_id): a live session appending encounters cannot shift rows between pages the way an offset would.
     const rows = cursor
       ? this.model.database
         .query<EncounterRow, [string, number, number, string, number]>(
@@ -153,10 +145,7 @@ export class CombatHistoryStore {
     };
   }
 
-  /**
-   * Per-attacker, per-enemy, per-skill damage for one encounter, with the enemy picker ordered by
-   * first sighting and duplicate monster names disambiguated.
-   */
+  /** Per-attacker, per-enemy, per-skill damage for one encounter, with the enemy picker ordered by first sighting and duplicate monster names disambiguated. */
   getEnemyBreakdown(sessionId: string, encounterId: string): CombatEnemyBreakdown {
     const enemies = this.model.database
       .query<{ target_id: number; display_name: string | null; first_seen_at_ms: number }, [string, string]>(

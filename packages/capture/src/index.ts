@@ -12,6 +12,9 @@ export {
 } from "./fishnet/decoder.ts";
 export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
 export { findPrefab } from "./fishnet/rpc-resolution.ts";
+export { decodeFieldRun } from "./fishnet/field-decoder.ts";
+export type { FieldDecodeRun } from "./fishnet/field-decoder.ts";
+export { characterDataParameter } from "./fishnet/character-data-schema.ts";
 export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/network-transform-decoder.ts";
 export { resolveBundledMapName } from "./fishnet/map-definitions/index.ts";
 export { compact, count, warnings } from "./text-format.ts";
@@ -25,20 +28,18 @@ export type {
 } from "./fishnet/semantic-map.ts";
 export { classifyFishNetRecoveryStyle } from "./fishnet/recovery-style.ts";
 export { FishNetEternalTowerTracker } from "./fishnet/eternal-tower-tracker.ts";
-export type {
-  FishNetEternalTowerPhase,
-  FishNetEternalTowerSnapshot,
-} from "./fishnet/eternal-tower-tracker.ts";
+export type { FishNetEternalTowerSnapshot } from "./fishnet/eternal-tower-tracker.ts";
 export {
   FishNetMonsterDirectory,
   decodeMonsterSpawn,
-  decodeMonsterSync,
 } from "./fishnet/monster-directory.ts";
 export type {
   FishNetMonsterDirectoryChange,
   FishNetMonsterLevels,
   FishNetMonsterSpawn,
 } from "./fishnet/monster-directory.ts";
+export { decodeBossGravestone } from "./fishnet/boss-gravestone.ts";
+export type { BossGravestone } from "./fishnet/boss-gravestone.ts";
 export type {
   CaptureConfig,
   CaptureProtocol,

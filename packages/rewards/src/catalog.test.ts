@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { loadBundledMobRewardCatalog, queryMobRewardCatalog } from "./catalog.ts";
+import { loadBundledMobRewardCatalog, mobIdentityDefinitionsById, queryMobRewardCatalog } from "./catalog.ts";
 
 test("loads a complete build-scoped mob reward catalog", () => {
   const catalog = loadBundledMobRewardCatalog();
@@ -14,4 +14,17 @@ test("loads a complete build-scoped mob reward catalog", () => {
   const reloaded = loadBundledMobRewardCatalog();
   expect(reloaded).not.toBe(catalog);
   expect(reloaded.mobs).not.toBe(catalog.mobs);
+});
+
+test("includes datamine-backed non-reward actors only in the combat identity catalog", () => {
+  const rewards = loadBundledMobRewardCatalog();
+  const identities = mobIdentityDefinitionsById(rewards);
+
+  expect(rewards.mobs.some((mob) => mob.id === "NightmareShadow")).toBe(false);
+  expect(identities.get("NightmareShadow")).toEqual({
+    id: "NightmareShadow",
+    displayName: "Curse Manifestation",
+    level: 0,
+  });
+  expect(identities.size).toBe(rewards.mobs.length + 7);
 });

@@ -1,5 +1,46 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies [813bce6]
+  - @kar-mi/spirit-vale-tools-capture@2.3.0
+  - @kar-mi/spirit-vale-tools-logging@0.9.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.5
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.1
+
+## 1.3.0
+
+### Minor Changes
+
+- 545f9f9: Retain directly decoded player identities across object lifecycle gaps, clear them on direct monster identity syncs, and expose the complete datamine-backed monster identity catalog separately from reward eligibility.
+
+  Ordered raw capture splits can also be replayed through one decoder and actor lifetime by supplying multiple inputs.
+
+### Patch Changes
+
+- Updated dependencies [545f9f9]
+  - @kar-mi/spirit-vale-tools-combat@3.3.4
+
+## 1.2.2
+
+### Patch Changes
+
+- Updated dependencies [04bf95c]
+  - @kar-mi/spirit-vale-tools-capture@2.1.0
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.3
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [6258350]
+  - @kar-mi/spirit-vale-tools-capture@2.0.0
+  - @kar-mi/spirit-vale-tools-combat@3.3.2
+  - @kar-mi/spirit-vale-tools-items@0.1.8
+
 ## 1.2.0
 
 ### Minor Changes

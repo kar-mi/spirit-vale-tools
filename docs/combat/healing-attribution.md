@@ -19,7 +19,7 @@ does not depend on cast timing or status correlation.
 Unlike `ApplyDamage_C`/`Death_C`, whose `Damage` struct includes an explicit
 `AttackerId`, `Recover_C`'s wire signature is just `(amount: int, settings:
 FloaterSettings)` — see
-`packages/capture/src/fishnet/rpc-definitions/game/health-component.ts`. The
+`packages/capture/src/fishnet/rpc-definitions/generated/health-component.ts`. The
 healed target is always known (it's the RPC's `objectId`), but the game
 genuinely never sends who did the healing. This isn't a decoding gap or a
 missing RPC-map entry; the field doesn't exist on the wire.

@@ -90,8 +90,7 @@ describe("decodeEffectDisplays", () => {
   });
 
   test("decodes stack counts against the server's declared ceiling", () => {
-    // Stacks and their ceiling are separate fields of the same width; a value below the cap is what
-    // tells them apart.
+    // Stacks and their ceiling are separate fields of the same width; a value below the cap is what tells them apart.
     expect(decodeEffectDisplays(payload([entry("FictionalMight", 5, 22, 25)])).applies).toEqual([
       { statusId: "FictionalMight", remainingSeconds: 5, stacks: 22, maxStacks: 25 },
     ]);

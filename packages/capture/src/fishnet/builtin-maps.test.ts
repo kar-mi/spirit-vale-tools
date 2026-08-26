@@ -34,6 +34,12 @@ function f32(value: number): Buffer {
   return result;
 }
 
+function f64(value: number): Buffer {
+  const result = Buffer.alloc(8);
+  result.writeDoubleLE(value);
+  return result;
+}
+
 function message(id: number, payload: Buffer): Buffer {
   return Buffer.concat([u16(id), payload]);
 }
@@ -58,9 +64,29 @@ function spawnWithoutLinks(objectId: number, collectionId: number, prefabId: num
   ]));
 }
 
+function spawnWithInitialSyncTypes(
+  objectId: number,
+  collectionId: number,
+  prefabId: number,
+  syncTypes: Buffer,
+): Buffer {
+  return message(3, Buffer.concat([
+    Buffer.from([4]), packed(objectId), u16(collectionId), packed(0), packed(-1), Buffer.from([0]),
+    packed(prefabId), u32(0), u16(0), u32(syncTypes.length), syncTypes,
+  ]));
+}
+
 function targetRpc(objectId: number, componentIndex: number, hash: number, payload: Buffer): Buffer {
   const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
   return message(10, Buffer.concat([
+    packed(objectId), Buffer.from([1, componentIndex]),
+    packed(wireHash.length + payload.length), wireHash, payload,
+  ]));
+}
+
+function serverRpc(objectId: number, componentIndex: number, hash: number, payload: Buffer): Buffer {
+  const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
+  return message(8, Buffer.concat([
     packed(objectId), Buffer.from([1, componentIndex]),
     packed(wireHash.length + payload.length), wireHash, payload,
   ]));
@@ -87,8 +113,8 @@ describe("bundled FishNet maps", () => {
 
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
-    expect(map.behaviours).toHaveLength(14);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(331);
+    expect(map.behaviours).toHaveLength(15);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(337);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -104,7 +130,7 @@ describe("bundled FishNet maps", () => {
   test("contains collision-free component layouts for verified instantiated prefabs", () => {
     const map = loadBundledFishNetRpcMap();
     const behaviourNames = new Set(map.behaviours.map(({ typeName }) => typeName));
-    expect(map.prefabs).toHaveLength(5);
+    expect(map.prefabs).toHaveLength(6);
 
     const prefabKeys = map.prefabs?.map(({ collectionId, prefabId }) => `${collectionId}:${prefabId}`) ?? [];
     expect(new Set(prefabKeys).size).toBe(prefabKeys.length);
@@ -120,8 +146,9 @@ describe("bundled FishNet maps", () => {
       ?.find((prefab) => prefab.collectionId === 0 && prefab.prefabId === prefabId)
       ?.components.find((entry) => entry.index === index)?.typeName;
     expect(component(0, 0)).toBe("LootDrop");
-    expect(component(1, 1)).toBe("MoveComponent");
+    expect(component(1, 0)).toBe("PlayerController");
     expect(component(2, 1)).toBe("FishNet.Component.Transforming.NetworkTransform");
+    expect(component(3, 0)).toBe("BossGraveStone");
     expect(component(4, 2)).toBe("HealthComponent");
     expect(component(4, 5)).toBe("StatusComponent");
     expect(component(5, 3)).toBe("HealthComponent");
@@ -139,7 +166,44 @@ describe("bundled FishNet maps", () => {
       `${collectionId}:${prefabId}:${prefabName}`)).toEqual(["0:1:PlayerClone", "0:4:Player"]);
   });
 
-  test("decodes the build-derived Eternal Tower run prefix on the real player prefab", () => {
+  test("decodes a gravestone using the runtime-sorted prefab id", () => {
+    // DefaultPrefabObjects is sorted by AssetPathHash at runtime before PrefabId is assigned. The
+    // serialized backing ids are stale and put Player at id 3, which made this complete component
+    // 0 / count 1 / SyncVar 0 group look like PlayerController.ChatRoomActive plus opaque bytes.
+    const syncTypes = Buffer.concat([
+      Buffer.from([0, 1, 0]),
+      f64(1_900_000_000),
+      string("SyntheticHunter"),
+      string("SyntheticWasp"),
+      string("SyntheticBossId"),
+    ]);
+    const [packet] = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(
+      tick(8, spawnWithInitialSyncTypes(44, 0, 3, syncTypes)),
+      { reliable: true, connectionId: "synthetic-gravestone" },
+    );
+
+    expect(packet).toMatchObject({
+      packetName: "objectSpawn",
+      spawnPrefabId: 3,
+      spawnSyncEntries: [{
+        componentIndex: 0,
+        networkBehaviourType: "BossGraveStone",
+        index: 0,
+        name: "_killInfo",
+        fields: [
+          { name: "KillTime", value: 1_900_000_000 },
+          { name: "KillerName", value: "SyntheticHunter" },
+          { name: "BossName", value: "SyntheticWasp" },
+          { name: "BossId", value: "SyntheticBossId" },
+        ],
+      }],
+    });
+  });
+
+  test("resolves the build-derived Eternal Tower run RPC on the real player prefab", () => {
+    // This build's rpc-build.json leaves EternalTowerClientState ("match") without resolved
+    // fields - unlike the prior build, where they'd already been recovered - so the method
+    // resolves but its payload stays undecoded until a future export fills the struct in.
     const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
     const run = Buffer.concat([
       Buffer.from([0]),
@@ -150,19 +214,15 @@ describe("bundled FishNet maps", () => {
     ]);
     const results = decoder.decode(tick(9, Buffer.concat([
       spawnWithoutLinks(70, 0, 4),
-      targetRpc(70, 0, 95, run),
+      targetRpc(70, 0, 97, run),
     ])), { reliable: true, connectionId: "synthetic-tower" });
 
     expect(results[1]).toMatchObject({
       networkBehaviourType: "PlayerController",
       rpcName: "ETUpdateRun",
-      decodedFields: [
-        { name: "match.InstanceId", value: 17 },
-        { name: "match.PartyId", value: 23 },
-        { name: "match.State", value: 2 },
-        { name: "match.Floor", value: 42 },
-      ],
+      rpcResolution: "verified",
     });
+    expect(results[1]?.decodedFields).toBeUndefined();
   });
 
   test("decodes the verified Damage writer layout from the committed map", () => {
@@ -224,6 +284,34 @@ describe("bundled FishNet maps", () => {
     expect(unsourced[1]?.undecodedPayload).toBeUndefined();
   });
 
+  test("decodes a StatusComponent Data/Level/JobLevel sync bundle from the committed map", () => {
+    // Regression coverage for the gap this fixed: `StatusData` (SyncVar index 0) used to have no
+    // verified field layout, so a real bundle - Data, then Level, then JobLevel - left everything
+    // from Data onward as opaque undecoded bytes. All values below are fabricated for this test.
+    const name = Buffer.from("SyntheticHero", "utf8");
+    const body = Buffer.concat([
+      Buffer.from([0]), packed(name.length), name, packed(3), packed(1), // Data: DisplayName/DisplayClass/Race
+      Buffer.from([1]), packed(88), // Level
+      Buffer.from([2]), packed(42), // JobLevel
+    ]);
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const results = decoder.decode(tick(12, Buffer.concat([
+      spawnWithoutLinks(500, 0, 4), // collectionId 0, prefabId 4 = "Player" (StatusComponent at index 5)
+      syncType(500, 5, body),
+    ])), { reliable: true, connectionId: "synthetic-status" });
+
+    const sync = results.find((packet) => packet.packetName === "syncType");
+    expect(sync).toMatchObject({ networkBehaviourType: "StatusComponent", syncName: "Data" });
+    expect(sync?.decodedFields).toMatchObject([
+      { name: "DisplayName", value: "SyntheticHero" },
+      { name: "DisplayClass", value: 3 },
+      { name: "Race", value: 1 },
+      { name: "Level", value: 88 },
+      { name: "JobLevel", value: 42 },
+    ]);
+    expect(sync?.undecodedPayload).toBeUndefined();
+  });
+
   test("contains verified basic-attack parameter codecs", () => {
     const combat = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "CombatComponent");
     expect(combat?.rpcs.find(({ methodName }) => methodName === "Attack_C")?.parameters).toEqual([
@@ -248,21 +336,95 @@ describe("bundled FishNet maps", () => {
     ]));
   });
 
-  test("contains the mapped public player identity SyncType prefix", () => {
+  test("contains the complete mapped player visual SyncType", () => {
     const player = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "PlayerController");
-    expect(player?.syncTypes?.find(({ index }) => index === 5)).toEqual({
-      index: 5,
-      name: "VisualData",
-      typeName: "CharacterVisualDto",
-      fields: [{
-        name: "Appearance",
-        typeName: "CharacterAppearanceDto",
-        fields: [
-          { name: "DisplayName", typeName: "System.String", codec: "stringUtf8Packed" },
-          { name: "Archetype", typeName: "Archetype", codec: "packedInt32" },
-        ],
-      }],
+    const visual = player?.syncTypes?.find(({ index }) => index === 5);
+    expect(visual).toMatchObject({ index: 5, name: "VisualData", typeName: "CharacterVisualDto" });
+    expect(visual?.fields?.map(({ name }) => name)).toEqual(["Appearance", "Equips", "EquipAppearance", "Cosmetics"]);
+    expect(visual?.fields?.[0]?.fields?.map(({ name }) => name)).toEqual([
+      "DisplayName", "Archetype", "BodyColor", "Hair", "HairColor", "Brow",
+      "Beard", "Mouth", "Eye", "EyeColor", "Ears", "Iris",
+    ]);
+  });
+
+  test("contains complete combat data needed to advance through spawn SyncTypes", () => {
+    const combat = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "CombatComponent");
+    expect(combat?.syncTypes?.find(({ index }) => index === 0)?.fields?.map(({ name }) => name)).toEqual([
+      "MainHandAttackDelay", "MainHandType", "OffHandAttackDelay", "OffHandType", "AttackRange",
+      "Stance", "Weapons", "CastAnimationTime", "AttackAnimationTimes", "AttackDelay", "StatScalings",
+    ]);
+    expect(combat?.syncTypes?.find(({ index }) => index === 1)).toMatchObject({ name: "SpeedRank", codec: "packedInt32" });
+  });
+
+  test("decodes deterministic market search and stall-status prefixes", () => {
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const requestPrefix = Buffer.concat([
+      Buffer.from([0]), // nullable DTO is present
+      string("Synthetic Ore"),
+      string("synthetic-cursor"),
+      packed(25),
+    ]);
+    const trailingRequestFields = Buffer.from([0x7f, 0x55]);
+    const request = Buffer.concat([requestPrefix, trailingRequestFields]);
+    const stallStatus = Buffer.concat([
+      Buffer.from([0, 1]), // nullable DTO is present; stall is active
+      string("synthetic-character"),
+      packed(123_456),
+      packed(3),
+      packed(8),
+    ]);
+    const results = decoder.decode(tick(13, Buffer.concat([
+      spawnWithoutLinks(501, 0, 4),
+      serverRpc(501, 0, 72, request),
+      targetRpc(501, 0, 77, stallStatus),
+    ])), { reliable: true, connectionId: "synthetic-market" });
+
+    expect(results[1]).toMatchObject({
+      packetName: "serverRpc",
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_S",
+      rpcResolution: "verified",
+      decodedFields: [
+        { name: "dto.Query", value: "Synthetic Ore" },
+        { name: "dto.Cursor", value: "synthetic-cursor" },
+        { name: "dto.PageSize", value: 25 },
+      ],
     });
+    expect(results[1]?.undecodedPayload).toEqual(trailingRequestFields);
+    expect(results[2]).toMatchObject({
+      packetName: "targetRpc",
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendingStallStatus_T",
+      rpcResolution: "verified",
+      decodedFields: [
+        { name: "dto.HasActiveStall", value: true },
+        { name: "dto.CharacterId", value: "synthetic-character" },
+        { name: "dto.ExpiresAt", value: "123456" },
+        { name: "dto.OccupiedCount", value: 3 },
+        { name: "dto.TotalSpots", value: 8 },
+      ],
+    });
+    expect(results[2]?.undecodedPayload).toBeUndefined();
+
+    const lateAttach = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(14,
+      serverRpc(777, 0, 72, request)), { reliable: true, connectionId: "synthetic-market-late-attach" });
+    expect(lateAttach[0]).toMatchObject({
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_S",
+      rpcResolution: "verified",
+    });
+    expect(lateAttach[0]?.undecodedPayload).toEqual(trailingRequestFields);
+
+    const lateResponse = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(15,
+      targetRpc(778, 0, 73, string("{\"Success\":true,\"Listings\":[]}"))),
+    { reliable: true, connectionId: "synthetic-market-late-response" });
+    expect(lateResponse[0]).toMatchObject({
+      networkBehaviourType: "PlayerController",
+      rpcName: "RequestVendorItemList_T",
+      rpcResolution: "verified",
+      decodedFields: [{ name: "pageJson", value: "{\"Success\":true,\"Listings\":[]}" }],
+    });
+    expect(lateResponse[0]?.undecodedPayload).toBeUndefined();
   });
 
   test("uses the verified Damage layout for death events", () => {
@@ -272,10 +434,36 @@ describe("bundled FishNet maps", () => {
     expect(death?.parameters?.[0]?.fields).toEqual(applyDamage?.parameters?.[0]?.fields);
   });
 
+  /**
+   * A minimal but wire-valid `CharacterData` payload: present (not null), every string/list/dict
+   * absent (-1) or empty, every nested struct null, every int 0. `CharacterData` is a C# class, so
+   * `Inspect_T`'s `data` parameter carries FishNet's null flag before its fields, same as any
+   * other nested reference-type value (see `character-data-schema.ts`) - a resolution test needs
+   * a payload that actually round-trips through it, since arbitrary bytes no longer pass the
+   * content cross-check that `signatureAdmitsPayload` performs once a shape exists.
+   */
+  function emptyCharacterData(): Buffer {
+    const absent = packed(-1); // null string / -1 list-or-dict count
+    const zero = packed(0);
+    const nullStruct = Buffer.from([1]); // FishNet's null flag: 1 = null
+    return Buffer.concat([
+      Buffer.from([0]), // top-level CharacterData itself: present, not null
+      // AppliedWriteIds is no longer serialized on the wire (see extract.py's `"Omitted"` kind) -
+      // no byte for it here.
+      absent, absent, zero, absent, absent, absent, // uid, accountId, version..name
+      nullStruct, nullStruct, absent, absent, absent, absent, absent, // appearance..archetypes
+      zero, zero, zero, zero, // level..jobExp
+      nullStruct, absent, absent, zero, absent, absent, absent, absent, // state..artifacts
+      nullStruct, absent, nullStruct, // skills, grimoires, inventory
+      zero, zero, zero, zero, zero, // lastLogin..deaths
+      absent, absent, absent, // waypointsUnlocked..waystoneMapId
+      zero, zero, // created, updated
+    ]);
+  }
+
   test("names PlayerController RPCs from prefab metadata when a spawn omits RPC Links", () => {
     // FishNet registers RPC-link ids per connection at spawn, so a capture that joins mid-session
-    // never sees them. The player prefab layout is what recovers the binding — without it the
-    // inspect reply is an anonymous multi-KB targetRpc and only a shape guess could claim it.
+    // never sees them. The player prefab layout is what recovers the binding.
     const map = loadBundledFishNetRpcMap();
     const inspect = map.behaviours
       .find(({ typeName }) => typeName === "PlayerController")?.rpcs
@@ -285,7 +473,7 @@ describe("bundled FishNet maps", () => {
     const decoder = new FishNetSessionDecoder(map);
     const results = decoder.decode(tick(1, Buffer.concat([
       spawnWithoutLinks(12, 0, 4),
-      targetRpc(12, 0, inspect?.wireHash ?? -1, Buffer.alloc(4878, 7)),
+      targetRpc(12, 0, inspect?.wireHash ?? -1, emptyCharacterData()),
     ])), { reliable: true, connectionId: "prefab-inspect" });
 
     expect(results[1]).toMatchObject({
@@ -307,8 +495,8 @@ describe("bundled FishNet maps", () => {
       packetName: "syncType",
       networkBehaviourType: "HealthComponent",
       syncIndex: 0,
-      syncName: "CurrentHealth",
-      decodedFields: [{ name: "CurrentHealth", value: 417 }],
+      syncName: "healthSync",
+      decodedFields: [{ name: "healthSync", value: 417 }],
     });
   });
 

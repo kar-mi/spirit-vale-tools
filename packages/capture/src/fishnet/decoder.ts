@@ -11,10 +11,7 @@ import type {
 
 export { FishNetProtocolError, FishNetSessionDecoder };
 
-/**
- * Decodes one FishNet message with its transport tick. This strict, pure API is
- * retained for callers which do not need bundle or session state.
- */
+/** Decodes one FishNet message with its transport tick. */
 export function decodeFishNetPayload(
   payload: Buffer,
   options: { reliable: boolean; rpcMap?: FishNetRpcMap } = { reliable: false },

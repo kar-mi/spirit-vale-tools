@@ -2,8 +2,7 @@
 
 This document compares three sources:
 
-- the formulas shared in the **game-mechanics Discord channel**, as transcribed
-  in [stat_calculations.md](stat_calculations.md);
+- the formulas shared in the **game-mechanics Discord channel**;
 - the formulas used by the current game build;
 - the calculations currently exposed by this repository's character package.
 

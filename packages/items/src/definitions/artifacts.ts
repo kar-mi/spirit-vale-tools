@@ -1529,6 +1529,10 @@ export class ArtifactItemDefinitions {
           {
             "type": 6,
             "value": 1
+          },
+          {
+            "type": 231,
+            "value": 1
           }
         ]
       }

@@ -246,8 +246,7 @@ function twoSyncVarMap(): FishNetRpcMap {
     metadataVersion: 31,
     behaviours: [{
       typeName: "SyntheticContainer",
-      // One RPC so a spawn's link registration can bind the behaviour, which is what selects the
-      // SyncType definitions below.
+      // One RPC so a spawn's link registration can bind the behaviour, which is what selects the SyncType definitions below.
       rpcs: [{ wireHash: 0x4321, packetKind: "observersRpc", methodName: "SyntheticContainerNotice" }],
       syncTypes: [
         {
@@ -353,8 +352,6 @@ describe("FishNet bundles and sessions", () => {
           methodName: "RpcSyntheticNotice",
           wireHash: 0x1234,
           packetKind: "observersRpc",
-          // The generator records parameters even for types it cannot break down, so an entry with
-          // none genuinely takes none — and a match claiming one is refused when bytes are present.
           parameters: [{ name: "value", typeName: "System.UInt16", codec: "uint16" as const }],
         }],
       }],
@@ -684,19 +681,14 @@ describe("FishNet bundles and sessions", () => {
     const decoder = new FishNetSessionDecoder(map);
     const context = { reliable: true, connectionId: "elimination" };
 
-    // Recover (hash 1) arrives for an object whose components are entirely unknown: ambiguous
-    // between SyntheticHealth and SyntheticSkills, exactly like HealthComponent/SkillsComponent's
-    // shared Recover_C hash before either component has been observed.
     const cold = decoder.decode(tick(40, fixedServerRpc(60, 3, 1)), context);
     expect(cold[0]).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
 
-    // A skill cast (hash 9, unique to SyntheticSkills) on a *different* component index of the
-    // same object establishes that index 5 is SyntheticSkills.
+    // A skill cast (hash 9, unique to SyntheticSkills) on a *different* component index of the same object establishes that index 5 is SyntheticSkills.
     const castBegin = decoder.decode(tick(41, fixedServerRpc(60, 5, 9)), context);
     expect(castBegin[0]).toMatchObject({ networkBehaviourType: "SyntheticSkills", rpcResolution: "verified" });
 
-    // Recover on index 3 is ambiguous in isolation, but index 5 is already claimed by
-    // SyntheticSkills on this same object, so index 3 must be SyntheticHealth.
+    // Recover on index 3 is ambiguous in isolation, but index 5 is already claimed by SyntheticSkills on this same object, so index 3 must be SyntheticHealth.
     const warm = decoder.decode(tick(42, fixedServerRpc(60, 3, 1)), context);
     expect(warm[0]).toMatchObject({
       networkBehaviourType: "SyntheticHealth",
@@ -704,17 +696,14 @@ describe("FishNet bundles and sessions", () => {
       rpcResolution: "verified",
     });
 
-    // A second Recover on the same object+component now resolves directly from the bound state,
-    // without needing to re-run elimination.
+    // A second Recover on the same object+component now resolves directly from the bound state, without needing to re-run elimination.
     const bound = decoder.decode(tick(43, fixedServerRpc(60, 3, 1)), context);
     expect(bound[0]).toMatchObject({ networkBehaviourType: "SyntheticHealth", rpcName: "SyntheticRecover" });
 
-    // A wholly unrelated object with no bound components stays ambiguous: elimination never
-    // guesses when there is nothing to eliminate against.
+    // A wholly unrelated object with no bound components stays ambiguous: elimination never guesses when there is nothing to eliminate against.
     const unrelated = decoder.decode(tick(44, fixedServerRpc(61, 3, 1)), context);
     expect(unrelated[0]).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
   });
-
 
   describe("spawn transform", () => {
     test("reports the position and scale a spawn was placed at", () => {
@@ -803,7 +792,6 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
-
   describe("SyncTypes carried inside an ObjectSpawn", () => {
     test("walks each component's run of SyncTypes", () => {
       const decoder = new FishNetSessionDecoder(twoSyncVarMap());
@@ -851,12 +839,10 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
-
   describe("recovering components for an object whose spawn was never captured", () => {
     test("binds a component every layout consistent with the object's known bindings agrees on", () => {
       const decoder = new FishNetSessionDecoder(spawnlessRecoveryMap());
-      // No spawn is ever decoded for object 60. Its controller resolves on its own wire hash, and
-      // that binding is what narrows the layouts the transform is then recovered from.
+      // No spawn is ever decoded for object 60.
       const results = decoder.decode(tick(50, Buffer.concat([
         fixedServerRpc(60, 0, 22, u16(3)),
         fixedServerRpc(60, 2, 5, u16(9)),
@@ -886,10 +872,8 @@ describe("FishNet bundles and sessions", () => {
     });
   });
 
-
   describe("link table quarantine across re-authentication", () => {
-    // One behaviour whose observersRpc hash 3 has a checkable signature, and one whose array
-    // parameter cannot be evaluated - the CalibrateSummons_T shape.
+    // One behaviour whose observersRpc hash 3 has a checkable signature, and one whose array parameter cannot be evaluated - the CalibrateSummons_T shape.
     const map: FishNetRpcMap = {
       buildFingerprint: "synthetic-quarantine",
       metadataVersion: 31,
@@ -920,8 +904,6 @@ describe("FishNet bundles and sessions", () => {
       const before = decoder.decode(tick(2, linked(900, source)), context);
       expect(before[0]).toMatchObject({ rpcName: "SyntheticApplyDamage", rpcResolution: "verified" });
 
-      // A channel switch on the same socket: the client re-authenticates but the server does not
-      // re-spawn object 80, so no fresh registration for link 900 is ever sent again.
       decoder.decode(tick(3, authenticated()), context);
       const after = decoder.decode(tick(4, linked(900, source)), context);
       expect(after[0]).toMatchObject({
@@ -939,8 +921,6 @@ describe("FishNet bundles and sessions", () => {
     test("rejects a quarantined link whose payload does not fit the signature", () => {
       const { decoder, context } = decoderWithLink("quarantine-misfit");
       decoder.decode(tick(3, authenticated()), context);
-      // Trailing byte the string parameter does not account for: consistent with the link id having
-      // been reallocated to some other method, so the registration is not believed.
       const after = decoder.decode(tick(4, linked(900, Buffer.concat([source, Buffer.from([0xff])]))), context);
       expect(after[0]).toMatchObject({ linkResolved: false });
       expect(after[0]?.rpcName).toBeUndefined();
@@ -949,12 +929,10 @@ describe("FishNet bundles and sessions", () => {
     test("falls back to object liveness when the signature cannot be evaluated", () => {
       const { decoder, context } = decoderWithLink("quarantine-liveness", 4);
       decoder.decode(tick(3, authenticated()), context);
-      // Nothing has re-established object 80 since the quarantine, so an unevaluable signature has
-      // no corroboration at all.
+      // Nothing has re-established object 80 since the quarantine, so an unevaluable signature has no corroboration at all.
       expect(decoder.decode(tick(4, linked(900, source)), context)[0]).toMatchObject({ linkResolved: false });
 
-      // Ordinary traffic on object 80 rebinds a component, proving the object outlived the re-auth
-      // and so was not replaced by whatever might have taken over link 900.
+      // Ordinary traffic on object 80 rebinds a component, proving the object outlived the re-auth and so was not replaced by whatever might have taken over link 900.
       decoder.decode(tick(5, observersRpc(80, 2, 4, source)), context);
       expect(decoder.decode(tick(6, linked(900, source)), context)[0]).toMatchObject({
         objectId: 80,
@@ -966,8 +944,6 @@ describe("FishNet bundles and sessions", () => {
     test("drops a quarantined link when its object respawns with a fresh link set", () => {
       const { decoder, context } = decoderWithLink("quarantine-respawn");
       decoder.decode(tick(3, authenticated()), context);
-      // A respawn re-issues the object's links from scratch, so the pre-auth set is stale by
-      // definition - link 900 must not survive on the strength of the old registration.
       decoder.decode(tick(4, spawnWithLink(80, 2, 901, 3)), context);
       expect(decoder.decode(tick(5, linked(900, source)), context)[0]).toMatchObject({ linkResolved: false });
       expect(decoder.decode(tick(6, linked(901, source)), context)[0]).toMatchObject({
@@ -994,13 +970,17 @@ describe("FishNet bundles and sessions", () => {
       });
     });
 
-    test("retains only one generation across successive re-authentications", () => {
+    test("survives a back-to-back re-authentication burst before any repopulation", () => {
       const { decoder, context } = decoderWithLink("quarantine-generations");
       decoder.decode(tick(3, authenticated()), context);
+      // A second re-auth arrives before anything re-registers link 900.
       decoder.decode(tick(4, authenticated()), context);
-      // The first re-auth quarantined link 900; the second retired that empty generation over the
-      // top of it, so the original suspects are gone rather than accumulating forever.
-      expect(decoder.decode(tick(5, linked(900, source)), context)[0]).toMatchObject({ linkResolved: false });
+      expect(decoder.decode(tick(5, linked(900, source)), context)[0]).toMatchObject({
+        linkResolved: true,
+        objectId: 80,
+        rpcName: "SyntheticApplyDamage",
+        rpcResolution: "recovered",
+      });
     });
 
     test("keeps connections isolated - quarantine never leaks across sockets", () => {
@@ -1021,8 +1001,7 @@ describe("FishNet bundles and sessions", () => {
             wireHash: 3,
             packetKind: "serverRpc",
             methodName: "SyntheticToggleBegin",
-            // No codec, exactly as the scraper emits for 130 string parameters. Without the
-            // fallback the decode stops here and every later field is lost with it.
+            // No codec, exactly as the scraper emits for 130 string parameters.
             parameters: [
               { name: "id", typeName: "System.String" },
               { name: "level", typeName: "System.Int32" },
@@ -1062,18 +1041,16 @@ describe("FishNet bundles and sessions", () => {
   });
 
   describe("refusing a match the payload contradicts", () => {
-    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 31. A behaviour with
-    // many RPCs can use a 16-bit hash whose low byte is also 31 - here 0x661f - and the 8-bit
-    // reading then claims a full heal that never happened.
+    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 30.
     const COLLIDING_HASH_TAIL = Buffer.from([0x66]);
 
     test("does not claim a parameterless method for a packet carrying bytes", () => {
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 1, 31, COLLIDING_HASH_TAIL)),
+        tick(1, observersRpc(4801, 1, 30, COLLIDING_HASH_TAIL)),
         { reliable: true, connectionId: "hash-collision" },
       );
-      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661f, rpcResolution: "unresolved" });
+      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661e, rpcResolution: "unresolved" });
       expect(packet?.rpcName).toBeUndefined();
     });
 
@@ -1081,7 +1058,7 @@ describe("FishNet bundles and sessions", () => {
       // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 0, 31)),
+        tick(1, observersRpc(4801, 0, 30)),
         { reliable: true, connectionId: "hash-collision-genuine" },
       );
       expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });
@@ -1106,22 +1083,19 @@ describe("FishNet bundles and sessions", () => {
       };
       const decoder = new FishNetSessionDecoder(map);
       const context = { reliable: true, connectionId: "refusal-binding" };
-      // Hash 9 matches the parameterless SyntheticStopEmote, but bytes are present, so the match is
-      // refused - and index 4 must NOT be remembered as SyntheticEmotes.
+      // Hash 9 matches the parameterless SyntheticStopEmote, but bytes are present, so the match is refused - and index 4 must NOT be remembered as SyntheticEmotes.
       const [refused] = decoder.decode(tick(1, fixedServerRpc(90, 4, 9, Buffer.from("aabb", "hex"))), context);
       expect(refused?.rpcResolution).toBe("unresolved");
       expect(refused?.networkBehaviourType).toBeUndefined();
 
-      // The same component later carries a hash only SyntheticHealth declares; a poisoned binding
-      // would have prevented this from resolving.
+      // The same component later carries a hash only SyntheticHealth declares; a poisoned binding would have prevented this from resolving.
       const [later] = decoder.decode(tick(2, fixedServerRpc(90, 4, 40, Buffer.from([14]))), context);
       expect(later).toMatchObject({ networkBehaviourType: "SyntheticHealth", rpcName: "SyntheticApplyDamage" });
     });
   });
 
   describe("payload-shape elimination", () => {
-    // Two behaviours share serverRpc hash 0 with signatures of different lengths, plus a third whose
-    // array parameter this decoder cannot evaluate at all.
+    // Two behaviours share serverRpc hash 0 with signatures of different lengths, plus a third whose array parameter this decoder cannot evaluate at all.
     const map: FishNetRpcMap = {
       buildFingerprint: "synthetic-shape",
       metadataVersion: 31,
@@ -1186,8 +1160,6 @@ describe("FishNet bundles and sessions", () => {
         tick(53, fixedServerRpc(71, 3, 0, damagePayload)),
         { reliable: true, connectionId: "shape-undecodable" },
       );
-      // SyntheticSummoning's array parameter might fit these bytes for all this decoder knows, so
-      // dropping it to crown SyntheticHealth would be a guess dressed up as a deduction.
       expect(packet).toMatchObject({ rpcResolution: "ambiguous", networkBehaviourType: undefined });
     });
 
@@ -1222,8 +1194,6 @@ describe("FishNet bundles and sessions", () => {
     }
 
     test("resolves damage and death on an unbound object against the bundled map", () => {
-      // An ApplyDamage_C/Death_C pair on an object whose spawn was never seen. Both used to stay
-      // ambiguous, and every domain tracker then dropped them.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const context = { reliable: true, connectionId: "bundled-shape" };
       const struct = damageStruct("SyntheticBolt");

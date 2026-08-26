@@ -1,13 +1,9 @@
 import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
 import { checkedEnd, readSignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
-export interface FishNetEffectDisplay {
+interface FishNetEffectDisplay {
   statusId: string;
-  /**
-   * Seconds left on the status. The wire counts this down in real time and resets it on
-   * re-application, so it is authoritative in a way the catalog's nominal duration is not.
-   * Absent when the wire carries a negative sentinel, which marks a status with no expiry.
-   */
+  /** Seconds left on the status. */
   remainingSeconds?: number;
   stacks: number;
   /** Server-declared stack ceiling; 0 where the status declares none. */
@@ -19,18 +15,7 @@ export interface FishNetEffectDisplayBatch {
   removes: string[];
 }
 
-/**
- * Decodes the batched status snapshot carried by `ApplyEffectDisplays_O`.
- *
- * This is the observers-facing feed, so unlike the owner-only `ApplyEffect_T` it reports every
- * actor in range, and it repeats periodically rather than only on change - which makes it
- * self-healing after a missed packet. It carries no status *level*: callers that need one must
- * keep whatever the owner-only feed last reported.
- *
- * Each entry's trailing byte is a flag whose meaning is not established - it correlates only
- * loosely with a status being freshly applied - so it is validated as a boolean and discarded
- * rather than exposed under a name that might not be true.
- */
+/** Decodes the batched status snapshot carried by `ApplyEffectDisplays_O`. */
 export function decodeEffectDisplays(payload: Buffer): FishNetEffectDisplayBatch {
   const applies: FishNetEffectDisplay[] = [];
   let offset = 0;

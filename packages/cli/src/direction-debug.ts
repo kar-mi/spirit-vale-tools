@@ -13,8 +13,6 @@ const fishNetBuildFingerprint = option("--fishnet-build");
 
 const directory = new FishNetActorDirectory();
 const character = new FishNetCharacterTracker();
-// Only used for its x/y/z cache here; it withholds an event until it knows a complete position,
-// which a heading-only update (rotating without ever having moved) never satisfies on its own.
 const positions = new FishNetPositionTracker({ directory });
 
 let lastPrinted: { x?: number; y?: number; z?: number; heading?: number } | undefined;

@@ -6,10 +6,6 @@ import { describe, expect, test } from "bun:test";
 import { JsonLinesLogger, activateLogSession, createLogSession, defaultLogDirectory, isLogStreamHeader, parseLogRecord, parseLogStreamHeader, readCurrentLogStream, streamSessionPath } from "./index.ts";
 import type { LogRecord } from "./types.ts";
 
-/**
- * Decodes a stream file's records the way a reader does: v2 opens with a header line that carries
- * no record, so tests assert on decoded records rather than on raw lines.
- */
 function decodeRecords(text: string): LogRecord[] {
   const records: LogRecord[] = [];
   let header;

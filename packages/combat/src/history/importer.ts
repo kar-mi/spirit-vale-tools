@@ -11,7 +11,7 @@ import { takeDirtyFrom } from "../reducers/timeline.ts";
 import { COMBAT_DOMAIN_NAME } from "./domain.ts";
 
 /** Table discriminator for the three meters sharing the actor/skill/target/timeline tables. */
-export type StoredMeter = "dps" | "tanked" | "healing";
+type StoredMeter = "dps" | "tanked" | "healing";
 
 const METER_KINDS: readonly { meter: StoredMeter; kind: MeterKind }[] = [
   { meter: "tanked", kind: "tanked" },
@@ -22,30 +22,18 @@ export interface IndexCombatStreamOptions extends Pick<DamageReducerOptions, "id
   sessionId: string;
   sourcePath: string;
   batchBytes?: number;
-  /**
-   * Closes the encounter still in progress at the end of the log. Set this only when the log will
-   * not grow — a completed past session. While a session is live the trailing encounter must stay
-   * open so the next pass continues it instead of starting a new one.
-   */
+  /** Closes the encounter still in progress at the end of the log. */
   finalize?: boolean;
 }
 
-/**
- * Indexes one combat log into the read model.
- *
- * Encounter ids come from the log (`enc-<sequence of the first record>`) rather than a counter, so
- * the same log always produces the same ids and re-indexing is stable. An encounter still open at a
- * batch boundary is written with `ended_at_ms` null and resumed on the next pass.
- */
+/** Indexes one combat log into the read model. */
 export async function indexCombatStream(model: ReadModel, options: IndexCombatStreamOptions): Promise<IndexStreamResult> {
   const { sessionId, sourcePath } = options;
   const finished: EncounterAggregate[] = [];
   let currentSequence = 0;
   let lastObservedAtMs = 0;
 
-  // The tanked and healing meters follow the damage reducer's encounter boundaries; only outgoing
-  // party damage defines an encounter. Their aggregates are captured per encounter id so a finished
-  // encounter can be written after the reducer has already moved on.
+  // The tanked and healing meters follow the damage reducer's encounter boundaries; only outgoing party damage defines an encounter.
   const meters = METER_KINDS.map(({ meter, kind }) => ({
     meter,
     reducer: new MeterReducer({
@@ -192,11 +180,7 @@ function consume(
   }
 }
 
-/**
- * Writes through `model.statement`, not `database.query`. Both hit the same connection, but only the
- * former is finalized by `close()`; statements left in Bun's own cache keep the database file open
- * on Windows, which blocks deleting the cache directory.
- */
+/** Writes through the model's statement cache so repeated indexing reuses prepared SQL. */
 function writeEncounter(
   model: ReadModel,
   sessionId: string,
@@ -580,10 +564,8 @@ interface ActorRow {
 /**
  * Rebuilds the encounter left open by an earlier pass so indexing continues rather than restarts.
  *
- * Reads go through the model's statement cache rather than `database.query`, so `close()` finalizes
- * them. A statement left in Bun's own cache keeps the database file open on Windows, which blocks
- * deleting the cache directory — and a long-lived model that re-indexes a live session resumes here
- * on every pass.
+ * Reads go through the model's statement cache so a long-lived model that re-indexes a live session
+ * can resume here on every pass without repeatedly preparing the same SQL.
  */
 function loadOpenEncounter(model: ReadModel, sessionId: string): EncounterAggregate | undefined {
   const database = statements(model);
@@ -682,8 +664,7 @@ function loadMeterAggregate(
   open: EncounterAggregate,
   meter: StoredMeter,
 ): EncounterAggregate {
-  // Through the model's statement cache, not `database.query`: statements left in Bun's own cache
-  // keep the database file open on Windows and block deleting the cache directory.
+  // Reuse the model's statement cache across incremental indexing passes.
   const database = statements(model);
   const aggregate: EncounterAggregate = {
     id: open.id,

@@ -1,9 +1,6 @@
 import type { Database } from "bun:sqlite";
 
-/**
- * Version of the infrastructure's own tables. Bump only when the tables below change; a mismatch
- * discards the entire cache, including every domain's tables.
- */
+/** Version of the infrastructure's own tables. */
 export const READ_MODEL_SCHEMA_VERSION = 1;
 
 const METADATA_SCHEMA = `

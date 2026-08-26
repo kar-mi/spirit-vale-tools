@@ -16,18 +16,9 @@ export interface JsonlTailReadResult {
 export interface JsonlTailReaderOptions {
   /** Chooses the decoder from the first available chunk (e.g. for BOM sniffing). Defaults to plain UTF-8. */
   createDecoder?: (firstChunk: Uint8Array) => TextDecoder;
-  /**
-   * Byte offset to resume from, e.g. one persisted by an earlier process. Defaults to 0.
-   *
-   * A non-zero offset means the first chunk handed to {@link JsonlTailReaderOptions.createDecoder}
-   * is from the middle of the file, so byte-order marks are no longer visible. Resume only on files
-   * known to be UTF-8; a truncation still resets the reader to 0, where sniffing works again.
-   */
+  /** Byte offset to resume from, e.g. one persisted by an earlier process. */
   startOffset?: number;
-  /**
-   * Most bytes to take in one {@link JsonlTailReader.read}. Defaults to unlimited. A line longer
-   * than this is still delivered — it simply spans several reads.
-   */
+  /** Most bytes to take in one {@link JsonlTailReader.read}. */
   maxReadBytes?: number;
 }
 
@@ -52,29 +43,17 @@ export class JsonlTailReader {
     this.readOffset = startOffset;
   }
 
-  /**
-   * Byte position just past the last complete line, excluding any buffered partial line. This is the
-   * safe point to persist and hand back as `startOffset`; resuming there re-reads the partial line.
-   *
-   * Assumes newline-delimited UTF-8, as written by this package's logger.
-   */
+  /** Byte position just past the last complete line, excluding any buffered partial line. */
   get offset(): number {
     return this.readOffset - this.partialBytes;
   }
 
-  /**
-   * Byte position of the next read, including any buffered partial line. Two readers over the same
-   * file that report the same position have consumed exactly the same bytes, so this is what a
-   * catch-up reader targets when it is being brought level with another one.
-   */
+  /** Byte position of the next read, including any buffered partial line. */
   get bytePosition(): number {
     return this.readOffset;
   }
 
-  /**
-   * @param limitBytes Caps this read below {@link JsonlTailReaderOptions.maxReadBytes}. Used to stop
-   * a catch-up read exactly at another reader's position rather than at end of file.
-   */
+  /** a catch-up read exactly at another reader's position rather than at end of file. */
   async read(limitBytes = Number.POSITIVE_INFINITY): Promise<JsonlTailReadResult> {
     let size: number;
     try {

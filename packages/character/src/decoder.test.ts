@@ -59,8 +59,7 @@ describe("positional and chaos character fields", () => {
   test("keeps substat wire positions when the game sends a hole", () => {
     const item = wornWeapon({ substats: [{ type: 0, roll: 100 }, null, { type: 1, roll: 50 }] });
 
-    // The array is still densified for compatibility, so the index is the only way to tell that
-    // the second roll sits in slot 2 rather than slot 1.
+    // The array is still densified for compatibility, so the index is the only way to tell that the second roll sits in slot 2 rather than slot 1.
     expect(item.substats).toHaveLength(2);
     expect(item.substats.map((stat) => stat.index)).toEqual([0, 2]);
   });
@@ -121,9 +120,6 @@ describe("positional and chaos character fields", () => {
   });
 
   test("keeps the action bar out of the skill-tree allocation", () => {
-    // Recorded characters carry Assigned entries that restate a learned skill at a different
-    // level, and entries for skills granted by grimoires rather than spent points. Merging them
-    // into the allocation inflates levels and invents skills.
     const decoded = decodeCharacterRpcPayload(syntheticCharacter(true, true, "Example Hero", {
       skills: [{ id: "PanicBurst", level: 5 }, { id: "AerialShot", level: 1 }],
       assigned: [{ id: "PanicBurst", level: 10 }, { id: "SniperShot", level: 10 }],

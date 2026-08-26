@@ -1106,7 +1106,7 @@ export class GemItemDefinitions {
       "refineEffects": [
         {
           "type": 177,
-          "value": 0.30000001192092896
+          "value": 0.3
         }
       ]
     },
@@ -1672,7 +1672,7 @@ export class GemItemDefinitions {
       "refineEffects": [
         {
           "type": 26,
-          "value": 1,
+          "value": 2,
           "target": {
             "kind": "status",
             "id": "Frozen"
@@ -1680,7 +1680,7 @@ export class GemItemDefinitions {
         },
         {
           "type": 26,
-          "value": 1,
+          "value": 2,
           "target": {
             "kind": "status",
             "id": "Stun"

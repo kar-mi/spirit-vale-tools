@@ -1,10 +1,7 @@
 import { decodeQuaternion, quaternionYaw, type Quaternion } from "./quaternion-compression.ts";
 import { readSignedPackedWhole } from "./wire-reader.ts";
 
-/**
- * Fixed-point scale FishNet's NetworkTransform applies before writing an axis as a 16-bit whole,
- * and divides by on read. Verified against the build's `SerializeChanged` / `DeserializePacket`.
- */
+/** Fixed-point scale FishNet's NetworkTransform applies before writing an axis as a 16-bit whole, and divides by on read. */
 const COMPRESSED_SCALE = 100;
 
 /** Quaternion packings NetworkTransform can be configured with, widest first for candidate fitting. */
@@ -21,10 +18,7 @@ const FLAG_ROTATION = 0x40;
 const FLAG_EXTENDED = 0x80;
 const FLAG_B_PARENT = 0x40;
 
-/**
- * Axes carried by one update. An absent axis is not zero — it means the sender did not resend that
- * axis, so the object keeps its previous value.
- */
+/** Axes carried by one update. */
 export interface NetworkTransformAxes {
   x?: number;
   y?: number;
@@ -34,10 +28,7 @@ export interface NetworkTransformAxes {
 export interface DecodedNetworkTransform {
   position: NetworkTransformAxes;
   scale?: NetworkTransformAxes;
-  /**
-   * Width in bytes of the rotation the update carried, when it carried one. The quaternion packing
-   * is a component setting rather than a wire field, so this is read off the update itself.
-   */
+  /** Width in bytes of the rotation the update carried, when it carried one. */
   rotationBytes?: number;
   /** The rotation as `[x, y, z, w]`, decoded from whichever packing `rotationBytes` names. */
   rotation?: Quaternion;
@@ -49,17 +40,6 @@ export interface DecodedNetworkTransform {
   consumed: number;
 }
 
-/**
- * Decodes one NetworkTransform update from the `ArraySegment<byte>` payload of
- * `ObserversUpdateClientAuthoritativeTransform`, `TargetUpdateTransform`, or `ServerUpdateTransform`.
- *
- * Positions are absolute, not deltas: each axis is either resent (as fixed-point or float32) or
- * omitted to mean unchanged, so no baseline needs to be carried across packets to read one.
- *
- * Exactly one update is read. Bytes after the segment are left to the caller — in this build they
- * are further bundled messages the session decoder could not split, not additional updates, and
- * reading them as updates produces out-of-world coordinates.
- */
 export function decodeNetworkTransformData(payload: Buffer): DecodedNetworkTransform | undefined {
   try {
     const length = readSignedPackedWhole(payload, 0);
@@ -87,8 +67,6 @@ function decodeEntry(payload: Buffer, start: number, end: number): Omit<DecodedN
   const extended = (flags & FLAG_EXTENDED) !== 0;
 
   // Without the extension byte the rotation is whatever is left, so its packing is known exactly.
-  // With one, the rotation width has to be chosen, and only a width that lands the rest of the
-  // entry precisely on its end is accepted.
   if (!extended) {
     if (!hasRotation) return offset === end ? { position } : undefined;
     const rotationBytes = end - offset;

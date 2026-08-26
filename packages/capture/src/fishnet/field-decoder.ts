@@ -28,12 +28,7 @@ export interface FieldDecodeRun {
   complete: boolean;
 }
 
-/**
- * Decodes one parameter list and reports where it ended, so a caller walking several concatenated
- * entries in one payload can find the next boundary. Like {@link applyDecodedFields} it keeps the
- * prefix it managed to read, but it mutates nothing and leaves the caller to decide whether an
- * incomplete run is a stopping point.
- */
+/** Decodes one parameter list and reports where it ended, so a caller walking several concatenated entries in one payload can find the next boundary. */
 export function decodeFieldRun(
   payload: Buffer,
   parameters: readonly FishNetRpcParameter[] | undefined,
@@ -47,25 +42,14 @@ export function decodeFieldRun(
   return { fields, consumed: decoded.offset, complete: decoded.complete };
 }
 
-/**
- * Decode result for callers that need to know whether a payload actually *fits* a signature rather
- * than just how much of it could be read. `undecodable` marks a parameter list this decoder cannot
- * evaluate at all - one carrying an array or a game struct with no field breakdown - which is
- * distinct from a signature that was evaluated and did not match.
- */
+/** Decode result for callers that need to know whether a payload actually *fits* a signature rather than just how much of it could be read. */
 export interface FieldDecodeFit {
   consumed: number;
   complete: boolean;
   undecodable: boolean;
 }
 
-/**
- * Strict, non-mutating decode of one payload against one parameter list. `applyDecodedFields` is
- * deliberately lenient - it keeps whatever prefix decoded and stashes the rest as
- * `undecodedPayload` - which is right for display but useless for telling two candidate signatures
- * apart, so shape-based elimination needs the consumed length and the undecodable flag instead.
- *
- */
+/** Strict, non-mutating decode of one payload against one parameter list. */
 export function tryDecodeFields(
   payload: Buffer,
   parameters: readonly FishNetRpcParameter[] | undefined,
@@ -79,22 +63,22 @@ export function tryDecodeFields(
   return { consumed: decoded.offset, complete: decoded.complete, undecodable: false };
 }
 
-/** A parameter is evaluable when every leaf resolves to a codec; arrays and opaque structs do not. */
+/** A parameter is evaluable when every leaf resolves to a codec; opaque structs do not. */
 function isDecodable(parameters: readonly FishNetRpcParameter[]): boolean {
   return parameters.every((parameter) => {
+    if (parameter.repeated || parameter.dictionaryKey) return isElementDecodable(parameter);
     if (inferredCodec(parameter)) return true;
     return parameter.fields !== undefined && parameter.fields.length > 0 && isDecodable(parameter.fields);
   });
 }
 
-/**
- * Wire codecs for the BCL types the map leaves uncoded. The scraper records a parameter's type name
- * even when it assigns no codec, and 130 `System.String` parameters arrive that way - without this
- * table a single uncoded parameter stops the decode dead and every field after it is lost too.
- *
- * Deliberately limited to types whose encoding is unambiguous: game structs, enums and arrays stay
- * unresolved so a caller can still tell "does not match" apart from "cannot be checked".
- */
+/** Whether the per-element shape of a `repeated`/`dictionaryKey` parameter can be decoded. */
+function isElementDecodable(parameter: FishNetRpcParameter): boolean {
+  if (inferredCodec(parameter)) return true;
+  return parameter.fields !== undefined && parameter.fields.length > 0 && isDecodable(parameter.fields);
+}
+
+/** Wire codecs for the BCL types the map leaves uncoded. */
 const PRIMITIVE_CODECS: Readonly<Record<string, FishNetWireCodec>> = {
   "System.Boolean": "boolean",
   "System.Byte": "uint8",
@@ -125,45 +109,110 @@ function decodeParameters(
   let offset = start;
   for (const parameter of parameters) {
     const name = prefix.length === 0 ? parameter.name : `${prefix}.${parameter.name}`;
-    const codec = inferredCodec(parameter);
-    if (codec) {
+    const result = parameter.repeated || parameter.dictionaryKey
+      ? decodeRepeatedParameter(buffer, offset, parameter, name, fields)
+      : decodeSingleValue(buffer, offset, parameter, name, fields);
+    offset = result.offset;
+    if (!result.complete) return { offset, complete: false };
+  }
+  return { offset, complete: true };
+}
+
+/** Decodes one non-repeated field: a leaf codec, or a nullable-flag-prefixed nested struct. */
+function decodeSingleValue(
+  buffer: Buffer,
+  start: number,
+  parameter: FishNetRpcParameter,
+  name: string,
+  fields: FishNetDecodedField[],
+): { offset: number; complete: boolean } {
+  let offset = start;
+  const codec = inferredCodec(parameter);
+  if (codec) {
+    try {
+      const decoded = decodeField(buffer, offset, codec);
+      const resolvedName = name === "mapId" && typeof decoded.value === "number"
+        ? resolveBundledMapName(decoded.value)
+        : undefined;
+      fields.push({
+        name,
+        typeName: parameter.typeName,
+        codec,
+        value: decoded.value,
+        ...(resolvedName === undefined ? {} : { resolvedName }),
+      });
+      return { offset: decoded.nextOffset, complete: true };
+    } catch {
+      return { offset, complete: false };
+    }
+  }
+  if (parameter.nullable) {
+    try {
+      requireBytes(buffer, offset, 1, `${name} nullable flag`);
+      const isNull = buffer[offset];
+      if (isNull === 1) {
+        fields.push({ name, typeName: parameter.typeName, codec: "nullable", value: null });
+        return { offset: offset + 1, complete: true };
+      }
+      if (isNull !== 0) throw new FishNetProtocolError(`invalid ${name} nullable flag`);
+      offset += 1;
+    } catch {
+      return { offset, complete: false };
+    }
+  }
+  if (!parameter.fields || parameter.fields.length === 0) return { offset, complete: false };
+  return decodeParameters(buffer, offset, parameter.fields, name, fields);
+}
+
+/** Upper bound on a `repeated`/`dictionaryKey` element count, matching `CharacterReader.list`. */
+const MAX_REPEATED_COUNT = 100_000;
+
+/**
+ * Decodes a `List<T>` (`repeated`) or `Dictionary<string, T>` (`dictionaryKey`) field: a packed
+ * signed count (`-1`/negative meaning empty, matching FishNet's generic writer convention), then
+ * that many elements - each preceded by a string key for a dictionary - shaped by the same
+ * parameter's `codec`/`nullable`/`fields`.
+ */
+function decodeRepeatedParameter(
+  buffer: Buffer,
+  start: number,
+  parameter: FishNetRpcParameter,
+  name: string,
+  fields: FishNetDecodedField[],
+): { offset: number; complete: boolean } {
+  let offset = start;
+  let count: number;
+  try {
+    const decoded = readSignedPackedWhole(buffer, offset);
+    count = decoded.value;
+    offset = decoded.nextOffset;
+  } catch {
+    return { offset, complete: false };
+  }
+  const length = count < 0 ? 0 : count;
+  if (length > MAX_REPEATED_COUNT) return { offset, complete: false };
+  fields.push({ name: `${name}.length`, typeName: "System.Int32", codec: "packedInt32", value: length });
+  const element: FishNetRpcParameter = {
+    name: "",
+    ...(parameter.typeName === undefined ? {} : { typeName: parameter.typeName }),
+    ...(parameter.codec === undefined ? {} : { codec: parameter.codec }),
+    ...(parameter.nullable === undefined ? {} : { nullable: parameter.nullable }),
+    ...(parameter.fields === undefined ? {} : { fields: parameter.fields }),
+  };
+  for (let index = 0; index < length; index += 1) {
+    const elementName = `${name}[${index}]`;
+    if (parameter.dictionaryKey) {
       try {
-        const decoded = decodeField(buffer, offset, codec);
-        const resolvedName = name === "mapId" && typeof decoded.value === "number"
-          ? resolveBundledMapName(decoded.value)
-          : undefined;
-        fields.push({
-          name,
-          typeName: parameter.typeName,
-          codec,
-          value: decoded.value,
-          ...(resolvedName === undefined ? {} : { resolvedName }),
-        });
+        const decoded = decodeField(buffer, offset, parameter.dictionaryKey);
+        fields.push({ name: `${elementName}.$key`, typeName: "System.String", codec: parameter.dictionaryKey, value: decoded.value });
         offset = decoded.nextOffset;
       } catch {
         return { offset, complete: false };
       }
-      continue;
     }
-    if (parameter.nullable) {
-      try {
-        requireBytes(buffer, offset, 1, `${name} nullable flag`);
-        const isNull = buffer[offset];
-        if (isNull === 1) {
-          fields.push({ name, typeName: parameter.typeName, codec: "nullable", value: null });
-          offset += 1;
-          continue;
-        }
-        if (isNull !== 0) throw new FishNetProtocolError(`invalid ${name} nullable flag`);
-        offset += 1;
-      } catch {
-        return { offset, complete: false };
-      }
-    }
-    if (!parameter.fields || parameter.fields.length === 0) return { offset, complete: false };
-    const nested = decodeParameters(buffer, offset, parameter.fields, name, fields);
-    offset = nested.offset;
-    if (!nested.complete) return { offset, complete: false };
+    const result = decodeSingleValue(buffer, offset, element, elementName, fields);
+    offset = result.offset;
+    if (!result.complete) return { offset, complete: false };
   }
   return { offset, complete: true };
 }

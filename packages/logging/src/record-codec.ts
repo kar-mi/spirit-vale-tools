@@ -1,33 +1,11 @@
 import { isRecord } from "./predicates.ts";
 import type { JsonObject, LogRecord, LogStream, LogStreamHeader } from "./types.ts";
 
-/**
- * On-disk record encoding.
- *
- * v1 wrote the full envelope on every line:
- * `{"schemaVersion":1,"sessionId":"…","sequence":3,"recordedAt":"2026-08-07T00:39:10.719Z",
- *   "source":"desktop-capture","type":"combat.event","data":{…}}`
- *
- * Of that, `schemaVersion`, `sessionId` and `source` never varied within a file; `recordedAt` spent
- * 24 bytes on an ISO string for a value every reader immediately `Date.parse`d back to a number.
- * Across 130 real combat logs that was 34% of the bytes on disk. v2 keeps only what varies:
- * `{"seq":3,"at":1754526750719,"type":"combat.event","data":{…}}`
- *
- * `type` stays: it is *not* recoverable from `data`. 743,106 records in those logs carry no
- * `data.kind` at all (packet diagnostics, lifecycle and warning records), so deriving it would be
- * guesswork exactly where it matters.
- *
- * Reading stays backward compatible: {@link parseLogRecord} accepts either shape, so the logs
- * already on disk keep working untouched.
- */
+/** On-disk record encoding. */
 const V2_SEQUENCE_KEY = "seq";
 const V2_TIMESTAMP_KEY = "at";
 
-/**
- * Encodes one record from its parts. Takes epoch milliseconds rather than a {@link LogRecord}
- * because this runs once per logged event: the writer already has the clock reading, and formatting
- * it as an ISO string only to parse it straight back would be pure overhead on that path.
- */
+/** Encodes one record from its parts. */
 export function encodeLogRecord(sequence: number, atMs: number, type: string, data: JsonObject): string {
   return JSON.stringify({
     [V2_SEQUENCE_KEY]: sequence,
@@ -54,13 +32,7 @@ export function parseLogStreamHeader(value: unknown): LogStreamHeader | undefine
   return value;
 }
 
-/**
- * Decodes one line's parsed JSON into a record, accepting both encodings.
- *
- * `header` supplies the `sessionId` and `source` a v2 line does not carry. It is optional because
- * no consumer reads either field, and an incremental pass resuming from a byte offset never sees
- * the header line; those records decode with both fields empty rather than failing.
- */
+/** Decodes one line's parsed JSON into a record, accepting both encodings. */
 export function parseLogRecord(value: unknown, header?: LogStreamHeader): LogRecord | undefined {
   if (!isRecord(value)) return undefined;
   if (value["schemaVersion"] === 1) return parseV1(value);

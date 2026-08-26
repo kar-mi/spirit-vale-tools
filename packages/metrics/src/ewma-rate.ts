@@ -1,18 +1,4 @@
-/**
- * Continuous-time exponentially-weighted rate estimator (a "leaky bucket").
- *
- * A value of `v` recorded at time `t` contributes `v / tau` to the rate immediately, then fades as
- * `e^{-(now - t) / tau}`. `tauSeconds` is a decay constant, not a cutoff: contributions never fully
- * vanish, but after ~3x tau they are negligible (about 5% of their original weight).
- *
- * Chosen over a flat rolling window because a window has a hard edge: the rate drops
- * discontinuously the instant a value ages past it, and steps to exactly zero once the window is
- * empty. For sparse events (XP, coins) a short window reads 0 between gains and a long one barely
- * moves per gain. For dense events (damage) the two are statistically equivalent — a window of
- * width `W` and an EWMA of time constant `tau` have equal estimator variance when `W = 2 * tau`,
- * and equal mean lag — so the EWMA is a drop-in that only removes the discontinuity, at O(1) state
- * instead of a retained list of every recent event.
- */
+/** Continuous-time exponentially-weighted rate estimator (a "leaky bucket"). */
 export interface EwmaRateOptions {
   /** Decay time constant, in seconds. */
   tauSeconds: number;
@@ -26,13 +12,7 @@ export interface EwmaRamp {
   minimumMs?: number;
 }
 
-/**
- * Durable state of an estimator, safe to persist and later restore.
- *
- * `tauSeconds` travels with the rate because the two are only meaningful together: the same
- * accumulated rate decays differently under a different time constant, so a reader that persists
- * only the number cannot reconstruct the estimator that produced it.
- */
+/** Durable state of an estimator, safe to persist and later restore. */
 export interface EwmaRateState {
   rate: number;
   updatedAtMs: number;
@@ -64,15 +44,7 @@ export class EwmaRate {
     this.rate += value / this.tauSeconds;
   }
 
-  /**
-   * The estimated rate per second as of `nowMs`, decayed lazily without mutating state.
-   *
-   * Pass `ramp` to correct the cold start: an estimator rising from zero under-reads a steady
-   * stream by `1 - e^{-elapsed / tau}` (63% low at one tau). This is the continuous analogue of
-   * dividing a rolling window's sum by `min(windowMs, now - start)` rather than by the full window.
-   * Omit it for sparse gains, where the ramp is indistinguishable from genuinely having earned
-   * nothing yet.
-   */
+  /** The estimated rate per second as of `nowMs`, decayed lazily without mutating state. */
   rateAt(nowMs: number, ramp?: EwmaRamp): number {
     const decaySeconds = Math.max(0, nowMs - this.updatedAtMs) / 1_000;
     const decayed = this.rate * Math.exp(-decaySeconds / this.tauSeconds);
@@ -97,12 +69,7 @@ export class EwmaRate {
     this.updatedAtMs = state.updatedAtMs;
   }
 
-  /**
-   * Folds `other` into this estimator. The rate is linear in its inputs, so two estimators over
-   * disjoint event streams combine exactly by decaying both to a common time and adding — which is
-   * what lets separately-aggregated actors be merged into one row without replaying their events.
-   * Both must share a time constant.
-   */
+  /** Folds `other` into this estimator. */
   add(other: EwmaRate): void {
     if (other.tauSeconds !== this.tauSeconds) throw new Error("cannot merge estimators with different tauSeconds");
     const atMs = Math.max(this.updatedAtMs, other.updatedAtMs);

@@ -102,7 +102,7 @@ export class RewardLogFollower {
 }
 
 /** Watcher tuning shared by both session followers in this package. */
-export type RewardSessionFollowerTuning =
+type RewardSessionFollowerTuning =
   Pick<LiveLogSessionFollowerOptions<RewardLogFollower, RewardLogBatch>, "fallbackPollMs" | "debounceMs" | "persistent">;
 
 export class RewardSessionLogFollower {
@@ -222,12 +222,7 @@ export class LiveRewardSessionLogFollower {
 
 export { LiveRewardSessionLogFollower as BoundedRewardSessionLogFollower };
 
-/**
- * Splits a byte stream into lines without a Node builtin.
- *
- * `node:readline` would pull a Node module into this package's bundle, and the package is imported
- * by browser bundles for its pure trend helpers — a builtin there fails the build outright.
- */
+/** Splits a byte stream into lines without a Node builtin. */
 async function* readLines(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();

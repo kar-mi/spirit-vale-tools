@@ -6,11 +6,13 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "bun run build:packages",
-    "build:packages": "bun run --filter @kar-mi/spirit-vale-tools-capture build && bun run --filter @kar-mi/spirit-vale-tools-logging build && bun run --filter @kar-mi/spirit-vale-tools-metrics build &&bun run --filter @kar-mi/spirit-vale-tools-sqlite build && bun run --filter @kar-mi/spirit-vale-tools-items build && bun run --filter @kar-mi/spirit-vale-tools-skills build && bun run --filter @kar-mi/spirit-vale-tools-statuses build && bun run --filter @kar-mi/spirit-vale-tools-combat build && bun run --filter @kar-mi/spirit-vale-tools-character build && bun run --filter @kar-mi/spirit-vale-tools-rewards build",
+    "build:packages": "bun run --filter @kar-mi/spirit-vale-tools-capture build && bun run --filter @kar-mi/spirit-vale-tools-logging build && bun run --filter @kar-mi/spirit-vale-tools-metrics build && bun run --filter @kar-mi/spirit-vale-tools-sqlite build && bun run --filter @kar-mi/spirit-vale-tools-items build && bun run --filter @kar-mi/spirit-vale-tools-skills build && bun run --filter @kar-mi/spirit-vale-tools-statuses build && bun run --filter @kar-mi/spirit-vale-tools-combat build && bun run --filter @kar-mi/spirit-vale-tools-character build && bun run --filter @kar-mi/spirit-vale-tools-rewards build && bun run --filter @kar-mi/spirit-vale-tools-market build",
     "capture:dump": "bun run packages/cli/src/dump.ts",
     "capture:combat": "bun run packages/cli/src/dump.ts --protocols udp --combat-only",
     "combat:replay": "bun run packages/cli/src/combat.ts",
     "direction:debug": "bun run packages/cli/src/direction-debug.ts",
+    "generate:rpc-map": "bun run scripts/generate-rpc-map.ts",
+    "market": "bun run packages/cli/src/market.ts",
     "release:packages": "bun run build:packages && changeset publish",
     "rewards": "bun run packages/cli/src/rewards.ts",
     "check": "bun run typecheck && bun test",
@@ -19,12 +21,12 @@
     "version:packages": "changeset version"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14",
+    "@types/bun": "^1.4.0",
     "@changesets/cli": "^2.29.8",
     "typescript": "^7.0.2"
   },
   "engines": {
-    "bun": ">=1.3.0"
+    "bun": ">=1.4.0"
   },
-  "packageManager": "bun@1.3.14"
+  "packageManager": "bun@1.4.0"
 }

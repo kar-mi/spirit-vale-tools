@@ -44,14 +44,6 @@ import type {
 export interface ConnectionState {
   links: Map<number, RpcLinkRegistrationState>;
   components: Map<string, string>;
-  /**
-   * The link and component tables as they stood before the last `authenticated`/`disconnect`, kept
-   * because this game re-authenticates on the same socket during a channel switch *without*
-   * re-spawning objects that are already spawned. Registrations are only ever learned from an
-   * `objectSpawn`, so dropping them outright leaves every rpcLink on those objects unresolvable
-   * until something forces a real respawn. Entries here are suspects, not facts: they are only
-   * believed after `corroborateStaleLink` agrees, and any fresh registration or despawn evicts them.
-   */
   staleLinks: Map<number, RpcLinkRegistrationState>;
   staleComponents: Map<string, string>;
 }
@@ -141,11 +133,7 @@ export function parseMessage(
         const packet = basePacket(buffer, start, end, tick, bundleIndex, packetId, packetName);
         packet.objectId = objectId;
         packet.networkBehaviourIndex = header.componentIndex;
-        // Recovery deliberately does not teach the connection, unlike the fixed-RPC path. That path
-        // gates on `rejectedByPayload` before writing a binding, and a SyncType packet has no
-        // equivalent check to offer, so a binding learned here would enter `state.components` on
-        // weaker evidence and then feed every later elimination on the object. Repeating the
-        // recovery costs a scan of the component map; it measured at a few percent of decode time.
+        // Recovery deliberately does not teach the connection, unlike the fixed-RPC path.
         packet.networkBehaviourType = state.components.get(componentKey(objectId, header.componentIndex))
           ?? recoverComponentFromPrefabLayouts(options.rpcMap, state.components, objectId, header.componentIndex);
         packet.syncPayload = buffer.subarray(header.nextOffset + 4, end);
@@ -245,9 +233,6 @@ function parseRpcLink(
     ?? state.components.get(componentKey(resolved.objectId, resolved.componentIndex))
     ?? state.staleComponents.get(componentKey(resolved.objectId, resolved.componentIndex));
   const lookup = lookupRpc(options.rpcMap, behaviourType, resolved.packetName, resolved.rpcHash, undefined);
-  // A quarantined registration is only a suspect: believing it blindly would misattribute traffic
-  // outright if the server had reallocated link ids on this socket, which is worse than the gap it
-  // is meant to close.
   if (stale && !corroborateStaleLink(lookup, packet.payload, state, resolved)) {
     packet.linkResolved = false;
     return { packet, end, stop };
@@ -264,22 +249,12 @@ function parseRpcLink(
   applyRpcLookup(packet, lookup);
   if (!stale) return { packet, end, stop };
 
-  // Corroborated once is enough: promote it so later packets on this link cost a plain map hit, and
-  // report the weaker provenance.
+  // Corroborated once is enough: promote it so later packets on this link cost a plain map hit, and report the weaker provenance.
   if (packet.rpcResolution === "verified") packet.rpcResolution = "recovered";
   return { packet, end, stop, registrations: [[packetId, resolved]] };
 }
 
-/**
- * Decides whether a quarantined link registration is trustworthy for this payload.
- *
- * The signature check is the strong one — an exact-length decode against the resolved method's
- * parameters. A reallocated link id would almost certainly resolve to a method whose parameters do
- * not consume these bytes exactly; the same discriminator found zero false positives across 385,742
- * captured payloads. Signatures this decoder cannot evaluate (array parameters, most notably
- * `CalibrateSummons_T`) fall back to liveness: the registration's object must still be demonstrably
- * present, since a reallocation implies the old object is gone.
- */
+/** Decides whether a quarantined link registration is trustworthy for this payload. */
 function corroborateStaleLink(
   lookup: RpcLookup,
   payload: Buffer,

@@ -23,6 +23,7 @@
       "@kar-mi/spirit-vale-tools-combat": ["./packages/combat/src/index.ts"],
       "@kar-mi/spirit-vale-tools-items": ["./packages/items/src/index.ts"],
       "@kar-mi/spirit-vale-tools-logging": ["./packages/logging/src/index.ts"],
+      "@kar-mi/spirit-vale-tools-market": ["./packages/market/src/index.ts"],
       "@kar-mi/spirit-vale-tools-metrics": ["./packages/metrics/src/index.ts"],
       "@kar-mi/spirit-vale-tools-rewards": ["./packages/rewards/src/index.ts"],
       "@kar-mi/spirit-vale-tools-skills": ["./packages/skills/src/index.ts"],

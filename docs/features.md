@@ -29,6 +29,8 @@ bun run capture:dump -- --protocols udp --decode-fishnet
   breakdowns.
 - `rewards` correlates monster deaths with XP, coins, items, session totals,
   trends, and replay data.
+- `market` decodes paginated searches, listings, vending stalls, overview data,
+  collection results, and provides local filtering and replay.
 - `items`, `skills`, and `statuses` provide build-scoped static catalogs.
 - `logging` provides internal versioned JSON Lines sessions used by domain
   packages and CLI consumers.
@@ -46,6 +48,24 @@ bun run rewards
 
 Only uniquely correlated monster deaths enter per-monster totals. Ambiguous or
 unrelated reward updates remain separate.
+
+## Market CLI
+
+Follow market and vending-stall traffic live:
+
+```powershell
+bun run market -- --live
+```
+
+Replay a structured capture and optionally filter the reconstructed listings:
+
+```powershell
+bun run market -- --input capture.jsonl --query "iron" --sort price-asc
+```
+
+Fresh searches replace the current listing set, while cursor-based pages append
+to it. Search requests and stall status use build-derived deterministic field
+layouts; packets that are not verified against the supported build are ignored.
 
 ## Runtime boundaries
 

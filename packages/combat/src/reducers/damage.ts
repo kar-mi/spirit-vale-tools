@@ -4,14 +4,9 @@ import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent, FishNetCombatEv
 import { ANALYSIS_BUCKET_MS, addToSeries, createSeries } from "./timeline.ts";
 import type { BucketSeries } from "./timeline.ts";
 
-export const DEFAULT_IDLE_GAP_MS = 30_000;
+const DEFAULT_IDLE_GAP_MS = 30_000;
 export const DEFAULT_MINIMUM_DURATION_MS = 1_000;
-/**
- * Current DPS is an exponentially-weighted rate rather than a flat window of recent hits. A window
- * of width `W` and an EWMA of time constant `tau` have equal estimator variance when `W = 2 * tau`
- * and equal mean lag, so 2.5 seconds reproduces the smoothing and responsiveness of the 5-second
- * window this replaced — without its discontinuities, and in O(1) state per actor.
- */
+/** Current DPS is an exponentially-weighted rate rather than a flat window of recent hits. */
 export const DEFAULT_CURRENT_TAU_SECONDS = 2.5;
 
 export interface CombatIdentity {
@@ -29,14 +24,7 @@ export interface SkillAggregate {
   criticalHits: number;
 }
 
-/**
- * Per-actor totals for one encounter.
- *
- * Where the legacy meter kept every hit in `damagePoints`, this keeps two incremental bucket series
- * plus an O(1) rate estimator. `encounterSeries` is aligned to the encounter start (what the
- * actor rows and the party chart use); `actorSeries` is aligned to this actor's own first damage,
- * which is the alignment the legacy meter uses for the `personal` row.
- */
+/** Per-actor totals for one encounter. */
 export interface ActorAggregate {
   actorId: number;
   actorIds: number[];
@@ -97,11 +85,7 @@ export interface EncounterAggregate {
   activeActors: Map<number, ActorAggregate>;
   /** First time each enemy was hit, which orders the enemy picker. */
   enemyFirstSeenAtMs: Map<number, number>;
-  /**
-   * Enemy display names, captured when the hit lands rather than looked up when the encounter is
-   * written. A monster is named by its spawn packet, which the log does not carry, so resolving
-   * later would lose the name entirely for anything that died without acting.
-   */
+  /** Enemy display names, captured when the hit lands rather than looked up when the encounter is written. */
   enemyNames: Map<number, string>;
   deaths: DeathRecord[];
 }
@@ -122,33 +106,16 @@ export interface DamageReducerOptions {
 export const MOB_IDENTITY_PREFIX = "__spiritvaleMobIdentity:";
 
 const DEATH_LOOKBACK_MS = 10_000;
-/**
- * Monster display names retained at once. Names are only needed to label recent hits and the current
- * encounter's enemies, but a long session sees a great many distinct monsters, so the map is capped
- * and evicts the least recently seen rather than growing for the whole session.
- */
+/** Monster display names retained at once. */
 const MAX_MOB_IDENTITIES = 4_096;
-/**
- * Player identities retained at once, capped for the same reasons as {@link MAX_MOB_IDENTITIES} and
- * evicted least-recently-seen first. An indexing pass serialises this map to the read model on every
- * batch, so an uncapped one costs repeated writes proportional to every player the session has ever
- * seen — which in a crowded hub is far more than the handful an encounter actually needs. Evicting
- * an entry does not lose a name from a stored encounter: each actor row carries its own copy.
- */
+/** Player identities retained at once, capped for the same reasons as {@link MAX_MOB_IDENTITIES} and evicted least-recently-seen first. */
 const MAX_IDENTITIES = 4_096;
 
 export class DamageReducer {
   readonly identities = new Map<number, CombatIdentity>();
   readonly mobIdentities = new Map<number, string>();
   current?: EncounterAggregate;
-  /**
-   * Recent positive hits per target, trimmed to the death lookback. Exposed so an indexing pass can
-   * carry it across a resume; without it a death just after the boundary would lose its hit list.
-   *
-   * Bounded by {@link sweepRecentHits} to the targets hit within the lookback, not by how many
-   * targets the session has seen: an incremental pass serialises this map on every batch, so letting
-   * it accumulate would cost far more in repeated writes than in memory.
-   */
+  /** Recent positive hits per target, trimmed to the death lookback. */
   readonly recentHits = new Map<number, { atMs: number; hit: DeathHitRecord }[]>();
   private lastSweepAtMs?: number;
   private readonly idleGapMs: number;
@@ -541,7 +508,7 @@ export function createActor(
   };
 }
 
-export function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
+function isCountedDamage(event: FishNetCombatEvent): event is FishNetCombatDamageEvent | FishNetCombatDeathEvent {
   if (event.kind !== "damage" && event.kind !== "death") return false;
   if (event.team !== 0
     || event.actorId === event.targetId
@@ -550,7 +517,7 @@ export function isCountedDamage(event: FishNetCombatEvent): event is FishNetComb
   return event.kind === "damage" || !event.duplicatesDamageEvent;
 }
 
-export function isCountedKill(event: FishNetCombatEvent): event is FishNetCombatDeathEvent {
+function isCountedKill(event: FishNetCombatEvent): event is FishNetCombatDeathEvent {
   return event.kind === "death"
     && event.team === 0
     && event.actorId !== event.targetId
@@ -568,6 +535,6 @@ export function isPositiveHit(event: FishNetCombatDamageEvent | FishNetCombatDea
     && (event.kind === "damage" || !event.duplicatesDamageEvent);
 }
 
-export function isMobTarget(identities: ReadonlyMap<number, unknown>, actorId: number, targetId: number): boolean {
+function isMobTarget(identities: ReadonlyMap<number, unknown>, actorId: number, targetId: number): boolean {
   return targetId >= 0 && targetId !== actorId && !identities.has(targetId);
 }

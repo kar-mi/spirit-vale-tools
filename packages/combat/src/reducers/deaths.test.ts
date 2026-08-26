@@ -23,12 +23,6 @@ function damage(actorId: number, targetId: number, value: number, atMs: number, 
   } as FishNetCombatEvent;
 }
 
-/**
- * The player-side reflect: a `ReflectDamage` stat sends an attacker's own hit back at them, which
- * the tracker labels from damage type 4 (`combat-tracker.ts`, `DAMAGE_TYPE_SOURCES`). Unlike the
- * boss reflect it is ordinary outgoing party damage — the reflecting player attacks the monster —
- * so it must stay on the DPS meter and out of the death log.
- */
 function reflected(actorId: number, targetId: number, value: number, atMs: number): FishNetCombatEvent {
   return {
     kind: "damage", rpc: "ApplyDamage_C", tick: atMs, payloadBytes: 0, fields: {},
@@ -62,11 +56,7 @@ function deathsFor(events: readonly Timed[]) {
 }
 
 describe("death log", () => {
-  /**
-   * A boss spell reflect sends the caster's own hit back at them: team 0 (the reflect keeps the
-   * original caster's team) and self-attributed. Read as outgoing party damage it vanished from the
-   * death log entirely, which is the bug this asserts against.
-   */
+  /** A boss spell reflect sends the caster's own hit back at them: team 0 (the reflect keeps the original caster's team) and self-attributed. */
   test("records a reflected self-inflicted death of a known player", () => {
     const deaths = deathsFor([
       { event: identity(PIKI, "Piki", 0), atMs: 0 },
@@ -118,10 +108,6 @@ describe("death log", () => {
     expect(deaths).toEqual([]);
   });
 
-  /**
-   * A capture that never resolved player names still has to log the death: a mob killed by the
-   * party is attributed to its killer, so a self-attributed death is a reflect either way.
-   */
   test("logs a reflected death even when no identity was ever resolved", () => {
     const deaths = deathsFor([
       { event: damage(PIKI, 900, 19_876, 1_000), atMs: 1_000 },

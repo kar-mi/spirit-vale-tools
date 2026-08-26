@@ -11,12 +11,7 @@ export interface DpsReplayResult {
   invalidLines: number;
 }
 
-/**
- * Loads combat JSON Lines without retaining raw records or file contents.
- *
- * The reducer leaves `maxTimelineBuckets` unbounded by default, which is what a whole-log replay
- * wants: full timeline resolution, where the live service caps it to keep memory bounded.
- */
+/** Loads combat JSON Lines without retaining raw records or file contents. */
 export async function loadDpsReplay(path: string, personalName = ""): Promise<DpsReplayResult> {
   const finished: EncounterAggregate[] = [];
   const reducer = new DamageReducer({ onEncounterFinished: (encounter) => finished.push(encounter) });
@@ -45,8 +40,6 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
       invalidLines += 1;
       continue;
     }
-    // `parseLogRecord` already rejects a record whose `recordedAt` will not parse, so every record
-    // reaching here has a usable wall clock; there is no tick-derived fallback to fall back to.
     const recordedAtMs = Date.parse(record.recordedAt);
     recordedAtOriginMs ??= recordedAtMs;
     lastTime = Math.max(lastTime, recordedAtMs - recordedAtOriginMs);
@@ -56,8 +49,6 @@ export async function loadDpsReplay(path: string, personalName = ""): Promise<Dp
   // Closes the trailing encounter, so every encounter in the log reaches `finished`.
   reducer.reset(lastTime);
   // No `nowMs`: each encounter renders as of its own last damage, not as of the end of the file.
-  // Rendering a finished log at one shared "now" would decay every encounter but the last to a
-  // current rate of nearly zero.
   const snapshots = finished.map((encounter) => renderEncounter(encounter, { personalName }));
   return { snapshots, invalidLines };
 }
@@ -113,8 +104,6 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
   }
   if (value["kind"] === "activation") return value as unknown as FishNetCombatEvent;
   if (value["kind"] === "status") {
-    // Level is optional: the observer-facing display feed carries none, so demanding one discarded
-    // every status it produced - which is the overwhelming majority of them.
     if (!isFiniteNumber(value["actorId"])
       || typeof value["statusId"] !== "string"
       || (value["level"] !== undefined && !isFiniteNumber(value["level"]))

@@ -1,4 +1,6 @@
-import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
+import { characterDataParameter, CURRENT_GAME_BUILD_FINGERPRINT, decodeFieldRun } from "@kar-mi/spirit-vale-tools-capture";
+import type { FishNetDecodedField } from "@kar-mi/spirit-vale-tools-capture";
+import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
 import { resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
 import { PERCENT_STATS, STAT_NAMES } from "./stat-names.ts";
@@ -26,47 +28,51 @@ export function resolveCharacterArchetypeId(name: string): number | undefined {
 }
 
 export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: boolean, now = new Date()): DecodedCharacterUpdate {
-  const reader = new CharacterReader(payload);
-  const updateType = includesUpdateType ? reader.packed() : 327417855;
-  reader.object();
-  reader.string(80); // UID; intentionally discarded.
-  reader.string(80); // Account id; intentionally discarded.
-  reader.packed();
-  reader.string(80);
-  reader.string(80);
-  const name = reader.string(64) ?? "Unknown character";
-  reader.object();
-  for (let index = 0; index < 10; index += 1) reader.packed();
-  reader.object();
-  reader.booleans();
-  reader.list(() => { reader.object(); reader.packed(); reader.string(256); reader.packed(); reader.boolean(); });
-  const title = reader.string(256) ?? undefined;
-  reader.string(256);
-  reader.string(256);
-  const archetypes = reader.list(() => ARCHETYPES[reader.packed()] ?? "Unknown");
-  const level = reader.packed();
-  const experience = reader.packed();
-  const jobLevel = reader.packed();
-  const jobExperience = reader.packed();
-  skipCharacterState(reader);
-  const values = reader.list(() => reader.packed());
-  if (values.length < 6) throw new Error("CharacterData attributes are incomplete");
+  let startOffset = 0;
+  let updateType = 327417855;
+  if (includesUpdateType) {
+    const decoded = readSignedPackedWhole(payload, 0);
+    updateType = decoded.value;
+    startOffset = decoded.nextOffset;
+  }
+  const run = decodeFieldRun(payload, [characterDataParameter()], startOffset);
+  const tree = buildFieldTree(run.fields);
+  const data = child(tree, "data");
+  if (!data) throw new Error("CharacterData payload is null");
+
+  const name = leafString(data, "Name") ?? "Unknown character";
+  const title = leafString(data, "Title") || undefined;
+  // `Archetypes` codes as a bare-int list (no nested object), so each element IS the leaf value.
+  const archetypeNames = listValues(data, "Archetypes").map((value) => ARCHETYPES[Number(value)] ?? "Unknown");
+  const level = leafNumber(data, "Level", 0);
+  const experience = leafNumber(data, "Exp", 0);
+  const jobLevel = leafNumber(data, "JobLevel", 0);
+  const jobExperience = leafNumber(data, "JobExp", 0);
+
+  const rawAttributes = listValues(data, "Attributes").map((value) => Number(value));
+  if (rawAttributes.length < 6) throw new Error("CharacterData attributes are incomplete");
   const attributes: CharacterAttributes = {
-    STR: values[0]!, VIT: values[1]!, AGI: values[2]!, DEX: values[3]!, INT: values[4]!, LUK: values[5]!,
+    STR: rawAttributes[0]!, VIT: rawAttributes[1]!, AGI: rawAttributes[2]!,
+    DEX: rawAttributes[3]!, INT: rawAttributes[4]!, LUK: rawAttributes[5]!,
   };
   for (const [label, value] of Object.entries(attributes)) {
     if (!Number.isInteger(value) || value < 0 || value > 100_000) throw new Error(`invalid ${label} attribute`);
   }
-  const equipped = reader.list(() => readEquipmentSlot(reader)).filter((value): value is CharacterEquipment => value !== undefined);
-  const activeIndex = reader.packed();
+
+  const equipped = listItems(data, "Equips", (item) => readEquipmentSlot(item))
+    .filter((value): value is CharacterEquipment => value !== undefined);
+  const activeIndex = leafNumber(data, "ActiveLoadout", 0);
   const loadouts = [
-    reader.list(() => readEquipmentSlot(reader)).filter((value): value is CharacterEquipment => value !== undefined),
-    reader.list(() => readEquipmentSlot(reader)).filter((value): value is CharacterEquipment => value !== undefined),
-    reader.list(() => readEquipmentSlot(reader)).filter((value): value is CharacterEquipment => value !== undefined),
+    listItems(data, "LoadoutNormal", (item) => readEquipmentSlot(item)).filter((value): value is CharacterEquipment => value !== undefined),
+    listItems(data, "LoadoutSecondary", (item) => readEquipmentSlot(item)).filter((value): value is CharacterEquipment => value !== undefined),
+    listItems(data, "LoadoutHeavy", (item) => readEquipmentSlot(item)).filter((value): value is CharacterEquipment => value !== undefined),
   ];
-  const artifacts = reader.list(() => readArtifact(reader)).filter((value): value is CharacterArtifact => value !== undefined);
+  const artifacts = listItems(data, "Artifacts", (item) => readArtifactData(item))
+    .filter((value): value is CharacterArtifact => value !== undefined);
   const equipment = loadouts[activeIndex]?.length ? loadouts[activeIndex]! : equipped;
-  const { skills, currentWeight, ...history } = readCharacterHistory(reader, equipped, artifacts);
+
+  const { skills, currentWeight, ...history } = readCharacterHistory(data, run.complete, equipped, artifacts);
+
   return {
     updateType,
     ...(currentWeight === undefined ? {} : { currentWeight }),
@@ -75,7 +81,7 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
       buildFingerprint: CURRENT_GAME_BUILD_FINGERPRINT,
       name,
       ...(title ? { title } : {}),
-      archetypes,
+      archetypes: archetypeNames,
       level,
       experience,
       jobLevel,
@@ -93,26 +99,23 @@ export function decodeCharacterRpcPayload(payload: Buffer, includesUpdateType: b
   };
 }
 
-function readEquipmentSlot(reader: CharacterReader): CharacterEquipment | undefined {
-  if (!reader.object()) return undefined;
-  const slotIndex = reader.packed();
-  return readEquipmentData(reader, slotIndex);
+/** `data.Equips[i]` / one of the 3 loadouts: a slot index plus a nullable `Equip`. */
+function readEquipmentSlot(node: FieldNode | undefined): CharacterEquipment | undefined {
+  if (!node) return undefined;
+  const slotIndex = leafNumber(node, "Slot", -1);
+  return readEquipmentData(child(node, "Equip"), slotIndex);
 }
 
-function readEquipmentData(reader: CharacterReader, slotIndex: number): CharacterEquipment | undefined {
-  if (!reader.object()) return undefined;
-  const rawStats = reader.list(() => readRawSubstat(reader));
+function readEquipmentData(node: FieldNode | undefined, slotIndex: number): CharacterEquipment | undefined {
+  if (!node) return undefined;
+  const rawStats = listItems(node, "Substats", (item) => readRawSubstat(item));
   // Kept positional: an empty socket in the middle is not the same as a trailing one, and the
   // dense `cards` list below cannot express the difference.
-  const cardsBySlot = reader.list(() => reader.string(256)).map((value) => value || null);
+  const cardsBySlot = listValues(node, "Cards").map((value) => (typeof value === "string" && value ? value : null));
   const cards = cardsBySlot.filter((value): value is string => Boolean(value));
-  reader.packed(); // EquipData.StartingPotential
-  reader.packed(); // EquipData.SpentPotential
-  const chaosType = reader.packed(); // EquipData.ChaosType — an EquipType; -1 = no chaos substat
-  reader.string(80);
-  const refine = reader.packed();
-  const itemId = reader.string(256) ?? "Unknown equipment";
-  reader.boolean();
+  const chaosType = leafNumber(node, "ChaosType", -1); // EquipData.ChaosType — an EquipType; -1 = no chaos substat
+  const refine = leafNumber(node, "Refine", 0);
+  const itemId = leafString(node, "Id") ?? "Unknown equipment";
   const substatGroup = resolveFishNetItem(2, itemId)?.substatGroup;
   const substats = rawStats.flatMap((stat, index) => stat
     ? [convertSubstat(stat.type, stat.roll, slotIndex, false, substatGroup, { index, qualifier: stat.valueStr })]
@@ -120,19 +123,13 @@ function readEquipmentData(reader: CharacterReader, slotIndex: number): Characte
   return { slot: EQUIP_SLOTS[slotIndex] ?? `Slot ${slotIndex}`, itemId, refine, cards, substats, chaosType, cardsBySlot };
 }
 
-function readArtifact(reader: CharacterReader): CharacterArtifact | undefined {
-  return readArtifactData(reader);
-}
-
-function readArtifactData(reader: CharacterReader): CharacterArtifact | undefined {
-  if (!reader.object()) return undefined;
-  const rawStats = reader.list(() => readRawSubstat(reader));
-  const slotIndex = reader.packed();
-  const gems = reader.list(() => readRefinableItem(reader)).filter((value): value is { id: string; refine: number } => value !== undefined);
-  reader.string(80);
-  const refine = reader.packed();
-  const itemId = reader.string(256) ?? "Unknown artifact";
-  reader.boolean();
+function readArtifactData(node: FieldNode | undefined): CharacterArtifact | undefined {
+  if (!node) return undefined;
+  const rawStats = listItems(node, "Substats", (item) => readRawSubstat(item));
+  const slotIndex = leafNumber(node, "Slot", -1);
+  const gems = listItems(node, "Gems", (item) => readRefinableItem(item)).filter((value): value is { id: string; refine: number } => value !== undefined);
+  const refine = leafNumber(node, "Refine", 0);
+  const itemId = leafString(node, "Id") ?? "Unknown artifact";
   const substats = rawStats.flatMap((stat, index) => stat
     ? [convertSubstat(stat.type, stat.roll, slotIndex, true, undefined, { index, qualifier: stat.valueStr })]
     : []);
@@ -140,7 +137,8 @@ function readArtifactData(reader: CharacterReader): CharacterArtifact | undefine
 }
 
 function readCharacterHistory(
-  reader: CharacterReader,
+  data: FieldNode,
+  decodeComplete: boolean,
   equipped: readonly CharacterEquipment[],
   artifacts: readonly CharacterArtifact[],
 ): Partial<Pick<CharacterSnapshot, "playtimeSeconds" | "monsterKills" | "bossKills" | "deaths">> & {
@@ -149,37 +147,43 @@ function readCharacterHistory(
   grimoires?: CharacterEquipment[];
   currentWeight?: number;
 } {
+  // A partial callback may end after build data. Unlike a raw byte reader, the schema-driven
+  // decode does not throw on a truncated payload — it just stops emitting fields — so truncation
+  // is detected here instead: an incomplete decode reports no history at all, matching the old
+  // reader's all-or-nothing behavior (a partial weight/skill total would be actively misleading,
+  // not just missing).
+  if (!decodeComplete) return { skills: [] };
   const equippedWeight = equipped.reduce((total, item) => total + equipmentWeight(item.itemId), 0) + artifacts.length * 10;
   try {
-    const { skills, assigned } = readSkillSystem(reader);
+    const { skills, assigned } = readSkillSystem(child(data, "Skills"));
     // Equipped grimoires. Read positionally, then labelled by slot so filtering empties cannot
     // silently promote the second book into the first slot.
-    const grimoires = reader.list(() => readEquipmentData(reader, -1))
+    const grimoires = listItems(data, "Grimoires", (item) => readEquipmentData(item, -1))
       .map((item, index) => (item ? { ...item, slot: `Grimoire ${index + 1}` } : undefined))
       .filter((item): item is CharacterEquipment => item !== undefined);
     let inventoryWeight = 0;
-    if (reader.object()) {
-      reader.dictionary(() => {
-        const item = readEquipmentData(reader, -1);
-        if (item) inventoryWeight += equipmentWeight(item.itemId);
+    const inventory = child(data, "Inventory");
+    if (inventory) {
+      dictionaryValues(inventory, "Equips", (item) => {
+        const equip = readEquipmentData(item, -1);
+        if (equip) inventoryWeight += equipmentWeight(equip.itemId);
       });
-      reader.dictionary(() => {
-        if (readArtifactData(reader)) inventoryWeight += 10;
+      dictionaryValues(inventory, "Artifacts", (item) => {
+        if (readArtifactData(item)) inventoryWeight += 10;
       });
-      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
-      reader.dictionary(() => {
+      dictionaryValues(inventory, "Cards", (item) => { inventoryWeight += readStackableCount(item); });
+      dictionaryValues(inventory, "Gems", (item) => {
         // The game's inventory-total routine reads gems but omits them from weight.
-        readRefinableItem(reader);
+        readRefinableItem(item);
       });
-      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
-      reader.dictionary(() => { inventoryWeight += readStackableCount(reader); });
-      reader.dictionary(() => skipCosmetic(reader));
+      dictionaryValues(inventory, "Junks", (item) => { inventoryWeight += readStackableCount(item); });
+      dictionaryValues(inventory, "Consumables", (item) => { inventoryWeight += readStackableCount(item); });
+      dictionaryValues(inventory, "Cosmetics", () => undefined);
     }
-    reader.packed();
-    const playtimeSeconds = reader.packed();
-    const monsterKills = reader.packed();
-    const bossKills = reader.packed();
-    const deaths = reader.packed();
+    const playtimeSeconds = leafInt64Number(data, "Playtime", 0);
+    const monsterKills = leafNumber(data, "MonsterKills", 0);
+    const bossKills = leafNumber(data, "BossKills", 0);
+    const deaths = leafNumber(data, "Deaths", 0);
     return {
       skills,
       ...(assigned.length ? { assignedSkills: assigned } : {}),
@@ -191,7 +195,8 @@ function readCharacterHistory(
       deaths,
     };
   } catch {
-    // A partial callback may end after build data. The already-decoded snapshot remains useful.
+    // Any other unexpected failure reading the (structurally complete) history section - the
+    // already-decoded identity/equipment snapshot remains useful without it.
     return { skills: [] };
   }
 }
@@ -207,13 +212,12 @@ function readCharacterHistory(
  * doubling Panic Burst. They are kept apart, and only `SkillCopy` — which legitimately restates a
  * learned skill — is folded into the allocation.
  */
-function readSkillSystem(reader: CharacterReader): { skills: CharacterSkill[]; assigned: CharacterSkill[] } {
-  if (!reader.object()) return { skills: [], assigned: [] };
-  const allocated = reader.list(() => readSkill(reader));
-  const assigned = reader.list(() => readSkill(reader));
-  const copy = readSkill(reader);
+function readSkillSystem(node: FieldNode | undefined): { skills: CharacterSkill[]; assigned: CharacterSkill[] } {
+  if (!node) return { skills: [], assigned: [] };
+  const allocated = listItems(node, "Skills", (item) => readSkill(item));
+  const assigned = listItems(node, "Assigned", (item) => readSkill(item));
+  const copy = readSkill(child(node, "SkillCopy"));
   if (copy) allocated.push(copy);
-  reader.list(() => reader.string(256)); // Reanimations.
   const unique = new Map<string, CharacterSkill>();
   for (const skill of allocated) {
     if (!skill) continue;
@@ -225,10 +229,11 @@ function readSkillSystem(reader: CharacterReader): { skills: CharacterSkill[]; a
     assigned: assigned.filter((skill): skill is CharacterSkill => skill !== undefined),
   };
 }
-function readSkill(reader: CharacterReader): CharacterSkill | undefined {
-  if (!reader.object()) return undefined;
-  const id = reader.string(256);
-  const level = reader.packed();
+
+function readSkill(node: FieldNode | undefined): CharacterSkill | undefined {
+  if (!node) return undefined;
+  const id = leafString(node, "Id");
+  const level = leafNumber(node, "Level", -1);
   if (!id || level < 0) return undefined;
   const definition = resolveFishNetSkill(id);
   return {
@@ -243,23 +248,17 @@ function readSkill(reader: CharacterReader): CharacterSkill | undefined {
     })),
   };
 }
-function readStackableCount(reader: CharacterReader): number {
-  if (!reader.object()) return 0;
-  const count = reader.packed();
-  reader.string(256); reader.boolean();
-  return Math.max(0, count);
-}
-function skipCosmetic(reader: CharacterReader): void {
-  if (!reader.object()) return;
-  reader.packed(); reader.boolean(); reader.string(80); reader.packed(); reader.string(256); reader.boolean();
+
+/** `InventoryData.Cards`/`Junks`/`Consumables` dictionary value: a nullable 3-field struct, not a bare int. */
+function readStackableCount(node: FieldNode | undefined): number {
+  if (!node) return 0;
+  return Math.max(0, leafNumber(node, "Count", 0));
 }
 
-function readRefinableItem(reader: CharacterReader): { id: string; refine: number } | undefined {
-  if (!reader.object()) return undefined;
-  reader.string(80);
-  const refine = reader.packed();
-  const id = reader.string(256) ?? undefined;
-  reader.boolean();
+function readRefinableItem(node: FieldNode | undefined): { id: string; refine: number } | undefined {
+  if (!node) return undefined;
+  const refine = leafNumber(node, "Refine", 0);
+  const id = leafString(node, "Id") ?? undefined;
   return id ? { id, refine } : undefined;
 }
 
@@ -267,11 +266,11 @@ function equipmentWeight(itemId: string): number {
   return resolveFishNetItem(2, itemId)?.weight ?? 10;
 }
 
-function readRawSubstat(reader: CharacterReader): { type: number; roll: number; valueStr: string } | undefined {
-  if (!reader.object()) return undefined;
-  const type = reader.packed();
-  const roll = reader.packed();
-  const valueStr = reader.string(256) ?? ""; // StatData.ValueStr — the skill/element this stat is scoped to
+function readRawSubstat(node: FieldNode | undefined): { type: number; roll: number; valueStr: string } | undefined {
+  if (!node) return undefined;
+  const type = leafNumber(node, "Type", 0);
+  const roll = leafNumber(node, "Value", 0); // StatData.Value.
+  const valueStr = leafString(node, "ValueStr") ?? ""; // StatData.ValueStr — the skill/element this stat is scoped to
   return { type, roll, valueStr };
 }
 
@@ -348,81 +347,94 @@ function substatCap(type: number, slot: number, artifact: boolean, substatGroup?
 }
 function roundAwayFromZero(value: number): number { return value < 0 ? -Math.round(-value) : Math.round(value); }
 
-function skipCharacterState(reader: CharacterReader): void {
-  if (!reader.object()) return;
-  reader.float();
-  reader.float();
-  reader.string(256);
-  if (reader.object()) { reader.float(); reader.float(); reader.float(); }
-  reader.list(() => { if (!reader.object()) return; reader.string(256); reader.string(256); reader.packed(); reader.boolean(); reader.boolean(); });
-  reader.packed();
-  reader.list(() => { if (!reader.object()) return; reader.string(256); reader.packed(); });
-  reader.list(() => { if (!reader.object()) return; reader.string(256); reader.packed(); reader.float(); reader.packed(); });
+// --- Flat FishNetDecodedField[] -> nested lookup tree -----------------------------------------
+
+/** A reconstructed node: either a leaf value (string/number/boolean/null) or nested named fields. */
+type FieldNode = { [key: string]: unknown };
+
+/** Rebuilds `field-decoder.ts`'s dot/bracket-flattened field names (e.g. `equips[0].itemId`, or
+ * `equips.length` for a repeated field's element count) into a nested lookup tree, so the
+ * projection logic below can read `CharacterData` by field name instead of wire position.
+ */
+function buildFieldTree(fields: readonly FishNetDecodedField[]): FieldNode {
+  const root: FieldNode = {};
+  for (const field of fields) {
+    setFieldPath(root, parseFieldPath(field.name), field.value);
+  }
+  return root;
 }
 
-export class CharacterReader {
-  private offset = 0;
-  constructor(private readonly buffer: Buffer) {}
-
-  boolean(): boolean {
-    this.ensure(1);
-    return this.buffer[this.offset++] === 1;
+function parseFieldPath(name: string): Array<string | number> {
+  const path: Array<string | number> = [];
+  for (const segment of name.split(".")) {
+    const match = /^(.+)\[(\d+)\]$/.exec(segment);
+    if (match) path.push(match[1]!, Number(match[2]));
+    else path.push(segment);
   }
+  return path;
+}
 
-  object(): boolean { return !this.boolean(); }
-
-  packed(): number {
-    let raw = 0n;
-    let shift = 0n;
-    for (let count = 0; count < 10; count += 1) {
-      this.ensure(1);
-      const byte = this.buffer[this.offset++]!;
-      raw |= BigInt(byte & 0x7f) << shift;
-      if ((byte & 0x80) === 0) {
-        const value = (raw >> 1n) ^ (-(raw & 1n));
-        const result = Number(value);
-        if (!Number.isSafeInteger(result)) throw new Error("packed integer exceeds safe range");
-        return result;
-      }
-      shift += 7n;
-    }
-    throw new Error("invalid packed integer");
+function setFieldPath(root: FieldNode, path: readonly (string | number)[], value: unknown): void {
+  let node = root;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const key = String(path[index]);
+    const existing = node[key];
+    if (!existing || typeof existing !== "object") node[key] = {};
+    node = node[key] as FieldNode;
   }
+  node[String(path[path.length - 1])] = value;
+}
 
-  string(maximumLength: number): string | null {
-    const length = this.packed();
-    if (length === -1) return null;
-    if (length < 0 || length > maximumLength) throw new Error("invalid CharacterData string length");
-    this.ensure(length);
-    const value = new TextDecoder("utf-8", { fatal: true }).decode(this.buffer.subarray(this.offset, this.offset + length));
-    this.offset += length;
-    return value;
-  }
+function child(node: FieldNode | undefined, key: string): FieldNode | undefined {
+  const value = node?.[key];
+  return value && typeof value === "object" ? value as FieldNode : undefined;
+}
 
-  float(): number {
-    this.ensure(4);
-    const value = this.buffer.readFloatLE(this.offset);
-    this.offset += 4;
-    return value;
-  }
+function leaf(node: FieldNode | undefined, key: string): unknown {
+  return node?.[key];
+}
 
-  booleans(): boolean[] { return this.list(() => this.boolean()); }
+function leafString(node: FieldNode | undefined, key: string): string | null {
+  const value = leaf(node, key);
+  return typeof value === "string" ? value : null;
+}
 
-  list<T>(read: () => T): T[] {
-    const length = this.packed();
-    if (length === -1) return [];
-    if (length < 0 || length > 100_000) throw new Error("invalid CharacterData collection length");
-    return Array.from({ length }, read);
-  }
+function leafNumber(node: FieldNode | undefined, key: string, fallback: number): number {
+  const value = leaf(node, key);
+  return typeof value === "number" ? value : fallback;
+}
 
-  dictionary(readValue: () => unknown): void {
-    const length = this.packed();
-    if (length === -1) return;
-    if (length < 0 || length > 100_000) throw new Error("invalid CharacterData dictionary length");
-    for (let index = 0; index < length; index += 1) { this.string(256); readValue(); }
-  }
+/** `packedInt64` fields decode to a decimal string (precision-safe for currency); a play-time
+ * count in seconds never approaches that range, so converting to `number` here is safe. */
+function leafInt64Number(node: FieldNode | undefined, key: string, fallback: number): number {
+  const value = leaf(node, key);
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && /^-?\d+$/.test(value)) return Number(value);
+  return fallback;
+}
 
-  private ensure(length: number): void {
-    if (this.offset + length > this.buffer.length) throw new Error("truncated CharacterData payload");
-  }
+function listLength(node: FieldNode | undefined, key: string): number {
+  const value = child(node, key)?.["length"];
+  return typeof value === "number" ? value : 0;
+}
+
+/** A repeated struct field: `node[key]` is `{ length, 0: {...}, 1: {...}, ... }`. */
+function listItems<T>(node: FieldNode | undefined, key: string, map: (item: FieldNode | undefined, index: number) => T): T[] {
+  const length = listLength(node, key);
+  const container = child(node, key);
+  return Array.from({ length }, (_unused, index) => map(child(container, String(index)), index));
+}
+
+/** A repeated leaf/scalar field: `node[key]` is `{ length, 0: value, 1: value, ... }`. */
+function listValues(node: FieldNode | undefined, key: string): unknown[] {
+  const length = listLength(node, key);
+  const container = child(node, key);
+  return Array.from({ length }, (_unused, index) => container?.[String(index)]);
+}
+
+/** A `Dictionary<string, T>` field: same shape as a repeated struct, plus a `$key` per element. */
+function dictionaryValues(node: FieldNode | undefined, key: string, visit: (item: FieldNode | undefined) => void): void {
+  const length = listLength(node, key);
+  const container = child(node, key);
+  for (let index = 0; index < length; index += 1) visit(child(container, String(index)));
 }

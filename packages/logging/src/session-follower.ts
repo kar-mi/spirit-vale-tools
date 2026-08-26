@@ -22,14 +22,7 @@ export interface LiveLogSessionFollowerOptions<TFollower extends LiveLogLineCons
   noStreamBatch: (reset: boolean) => TBatch;
 }
 
-/**
- * Follows whichever session the shared current-stream pointer names.
- *
- * The pointer and the session file are read once per stream by the shared source rather than once
- * per consumer, and {@link next} only settles when there is something to report — so an idle stream
- * costs a debounced watcher event and nothing else. {@link poll} remains for consumers that drive
- * their own clock.
- */
+/** Follows whichever session the shared current-stream pointer names. */
 export class LiveLogSessionFollower<TFollower extends LiveLogLineConsumer<TBatch>, TBatch> {
   private sessionId?: string;
   private follower?: TFollower;

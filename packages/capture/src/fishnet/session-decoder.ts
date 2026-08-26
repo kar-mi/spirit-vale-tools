@@ -204,12 +204,24 @@ function orderedChunks(chunks: { sequence?: number; chunk: Buffer }[]): Buffer[]
  * empty tables — which means clearing here could only ever destroy state belonging to the *same*
  * socket. This game re-authenticates on the same socket during a channel switch without re-spawning
  * objects that are already spawned, so clearing left every rpcLink on those objects dead until the
- * next real map change. Only one generation is retained: a second re-authentication discards the
- * older suspects rather than accumulating them.
+ * next real map change.
+ *
+ * Re-authentications can arrive back-to-back (observed in practice as bursts of several within
+ * seconds, e.g. entering or moving through instanced content) before any fresh registration has a
+ * chance to repopulate `links`/`components`. Merging into the existing quarantine — rather than
+ * replacing it — means a second or third re-auth in that window can't wipe out a still-useful
+ * earlier generation with an as-yet-empty one. Freshly quarantined entries win on key collision;
+ * `removeObjectLinks`/`removeObjectComponents` (on spawn/despawn) remain the real eviction path so
+ * this doesn't grow unbounded, and the signature/liveness checks in `message-parser.ts` still guard
+ * against trusting a quarantined entry whose link id has since been reallocated.
  */
 function quarantineConnectionState(state: ConnectionState): void {
-  state.staleLinks = state.links;
-  state.staleComponents = state.components;
+  for (const [linkId, registration] of state.links) {
+    state.staleLinks.set(linkId, registration);
+  }
+  for (const [key, typeName] of state.components) {
+    state.staleComponents.set(key, typeName);
+  }
   state.links = new Map();
   state.components = new Map();
 }

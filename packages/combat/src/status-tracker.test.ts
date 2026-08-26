@@ -186,9 +186,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
   test("holds the established expiry when a refresh only rounds it forward", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 0);
-    // A second later the server still says ~30s because it quantises what it reports. Taking that
-    // at face value would walk the expiry forward on every refresh, so the timer never runs out and
-    // the rendered seconds bounce.
+    // A second later the server still says ~30s because it quantises what it reports.
     tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 29.6 }), 1_000);
     expect(tracker.getActiveStatuses(1, 1_000)[0]?.remainingMs).toBe(29_000);
   });
@@ -210,9 +208,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
 
   test("keeps a toggle alive between refreshes instead of blinking out", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
-    // "Aura" has no catalog duration, so its reported second is a keep-alive window that must keep
-    // advancing. Holding it - as a countdown's rounding correctly is - pins the expiry in the past
-    // between refreshes and the cell disappears and comes back.
+    // "Aura" has no catalog duration, so its reported second is a keep-alive window that must keep advancing.
     for (const at of [0, 500, 1_000, 1_500, 2_000, 2_500]) {
       tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), at);
       expect(tracker.getActiveStatuses(1, at)).toHaveLength(1);
@@ -221,9 +217,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
 
   test("keeps a toggle alive when the clock has run ahead of the last refresh", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
-    // The overlay judges expiry against a clock extrapolated from wall time, so "now" sits ahead of
-    // the newest event it has read. A refresh landing at the far end of its cadence must still not
-    // let the toggle lapse in between.
+    // The overlay judges expiry against a clock extrapolated from wall time, so "now" sits ahead of the newest event it has read.
     for (const at of [0, 700, 1_400, 2_100, 2_800]) {
       tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), at);
       tracker.advance(at + 600);
@@ -233,9 +227,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
 
   test("refreshes a self-granting buff when its skill is recast", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
-    // SelfBuff is granted by a skill of the same id, and the game does not resend the status on a
-    // recast - the activation is the only trace. The display feed reports stacks on everything, so
-    // a refresh path that skipped anything carrying stacks silently stopped covering these.
+    // SelfBuff is granted by a skill of the same id, and the game does not resend the status on a recast - the activation is the only trace.
     tracker.consumeStatus(display({ statusId: "SelfBuff", remainingSeconds: 60, stacks: 1 }), 0);
     expect(tracker.getActiveStatuses(1, 30_000)[0]?.remainingMs).toBe(30_000);
     tracker.consume(activationEvent({ sourceId: "SelfBuff", level: 1 }), 30_000);
@@ -252,8 +244,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
 
   test("publishes no countdown for a status the catalog gives no duration", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
-    // "Aura" has no duration in the catalog, and the server re-sends it with a second left each
-    // time. Publishing that would render a permanent toggle as forever expiring in one second.
+    // "Aura" has no duration in the catalog, and the server re-sends it with a second left each time.
     tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), 1_000);
     const [status] = tracker.getActiveStatuses(1, 1_000);
     expect(status?.remainingMs).toBeUndefined();
@@ -264,8 +255,7 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ statusId: "Aura", remainingSeconds: 1 }), 1_000);
     expect(tracker.getActiveStatuses(1, 1_500)).toHaveLength(1);
-    // Once the refreshes stop the aura has lapsed, so it must not linger forever - the keep-alive
-    // grace only delays that, it does not remove the timeout.
+    // Once the refreshes stop the aura has lapsed, so it must not linger forever - the keep-alive grace only delays that, it does not remove the timeout.
     expect(tracker.getActiveStatuses(1, 3_500)).toHaveLength(0);
   });
 
@@ -278,9 +268,6 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
   test("the skill-icon feed never erases a countdown the effect feed reported", () => {
     const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG, skillCatalog: SYNTHETIC_SKILL_CATALOG });
     tracker.consumeStatus(display({ statusId: "Burn", remainingSeconds: 30 }), 1_000);
-    // Both feeds report some ids (FlowState, AngelicBlessing in real captures). The icon feed knows
-    // only that something is on, so answering "no expiry" here would silently make a timed buff
-    // permanent.
     tracker.consumeStatus(display({ statusId: "Burn", rpc: "ApplySkillDisplay_O", level: 2 }), 2_000);
     const [status] = tracker.getActiveStatuses(1, 2_000);
     expect(status).toMatchObject({ level: 2, remainingMs: 29_000 });
@@ -520,8 +507,6 @@ describe("FishNetStatusTracker identity resolution", () => {
     tracker.consume(statusEvent({ actorId: 1, statusId: "SelfBuff", level: 5, action: "applied" }), 0);
     expect(tracker.getActiveStatusesForName("Hero", 0)).toHaveLength(1);
 
-    // Zone transition: reset drops everything tracked so far - a stale status with no expiry
-    // (e.g. one whose remove packet was dropped) doesn't get carried forward into the new zone.
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "reset", tick: 1 });
     tracker.consumeIdentity({ kind: "actorIdentity", operation: "upsert", tick: 2, actorId: 2, displayName: "Hero", uid: "hero-uid" });
     expect(tracker.getActiveStatuses(1, 1_000)).toHaveLength(0);

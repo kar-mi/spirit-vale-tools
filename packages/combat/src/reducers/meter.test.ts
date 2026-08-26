@@ -71,10 +71,7 @@ describe("tanked meter", () => {
     expect(total(reducer)).toBe(400);
   });
 
-  /**
-   * A boss spell reflect lands on the caster carrying their own team and their own id. It is real
-   * damage taken, so it belongs here even though every other team-zero hit is outgoing damage.
-   */
+  /** A boss spell reflect lands on the caster carrying their own team and their own id. */
   test("counts a reflected self-inflicted hit on a known party member", () => {
     const reducer = tankedMeter();
     reducer.consumeCombat(hit(1, 1, 16_753, 0), 1_000, IDENTITIES);
@@ -94,10 +91,7 @@ describe("tanked meter", () => {
     expect(total(reducer)).toBe(0);
   });
 
-  /**
-   * The player-side reflect (damage type 4) is outgoing party damage: the reflecting player is the
-   * attacker and the monster is the target. It belongs to the DPS meter, not to damage taken.
-   */
+  /** The player-side reflect (damage type 4) is outgoing party damage: the reflecting player is the attacker and the monster is the target. */
   test("ignores a player's own reflect damage against a monster", () => {
     const reducer = tankedMeter();
     reducer.consumeCombat(
@@ -129,8 +123,7 @@ describe("healing meter", () => {
   });
 
   test("ignores a full heal", () => {
-    // FullHeal_C is a town NPC service with no amount on the wire. Counting it would spike HPS by a
-    // whole health bar for something nobody healed, so it is deliberately not a `heal` event.
+    // FullHeal_C is a town NPC service with no amount on the wire.
     const reducer = healingMeter();
     reducer.consumeCombat(healed(400), 1_000, IDENTITIES);
     reducer.consumeCombat(fullHealed(), 2_000, IDENTITIES);

@@ -6,6 +6,7 @@ packet-sniffer/
 *.log
 *.zip
 *.txt
+*.jsonl
 .local/
 logs/
 

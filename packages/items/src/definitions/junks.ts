@@ -336,6 +336,11 @@ export class JunkItemDefinitions {
     },
     {
       "itemType": 0,
+      "id": "Corrupted Core",
+      "displayName": "Corrupted Core"
+    },
+    {
+      "itemType": 0,
       "id": "Cosmetic Converter",
       "displayName": "Cosmetic Converter"
     },
@@ -1178,6 +1183,11 @@ export class JunkItemDefinitions {
       "itemType": 0,
       "id": "Soldalite Piece",
       "displayName": "Soldalite Piece"
+    },
+    {
+      "itemType": 0,
+      "id": "Soul Fragment",
+      "displayName": "Soul Fragment"
     },
     {
       "itemType": 0,

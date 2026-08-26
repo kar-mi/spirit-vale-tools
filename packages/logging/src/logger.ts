@@ -34,12 +34,6 @@ export interface CreateLogSessionOptions extends LoggerTuning {
   logDirectory?: string;
   outputPaths?: Partial<Record<LogStream, string>>;
   onWriteError?: (failure: LogWriteFailure) => void;
-  /**
-   * When false, the session's stream files are created but the shared "current stream" pointers
-   * are left untouched, so followers keep reading whatever session was previously active. Use
-   * {@link activateLogSession} to switch the pointers once the caller is ready to cut over.
-   * Defaults to true.
-   */
   activate?: boolean;
 }
 
@@ -66,14 +60,7 @@ export interface JsonLinesLoggerStats {
   droppedRecords: number;
 }
 
-/**
- * Buffers records into byte-bounded batches and appends them through one file handle per stream.
- *
- * Records are never dropped for a write failure: the first error is reported once and rethrown by
- * {@link flush}/{@link close}, but later batches are still attempted. The only records dropped are
- * those that would push memory past `maxBufferedBytes`; each such episode is reported once and
- * counted in {@link stats}, and the logger resumes accepting records as soon as the queue drains.
- */
+/** Buffers records into byte-bounded batches and appends them through one file handle per stream. */
 export class JsonLinesLogger {
   private sequence = 0;
   private lines: string[] = [];
@@ -248,10 +235,10 @@ export class JsonLinesLogger {
 /**
  * Creates a directory, tolerating one that is already there.
  *
- * `fs.mkdir` with `recursive: true` is specified not to fail on an existing directory, but Bun on
- * Windows breaks that for exactly the relative forms a bare `--output name.jsonl` produces: `"."`
- * raises EEXIST and `"./"` raises ENOENT. Probing first keeps those paths working; EEXIST is still
- * swallowed afterwards so a directory created concurrently is not treated as a failure.
+ * `fs.mkdir` with `recursive: true` is specified not to fail on an existing directory, but Bun
+ * 1.4.0 on Windows still breaks that for exactly the relative forms a bare `--output name.jsonl`
+ * produces: `"."` raises EEXIST and `"./"` raises ENOENT. Probing first keeps those paths working;
+ * EEXIST is still swallowed afterwards so a concurrently created directory is not a failure.
  */
 async function ensureDirectory(directory: string): Promise<void> {
   try {

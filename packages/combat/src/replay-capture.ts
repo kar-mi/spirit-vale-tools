@@ -8,12 +8,7 @@ import type { FishNetCombatEvent } from "./combat-tracker.ts";
 export interface CombatCaptureReplayOptions {
   tracker: FishNetCombatTracker;
   directory: FishNetActorDirectory;
-  /**
-   * Receives every decoded event in wire order, so a caller can drive reducers as it replays.
-   *
-   * `observedAtMs` is the capture record's own timestamp, which is what the live indexing path uses
-   * (`history/importer.ts`) — the game tick alone has no epoch to align an encounter to.
-   */
+  /** Receives every decoded event in wire order, so a caller can drive reducers as it replays. */
   onEvent?: (event: FishNetActorIdentityEvent | FishNetCombatEvent, observedAtMs: number) => void;
 }
 
@@ -35,18 +30,23 @@ export function decodeCombatCaptureJsonLines(
   return replay.result();
 }
 
-/**
- * Re-runs a raw packet capture through the combat trackers.
- *
- * Needs a capture that carries `transport.packet` records — `dump.ts --combat-only` writes decoded
- * events instead, and those replay through {@link loadDpsReplay}.
- */
+/** Re-runs a raw packet capture through the combat trackers. */
 export async function replayCombatCapture(
   path: string,
   options: CombatCaptureReplayOptions,
 ): Promise<CombatCaptureReplayResult> {
+  return replayCombatCaptures([path], options);
+}
+
+/** Replays ordered capture-file splits through one FishNet decoder and one identity lifetime. */
+export async function replayCombatCaptures(
+  paths: readonly string[],
+  options: CombatCaptureReplayOptions,
+): Promise<CombatCaptureReplayResult> {
   const replay = new CombatCaptureReplay(options);
-  for await (const line of readLines(Bun.file(path).stream())) replay.consumeLine(line);
+  for (const path of paths) {
+    for await (const line of readLines(Bun.file(path).stream())) replay.consumeLine(line);
+  }
   return replay.result();
 }
 

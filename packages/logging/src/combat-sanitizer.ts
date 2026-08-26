@@ -1,19 +1,11 @@
 import type { JsonObject } from "./types.ts";
 
 const IDENTITY_KEYS = new Set(["kind", "operation", "tick", "actorId", "displayName", "archetype", "ownerConnectionId", "uid"]);
-// `rpc` and `remainingSeconds` are protocol values that a status event cannot be replayed without:
-// the first says which feed produced it, and the second is the server's own countdown. Dropping them
-// left a replayed status with no expiry and no way to tell an owner-only apply from an observer
-// refresh.
-// `phase` is what `FishNetStatusTracker.consumeActivation` checks before it refreshes a status:
-// an "interrupt" or "cancel" must not extend a buff. Without it here, a replayed activation always
-// looked like a successful cast, so replay and live capture disagreed on every interrupted one.
 const COMBAT_KEYS = new Set(["kind", "operation", "tick", "actorId", "mobId", "displayName", "value", "team", "sourceId", "sourceLabel", "recoveryStyle", "hitResult", "duplicatesDamageEvent", "critical", "targetId", "statusId", "level", "action", "phase", "skillId", "stacks", "rpc", "remainingSeconds"]);
 
 /** Structural allowlist for shareable combat records. Returns undefined for diagnostics/unknown records. */
 export function sanitizeCombatData(type: string, data: JsonObject): JsonObject | undefined {
-  // capture.lifecycle is what the capture CLI emits; both carry only a start/stop marker, and
-  // readers need them to see where a session began and ended.
+  // capture.lifecycle is what the capture CLI emits; both carry only a start/stop marker, and readers need them to see where a session began and ended.
   if (type === "combat.lifecycle" || type === "capture.lifecycle") return pick(data, new Set(["state"]));
   if (type === "combat.actorIdentity") return pick(data, IDENTITY_KEYS);
   if (type === "combat.event") return pick(data, COMBAT_KEYS);

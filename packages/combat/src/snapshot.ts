@@ -1,8 +1,4 @@
-/**
- * The rendered shape of one encounter, shared by every producer of it: the live service, the
- * history read model, and a whole-log replay. Kept apart from any one producer so none of them owns
- * the contract the others import.
- */
+/** The rendered shape of one encounter, shared by every producer of it: the live service, the history read model, and a whole-log replay. */
 export interface FishNetDpsSkillRow {
   sourceId: string;
   sourceLabel: string;
@@ -38,11 +34,7 @@ export interface FishNetDpsActorRow {
   lastDamageAtMs?: number;
   damage: number;
   dps: number;
-  /**
-   * Recent damage per second: an exponentially-weighted rate, not a flat window of the last few
-   * seconds. It rises the instant a hit lands and then fades, so it never steps discontinuously as
-   * a hit ages out and never reads exactly zero after one.
-   */
+  /** Recent damage per second: an exponentially-weighted rate, not a flat window of the last few seconds. */
   currentDps: number;
   contribution: number;
   hits: number;

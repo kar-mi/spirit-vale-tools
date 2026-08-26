@@ -11,20 +11,9 @@ import type { LogStream } from "./types.ts";
 
 /** Quiet period a burst of watcher events is collapsed into before the file is drained. */
 export const DEFAULT_STREAM_DEBOUNCE_MS = 20;
-/**
- * Longest the source goes without a stat even when no watcher event arrives.
- *
- * Bun 1.3.14 rewrote `fs.watch` onto inotify/FSEvents/kqueue for Linux, macOS and FreeBSD only —
- * Windows still routes through the older backend, where events around rotation and rename can be
- * coalesced or dropped. This poll is the safety net that bounds how long such a miss can stall a
- * consumer; it is not the primary wake-up path.
- */
+/** Longest the source goes without a stat even when no watcher event arrives. */
 export const DEFAULT_STREAM_FALLBACK_POLL_MS = 1_000;
-/**
- * Most bytes a live follower takes from disk in one drain, matching the read model's indexing batch.
- * A backlog — a session that was written while nothing was following it — is then handed over in
- * pieces instead of parsing megabytes in a single turn of the main thread.
- */
+/** Most bytes a live follower takes from disk in one drain, matching the read model's indexing batch. */
 export const DEFAULT_STREAM_BATCH_BYTES = 1024 * 1024;
 
 export interface LogStreamSourceOptions {
@@ -32,13 +21,7 @@ export interface LogStreamSourceOptions {
   logDirectory?: string;
   fallbackPollMs?: number;
   debounceMs?: number;
-  /**
-   * Whether the watchers and fallback timer hold the process open even while nothing is waiting on
-   * them. Defaults to false: a follower that is merely constructed, or polled and then dropped
-   * without {@link LogStreamSubscription.close}, must not keep a test run or a CLI alive. The timer
-   * is referenced automatically for as long as a subscriber is actually parked in
-   * {@link LogStreamSubscription.next}, so an awaited follow loop stays alive without this.
-   */
+  /** Whether the watchers and fallback timer hold the process open even while nothing is waiting on them. */
   persistent?: boolean;
   /** Applied to the shared reader. Only the first subscriber of a stream gets to set these. */
   readerOptions?: Pick<JsonlTailReaderOptions, "createDecoder" | "maxReadBytes">;
@@ -61,14 +44,7 @@ export interface LogStreamSubscription extends AsyncIterable<LogStreamRead> {
   close(): void;
 }
 
-/**
- * The single tail of one log stream, shared by every consumer of it.
- *
- * One instance owns the current-stream pointer, one `fs.watch` on that pointer, one watch on the
- * active session file, and one {@link JsonlTailReader}. Subscribers receive the split lines. Without
- * this, each consumer independently re-read and re-parsed the pointer and re-stat'd the same file on
- * its own interval, so idle cost grew with the number of overlays attached.
- */
+/** The single tail of one log stream, shared by every consumer of it. */
 class LogStreamSource {
   private readonly stream: LogStream;
   private readonly logDirectory: string;
@@ -104,8 +80,7 @@ class LogStreamSource {
 
   subscribe(): LogStreamSubscription {
     const subscriber = new Subscriber(this);
-    // A subscriber that joins an already-running source is behind the shared reader, so it replays
-    // the bytes already consumed before it starts taking live ones.
+    // A subscriber that joins an already-running source is behind the shared reader, so it replays the bytes already consumed before it starts taking live ones.
     subscriber.catchUpFrom = this.reader === undefined ? undefined : this.reader.bytePosition;
     this.subscribers.add(subscriber);
     this.start();
@@ -125,15 +100,7 @@ class LogStreamSource {
     await this.draining;
   }
 
-  /**
-   * Drains with a guaranteed fresh pointer read.
-   *
-   * The watcher-driven path trusts its pointer cache — a session switch it learns about a debounce
-   * or a fallback poll late is invisible to an overlay. A caller driving its own clock through
-   * `poll()` is instead promised that what it gets back reflects the pointer as of the call, so this
-   * pays for the read. A drain already in flight may have passed the pointer check before the flag
-   * was set, so an unconsumed flag means a second pass is owed.
-   */
+  /** Drains with a guaranteed fresh pointer read. */
   async forceDrain(): Promise<void> {
     this.pointerDirty = true;
     await this.drain();
@@ -143,9 +110,7 @@ class LogStreamSource {
   private start(): void {
     if (this.closed || this.fallbackTimer) return;
     this.ensurePointerWatcher();
-    // fs.watch is advisory and can miss the atomic rename used to replace a stream pointer,
-    // especially on Windows. Make the fallback a real pointer poll instead of only draining the
-    // file selected by the last watcher event.
+    // fs.watch is advisory and can miss the atomic rename used to replace a stream pointer, especially on Windows.
     this.fallbackTimer = this.hold(setInterval(() => void this.forceDrain(), this.fallbackPollMs));
   }
 
@@ -154,12 +119,7 @@ class LogStreamSource {
     return timer;
   }
 
-  /**
-   * Keeps the event loop alive while a subscriber is parked in `next()`.
-   *
-   * Without this the fallback timer is unreferenced, so a program whose only remaining work is the
-   * follow loop would exit — or, worse, deadlock waiting on a promise nothing can settle.
-   */
+  /** Keeps the event loop alive while a subscriber is parked in `next()`. */
   awaitingChanged(delta: number): void {
     this.waiting += delta;
     if (this.persistent || !this.fallbackTimer) return;
@@ -201,12 +161,10 @@ class LogStreamSource {
     const capped = result.bytesRead > 0 && this.reader.bytePosition < result.size;
     if (!changedSession && !result.reset && !result.missing && result.lines.length === 0) return;
     this.publish({ ...result, changedSession, capped, ...(this.current ? { current: this.current } : {}) });
-    // A read that stopped at its cap leaves a backlog on disk; keep draining rather than waiting for
-    // the next append, which for a finished session would never come.
+    // A read that stopped at its cap leaves a backlog on disk; keep draining rather than waiting for the next append, which for a finished session would never come.
     if (capped) this.schedule();
   }
 
-  /** @returns whether the active session changed. */
   private async syncPointer(): Promise<boolean> {
     if (this.pointerLoaded && !this.pointerDirty) return false;
     this.pointerDirty = false;
@@ -234,8 +192,7 @@ class LogStreamSource {
 
   private ensurePointerWatcher(): void {
     if (this.pointerWatcher || this.closed) return;
-    // The pointer file is rewritten by rename, which destroys any watch held on the file itself, so
-    // the watch goes on its directory instead.
+    // The pointer file is rewritten by rename, which destroys any watch held on the file itself, so the watch goes on its directory instead.
     const directory = path.dirname(this.pointerPath);
     const name = path.basename(this.pointerPath);
     this.pointerWatcher = this.tryWatch(directory, (filename) => {
@@ -251,7 +208,6 @@ class LogStreamSource {
     this.fileWatcher = this.tryWatch(activePath, () => this.schedule());
   }
 
-  /** @returns a watcher, or undefined when the path does not exist yet — the fallback poll retries. */
   private tryWatch(target: string, onEvent: (filename: string | null) => void): FSWatcher | undefined {
     let watcher: FSWatcher;
     try {
@@ -262,16 +218,11 @@ class LogStreamSource {
       if (isMissing(error)) return undefined;
       throw error;
     }
-    // A watcher that errors out (the directory it covers was removed) must not take the source with
-    // it; dropping it silently leaves the fallback poll as the only wake-up path, which still works.
     watcher.on("error", () => watcher.close());
     return watcher;
   }
 
-  /**
-   * Replays the bytes a late subscriber missed, stopping exactly at the shared reader's position so
-   * the two are byte-identical before it starts taking live reads.
-   */
+  /** Replays the bytes a late subscriber missed, stopping exactly at the shared reader's position so the two are byte-identical before it starts taking live reads. */
   async catchUp(subscriber: Subscriber): Promise<LogStreamRead[]> {
     const target = subscriber.catchUpFrom;
     if (target === undefined || !this.current) return [];
@@ -317,10 +268,6 @@ class Subscriber implements LogStreamSubscription {
 
   constructor(private readonly source: LogStreamSource) {}
 
-  /**
-   * Live reads are buffered even while a catch-up is outstanding: they sit beyond the catch-up
-   * target, and {@link replay} is always drained first, so the subscriber still sees them in order.
-   */
   push(read: LogStreamRead): void {
     if (this.closed) return;
     this.pending = this.pending ? mergeReads(this.pending, read) : read;
@@ -381,12 +328,7 @@ class Subscriber implements LogStreamSubscription {
   }
 }
 
-/**
- * Folds a read into one a subscriber has not taken yet.
- *
- * Lines buffered before a truncation describe a file that no longer exists, so a reset discards
- * them rather than replaying them into a reducer that is about to be reset anyway.
- */
+/** Folds a read into one a subscriber has not taken yet. */
 function mergeReads(previous: LogStreamRead, next: LogStreamRead): LogStreamRead {
   const changedSession = previous.changedSession || next.changedSession;
   if (next.reset) return { ...next, changedSession };
@@ -402,12 +344,7 @@ function mergeReads(previous: LogStreamRead, next: LogStreamRead): LogStreamRead
 const sources = new Map<string, LogStreamSource>();
 const keys = new WeakMap<LogStreamSource, string>();
 
-/**
- * Subscribes to the shared tail of a stream, creating it on first use.
- *
- * Tuning ({@link LogStreamSourceOptions.debounceMs} and friends) is set by whichever subscriber
- * creates the source; later subscribers of the same stream join it as it stands.
- */
+/** Subscribes to the shared tail of a stream, creating it on first use. */
 export function subscribeToLogStream(options: LogStreamSourceOptions): LogStreamSubscription {
   const key = `${options.logDirectory ?? defaultLogDirectory()} ${options.stream}`;
   let source = sources.get(key);

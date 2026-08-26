@@ -10,9 +10,6 @@ test("rate tracker accumulates a running total", () => {
 });
 
 test("restoring a checkpoint and re-recording the same historical gains does not double-count them", () => {
-  // Simulates: a window is closed after counting some gains, then reopened — a fresh log
-  // follower re-tails the current session's log from the start, re-emitting every gain
-  // already reflected in the checkpoint.
   const first = new RateTracker();
   first.record(10, 1_000);
   first.record(20, 2_000);

@@ -1,20 +1,36 @@
 import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
-import { decodeCharacterRecordSync } from "./record-decoder.ts";
-import type { CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
+import { decodeCharacterRecordSync, decodeCharacterSpawnRecords } from "./record-decoder.ts";
+import type { CharacterIdentity, CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
 const MAX_PENDING_RECORD_OBJECTS = 4_096;
+const REGEN_CADENCE_MAX_GAP_MS = 1_750;
+const REGEN_SETTLE_QUIET_MS = 2_250;
 /** Maps stat breakdown ids onto the server-synced record that verifies them. */
-const RECORDED_STATS: ReadonlyArray<[string, keyof CharacterRecordValues]> = [
-  ["max-health", "maxHealth"],
-  ["max-mana", "maxMana"],
-  ["move-speed", "moveSpeed"],
+const RECORDED_STATS: ReadonlyArray<[string, readonly (keyof CharacterRecordValues)[]]> = [
+  ["max-health", ["maxHealth", "normalizedMaxHp"]],
+  ["max-mana", ["maxMana", "normalizedMaxMp"]],
+  ["move-speed", ["moveSpeed"]],
 ];
+
+interface CharacterTrackerTiming {
+  now?: () => number;
+  schedule?: (callback: () => void, delayMs: number) => unknown;
+  cancel?: (handle: unknown) => void;
+}
+
+interface RegenSequence {
+  lastValue: number;
+  lastObservedAtMs: number;
+  consecutiveIncreases: number;
+  timer?: unknown;
+}
 
 export class FishNetCharacterTracker {
   private snapshot?: CharacterSnapshot;
+  private identity?: CharacterIdentity;
   private unsupportedDetail?: string;
   private currentWeight?: number;
   private localObjectId?: number;
@@ -23,16 +39,22 @@ export class FishNetCharacterTracker {
   private records: CharacterRecordValues = {};
   private pendingRecords = new Map<string, CharacterRecordValues>();
   private listeners = new Set<(state: CharacterViewState) => void>();
+  private healthRegen?: RegenSequence;
+  private manaRegen?: RegenSequence;
+  private readonly now: () => number;
+  private readonly schedule: (callback: () => void, delayMs: number) => unknown;
+  private readonly cancel: (handle: unknown) => void;
 
-  constructor(initial?: CharacterSnapshot) {
+  constructor(initial?: CharacterSnapshot, timing: CharacterTrackerTiming = {}) {
+    this.now = timing.now ?? Date.now;
+    this.schedule = timing.schedule ?? ((callback, delayMs) => setTimeout(callback, delayMs));
+    this.cancel = timing.cancel ?? ((handle) => clearTimeout(handle as ReturnType<typeof setTimeout>));
     if (initial) this.snapshot = { ...initial, source: "cached" };
   }
 
   consume(packet: CapturedFishNetPacket): boolean {
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
-      // The client holds several server connections at once, so a boundary on a neighbouring one
-      // must not release a pin held on the live connection. If the pinned connection really is
-      // going away, the next serverRpc re-pins and reclaims tracking anyway.
+      // The client holds several server connections at once, so a boundary on a neighbouring one must not release a pin held on the live connection.
       if (this.localConnectionId === undefined || packet.connectionId === this.localConnectionId) {
         this.releaseLocalObject();
       }
@@ -44,7 +66,10 @@ export class FishNetCharacterTracker {
       return false;
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
-      this.pendingRecords.delete(pendingKey(packet.connectionId, packet.objectId));
+      const key = pendingKey(packet.connectionId, packet.objectId);
+      this.pendingRecords.delete(key);
+      const update = decodeCharacterSpawnRecords(packet.spawnSyncEntries);
+      if (update) Object.assign(this.pendingRecordsFor(key), update, { updatedAt: new Date().toISOString() });
     }
     // Only the local player's client emits serverRpc packets, which pins their unit object.
     if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {
@@ -52,22 +77,30 @@ export class FishNetCharacterTracker {
       this.localObjectId = packet.objectId;
       this.localConnectionId = packet.connectionId;
       const pending = this.pendingRecords.get(pendingKey(packet.connectionId, packet.objectId));
-      // Records describe one unit object and the sync stream refills them within moments, so a new
-      // object starts from its own values: showing the previous object's health is worse than showing
-      // none. Carried weight has no such stream and is deliberately left alone here.
-      if (pending) this.records = pending;
-      else if (objectChanged) this.records = {};
+      if (pending) {
+        this.resetRegenSequences();
+        this.records = { ...pending };
+        this.applyAuthoritativeMaxima();
+      } else if (objectChanged) {
+        this.resetRegenSequences();
+        this.records = {};
+      }
       this.pendingRecords.clear();
       if (objectChanged || pending) this.publish();
       return false;
     }
-    if (packet.packetName === "syncType") return this.consumeRecordSync(packet);
+    if (packet.packetName === "syncType") {
+      const identityChanged = this.consumeIdentitySync(packet);
+      const recordChanged = this.consumeRecordSync(packet);
+      return identityChanged || recordChanged;
+    }
     if (packet.rpcName === undefined || !CHARACTER_RPCS.has(packet.rpcName)) return false;
     try {
       const decoded = decodeCharacterRpcPayload(packet.payload, packet.rpcName === "CharacterCallback_T");
       if (this.snapshot && this.snapshot.name !== decoded.snapshot.name) {
         this.currentWeight = undefined;
         this.records = {};
+        this.resetRegenSequences();
       }
       this.snapshot = mergeSnapshot(this.snapshot, decoded.snapshot, decoded.updateType);
       if (decoded.currentWeight !== undefined) this.currentWeight = decoded.currentWeight;
@@ -75,6 +108,33 @@ export class FishNetCharacterTracker {
     } catch (error) {
       this.unsupportedDetail = `Character data isn't recognized: ${errorMessage(error)}. Change maps or channels to request a fresh update.`.slice(0, 240);
     }
+    this.publish();
+    return true;
+  }
+
+  /**
+   * `StatusComponent`'s `Data`/`Level`/`JobLevel` SyncVars are the only live wire source for your
+   * own name/level right now - the game never sends `LoadCharacter_T`/`CharacterCallback_T` in
+   * practice, which is what a full {@link CharacterSnapshot} needs. This only ever updates
+   * {@link identity}, deliberately never merged into `snapshot`.
+   */
+  private consumeIdentitySync(packet: CapturedFishNetPacket): boolean {
+    if (packet.networkBehaviourType !== "StatusComponent" || !this.isLocalObject(packet) || !packet.decodedFields) return false;
+    let name: string | undefined;
+    let level: number | undefined;
+    let jobLevel: number | undefined;
+    for (const field of packet.decodedFields) {
+      if (field.name === "DisplayName" && typeof field.value === "string") name = field.value;
+      else if (field.name === "Level" && typeof field.value === "number") level = field.value;
+      else if (field.name === "JobLevel" && typeof field.value === "number") jobLevel = field.value;
+    }
+    if (name === undefined && level === undefined && jobLevel === undefined) return false;
+    this.identity = {
+      name: name ?? this.identity?.name ?? "",
+      level: level ?? this.identity?.level,
+      jobLevel: jobLevel ?? this.identity?.jobLevel,
+    };
+    if (!this.identity.name) return false;
     this.publish();
     return true;
   }
@@ -88,7 +148,7 @@ export class FishNetCharacterTracker {
       Object.assign(this.pendingRecordsFor(key), update, { updatedAt: new Date().toISOString() });
       return false;
     }
-    Object.assign(this.records, update, { updatedAt: new Date().toISOString() });
+    this.applyLocalRecordUpdate(update);
     this.publish();
     return true;
   }
@@ -123,6 +183,8 @@ export class FishNetCharacterTracker {
     this.localObjectId = undefined;
     this.localConnectionId = undefined;
     this.pendingRecords.clear();
+    this.resetRegenSequences();
+    this.identity = undefined;
   }
 
   setCached(snapshot: CharacterSnapshot | undefined): void {
@@ -130,6 +192,7 @@ export class FishNetCharacterTracker {
     this.currentWeight = undefined;
     this.records = {};
     this.pendingRecords.clear();
+    this.resetRegenSequences();
     this.unsupportedDetail = undefined;
     this.publish();
   }
@@ -137,6 +200,105 @@ export class FishNetCharacterTracker {
   current(): CharacterSnapshot | undefined { return this.snapshot ? structuredClone(this.snapshot) : undefined; }
 
   currentObjectId(): number | undefined { return this.localObjectId; }
+
+  /**
+   * Moves a pre-pin candidate when a caller represents one physical object with a stable logical
+   * object id. This changes no values and promotes nothing; the following serverRpc remains the
+   * proof that pins the destination object.
+   */
+  rekeyPendingObject(connectionId: string, fromObjectId: number, toObjectId: number): void {
+    if (fromObjectId === toObjectId) return;
+    const fromKey = pendingKey(connectionId, fromObjectId);
+    const candidate = this.pendingRecords.get(fromKey);
+    if (!candidate) return;
+    this.pendingRecords.delete(fromKey);
+    Object.assign(this.pendingRecordsFor(pendingKey(connectionId, toObjectId)), candidate);
+  }
+
+  private applyLocalRecordUpdate(update: Partial<CharacterRecordValues>): void {
+    const previousHealth = this.records.currentHealth;
+    const previousMana = this.records.currentMana;
+    Object.assign(this.records, update, { updatedAt: new Date().toISOString() });
+    this.applyAuthoritativeMaxima();
+    if (update.maxHealth === undefined && update.currentHealth !== undefined && this.records.maxHealth === undefined) {
+      this.observeRegen("health", previousHealth, update.currentHealth);
+    }
+    if (update.maxMana === undefined && update.currentMana !== undefined && this.records.maxMana === undefined) {
+      this.observeRegen("mana", previousMana, update.currentMana);
+    }
+  }
+
+  private applyAuthoritativeMaxima(): void {
+    if (this.records.maxHealth !== undefined) {
+      this.records.normalizedMaxHp = this.records.maxHealth;
+      this.clearRegen("health");
+    }
+    if (this.records.maxMana !== undefined) {
+      this.records.normalizedMaxMp = this.records.maxMana;
+      this.clearRegen("mana");
+    }
+  }
+
+  private observeRegen(kind: "health" | "mana", previous: number | undefined, current: number): void {
+    const normalizedKey = kind === "health" ? "normalizedMaxHp" : "normalizedMaxMp";
+    const knownMaximum = this.records[normalizedKey];
+    if (knownMaximum !== undefined && current <= knownMaximum) return;
+    if (knownMaximum !== undefined) delete this.records[normalizedKey];
+    if (previous === undefined || current < previous) {
+      this.clearRegen(kind);
+      return;
+    }
+    const now = this.now();
+    let sequence = kind === "health" ? this.healthRegen : this.manaRegen;
+    if (current > previous) {
+      const continues = sequence !== undefined
+        && now - sequence.lastObservedAtMs <= REGEN_CADENCE_MAX_GAP_MS;
+      this.clearRegenTimer(sequence);
+      sequence = {
+        lastValue: current,
+        lastObservedAtMs: now,
+        consecutiveIncreases: continues ? sequence!.consecutiveIncreases + 1 : 1,
+      };
+      if (kind === "health") this.healthRegen = sequence;
+      else this.manaRegen = sequence;
+    } else if (sequence) {
+      this.clearRegenTimer(sequence);
+      sequence.lastObservedAtMs = now;
+      sequence.lastValue = current;
+    } else {
+      return;
+    }
+    if (sequence.consecutiveIncreases < 2) return;
+    sequence.timer = this.schedule(() => this.settleRegen(kind, sequence!), REGEN_SETTLE_QUIET_MS);
+  }
+
+  private settleRegen(kind: "health" | "mana", sequence: RegenSequence): void {
+    if ((kind === "health" ? this.healthRegen : this.manaRegen) !== sequence) return;
+    const currentKey = kind === "health" ? "currentHealth" : "currentMana";
+    const maxKey = kind === "health" ? "maxHealth" : "maxMana";
+    const normalizedKey = kind === "health" ? "normalizedMaxHp" : "normalizedMaxMp";
+    if (this.records[maxKey] !== undefined || this.records[currentKey] !== sequence.lastValue) return;
+    this.records[normalizedKey] = sequence.lastValue;
+    this.records.updatedAt = new Date().toISOString();
+    this.clearRegen(kind);
+    this.publish();
+  }
+
+  private clearRegen(kind: "health" | "mana"): void {
+    const sequence = kind === "health" ? this.healthRegen : this.manaRegen;
+    this.clearRegenTimer(sequence);
+    if (kind === "health") this.healthRegen = undefined;
+    else this.manaRegen = undefined;
+  }
+
+  private clearRegenTimer(sequence: RegenSequence | undefined): void {
+    if (sequence?.timer !== undefined) this.cancel(sequence.timer);
+  }
+
+  private resetRegenSequences(): void {
+    this.clearRegen("health");
+    this.clearRegen("mana");
+  }
 
   currentArchetypeId(): number | undefined {
     const archetype = this.snapshot?.archetypes.at(-1);
@@ -151,8 +313,10 @@ export class FishNetCharacterTracker {
     const weight = snapshot && this.currentWeight !== undefined
       ? { weight: { current: this.currentWeight, maximum: calculateWeightLimit(snapshot) } }
       : {};
+    const identity = this.identity ? { identity: { ...this.identity } } : {};
     if (this.unsupportedDetail) return {
       ...(snapshot ? { snapshot } : {}),
+      ...identity,
       stats: snapshot ? this.applyRecords(calculateStats(snapshot)) : [],
       gearTotals: snapshot ? calculateGearTotals(snapshot) : [],
       ...records,
@@ -161,6 +325,7 @@ export class FishNetCharacterTracker {
       statusDetail: this.unsupportedDetail,
     };
     if (!snapshot) return {
+      ...identity,
       status: "waiting",
       statusDetail: "Waiting for the game to send your character… Change maps or channels to request an update.",
       stats: [],
@@ -170,6 +335,7 @@ export class FishNetCharacterTracker {
     };
     return {
       snapshot,
+      ...identity,
       stats: this.applyRecords(calculateStats(snapshot)),
       gearTotals: calculateGearTotals(snapshot),
       ...records,
@@ -182,8 +348,8 @@ export class FishNetCharacterTracker {
   }
 
   private applyRecords(stats: CharacterStatBreakdown[]): CharacterStatBreakdown[] {
-    for (const [statId, recordKey] of RECORDED_STATS) {
-      const value = this.records[recordKey];
+    for (const [statId, recordKeys] of RECORDED_STATS) {
+      const value = recordKeys.map((key) => this.records[key]).find((candidate) => typeof candidate === "number");
       if (typeof value !== "number") continue;
       const stat = stats.find((entry) => entry.id === statId);
       if (stat) stat.record = value;

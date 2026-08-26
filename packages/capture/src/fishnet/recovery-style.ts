@@ -1,10 +1,7 @@
 import type { FishNetRecoveryStyle, FishNetSemanticMap } from "./semantic-map.ts";
 import type { DecodedFishNetPacket } from "./types.ts";
 
-/**
- * Classifies the game-defined FloaterSettings trailing a HealthComponent.Recover_C payload.
- * Build-specific payload signatures come from the selected semantic map.
- */
+/** Classifies the game-defined FloaterSettings trailing a HealthComponent.Recover_C payload. */
 export function classifyFishNetRecoveryStyle(
   packet: Pick<DecodedFishNetPacket, "networkBehaviourType" | "rpcName" | "undecodedPayload">,
   semanticMap: Pick<FishNetSemanticMap, "recoveryStyles"> | undefined,

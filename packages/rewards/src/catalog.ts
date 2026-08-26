@@ -21,6 +21,13 @@ export interface MobRewardDefinition {
   readonly drops: readonly MobDropDefinition[];
 }
 
+/** Minimal combat identity metadata, including non-reward targets omitted from the reward catalog. */
+export interface MobIdentityDefinition {
+  readonly id: string;
+  readonly displayName: string;
+  readonly level: number;
+}
+
 export interface MobRewardCatalog {
   readonly buildFingerprint: string;
   readonly experienceRequirements: readonly number[];
@@ -51,6 +58,26 @@ export function mobDefinitionsById(
   catalog: MobRewardCatalog = loadBundledMobRewardCatalog(),
 ): Map<string, MobRewardDefinition> {
   return new Map(catalog.mobs.map((mob) => [mob.id, mob]));
+}
+
+const NON_REWARD_MOB_IDENTITIES: readonly MobIdentityDefinition[] = [
+  { id: "Target Dummy", displayName: "Bullseye", level: 0 },
+  { id: "NightmareShadow", displayName: "Curse Manifestation", level: 0 },
+  { id: "Devil Bat", displayName: "Fire Bat", level: 0 },
+  { id: "Devil Hell", displayName: "Hell Bat", level: 0 },
+  { id: "Devil Hades", displayName: "Inferno Bat", level: 0 },
+  { id: "Training Dummy", displayName: "Sandbag", level: 0 },
+  { id: "Practice Dummy", displayName: "Straw Dummy", level: 0 },
+];
+
+/** Complete datamine-backed identity catalog for combat decoding; reward eligibility remains unchanged. */
+export function mobIdentityDefinitionsById(
+  catalog: MobRewardCatalog = loadBundledMobRewardCatalog(),
+): Map<string, MobIdentityDefinition> {
+  return new Map<string, MobIdentityDefinition>([
+    ...catalog.mobs.map((mob) => [mob.id, { id: mob.id, displayName: mob.displayName, level: mob.level }] as const),
+    ...NON_REWARD_MOB_IDENTITIES.map((mob) => [mob.id, { ...mob }] as const),
+  ]);
 }
 
 export function queryMobRewardCatalog(

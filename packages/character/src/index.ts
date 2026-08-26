@@ -1,6 +1,6 @@
-export { CharacterReader, decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
+export { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 export { aggregateGearSubstats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats, resolveCharacterHealingTraits } from "./formulas.ts";
-export { decodeCharacterRecordSync } from "./record-decoder.ts";
+export { decodeCharacterRecordSync, decodeCharacterSpawnRecords } from "./record-decoder.ts";
 export { FishNetCharacterTracker } from "./tracker.ts";
 export { FishNetInspectRoster } from "./inspect-roster.ts";
 export type { InspectedCharacter } from "./inspect-roster.ts";
@@ -12,6 +12,7 @@ export type {
   CharacterArtifact,
   CharacterEquipment,
   CharacterHealingTraits,
+  CharacterIdentity,
   GearStatTotal,
   CharacterRecordValues,
   CharacterSubstat,

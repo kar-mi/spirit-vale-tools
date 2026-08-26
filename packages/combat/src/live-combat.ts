@@ -25,11 +25,7 @@ export interface MeterEncounterSnapshot {
   total: number;
   rate: number;
   rows: MeterRow[];
-  /**
-   * The same encounter rendered with the detail the DPS snapshot carries: per-skill rows, timeline
-   * buckets, crit rates, contribution shares and the personal row. {@link rows} is a flat projection
-   * of `detail.actors`, not a second copy of the underlying data.
-   */
+  /** The same encounter rendered with the detail the DPS snapshot carries: per-skill rows, timeline buckets, crit rates, contribution shares and the personal row. */
   detail: FishNetDpsEncounterSnapshot;
 }
 
@@ -59,12 +55,7 @@ export interface LiveCombatState {
   latestFinished?: CombatEncounterRecord;
 }
 
-/**
- * Bounded live combat state for overlays and other polling consumers.
- *
- * The reducer owns encounter boundaries and bounded DPS buckets. This service only retains the
- * current meter and the most recently completed one; it never stores raw damage or old encounters.
- */
+/** Bounded live combat state for overlays and other polling consumers. */
 export class LiveCombatService {
   private readonly reducer: DamageReducer;
   private readonly currentTauSeconds: number;
@@ -75,11 +66,7 @@ export class LiveCombatService {
   private readonly healing: MeterReducer;
   private meterId?: string;
   private lastEventAtMs?: number;
-  /**
-   * The finished encounter is retained as aggregates rather than a rendered record, so changing the
-   * personal actor re-renders it too. Those aggregates are the same bounded state the live encounter
-   * holds - bucket series and per-skill totals, never individual hits.
-   */
+  /** The finished encounter is retained as aggregates rather than a rendered record, so changing the personal actor re-renders it too. */
   private latestFinished?: FinishedEncounter;
   private personalName: string;
   private personalActorId?: number;
@@ -107,9 +94,7 @@ export class LiveCombatService {
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
-    // The observer feed re-states identities it has already sent, so most of these events leave the
-    // rendered state exactly as it was. Bumping the revision for them would make every consumer
-    // re-project and re-publish for nothing.
+    // The observer feed re-states identities it has already sent, so most of these events leave the rendered state exactly as it was.
     const previous = event.operation === "reset" ? undefined : this.reducer.identities.get(event.actorId);
     const hadIdentities = this.reducer.identities.size > 0;
     this.reducer.consumeIdentity(event, observedAtMs);
@@ -134,9 +119,6 @@ export class LiveCombatService {
   }
 
   consumeCombat(event: FishNetCombatEvent, observedAtMs: number): void {
-    // The reducer owns encounter boundaries, so it runs first: it may close an encounter that has
-    // gone idle, and an incoming hit or heal arriving after that cutoff belongs to no encounter at
-    // all rather than to the one that just ended.
     this.reducer.consumeCombat(event, observedAtMs);
     const encounter = this.reducer.current;
     if (encounter) {
@@ -162,12 +144,7 @@ export class LiveCombatService {
     return this.personalActorId;
   }
 
-  /**
-   * Advances the idle clock. This is driven by a timer rather than by data, so it only moves the
-   * revision when it actually closed an encounter — which it reports through
-   * {@link finishMeter} — otherwise a consumer would see a new revision on every tick of an idle
-   * overlay.
-   */
+  /** Advances the idle clock. */
   advance(observedAtMs: number): void {
     this.reducer.advance(observedAtMs);
   }
@@ -244,8 +221,6 @@ export class LiveCombatService {
       aggregate ?? emptyAggregate(encounter),
       {
         nowMs: atMs,
-        // Tanked and healing rates are per second *of the encounter*, not per second of the span
-        // that happened to contain incoming hits, so they stay comparable with the DPS figure.
         windowEndMs: encounter.endedAtMs ?? atMs,
         lastEventAtMs: finished?.lastEventAtMs ?? this.lastEventAtMs ?? encounter.lastDamageAtMs,
         minimumDurationMs: this.minimumDurationMs,
@@ -297,13 +272,7 @@ interface RenderMeterOptions {
   endedAtMs?: number;
 }
 
-/**
- * Renders a meter aggregate once, then exposes it two ways: `detail` is the full snapshot, and
- * `rows` is the flat per-actor projection of it that a compact meter needs.
- */
 function renderMeter(aggregate: EncounterAggregate, options: RenderMeterOptions): MeterEncounterSnapshot {
-  // Widening the aggregate's last-damage time to the encounter window is what makes every rate in
-  // the snapshot — party and per actor — divide by the encounter's duration.
   const windowed: EncounterAggregate = {
     ...aggregate,
     lastDamageAtMs: Math.max(aggregate.lastDamageAtMs, options.windowEndMs),
@@ -314,8 +283,7 @@ function renderMeter(aggregate: EncounterAggregate, options: RenderMeterOptions)
     ...(options.personalName === undefined ? {} : { personalName: options.personalName }),
     ...(options.personalActorId === undefined ? {} : { personalActorId: options.personalActorId }),
   });
-  // Rendered rows merge actors by identity, so a row's first event is the earliest across the
-  // aggregates it merged.
+  // Rendered rows merge actors by identity, so a row's first event is the earliest across the aggregates it merged.
   const firstByActorId = new Map<number, number>();
   for (const actor of aggregate.actors) {
     if (actor.firstDamageAtMs !== undefined) firstByActorId.set(actor.actorId, actor.firstDamageAtMs);

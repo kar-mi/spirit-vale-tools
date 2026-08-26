@@ -6,7 +6,7 @@ implementation, and contributor references.
 ## Package and CLI guides
 
 - [Capability and CLI guide](features.md) — capture, combat, character,
-  rewards, logging, and command-line behavior.
+  rewards, market, logging, and command-line behavior.
 - [Packages](packages.md) — installing reusable Bun packages from GitHub
   Packages.
 - [Character stat formula comparison](stats/character_stat_formula_comparison.md)

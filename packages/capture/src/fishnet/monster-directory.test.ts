@@ -69,20 +69,33 @@ describe("FishNetMonsterDirectory", () => {
 });
 
 function monsterSync(tick: number, objectId: number): DecodedFishNetPacket {
-  const payload = Buffer.concat([
-    Buffer.from([7]), string("training-mob"), packed(2), packed(0), packed(1), Buffer.from([0, 1]),
-  ]);
+  const payload = Buffer.alloc(0);
   return {
     tick, packetId: 1, packetName: "syncType", raw: payload, payload,
-    syncPayload: payload, syncIndex: 7, objectId, networkBehaviourType: "MonsterController",
+    syncIndex: 0, syncName: "Data", objectId, networkBehaviourType: "MonsterController",
+    decodedFields: [
+      { name: "Id", typeName: "System.String", codec: "stringUtf8Packed", value: "training-mob" },
+      { name: "Level", typeName: "System.Int32", codec: "packedInt32", value: 2 },
+      { name: "Rank", typeName: "MonsterRank", codec: "packedInt32", value: 0 },
+    ],
   };
 }
 
 function monsterSpawn(tick: number, objectId: number): DecodedFishNetPacket {
-  const spawnSyncPayload = Buffer.concat([string("training-mob"), packed(2), packed(0), packed(1)]);
   return {
-    tick, packetId: 3, packetName: "objectSpawn", raw: spawnSyncPayload,
-    payload: Buffer.alloc(0), objectId, spawnSyncPayload,
+    tick, packetId: 3, packetName: "objectSpawn", raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0), objectId,
+    spawnSyncEntries: [{
+      index: 0,
+      name: "Data",
+      componentIndex: 0,
+      networkBehaviourType: "MonsterController",
+      fields: [
+        { name: "Id", typeName: "System.String", codec: "stringUtf8Packed", value: "training-mob" },
+        { name: "Level", typeName: "System.Int32", codec: "packedInt32", value: 2 },
+        { name: "Rank", typeName: "MonsterRank", codec: "packedInt32", value: 0 },
+      ],
+    }],
   };
 }
 

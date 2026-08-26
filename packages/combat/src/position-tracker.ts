@@ -25,19 +25,7 @@ export interface FishNetPositionTrackerOptions {
   directory?: FishNetActorDirectory;
 }
 
-/**
- * Tracks where every observed object is.
- *
- * NetworkTransform resends only the axes that changed, so a single update is rarely a whole
- * position. Each object's last known position is carried forward and the changed axes applied to
- * it, which means an object is only reported once a full position is known: either from its spawn
- * transform or from an update that carried all three axes.
- *
- * This deliberately performs no local-player inference of its own. Identifying the local player is
- * already solved elsewhere — `FishNetCharacterTracker` pins the object emitting serverRpc traffic,
- * and `FishNetActorDirectory` carries the local display name — so the caller supplies that object
- * id through {@link setLocalObjectId} rather than a second mechanism guessing it again.
- */
+/** Tracks where every observed object is. */
 export class FishNetPositionTracker {
   private readonly positions = new Map<number, FishNetPosition>();
   private localObjectId?: number;
@@ -68,8 +56,6 @@ export class FishNetPositionTracker {
   }
 
   consume(packet: DecodedFishNetPacket): FishNetPositionEvent[] {
-    // Object ids only mean anything within one connection, so a session boundary invalidates every
-    // position held; keeping them would place objects using another connection's ids.
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
       this.reset();
       return [];
@@ -98,9 +84,7 @@ export class FishNetPositionTracker {
     // A partial update with no baseline is not a position yet; wait rather than report a hole as 0.
     if (next.x === undefined || next.y === undefined || next.z === undefined) return [];
     const position: FishNetPosition = { x: next.x, y: next.y, z: next.z };
-    // Rotation resends the same way position axes do: an update without one means unchanged, so
-    // the last-known heading carries forward. Unlike position axes this never blocks the event —
-    // an object with no heading yet is still a valid position.
+    // Rotation resends the same way position axes do: an update without one means unchanged, so the last-known heading carries forward.
     const heading = update.heading ?? previous?.heading;
     if (heading !== undefined) position.heading = heading;
     this.positions.set(packet.objectId, position);

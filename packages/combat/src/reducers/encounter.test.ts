@@ -16,13 +16,6 @@ interface HarnessOptions {
   personalActorId?: number;
 }
 
-/**
- * Drives `DamageReducer` and renders through `renderEncounter`, exposing the reducer's split
- * lifecycle as the single "feed events, read snapshots" surface these tests assert on.
- *
- * Pure delegation: the reducer owns accumulation and encounter boundaries, `renderEncounter` owns
- * every derived figure, and the personal selection is a render option rather than meter state.
- */
 class MeterHarness {
   private readonly reducer: DamageReducer;
   private readonly finished: EncounterAggregate[] = [];
@@ -292,8 +285,6 @@ describe("encounter aggregation and rendering", () => {
         ],
       }],
     });
-    // Twenty seconds past the only counted hit, the current rate has faded to near nothing without
-    // reaching zero — where a five-second window would have dropped to exactly 0.
     const partyCurrentDps = meter.getLatestSnapshot(20_001)?.partyCurrentDps ?? 0;
     expect(partyCurrentDps).toBeGreaterThan(0);
     expect(partyCurrentDps).toBeLessThan(1);
@@ -554,8 +545,6 @@ describe("encounter aggregation and rendering", () => {
   });
 
   describe("current DPS", () => {
-    // An exponentially-weighted rate: a hit of `v` adds `v / tau` and then fades as e^{-elapsed/tau},
-    // with the reads corrected for the cold-start ramp by dividing by (1 - e^{-elapsed/tau}).
     const TAU = 2.5;
     const ramped = (rate: number, elapsedMs: number): number =>
       rate / (1 - Math.exp(-Math.max(1_000, elapsedMs) / 1_000 / TAU));
@@ -630,13 +619,10 @@ describe("encounter aggregation and rendering", () => {
 
     test("converges on the same steady-state figure the five-second window it replaced reported", () => {
       const meter = new MeterHarness({ personalActorId: 101 });
-      // 100 damage every 100ms is a true 1000 DPS, which is what a flat five-second window would
-      // have read once full: 5000 damage over five seconds.
+      // 100 damage every 100ms is a true 1000 DPS, which is what a flat five-second window would have read once full: 5000 damage over five seconds.
       for (let atMs = 0; atMs <= 60_000; atMs += 100) meter.consumeCombat(damage(101, 100), atMs);
 
       const current = meter.getLatestSnapshot(60_000)?.actors[0]?.currentDps ?? 0;
-      // Discrete impulses land a little above the continuous limit; a few percent either way is the
-      // quantisation of the hit cadence, not drift between the two estimators.
       expect(current).toBeWithin(970, 1_030);
     });
 
@@ -648,8 +634,7 @@ describe("encounter aggregation and rendering", () => {
       const snapshot = meter.getLatestSnapshot(10_000);
       const rows = snapshot?.actors ?? [];
       const party = snapshot?.partyCurrentDps ?? 0;
-      // The late actor is still inside its identity grace period, so only one row is shown while
-      // both contribute to the party figure.
+      // The late actor is still inside its identity grace period, so only one row is shown while both contribute to the party figure.
       expect(rows).toHaveLength(1);
       expect(party).toBeGreaterThan(rows[0]!.currentDps);
       // Both rows ramp from the encounter start, not from their own first hit.
@@ -663,10 +648,6 @@ describe("encounter aggregation and rendering", () => {
 
 describe("timeline bucket boundaries", () => {
   test("keeps a closing hit that lands exactly on a bucket boundary", () => {
-    // durationMs is lastDamageAtMs - startedAtMs, so the final hit of an encounter always sits on
-    // the closing edge. When that edge is a whole number of 5s buckets the hit indexes one bucket
-    // past the last rendered one, and used to vanish from the timeline while still counting toward
-    // damage and dps.
     const meter = new MeterHarness({ personalActorId: 101 });
     meter.consumeCombat(damage(101, 300), 0);
     meter.consumeCombat(damage(101, 200), 5_000);

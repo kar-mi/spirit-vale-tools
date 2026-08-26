@@ -392,8 +392,7 @@ describe("FishNetCombatTracker", () => {
     });
 
     test("ignores a FullHeal_C carrying a payload", () => {
-      // FullHeal_C declares no arguments, so bytes on the wire mean the hash was misread: the low
-      // byte of a 16-bit hash can collide with it.
+      // FullHeal_C declares no arguments, so bytes on the wire mean the hash was misread: the low byte of a 16-bit hash can collide with it.
       const tracker = new FishNetCombatTracker();
       const misread = packet(1, 8101, "PlayerController", "FullHeal_C");
       misread.payload = Buffer.from([0x66]);
@@ -428,8 +427,7 @@ describe("FishNetCombatTracker", () => {
       };
     }
 
-    // `null` means the tracker is given no local actor at all; passing `undefined` would re-apply
-    // the default parameter instead.
+    // `null` means the tracker is given no local actor at all; passing `undefined` would re-apply the default parameter instead.
     function recoveringTracker(localActorId: number | null = LOCAL_ACTOR): FishNetCombatTracker {
       return new FishNetCombatTracker({
         skillCatalog: SUMMON_CATALOG,
@@ -449,8 +447,7 @@ describe("FishNetCombatTracker", () => {
     });
 
     test("recovers an ambiguous targetRpc and attributes it to the packet's own object", () => {
-      // Resolved far enough to carry an object id, but the wire hash is shared and nothing on the
-      // object was bound, so it arrived unnamed.
+      // Resolved far enough to carry an object id, but the wire hash is shared and nothing on the object was bound, so it arrived unnamed.
       const tracker = recoveringTracker(9999);
       expect(tracker.consume({
         tick: 3,

@@ -1,12 +1,12 @@
 # Developer guide
 
 Spirit Vale Tools publishes reusable Bun packages through GitHub Packages. Use
-them to build your own capture, replay, catalog, combat, character, or
+them to build your own capture, replay, catalog, combat, character, market, or
 reward tooling.
 
 ## Requirements
 
-- Bun 1.3 or newer.
+- Bun 1.4 or newer.
 - Access to the `@kar-mi` packages on GitHub Packages.
 - For live packet capture, Windows and a compatible Npcap installation. Capture
   uses Npcap in non-promiscuous mode and must run in a Bun process, not a
@@ -46,6 +46,7 @@ bun add @kar-mi/spirit-vale-tools-statuses
 bun add @kar-mi/spirit-vale-tools-combat
 bun add @kar-mi/spirit-vale-tools-character
 bun add @kar-mi/spirit-vale-tools-rewards
+bun add @kar-mi/spirit-vale-tools-market
 ```
 
 The package manager installs the packages' declared dependencies. You do not
@@ -62,6 +63,7 @@ installed automatically this way; they are not a supported public API.
 | `@kar-mi/spirit-vale-tools-combat` | Combat tracking, DPS calculation, logs, and replay. |
 | `@kar-mi/spirit-vale-tools-character` | Character decoding and stat calculation. |
 | `@kar-mi/spirit-vale-tools-rewards` | Reward decoding, mob tracking, trends, and replay. |
+| `@kar-mi/spirit-vale-tools-market` | Market search, stall tracking, filtering, logs, and replay. |
 
 ## Import APIs
 
@@ -90,9 +92,10 @@ Catalog and domain packages export their public APIs from the package root:
 import { loadBundledItemCatalog, resolveFishNetItem } from "@kar-mi/spirit-vale-tools-items";
 import { loadBundledSkillCatalog, resolveFishNetSkill } from "@kar-mi/spirit-vale-tools-skills";
 import { loadBundledStatusCatalog, resolveFishNetStatus } from "@kar-mi/spirit-vale-tools-statuses";
-import { FishNetCombatTracker, FishNetDpsMeter } from "@kar-mi/spirit-vale-tools-combat";
+import { FishNetCombatTracker, LiveCombatService } from "@kar-mi/spirit-vale-tools-combat";
 import { calculateCharacterStats, decodeCharacterRpcPayload } from "@kar-mi/spirit-vale-tools-character";
 import { FishNetMobRewardTracker, queryMobRewardCatalog } from "@kar-mi/spirit-vale-tools-rewards";
+import { FishNetMarketTracker, replayMarketCapture } from "@kar-mi/spirit-vale-tools-market";
 ```
 
 Consult each package's README and TypeScript declarations for its complete API

@@ -5,13 +5,7 @@ import { isMissing } from "@kar-mi/spirit-vale-tools-logging";
 /** Enough to cover a first log record comfortably; longer first lines simply hash their prefix. */
 const FINGERPRINT_BYTES = 8192;
 
-/**
- * Identifies a log file by its first line, which is immutable for an append-only log and carries the
- * session id, sequence 1, and a timestamp. A different file at the same path therefore fingerprints
- * differently, which is how a replaced source is told apart from an appended one.
- *
- * Returns undefined when the file is missing or still empty.
- */
+/** Identifies a log file by its first line, which is immutable for an append-only log and carries the session id, sequence 1, and a timestamp. */
 export async function fingerprintSource(sourcePath: string): Promise<string | undefined> {
   let handle;
   try {

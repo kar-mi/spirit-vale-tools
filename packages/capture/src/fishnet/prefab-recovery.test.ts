@@ -2,10 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { recoverComponentFromPrefabLayouts } from "./rpc-resolution.ts";
 import type { FishNetRpcMap } from "./types.ts";
 
-/**
- * Two layouts share a controller at index 0 and a transform at index 8, mirroring a build where a
- * unit and its clone are byte-identical. A third layout is unrelated.
- */
+/** Two layouts share a controller at index 0 and a transform at index 8, mirroring a build where a unit and its clone are byte-identical. */
 const map: FishNetRpcMap = {
   buildFingerprint: "synthetic-recovery",
   metadataVersion: 31,

@@ -2,10 +2,7 @@ import type { Database } from "bun:sqlite";
 
 import type { LogRecord, LogStream } from "@kar-mi/spirit-vale-tools-logging";
 
-/**
- * A set of tables owned by one domain package. The read model never imports domain code; a domain
- * hands it schema callbacks instead, so combat and rewards stay independent of each other.
- */
+/** A set of tables owned by one domain package. */
 export interface ReadModelDomain {
   /** Stable key, e.g. "combat". Scopes rebuilds and indexing progress. */
   readonly name: string;
@@ -50,17 +47,11 @@ export interface IndexStreamRequest {
   sourcePath: string;
   /** The domain whose tables {@link apply} writes to. */
   domain: string;
-  /**
-   * Applies one batch of records. Runs inside the same transaction that advances the recorded byte
-   * offset, so rows and progress commit or roll back together.
-   */
+  /** Applies one batch of records. */
   apply: (records: readonly LogRecord[], database: Database) => void | number;
   /** Removes this domain's rows for one session/stream, so a rebuild starts from empty. */
   clear: (scope: { sessionId: string; stream: LogStream }, database: Database) => void;
-  /**
-   * Most source bytes read — and so most rows applied — per transaction. Defaults to 1 MiB. Each
-   * transaction ends on a record boundary, which is what makes an interrupted pass resumable.
-   */
+  /** Most source bytes read — and so most rows applied — per transaction. */
   batchBytes?: number;
 }
 

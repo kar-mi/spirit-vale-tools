@@ -183,7 +183,6 @@ describe("FishNetCharacterTracker", () => {
       attributes: { STR: 99, VIT: 50, AGI: 1, DEX: 1, INT: 1, LUK: 71 },
       activeLoadout: "Normal",
       // Baked under an older build: wrong scaled value (11 instead of 9) and unnamed stat.
-      // "Synthetic Visor" is not catalogued, so the accessory slot-cap table (Hit cap 10) applies.
       equipment: [{ slot: "Left accessory", itemId: "Synthetic Visor", refine: 0, cards: [], substats: [{ type: 13, name: "Stat 13", roll: 67, value: 11, percent: false }] }],
       artifacts: [],
       skills: [],
@@ -219,6 +218,93 @@ describe("FishNetCharacterTracker", () => {
     expect(state.stats.find((stat) => stat.id === "max-health")?.record).toBe(13_236);
     expect(state.stats.find((stat) => stat.id === "max-mana")?.record).toBe(654);
     expect(state.stats.find((stat) => stat.id === "move-speed")?.record).toBeCloseTo(8.925, 3);
+  });
+
+  test("buffers exact resource SyncTypes embedded in a spawn until that object is pinned", () => {
+    const tracker = new FishNetCharacterTracker();
+    const spawn = {
+      ...syncPacket(202, "PlayerController", ""),
+      packetName: "objectSpawn",
+      spawnSyncEntries: [
+        spawnEntry("HealthComponent", "healthSync", 750),
+        spawnEntry("HealthComponent", "maxHealthSync", 1_000),
+        spawnEntry("SkillsComponent", "manaSync", 120),
+        spawnEntry("SkillsComponent", "maxManaSync", 240),
+        spawnEntry("MoveComponent", "MoveSpeed", 8.925),
+      ],
+    } as CapturedFishNetPacket;
+
+    expect(tracker.consume(spawn)).toBe(false);
+    expect(tracker.state().records).toBeUndefined();
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.state().records).toMatchObject({
+      currentHealth: 750,
+      maxHealth: 1_000,
+      currentMana: 120,
+      maxMana: 240,
+      moveSpeed: 8.925,
+    });
+  });
+
+  test("rekeys a buffered physical spawn without promoting it before logical-object proof", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume({
+      ...syncPacket(202, "PlayerController", ""),
+      packetName: "objectSpawn",
+      spawnSyncEntries: [spawnEntry("SkillsComponent", "maxManaSync", 240)],
+    } as CapturedFishNetPacket);
+
+    tracker.rekeyPendingObject("test-connection", 202, -1);
+    expect(tracker.state().records).toBeUndefined();
+    tracker.consume(pinPacket(-1));
+
+    expect(tracker.state().records).toMatchObject({ maxMana: 240 });
+  });
+
+  test("normalizes a regen plateau only after consecutive increases and a quiet window", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_000));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_050));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "SkillsComponent", 1_100));
+    expect(tracker.state().records?.normalizedMaxMp).toBeUndefined();
+
+    timing.advance(2_249);
+    expect(tracker.state().records?.normalizedMaxMp).toBeUndefined();
+    timing.advance(1);
+    expect(tracker.state().records).toMatchObject({ currentMana: 1_100, normalizedMaxMp: 1_100 });
+  });
+
+  test("does not normalize a single heal increase as maximum health", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 500));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 750));
+
+    timing.advance(10_000);
+    expect(tracker.state().records?.normalizedMaxHp).toBeUndefined();
+  });
+
+  test("authoritative maxima override and cancel regen normalization", () => {
+    const timing = new ManualTiming();
+    const tracker = new FishNetCharacterTracker(undefined, timing.options());
+    tracker.consume(pinPacket(202));
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 700));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 710));
+    timing.advance(1_000);
+    tracker.consume(currentResourcePacket(202, "HealthComponent", 720));
+    tracker.consume(resourcePacket(202, "HealthComponent", 720, 1_000));
+
+    timing.advance(10_000);
+    expect(tracker.state().records).toMatchObject({ maxHealth: 1_000, normalizedMaxHp: 1_000 });
   });
 
   test("clears server-synced resources when the local object changes", () => {
@@ -270,8 +356,7 @@ describe("FishNetCharacterTracker", () => {
       expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
       expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
 
-      // The next pin starts that object's records from scratch, and must not promote a candidate
-      // buffered before the boundary.
+      // The next pin starts that object's records from scratch, and must not promote a candidate buffered before the boundary.
       tracker.consume(pinPacket(303));
       expect(tracker.state().records).toBeUndefined();
       expect(tracker.state().weight).toEqual({ current: 71, maximum: 3_260 });
@@ -334,6 +419,36 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().records).toMatchObject({ currentMana: 120, maxMana: 240 });
     expect(tracker.state().records).not.toMatchObject({ currentMana: 999, maxMana: 999 });
   });
+
+  test("exposes identity from a StatusComponent Data/Level/JobLevel sync, independent of a full snapshot", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(identityPacket(202, "Synthetic Hero", 88, 42));
+
+    expect(tracker.state().identity).toEqual({ name: "Synthetic Hero", level: 88, jobLevel: 42 });
+    expect(tracker.state().snapshot).toBeUndefined();
+    expect(tracker.state().status).toBe("waiting");
+  });
+
+  test("clears identity when the local object is released", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+    tracker.consume(identityPacket(202, "Synthetic Hero", 88, 42));
+    expect(tracker.state().identity).toBeDefined();
+
+    tracker.consume({ ...syncPacket(202, "StatusComponent", ""), packetName: "authenticated" } as CapturedFishNetPacket);
+
+    expect(tracker.state().identity).toBeUndefined();
+  });
+
+  test("ignores identity syncs belonging to other players", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+
+    tracker.consume(identityPacket(101, "Someone Else", 5, 5));
+
+    expect(tracker.state().identity).toBeUndefined();
+  });
 });
 
 function syncPacket(objectId: number, networkBehaviourType: string, payloadHex: string): CapturedFishNetPacket {
@@ -367,6 +482,38 @@ function resourcePacket(
   return packet;
 }
 
+function identityPacket(objectId: number, name: string, level: number, jobLevel: number): CapturedFishNetPacket {
+  const packet = syncPacket(objectId, "StatusComponent", "");
+  (packet as CapturedFishNetPacket & { decodedFields: unknown }).decodedFields = [
+    { name: "DisplayName", typeName: "System.String", codec: "stringUtf8Packed", value: name },
+    { name: "DisplayClass", typeName: "Archetype", codec: "packedInt32", value: 0 },
+    { name: "Race", typeName: "Race", codec: "packedInt32", value: 0 },
+    { name: "Level", typeName: "Int32", codec: "packedInt32", value: level },
+    { name: "JobLevel", typeName: "Int32", codec: "packedInt32", value: jobLevel },
+  ];
+  return packet;
+}
+
+function currentResourcePacket(
+  objectId: number,
+  networkBehaviourType: "HealthComponent" | "SkillsComponent",
+  current: number,
+): CapturedFishNetPacket {
+  const packet = syncPacket(objectId, networkBehaviourType, "");
+  packet.payload = Buffer.concat([Buffer.from([0]), packed(current)]);
+  return packet;
+}
+
+function spawnEntry(networkBehaviourType: string, name: string, value: number) {
+  return {
+    componentIndex: 0,
+    networkBehaviourType,
+    index: 0,
+    name,
+    fields: [{ name, typeName: "Synthetic", codec: "packedInt32" as const, value }],
+  };
+}
+
 function packed(value: number): Buffer {
   let encoded = BigInt(value) << 1n;
   const bytes: number[] = [];
@@ -376,4 +523,34 @@ function packed(value: number): Buffer {
   }
   bytes.push(Number(encoded));
   return Buffer.from(bytes);
+}
+
+class ManualTiming {
+  private nowMs = 0;
+  private nextId = 1;
+  private callbacks = new Map<number, { at: number; callback: () => void }>();
+
+  options() {
+    return {
+      now: () => this.nowMs,
+      schedule: (callback: () => void, delayMs: number): unknown => {
+        const id = this.nextId++;
+        this.callbacks.set(id, { at: this.nowMs + delayMs, callback });
+        return id;
+      },
+      cancel: (handle: unknown) => this.callbacks.delete(handle as number),
+    };
+  }
+
+  advance(milliseconds: number): void {
+    this.nowMs += milliseconds;
+    while (true) {
+      const due = [...this.callbacks]
+        .filter(([, timer]) => timer.at <= this.nowMs)
+        .sort(([, left], [, right]) => left.at - right.at)[0];
+      if (!due) return;
+      this.callbacks.delete(due[0]);
+      due[1].callback();
+    }
+  }
 }

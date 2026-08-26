@@ -93,8 +93,7 @@ describe("FishNetInspectRoster", () => {
   });
 
   test("an inspected character never reaches the local character tracker", () => {
-    // The tracker merges every payload it accepts into a single local snapshot, so routing an
-    // inspect through it would overwrite your own character with a stranger's.
+    // The tracker merges every payload it accepts into a single local snapshot, so routing an inspect through it would overwrite your own character with a stranger's.
     const tracker = new FishNetCharacterTracker();
     expect(tracker.consume(inspectPacket("Fictional Stranger"))).toBe(false);
     expect(tracker.current()).toBeUndefined();
@@ -111,8 +110,6 @@ describe("FishNetInspectRoster self and stranger", () => {
   });
 
   test("an unnamed targetRpc is never guessed at", () => {
-    // The bundled prefab layout names PlayerController RPCs even mid-session, so an unnamed
-    // targetRpc is some other traffic — decoding it speculatively could only invent a player.
     const roster = new FishNetInspectRoster();
     const packet = inspectPacket("Fictional Stranger", null);
     expect(roster.consume(packet)).toBe(false);

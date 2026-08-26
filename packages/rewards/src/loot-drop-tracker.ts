@@ -38,10 +38,7 @@ export interface FishNetLootDropUpdateEvent {
   drop: FishNetLootDrop;
 }
 
-/**
- * Emitted when a drop leaves the ground. A despawn carries only an object ID — no reason and no
- * actor — so this reports that the drop is gone, never that a particular player picked it up.
- */
+/** Emitted when a drop leaves the ground. */
 export interface FishNetLootDropRemovedEvent {
   kind: "removed";
   tick: number;
@@ -58,15 +55,7 @@ export interface FishNetLootDropTrackerOptions {
   rpcMap?: FishNetRpcMap;
 }
 
-/**
- * Tracks items lying on the ground, from the spawn that places them to the despawn that removes
- * them.
- *
- * A drop's world position comes from its spawn packet's transform header; its identity comes from
- * the `LootDrop` behaviour's SyncVars, which arrive both inside the spawn and as follow-up
- * `syncType` packets. Because the two halves arrive separately, a spawn is reported immediately and
- * an `update` follows once the item is named.
- */
+/** Tracks items lying on the ground, from the spawn that places them to the despawn that removes them. */
 export class FishNetLootDropTracker {
   private readonly map: FishNetRpcMap;
   private readonly drops = new Map<number, FishNetLootDrop>();

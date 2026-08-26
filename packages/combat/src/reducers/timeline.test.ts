@@ -2,11 +2,6 @@ import { describe, expect, test } from "bun:test";
 
 import { ANALYSIS_BUCKET_MS, addToSeries, createSeries, takeDirtyFrom } from "./timeline.ts";
 
-/**
- * The dirty range is what stops the read model rewriting an open encounter's whole timeline on
- * every indexing pass, so it has to be exact: too wide and the saving disappears, too narrow and a
- * changed bucket is never persisted.
- */
 describe("bucket series dirty range", () => {
   test("a fresh series is clean until something is recorded", () => {
     const series = createSeries(0);
@@ -21,8 +16,6 @@ describe("bucket series dirty range", () => {
   });
 
   test("covers the zero buckets a hit past the end appends", () => {
-    // Buckets 1 and 2 are created as padding by the second hit, so they are new rows too and the
-    // range has to reach back to them rather than starting at the hit's own bucket.
     const series = createSeries(0);
     addToSeries(series, 0, 10);
     takeDirtyFrom(series);
@@ -42,8 +35,7 @@ describe("bucket series dirty range", () => {
   });
 
   test("a resolution collapse invalidates the whole series", () => {
-    // Every bucket now spans a different range and the series is shorter, so a writer must replace
-    // it outright — which it recognises by the range starting at zero.
+    // Every bucket now spans a different range and the series is shorter, so a writer must replace it outright — which it recognises by the range starting at zero.
     const series = createSeries(0);
     for (let bucket = 0; bucket < 4; bucket += 1) addToSeries(series, bucket * ANALYSIS_BUCKET_MS, 10, 4);
     takeDirtyFrom(series);

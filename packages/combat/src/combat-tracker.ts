@@ -23,12 +23,7 @@ export interface FishNetCombatActorIdentity {
   readonly uid?: string;
 }
 
-/**
- * Names a monster type. Injected rather than imported because the mob catalog lives in the rewards
- * package, which already depends on this one.
- *
- * `level` disambiguates the spawn payload, which is scanned at arbitrary offsets.
- */
+/** Names a monster type. */
 export interface FishNetMonsterCatalog {
   get(mobId: string): { readonly level: number; readonly displayName: string } | undefined;
 }
@@ -52,11 +47,7 @@ export interface FishNetCombatTrackerOptions {
   actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   /** Resolves healing mechanics for actors whose local character build is visible. */
   healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  /**
-   * The local player's network object id, when known. Only used to attribute a summon calibration
-   * recovered from an unnamed packet, which carries no object id of its own. Omit it and that
-   * recovery is skipped.
-   */
+  /** The local player's network object id, when known. */
   localActorIdResolver?: () => number | undefined;
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */
   monsterCatalog?: FishNetMonsterCatalog;
@@ -180,11 +171,7 @@ export interface FishNetCombatStatusEvent {
   /** Absent on `ApplyEffectDisplays_O`, which carries no level; consumers keep the last known one. */
   level?: number;
   action: "applied" | "removed";
-  /**
-   * Server-reported time left, from `ApplyEffectDisplays_O` only. Authoritative where present:
-   * the catalog's nominal duration is a guess at what the server is already telling us here.
-   * Absent for a status with no expiry.
-   */
+  /** Server-reported time left, from `ApplyEffectDisplays_O` only. */
   remainingSeconds?: number;
   stacks?: number;
   actorIdentity?: FishNetCombatActorIdentity;
@@ -204,16 +191,8 @@ export interface FishNetCombatSummonEvent {
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
-/**
- * A `PlayerController.FullHeal_C`, which restores an actor outright.
- *
- * Kept off the `heal` kind on purpose. The wire carries no amount — the RPC declares no arguments at
- * all — and the in-game source is a town NPC service rather than combat healing, so folding it into
- * HPS would spike the meter by a full health bar for something no one healed. `reducers/meter.ts`
- * only counts `kind: "heal"`, so a separate kind keeps it out structurally instead of by a flag
- * somebody has to remember.
- */
-export interface FishNetCombatFullHealEvent {
+/** A `PlayerController.FullHeal_C`, which restores an actor outright. */
+interface FishNetCombatFullHealEvent {
   kind: "fullHeal";
   rpc: "FullHeal_C";
   tick: number;
@@ -266,8 +245,7 @@ interface ActivationState {
   actionKind: FishNetCombatActionKind;
   sourceId?: string;
   sourceLabel?: string;
-  /** The cast's declared target (from CastBegin_C's targetId field), when known. Used to
-   * correlate heals back to a caster since Recover_C carries no healer id of its own. */
+  /** The cast's declared target (from CastBegin_C's targetId field), when known. */
   targetId?: number;
   startTick: number;
   endTick?: number;
@@ -275,8 +253,6 @@ interface ActivationState {
   inferred: boolean;
 }
 
-/** Attribution for a target's currently active "Regeneration" status, resolved once when the
- * status is applied and reused for every Recover_C tick until RemoveEffect_T clears it. */
 interface RegenSourceState {
   actorId?: number;
   sourceId?: string;
@@ -295,17 +271,11 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 const CURRENT_STATUS_COMPONENT_INDICES = new Set([5, 6]);
 const CURRENT_HEALTH_COMPONENT_INDICES = new Set([2, 3]);
-/**
- * Upper bound on a payload `recoverSummons` will even attempt. A calibration is 13 bytes per summon
- * and no build fields more than a handful, so this only exists to keep the heuristic away from the
- * multi-kilobyte character dumps that also travel on unresolved links.
- */
+/** Upper bound on a payload `recoverSummons` will even attempt. */
 const MAX_RECOVERED_SUMMON_BYTES = 256;
-/** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. Extend as more
- * are confirmed in captures — this is a best-effort allowlist, not derived from game data. */
+/** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. */
 const HEALING_SKILL_IDS = new Set(["Heal", "HighHeal", "FieldHealing"]);
-/** Skill ids that heal indirectly by granting the "Regeneration" status (per
- * packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
+/** Skill ids that heal indirectly by granting the "Regeneration" status (per packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
 const REGEN_SKILL_IDS = new Set(["HealAll", "Sanctuary", "GuardianBond", "SanctuaryField"]);
 const REGEN_STATUS_ID = "Regeneration";
 
@@ -426,8 +396,6 @@ export class FishNetCombatTracker {
       return events;
     }
     if (packet.rpcName === "FullHeal_C" && matchesBehaviour(packet, "PlayerController")) {
-      // Declares no arguments, so anything on the wire means the hash was misread - the decoder
-      // refuses those, and this is a second belt for a packet arriving pre-resolved.
       if (packet.payload.length === 0) {
         events.push({
           kind: "fullHeal",
@@ -480,8 +448,7 @@ export class FishNetCombatTracker {
 
   /** Uses the normal monster-identity path so all consumers receive the curated boss name. */
   private bossIdentity(event: FishNetCombatActivationEvent): FishNetCombatMonsterIdentityEvent | undefined {
-    // Spawn-derived monster data and player identities are authoritative. The curated registry
-    // exists only for boss objects that expose neither of those game-provided identities.
+    // Spawn-derived monster data and player identities are authoritative.
     if (!event.sourceId || event.actorIdentity || this.monsters?.get(event.actorId)) return undefined;
     const definition = this.bossCatalog?.get(event.sourceId);
     if (!definition) return undefined;

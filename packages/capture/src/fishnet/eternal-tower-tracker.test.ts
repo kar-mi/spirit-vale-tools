@@ -16,7 +16,14 @@ function packet(rpcName: string, decodedFields: FishNetDecodedField[], tick = 1)
   } as CapturedFishNetPacket;
 }
 
-const packed = (name: string, value: number): FishNetDecodedField => ({
+const stringField = (name: string, value: string): FishNetDecodedField => ({
+  name,
+  typeName: "System.String",
+  codec: "stringUtf8Packed",
+  value,
+});
+
+const intField = (name: string, value: number): FishNetDecodedField => ({
   name,
   typeName: "System.Int32",
   codec: "packedInt32",
@@ -24,84 +31,116 @@ const packed = (name: string, value: number): FishNetDecodedField => ({
 });
 
 describe("FishNetEternalTowerTracker", () => {
-  test("initializes from a complete ETUpdateRun snapshot", () => {
+  test("reads the floor from a DrawTitle banner", () => {
     const tracker = new FishNetEternalTowerTracker();
 
-    expect(tracker.consume(packet("ETUpdateRun", [
-      packed("match.InstanceId", 17),
-      packed("match.PartyId", 23),
-      packed("match.State", 2),
-      packed("match.Floor", 42),
+    expect(tracker.consume(packet("DrawTitle", [
+      stringField("title", "The Echoing Spire\nFloor 12"),
     ], 10))).toBe(true);
     expect(tracker.current()).toEqual({
       known: true,
       inTower: true,
-      active: true,
-      phase: "inRun",
-      stateValue: 2,
-      floor: 42,
-      instanceId: 17,
-      partyId: 23,
-      finished: false,
-      source: "ETUpdateRun",
+      floor: 12,
+      towerName: "The Echoing Spire",
+      source: "DrawTitle",
       updatedTick: 10,
     });
   });
 
-  test("distinguishes acceptance, completion, and leaving the instance", () => {
+  test("advances the floor on a later DrawTitle without needing a reset in between", () => {
     const tracker = new FishNetEternalTowerTracker();
+    tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 1")], 1));
 
-    tracker.consume(packet("ETUpdateRun", [
-      packed("match.State", 1),
-      packed("match.Floor", 8),
-    ]));
-    expect(tracker.current()).toMatchObject({ active: true, inTower: false, phase: "accept", floor: 8 });
-
-    tracker.consume(packet("ETAdvanceFloor", [
-      packed("floor", 8),
-      { name: "finished", typeName: "System.Boolean", codec: "boolean", value: true },
-    ], 2));
-    expect(tracker.current()).toMatchObject({ active: false, inTower: true, phase: "finished", floor: 8 });
-
-    tracker.consume(packet("ETUpdateRun", [
-      { name: "match", typeName: "EternalTowerRun", codec: "nullable", value: null },
-    ], 3));
-    expect(tracker.current()).toMatchObject({ known: true, active: false, inTower: false, phase: "none" });
-    expect(tracker.current().floor).toBeUndefined();
+    expect(tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 2")], 2)))
+      .toBe(true);
+    expect(tracker.current()).toMatchObject({ floor: 2 });
   });
 
-  test("can initialize after capture starts mid-run from an advance message", () => {
+  test("ignores a title that does not match the floor banner shape", () => {
     const tracker = new FishNetEternalTowerTracker();
-
-    expect(tracker.consume(packet("ETAdvanceFloor", [
-      packed("floor", 19),
-      { name: "finished", typeName: "System.Boolean", codec: "boolean", value: false },
-    ]))).toBe(true);
-    expect(tracker.current()).toMatchObject({ known: true, inTower: true, active: true, floor: 19 });
+    expect(tracker.consume(packet("DrawTitle", [stringField("title", "Welcome back!")]))).toBe(false);
+    expect(tracker.current()).toEqual({ known: false, inTower: false });
   });
 
-  test("does not treat enter or leave requests as authoritative transitions", () => {
+  test("confirms tower entry and captures the instance id from ClientInstancedMapReady", () => {
     const tracker = new FishNetEternalTowerTracker();
-    const enter = packet("ETEnter", []);
-    enter.packetName = "serverRpc";
-    const leave = packet("ETLeave", []);
-    leave.packetName = "serverRpc";
 
-    expect(tracker.consume(enter)).toBe(false);
-    expect(tracker.consume(leave)).toBe(false);
-    expect(tracker.current()).toEqual({ known: false, inTower: false, active: false, phase: "unknown" });
+    expect(tracker.consume(packet("ClientInstancedMapReady", [
+      intField("mapId", 50),
+      intField("localMapInstanceId", 1000000001),
+      stringField("instancedMapFlowId", "flow-1"),
+      stringField("instancedMapId", "map-1"),
+      stringField("admissionId", "admission-1"),
+      stringField("bindingSlot", "et"),
+      stringField("bindingToken", "token-1"),
+    ], 5))).toBe(true);
+    expect(tracker.current()).toMatchObject({
+      known: true,
+      inTower: true,
+      instanceId: 1000000001,
+      instancedMapId: "map-1",
+      source: "ClientInstancedMapReady",
+    });
   });
 
-  test("resets when its authoritative transport disconnects", () => {
+  test("merges DrawTitle and ClientInstancedMapReady into one snapshot regardless of order", () => {
     const tracker = new FishNetEternalTowerTracker();
-    tracker.consume(packet("ETAdvanceFloor", [
-      packed("floor", 3),
-      { name: "finished", typeName: "System.Boolean", codec: "boolean", value: false },
-    ]));
+    tracker.consume(packet("ClientInstancedMapReady", [
+      intField("localMapInstanceId", 7),
+      stringField("instancedMapId", "map-7"),
+      stringField("bindingSlot", "et"),
+    ], 1));
+    tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 4")], 2));
+
+    expect(tracker.current()).toMatchObject({
+      floor: 4,
+      towerName: "The Echoing Spire",
+      instanceId: 7,
+      instancedMapId: "map-7",
+    });
+  });
+
+  test("clears tower state once bound to a non-tower instanced map", () => {
+    const tracker = new FishNetEternalTowerTracker();
+    tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 4")], 1));
+
+    expect(tracker.consume(packet("ClientInstancedMapReady", [
+      intField("localMapInstanceId", 99),
+      stringField("bindingSlot", "farm"),
+    ], 2))).toBe(true);
+    expect(tracker.current()).toEqual({ known: false, inTower: false });
+  });
+
+  test("does not reset on authenticated or disconnect - floor survives a same-instance reconnect", () => {
+    const tracker = new FishNetEternalTowerTracker();
+    tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 25")], 1));
+
+    const reconnect = packet("", []);
+    reconnect.packetName = "authenticated";
+    expect(tracker.consume(reconnect)).toBe(false);
+    expect(tracker.current()).toMatchObject({ known: true, floor: 25 });
+
     const disconnect = packet("", []);
     disconnect.packetName = "disconnect";
+    expect(tracker.consume(disconnect)).toBe(false);
+    expect(tracker.current()).toMatchObject({ known: true, floor: 25 });
+  });
 
-    expect(tracker.consume(disconnect)).toBe(true);
-    expect(tracker.current().known).toBe(false);
+  test("ignores traffic from an unrelated behaviour", () => {
+    const tracker = new FishNetEternalTowerTracker();
+    const other = packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 4")]);
+    other.networkBehaviourType = "MonsterController";
+
+    expect(tracker.consume(other)).toBe(false);
+    expect(tracker.current()).toEqual({ known: false, inTower: false });
+  });
+
+  test("reset() clears an explicitly-tracked floor", () => {
+    const tracker = new FishNetEternalTowerTracker();
+    tracker.consume(packet("DrawTitle", [stringField("title", "The Echoing Spire\nFloor 4")]));
+
+    expect(tracker.reset()).toBe(true);
+    expect(tracker.current()).toEqual({ known: false, inTower: false });
+    expect(tracker.reset()).toBe(false);
   });
 });
