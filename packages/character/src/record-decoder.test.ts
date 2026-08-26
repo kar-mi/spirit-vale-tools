@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
-import { decodeCharacterRecordSync } from "./record-decoder.ts";
+import { decodeCharacterRecordSync, decodeCharacterSpawnRecords } from "./record-decoder.ts";
 
 function syncPacket(networkBehaviourType: string | undefined, payloadHex: string): CapturedFishNetPacket {
   return {
@@ -54,3 +54,32 @@ describe("decodeCharacterRecordSync", () => {
     expect(decodeCharacterRecordSync(syncPacket("MoveComponent", "01000020c1"))).toBeUndefined();
   });
 });
+
+describe("decodeCharacterSpawnRecords", () => {
+  test("uses exact decoded behaviour and SyncType names", () => {
+    expect(decodeCharacterSpawnRecords([
+      spawnEntry("HealthComponent", "healthSync", 750),
+      spawnEntry("HealthComponent", "maxHealthSync", 1_000),
+      spawnEntry("SkillsComponent", "manaSync", 120),
+      spawnEntry("SkillsComponent", "maxManaSync", 240),
+      spawnEntry("MoveComponent", "MoveSpeed", 8.925),
+      spawnEntry("OtherComponent", "healthSync", 1),
+    ])).toEqual({
+      currentHealth: 750,
+      maxHealth: 1_000,
+      currentMana: 120,
+      maxMana: 240,
+      moveSpeed: 8.925,
+    });
+  });
+});
+
+function spawnEntry(networkBehaviourType: string, name: string, value: number) {
+  return {
+    componentIndex: 0,
+    networkBehaviourType,
+    index: 0,
+    name,
+    fields: [{ name, typeName: "Synthetic", codec: "packedInt32" as const, value }],
+  };
+}

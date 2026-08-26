@@ -1,7 +1,7 @@
 import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { decodeCharacterRpcPayload, rescaleSubstats, resolveCharacterArchetypeId } from "./decoder.ts";
 import { aggregateGearSubstats, calculateAdvancedGearStats, calculateCharacterStats, calculateWeightLimit, materializeGearStats, materializeSkillStats } from "./formulas.ts";
-import { decodeCharacterRecordSync } from "./record-decoder.ts";
+import { decodeCharacterRecordSync, decodeCharacterSpawnRecords } from "./record-decoder.ts";
 import type { CharacterIdentity, CharacterRecordValues, CharacterSnapshot, CharacterStatBreakdown, CharacterViewState } from "./types.ts";
 
 const CHARACTER_RPCS = new Set(["LoadCharacter_T", "CharacterCallback_T"]);
@@ -43,7 +43,10 @@ export class FishNetCharacterTracker {
       return false;
     }
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
-      this.pendingRecords.delete(pendingKey(packet.connectionId, packet.objectId));
+      const key = pendingKey(packet.connectionId, packet.objectId);
+      this.pendingRecords.delete(key);
+      const update = decodeCharacterSpawnRecords(packet.spawnSyncEntries);
+      if (update) Object.assign(this.pendingRecordsFor(key), update, { updatedAt: new Date().toISOString() });
     }
     // Only the local player's client emits serverRpc packets, which pins their unit object.
     if (packet.packetName === "serverRpc" && packet.objectId !== undefined) {

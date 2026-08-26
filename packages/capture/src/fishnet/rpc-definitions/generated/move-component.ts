@@ -57,7 +57,8 @@ export const moveComponentSyncTypes = [
   {
     "index": 0,
     "name": "SpeedRank",
-    "typeName": "Speed"
+    "typeName": "Speed",
+    "codec": "packedInt32"
   },
   {
     "index": 1,

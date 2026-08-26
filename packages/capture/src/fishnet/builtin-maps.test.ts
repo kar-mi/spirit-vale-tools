@@ -283,21 +283,24 @@ describe("bundled FishNet maps", () => {
     ]));
   });
 
-  test("contains the mapped public player identity SyncType prefix", () => {
+  test("contains the complete mapped player visual SyncType", () => {
     const player = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "PlayerController");
-    expect(player?.syncTypes?.find(({ index }) => index === 5)).toEqual({
-      index: 5,
-      name: "VisualData",
-      typeName: "CharacterVisualDto",
-      fields: [{
-        name: "Appearance",
-        typeName: "CharacterAppearanceDto",
-        fields: [
-          { name: "DisplayName", typeName: "System.String", codec: "stringUtf8Packed" },
-          { name: "Archetype", typeName: "Archetype", codec: "packedInt32" },
-        ],
-      }],
-    });
+    const visual = player?.syncTypes?.find(({ index }) => index === 5);
+    expect(visual).toMatchObject({ index: 5, name: "VisualData", typeName: "CharacterVisualDto" });
+    expect(visual?.fields?.map(({ name }) => name)).toEqual(["Appearance", "Equips", "EquipAppearance", "Cosmetics"]);
+    expect(visual?.fields?.[0]?.fields?.map(({ name }) => name)).toEqual([
+      "DisplayName", "Archetype", "BodyColor", "Hair", "HairColor", "Brow",
+      "Beard", "Mouth", "Eye", "EyeColor", "Ears", "Iris",
+    ]);
+  });
+
+  test("contains complete combat data needed to advance through spawn SyncTypes", () => {
+    const combat = loadBundledFishNetRpcMap().behaviours.find(({ typeName }) => typeName === "CombatComponent");
+    expect(combat?.syncTypes?.find(({ index }) => index === 0)?.fields?.map(({ name }) => name)).toEqual([
+      "MainHandAttackDelay", "MainHandType", "OffHandAttackDelay", "OffHandType", "AttackRange",
+      "Stance", "Weapons", "CastAnimationTime", "AttackAnimationTimes", "AttackDelay", "StatScalings",
+    ]);
+    expect(combat?.syncTypes?.find(({ index }) => index === 1)).toMatchObject({ name: "SpeedRank", codec: "packedInt32" });
   });
 
   test("decodes deterministic market search and stall-status prefixes", () => {

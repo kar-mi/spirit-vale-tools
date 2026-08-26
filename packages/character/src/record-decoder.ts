@@ -1,4 +1,4 @@
-import type { CapturedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
+import type { CapturedFishNetPacket, FishNetSpawnSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
 import type { CharacterRecordValues } from "./types.ts";
 
 export function decodeCharacterRecordSync(packet: CapturedFishNetPacket): Partial<CharacterRecordValues> | undefined {
@@ -17,6 +17,26 @@ export function decodeCharacterRecordSync(packet: CapturedFishNetPacket): Partia
     default:
       return undefined;
   }
+}
+
+/** Reads exact, map-decoded resource SyncTypes embedded in an ObjectSpawn. */
+export function decodeCharacterSpawnRecords(entries: readonly FishNetSpawnSyncEntry[] | undefined): Partial<CharacterRecordValues> | undefined {
+  if (!entries) return undefined;
+  const update: Partial<CharacterRecordValues> = {};
+  for (const entry of entries) {
+    const value = entry.fields.find((field) => field.name === entry.name)?.value;
+    if (typeof value !== "number") continue;
+    if (entry.networkBehaviourType === "HealthComponent") {
+      if (entry.name === "healthSync") update.currentHealth = value;
+      else if (entry.name === "maxHealthSync") update.maxHealth = value;
+    } else if (entry.networkBehaviourType === "SkillsComponent") {
+      if (entry.name === "manaSync") update.currentMana = value;
+      else if (entry.name === "maxManaSync") update.maxMana = value;
+    } else if (entry.networkBehaviourType === "MoveComponent" && entry.name === "MoveSpeed") {
+      update.moveSpeed = value;
+    }
+  }
+  return recordUpdate(update);
 }
 
 function recordUpdate(update: Partial<CharacterRecordValues>): Partial<CharacterRecordValues> | undefined {

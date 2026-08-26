@@ -220,6 +220,33 @@ describe("FishNetCharacterTracker", () => {
     expect(state.stats.find((stat) => stat.id === "move-speed")?.record).toBeCloseTo(8.925, 3);
   });
 
+  test("buffers exact resource SyncTypes embedded in a spawn until that object is pinned", () => {
+    const tracker = new FishNetCharacterTracker();
+    const spawn = {
+      ...syncPacket(202, "PlayerController", ""),
+      packetName: "objectSpawn",
+      spawnSyncEntries: [
+        spawnEntry("HealthComponent", "healthSync", 750),
+        spawnEntry("HealthComponent", "maxHealthSync", 1_000),
+        spawnEntry("SkillsComponent", "manaSync", 120),
+        spawnEntry("SkillsComponent", "maxManaSync", 240),
+        spawnEntry("MoveComponent", "MoveSpeed", 8.925),
+      ],
+    } as CapturedFishNetPacket;
+
+    expect(tracker.consume(spawn)).toBe(false);
+    expect(tracker.state().records).toBeUndefined();
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.state().records).toMatchObject({
+      currentHealth: 750,
+      maxHealth: 1_000,
+      currentMana: 120,
+      maxMana: 240,
+      moveSpeed: 8.925,
+    });
+  });
+
   test("clears server-synced resources when the local object changes", () => {
     const tracker = new FishNetCharacterTracker();
     tracker.consume(pinPacket(101));
@@ -405,6 +432,16 @@ function identityPacket(objectId: number, name: string, level: number, jobLevel:
     { name: "JobLevel", typeName: "Int32", codec: "packedInt32", value: jobLevel },
   ];
   return packet;
+}
+
+function spawnEntry(networkBehaviourType: string, name: string, value: number) {
+  return {
+    componentIndex: 0,
+    networkBehaviourType,
+    index: 0,
+    name,
+    fields: [{ name, typeName: "Synthetic", codec: "packedInt32" as const, value }],
+  };
 }
 
 function packed(value: number): Buffer {

@@ -42,6 +42,37 @@ describe("transportPacketData", () => {
 });
 
 describe("fishNetPacketData", () => {
+  test("serializes ObjectSpawn sync payloads and decoded entries", () => {
+    const packet = {
+      tick: 49,
+      packetId: 3,
+      packetName: "objectSpawn",
+      objectId: 12,
+      spawnSyncPayload: Buffer.from("0001", "hex"),
+      spawnSyncEntries: [{
+        componentIndex: 2,
+        networkBehaviourType: "HealthComponent",
+        index: 0,
+        name: "healthSync",
+        fields: [{ name: "healthSync", typeName: "System.Int32", codec: "packedInt32", value: 750 }],
+      }],
+      raw: Buffer.alloc(0),
+      payload: Buffer.alloc(0),
+      connectionId: "synthetic-connection",
+    } as CapturedFishNetPacket;
+
+    expect(fishNetPacketData(packet)).toMatchObject({
+      spawnSyncPayloadHex: "0001",
+      spawnSyncEntries: [{
+        componentIndex: 2,
+        networkBehaviourType: "HealthComponent",
+        index: 0,
+        name: "healthSync",
+        fields: [{ name: "healthSync", value: 750 }],
+      }],
+    });
+  });
+
   test("serializes resolved RPC Links with their decoded fields", () => {
     const udp = udpPacket("inbound");
     const liteNetPacket: CapturedLiteNetLibPacket = {

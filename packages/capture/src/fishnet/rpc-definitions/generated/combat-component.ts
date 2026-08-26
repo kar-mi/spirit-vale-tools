@@ -33,12 +33,73 @@ export const combatComponentSyncTypes = [
   {
     "index": 0,
     "name": "CombatData",
-    "typeName": "CombatData"
+    "typeName": "CombatData",
+    "fields": [
+      {
+        "name": "MainHandAttackDelay",
+        "typeName": "System.Single",
+        "codec": "float32"
+      },
+      {
+        "name": "MainHandType",
+        "typeName": "EquipType",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "OffHandAttackDelay",
+        "typeName": "System.Single",
+        "codec": "float32"
+      },
+      {
+        "name": "OffHandType",
+        "typeName": "EquipType",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "AttackRange",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "Stance",
+        "typeName": "StanceType",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "Weapons",
+        "typeName": "System.Collections.Generic.List`1[[EquipType, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "repeated": true,
+        "codec": "packedInt32"
+      },
+      {
+        "name": "CastAnimationTime",
+        "typeName": "System.Single",
+        "codec": "float32"
+      },
+      {
+        "name": "AttackAnimationTimes",
+        "typeName": "System.Single[]",
+        "repeated": true,
+        "codec": "float32"
+      },
+      {
+        "name": "AttackDelay",
+        "typeName": "System.Single",
+        "codec": "float32"
+      },
+      {
+        "name": "StatScalings",
+        "typeName": "System.Single[]",
+        "repeated": true,
+        "codec": "float32"
+      }
+    ]
   },
   {
     "index": 1,
     "name": "SpeedRank",
-    "typeName": "Speed"
+    "typeName": "Speed",
+    "codec": "packedInt32"
   },
   {
     "index": 2,

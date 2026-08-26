@@ -59,11 +59,12 @@ export function fishNetPacketData(packet: CapturedFishNetPacket): JsonObject {
       "bundleIndex", "linkId", "linkedPacketName", "linkResolved", "registeredObjectId",
       "registeredComponentIndex", "registeredRpcHash", "spawnType", "spawnCollectionId", "spawnPrefabId",
       "spawnNested", "spawnLocalPosition", "spawnLocalRotation", "spawnLocalScale",
-      "rpcLinkRegistrations", "syncIndex", "syncName", "broadcastHash", "broadcastName",
+      "spawnSyncEntries", "rpcLinkRegistrations", "syncIndex", "syncName", "broadcastHash", "broadcastName",
     ]),
     ...(packet.spawnSceneId === undefined ? {} : { spawnSceneId: packet.spawnSceneId.toString() }),
     ...(packet.undecodedPayload === undefined ? {} : { undecodedPayloadHex: packet.undecodedPayload.toString("hex") }),
     ...(packet.syncPayload === undefined ? {} : { syncPayloadHex: packet.syncPayload.toString("hex") }),
+    ...(packet.spawnSyncPayload === undefined ? {} : { spawnSyncPayloadHex: packet.spawnSyncPayload.toString("hex") }),
   };
 }
 

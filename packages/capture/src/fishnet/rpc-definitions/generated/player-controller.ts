@@ -4014,6 +4014,114 @@ export const playerControllerSyncTypes = [
             "name": "Archetype",
             "typeName": "Archetype",
             "codec": "packedInt32"
+          },
+          {
+            "name": "BodyColor",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Hair",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "HairColor",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Brow",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Beard",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Mouth",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Eye",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "EyeColor",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Ears",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Iris",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          }
+        ]
+      },
+      {
+        "name": "Equips",
+        "typeName": "System.Collections.Generic.List`1[[EquipVisualDto, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "repeated": true,
+        "fields": [
+          {
+            "name": "Slot",
+            "typeName": "EquipSlot",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "EquipId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          }
+        ]
+      },
+      {
+        "name": "EquipAppearance",
+        "typeName": "EquipAppearanceData",
+        "nullable": true,
+        "fields": [
+          {
+            "name": "EquipSlotsHidden",
+            "typeName": "System.Boolean[]",
+            "repeated": true,
+            "codec": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "Cosmetics",
+        "typeName": "System.Collections.Generic.List`1[[CosmeticSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "repeated": true,
+        "nullable": true,
+        "fields": [
+          {
+            "name": "Slot",
+            "typeName": "CosmeticSlot",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Id",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Rarity",
+            "typeName": "ItemRarity",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Shiny",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
           }
         ]
       }
