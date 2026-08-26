@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-character",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Spirit Vale character decoding and stat calculation utilities.",
   "type": "module",
   "files": [
@@ -17,7 +17,7 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-capture": "^2.0.0",
+    "@kar-mi/spirit-vale-tools-capture": "^2.4.0",
     "@kar-mi/spirit-vale-tools-items": "^0.1.8",
     "@kar-mi/spirit-vale-tools-skills": "^0.2.1"
   }

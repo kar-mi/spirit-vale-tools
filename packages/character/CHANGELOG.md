@@ -1,5 +1,18 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.5.0
+
+### Minor Changes
+
+- 0dc8425: Decode complete player spawn SyncTypes from generated build mappings, including visual, movement, combat, health, and mana state.
+
+  Expose spawn-embedded character resources safely after local-object proof, and add authoritative-first `normalizedMaxHp` and `normalizedMaxMp` values that can infer a missing maximum from a settled regeneration sequence.
+
+### Patch Changes
+
+- Updated dependencies [0dc8425]
+  - @kar-mi/spirit-vale-tools-capture@2.4.0
+
 ## 0.4.3
 
 ### Patch Changes
