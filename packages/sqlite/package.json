@@ -2,6 +2,12 @@
   "name": "@kar-mi/spirit-vale-tools-sqlite",
   "version": "0.2.1",
   "description": "Disposable SQLite read-model infrastructure for Spirit Vale session logs.",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kar-mi/spirit-vale-tools.git",
+    "directory": "packages/sqlite"
+  },
   "type": "module",
   "engines": {
     "bun": ">=1.4.0"
