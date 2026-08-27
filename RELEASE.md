@@ -1,7 +1,7 @@
 # Package releases
 
-Reusable `@kar-mi/spirit-vale-tools-*` packages are versioned and published
-independently through Changesets and GitHub Packages.
+Reusable `@kar-mi/spirit-vale-tools-*` packages are versioned independently
+through Changesets and published to both npm and GitHub Packages.
 
 ## Validation
 
@@ -24,11 +24,14 @@ bunx changeset
 Commit the generated Markdown file with the implementation. On `main`, the
 **Version and Publish Packages** workflow opens or updates a version pull
 request. Merging that pull request builds and publishes the changed packages to
-GitHub Packages.
+GitHub Packages, then mirrors the same versions to npm.
 
 `bun run release:packages` always runs `build:packages` before
 `changeset publish`, because publishable packages include generated `dist`
 output.
+
+The npm mirror uses `bun run publish:npm`, which disables duplicate Git tag
+creation because the GitHub Packages release job owns release tags.
 
 ## GitHub configuration
 

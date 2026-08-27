@@ -13,6 +13,7 @@
     "direction:debug": "bun run packages/cli/src/direction-debug.ts",
     "generate:rpc-map": "bun run scripts/generate-rpc-map.ts",
     "market": "bun run packages/cli/src/market.ts",
+    "publish:npm": "bun run build:packages && changeset publish --no-git-tag",
     "release:packages": "bun run build:packages && changeset publish",
     "rewards": "bun run packages/cli/src/rewards.ts",
     "check": "bun run typecheck && bun test",

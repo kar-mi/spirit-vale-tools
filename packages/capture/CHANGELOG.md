@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 2.4.1
+
+### Patch Changes
+
+- f181ebf: Reconstruct FishNet prefab IDs from runtime AssetPathHash ordering so gravestone spawns and SyncTypes decode correctly.
+
 ## 2.4.0
 
 ### Minor Changes
