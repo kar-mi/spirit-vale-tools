@@ -21,8 +21,7 @@ availability.
 ## Linux Prerequisites
 
 - A standard linux distrobution
-- Bun 1.3
-- Electrobun dependencies (see electrobun documentation for linux dependencies.)
+- Bun 1.4 or newer for development
 - libpcap
 
 To run live capture without elevation, give bun `CAP_NET_RAW` & 
@@ -41,7 +40,7 @@ sudo setcap 'cap_net_raw,cap_net_admin=+ep' $(which bun)
 getcap $(which bun)
 ```
 
-Other Capabilities & Permissions:
+Other Linux Capabilities & Permissions:
 
 * `capsh` for a temporary shell session with specified capabilities.
 * `CAP_AMBIENT` for ambient capabilities, allows for spawned child `execve()` processes to inherit capabilities.
@@ -49,7 +48,7 @@ Other Capabilities & Permissions:
 * `docker` container with `--cap-add NET_RAW --cap-add NET_ADMIN`.
 * Wrappers, a script or program that sets the capabilities and launches the process. So you could have a `./bun_net_raw ./script.js` app, that launches regular `./bun` with the added capabilities, flags & commandline arguments. So that other bun scripts will continue to run without `NET_RAW` perms.
 
-`capsh` & `CAP_AMBIENT` Example:
+Linux `capsh` & `CAP_AMBIENT` Example:
 
 ```sh
 # Example: Launch bun in a shell with ambient capabilities
@@ -60,7 +59,7 @@ sudo capsh --caps="cap_net_raw,cap_net_admin+ep" \
            -- -c "export CAP_AMBIENT=1; bun /path/to/script.js"
 ```
 
-NixOS wrapper example:
+Linux NixOS wrapper example:
 
 ```nix
 nixosConfigurations.yourhostname = nixpkgs.lib.nixosSystem {
