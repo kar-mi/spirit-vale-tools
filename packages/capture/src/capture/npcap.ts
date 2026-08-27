@@ -54,9 +54,23 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       default: return { availability: "error", detail: `${expectedCaptureLibraryName()} capture is supported only on Windows & linux.` };
     }
     const dllPath = npcapDllPath();
-    if (!existsSync(dllPath)) {
-      return { availability: "missing", detail: `${expectedCaptureLibraryName()} (dllPath: ${dllPath}) is not found, please install it and make sure it's avaliable.` };
+    
+    switch(process.platform) {
+      case "win32":
+          if (!existsSync(dllPath)) {
+            return { availability: "missing", detail: `${expectedCaptureLibraryName()} is not found, please install it and make sure it's avaliable.` };
+          }
+      case "linux":
+        // we already validated that we can dlopen it in npcapDllPath() function.
+        // dllPath could be "libpcap.so" on linux... but the fully qualified path is actually LD_LIBRARY_PATH="/nix/store/lhqzqnb3r8wclslpchwwam9k12w7w58f-libpcap-1.10.6-lib/lib" + "libpcap.so".
+        // it's maybe better to just attempt a dlopen, and return the linker error then it is to existsSync("libpcap.so").
+        break;
+      default:
+        return { availability: "missing", detail: `Missing packet capture, not supported on this platform.` };
     }
+    
+
+    
     if (await isAdminOnlyInstall()) {
       return {
         availability: "admin-only",
@@ -326,9 +340,9 @@ function npcapDllPath(): string {
     case "linux": {
       const candidates = [
         process.env.LIBPCAP_PATH ?? "", // user specified override
-        "libpcap.so", // the dynamic linker should search the cwd & $PATH
+        "libpcap.so", // the dynamic linker should search the app folder & $LD_LIBRARY_PATH
         "libpcap.so.1", // fallbacks
-        "/usr/lib/libpcap.so",
+        "/usr/lib/libpcap.so", // and a fully qualified path where we expect it to be installed on most standard linux distros..
       ].filter(Boolean);
       for (const path of candidates) {
         try {
@@ -341,7 +355,7 @@ function npcapDllPath(): string {
           console.log("Tried to open lib, but failed: ", path, err);
         }
       }
-      throw new Error("libpcap not found.");
+      throw new Error("libpcap dynamic library not found, make sure to install it, and make sure it's avaliable in your $LD_LIBRARY_PATH, or you can set the LIBPCAP_PATH env var.");
     }
     default: throw new Error(`${process.platform} Platform not supported.`);
   }
