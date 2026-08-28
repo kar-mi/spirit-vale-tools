@@ -161,7 +161,8 @@ export interface FishNetCombatDeathEvent {
 
 export interface FishNetCombatStatusEvent {
   kind: "status";
-  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O" | "ApplySkillDisplay_O" | "RemoveSkillDisplay_O";
+  /** `LoadCharacter_T` is a login-restore fallback: an effect already active when the client connects, from the character save's own snapshot rather than a live apply. */
+  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O" | "ApplySkillDisplay_O" | "RemoveSkillDisplay_O" | "LoadCharacter_T";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
@@ -170,7 +171,7 @@ export interface FishNetCombatStatusEvent {
   /** Absent on `ApplyEffectDisplays_O`, which carries no level; consumers keep the last known one. */
   level?: number;
   action: "applied" | "removed";
-  /** Server-reported time left, from `ApplyEffectDisplays_O` only. */
+  /** Server-reported time left, from `ApplyEffectDisplays_O`/`LoadCharacter_T` only. */
   remainingSeconds?: number;
   stacks?: number;
   actorIdentity?: FishNetCombatActorIdentity;
@@ -263,6 +264,13 @@ interface SummonCalibrationEntry {
   skillId: string;
   summonId: string;
   level: number;
+}
+
+interface LoginEffectEntry {
+  statusId: string;
+  level: number;
+  remainingSeconds?: number;
+  stacks: number;
 }
 
 const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> = {
@@ -418,6 +426,12 @@ export class FishNetCombatTracker {
       && packet.rpcResolution === "verified"
       && packet.networkBehaviourType === "SummoningComponent") {
       events.push(...this.consumeSummonCalibration(packet));
+      return events;
+    }
+    if (packet.rpcName === "LoadCharacter_T"
+      && packet.rpcResolution === "verified"
+      && packet.networkBehaviourType === "PlayerSave") {
+      events.push(...this.consumeLoginEffects(packet));
       return events;
     }
     return events;
@@ -594,6 +608,37 @@ export class FishNetCombatTracker {
       ...(level === undefined ? {} : { level }),
       actorIdentity: this.actorIdentityResolver?.(actorId),
     };
+  }
+
+  /**
+   * Login restores whichever effects were active at save time through `PlayerSave.LoadCharacter_T`'s
+   * own `State.Effects` snapshot - no other packet reports them. Unlike `ApplyEffectDisplays_O`
+   * (which repeats and self-heals), this fires once per login, so a status it lists that never gets
+   * an explicit apply afterward would otherwise never appear at all.
+   */
+  private consumeLoginEffects(packet: DecodedFishNetPacket): FishNetCombatStatusEvent[] {
+    const entries = decodedLoginEffects(packet);
+    if (!entries) return [];
+    const actorId = packet.objectId!;
+    return entries.map((entry): FishNetCombatStatusEvent => ({
+      kind: "status",
+      rpc: "LoadCharacter_T",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: {
+        Id: entry.statusId,
+        Level: entry.level,
+        Duration: entry.remainingSeconds ?? null,
+        Stacks: entry.stacks,
+      },
+      actorId,
+      statusId: entry.statusId,
+      level: entry.level,
+      action: "applied",
+      ...(entry.remainingSeconds === undefined ? {} : { remainingSeconds: entry.remainingSeconds }),
+      stacks: entry.stacks,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    }));
   }
 
   /**
@@ -1095,6 +1140,32 @@ function decodedSummonCalibration(packet: DecodedFishNetPacket): SummonCalibrati
     if (skillId === undefined || summonId === undefined
       || level === undefined || !Number.isInteger(level) || level < 0) return undefined;
     entries.push({ skillId, summonId, level });
+  }
+  return entries;
+}
+
+/** Reads only the generated `State.Effects` nested-field shape; missing, partial, or trailing data fails closed. */
+function decodedLoginEffects(packet: DecodedFishNetPacket): LoginEffectEntry[] | undefined {
+  if (packet.undecodedPayload && packet.undecodedPayload.length > 0) return undefined;
+  const length = numberField(packet, "data.State.Effects.length");
+  if (length === undefined || !Number.isInteger(length) || length < 0) return undefined;
+
+  const entries: LoginEffectEntry[] = [];
+  for (let index = 0; index < length; index += 1) {
+    const statusId = stringField(packet, `data.State.Effects[${index}].Id`);
+    const level = numberField(packet, `data.State.Effects[${index}].Level`);
+    const duration = numberField(packet, `data.State.Effects[${index}].Duration`);
+    const stacks = numberField(packet, `data.State.Effects[${index}].Stacks`);
+    if (statusId === undefined
+      || level === undefined || !Number.isInteger(level) || level < 0
+      || duration === undefined
+      || stacks === undefined || !Number.isInteger(stacks) || stacks < 0) return undefined;
+    entries.push({
+      statusId,
+      level,
+      ...(duration < 0 || !Number.isFinite(duration) ? {} : { remainingSeconds: duration }),
+      stacks,
+    });
   }
   return entries;
 }

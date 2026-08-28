@@ -442,6 +442,69 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(trailing)).toEqual([]);
   });
 
+  function loadCharacterEffects(
+    tick: number,
+    actorId: number,
+    effects: readonly { statusId: string; level: number; duration: number; stacks: number }[],
+  ): DecodedFishNetPacket {
+    const result = packet(tick, actorId, "PlayerSave", "LoadCharacter_T", [
+      field("data.State.Effects.length", effects.length),
+      ...effects.flatMap((effect, index) => [
+        field(`data.State.Effects[${index}].Id`, effect.statusId),
+        field(`data.State.Effects[${index}].Level`, effect.level),
+        field(`data.State.Effects[${index}].Duration`, effect.duration),
+        field(`data.State.Effects[${index}].Stacks`, effect.stacks),
+      ]),
+    ]);
+    result.rpcResolution = "verified";
+    return result;
+  }
+
+  test("restores an effect still active at login from LoadCharacter_T, since no other packet reports it", () => {
+    const tracker = new FishNetCombatTracker();
+    const events = tracker.consume(loadCharacterEffects(1, 10, [
+      { statusId: "WindAttunement", level: 3, duration: 21, stacks: 0 },
+      { statusId: "Ruthless", level: 1, duration: 0.833, stacks: 0 },
+    ]));
+    expect(events).toEqual([
+      expect.objectContaining({
+        kind: "status", rpc: "LoadCharacter_T", actorId: 10,
+        statusId: "WindAttunement", level: 3, action: "applied", remainingSeconds: 21,
+      }),
+      expect.objectContaining({
+        kind: "status", rpc: "LoadCharacter_T", actorId: 10,
+        statusId: "Ruthless", level: 1, action: "applied", remainingSeconds: 0.833,
+      }),
+    ]);
+  });
+
+  test("emits nothing for a LoadCharacter_T with no active effects", () => {
+    const tracker = new FishNetCombatTracker();
+    expect(tracker.consume(loadCharacterEffects(1, 10, []))).toEqual([]);
+  });
+
+  test("fails closed when generated login-effect fields are absent, partial, or leave trailing data", () => {
+    const tracker = new FishNetCombatTracker();
+    const absent = packet(1, 10, "PlayerSave", "LoadCharacter_T");
+    absent.rpcResolution = "verified";
+    expect(tracker.consume(absent)).toEqual([]);
+
+    const partial = loadCharacterEffects(2, 10, [{ statusId: "WindAttunement", level: 3, duration: 21, stacks: 0 }]);
+    partial.decodedFields = partial.decodedFields?.filter(({ name }) => name !== "data.State.Effects[0].Level");
+    expect(tracker.consume(partial)).toEqual([]);
+
+    const trailing = loadCharacterEffects(3, 10, [{ statusId: "WindAttunement", level: 3, duration: 21, stacks: 0 }]);
+    trailing.undecodedPayload = Buffer.from([0xff]);
+    expect(tracker.consume(trailing)).toEqual([]);
+  });
+
+  test("ignores a LoadCharacter_T unless its component resolution is verified", () => {
+    const tracker = new FishNetCombatTracker();
+    const recovered = loadCharacterEffects(1, 10, [{ statusId: "WindAttunement", level: 3, duration: 21, stacks: 0 }]);
+    recovered.rpcResolution = "recovered";
+    expect(tracker.consume(recovered)).toEqual([]);
+  });
+
   /** `SummoningComponent` lives on the summon itself; `SummonerSync` is its only link back to the owning actor. */
   function summonSkillSync(
     tick: number,
