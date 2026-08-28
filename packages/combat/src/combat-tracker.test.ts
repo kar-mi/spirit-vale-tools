@@ -442,42 +442,55 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(trailing)).toEqual([]);
   });
 
-  test("falls back to SummonSkillSync for a summon restored at login, before any CalibrateSummons_T arrives", () => {
-    const tracker = new FishNetCombatTracker();
-    const sync: DecodedFishNetPacket = {
-      tick: 1,
-      objectId: 10,
+  /** `SummoningComponent` lives on the summon itself; `SummonerSync` is its only link back to the owning actor. */
+  function summonSkillSync(
+    tick: number,
+    summonObjectId: number,
+    skillId: string,
+    ownerActorId?: number,
+  ): DecodedFishNetPacket {
+    return {
+      tick,
+      objectId: summonObjectId,
       networkBehaviourType: "SummoningComponent",
       packetId: 900,
       packetName: "syncType",
       raw: Buffer.alloc(0),
       payload: Buffer.alloc(0),
       syncEntries: [
-        { index: 0, name: "SummonerSync", fields: [] },
+        ...(ownerActorId === undefined ? [] : [{ index: 0, name: "SummonerSync", fields: [field("SummonerSync", ownerActorId)] }]),
         { index: 2, name: "SummonSkillSync", fields: [
-          field("SkillId", "FictionalClone"),
-          field("Id", "FictionalClone Actor"),
+          field("SkillId", skillId),
+          field("Id", `${skillId} Actor`),
           field("Level", 1),
         ] },
       ],
     };
-    expect(tracker.consume(sync)).toEqual([
+  }
+
+  test("falls back to SummonSkillSync for a summon restored at login, before any CalibrateSummons_T arrives", () => {
+    const tracker = new FishNetCombatTracker();
+    expect(tracker.consume(summonSkillSync(1, 20, "FictionalClone", 10))).toEqual([
       expect.objectContaining({ kind: "summon", rpc: "SummonSkillSync", actorId: 10, skillId: "FictionalClone", stacks: 1 }),
+    ]);
+  });
+
+  test("credits no one for a summon whose SummonerSync has never been seen", () => {
+    const tracker = new FishNetCombatTracker();
+    expect(tracker.consume(summonSkillSync(1, 20, "FictionalClone"))).toEqual([]);
+  });
+
+  test("remembers a summon's owner from an earlier packet when a later one omits SummonerSync", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(summonSkillSync(1, 20, "FictionalClone", 10));
+    expect(tracker.consume(summonSkillSync(2, 20, "FictionalBloom"))).toEqual([
+      expect.objectContaining({ actorId: 10, skillId: "FictionalBloom" }),
     ]);
   });
 
   test("lets a later CalibrateSummons_T snapshot supersede a SummonSkillSync fallback", () => {
     const tracker = new FishNetCombatTracker();
-    const sync: DecodedFishNetPacket = {
-      tick: 1,
-      objectId: 10,
-      networkBehaviourType: "SummoningComponent",
-      packetId: 900,
-      packetName: "syncType",
-      raw: Buffer.alloc(0),
-      payload: Buffer.alloc(0),
-      syncEntries: [{ index: 2, name: "SummonSkillSync", fields: [field("SkillId", "FictionalClone")] }],
-    };
+    const sync = summonSkillSync(1, 20, "FictionalClone", 10);
     tracker.consume(sync);
     // A duplicate sync for the same known skill emits nothing more.
     expect(tracker.consume(sync)).toEqual([]);

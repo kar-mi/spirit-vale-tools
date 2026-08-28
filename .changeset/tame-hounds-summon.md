@@ -1,0 +1,10 @@
+---
+"@kar-mi/spirit-vale-tools-capture": patch
+"@kar-mi/spirit-vale-tools-combat": patch
+---
+
+Decode `NetworkObject`-typed SyncTypes (`SummoningComponent`'s `SummonerSync`/`PrimarySync`, now carrying an explicit codec in the regenerated FishNet map) and consume `SummonSkillSync` as a login-restore fallback for `CalibrateSummons_T`.
+
+A summon already active when the client connects is restored through `SummonSkillSync`, not `CalibrateSummons_T` - that RPC only fires on a later change. Because `SummonerSync`/`PrimarySync` previously had no decodable codec, the SyncType walk halted before ever reaching `SummonSkillSync`, so the overlay showed nothing for a summon restored at login. The combat tracker now fills in that one summon from `SummonSkillSync` without overwriting whatever a later `CalibrateSummons_T` snapshot reports.
+
+`SummoningComponent.SummonSkillSync` lives on the summoned object itself, not the owning actor - the fallback now credits the actor named by that same component's `SummonerSync` (remembered per summon object across updates that omit it) instead of the summon's own object id.
