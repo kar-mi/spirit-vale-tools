@@ -120,7 +120,14 @@ function summonCalibration(
   const result = packet(tick, actorId, "SummoningComponent", "CalibrateSummons_T");
   result.payload = Buffer.concat([
     packed(skillIds.length),
-    ...skillIds.map((skillId) => Buffer.concat([packed(Buffer.byteLength(skillId)), Buffer.from(skillId), Buffer.from([1, 0])])),
+    ...skillIds.map((skillId) => {
+      const summonId = `${skillId} Actor`;
+      return Buffer.concat([
+        packed(Buffer.byteLength(skillId)), Buffer.from(skillId),
+        packed(Buffer.byteLength(summonId)), Buffer.from(summonId),
+        packed(1),
+      ]);
+    }),
   ]);
   return result;
 }
@@ -410,7 +417,14 @@ describe("FishNetCombatTracker", () => {
     function calibrationPayload(...skillIds: readonly string[]): Buffer {
       return Buffer.concat([
         packed(skillIds.length),
-        ...skillIds.map((id) => Buffer.concat([packed(Buffer.byteLength(id)), Buffer.from(id), Buffer.from([1, 0])])),
+        ...skillIds.map((skillId) => {
+          const summonId = `${skillId} Actor`;
+          return Buffer.concat([
+            packed(Buffer.byteLength(skillId)), Buffer.from(skillId),
+            packed(Buffer.byteLength(summonId)), Buffer.from(summonId),
+            packed(1),
+          ]);
+        }),
       ]);
     }
 

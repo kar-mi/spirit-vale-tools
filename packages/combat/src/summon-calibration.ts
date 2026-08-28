@@ -1,10 +1,10 @@
 import { FishNetProtocolError } from "@kar-mi/spirit-vale-tools-capture";
-import { checkedEnd, readSignedPackedWhole, requireBytes } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
+import { checkedEnd, readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 
 export interface FishNetSummonCalibrationEntry {
   skillId: string;
-  isPrimary: boolean;
-  isMountedSummon: boolean;
+  summonId: string;
+  level: number;
 }
 
 /** Decodes the complete summon snapshot carried by CalibrateSummons_T. */
@@ -21,11 +21,12 @@ export function decodeSummonCalibration(payload: Buffer): FishNetSummonCalibrati
   for (let index = 0; index < count.value; index += 1) {
     const skill = readString(payload, offset);
     offset = skill.nextOffset;
-    const primary = readBoolean(payload, offset, "summon primary flag");
-    offset = primary.nextOffset;
-    const mounted = readBoolean(payload, offset, "summon mounted flag");
-    offset = mounted.nextOffset;
-    entries.push({ skillId: skill.value, isPrimary: primary.value, isMountedSummon: mounted.value });
+    const summon = readString(payload, offset);
+    offset = summon.nextOffset;
+    const level = readSignedPackedWhole(payload, offset);
+    offset = level.nextOffset;
+    if (level.value < 0) throw new FishNetProtocolError("summon level must not be negative");
+    entries.push({ skillId: skill.value, summonId: summon.value, level: level.value });
   }
   requireComplete(payload, offset);
   return entries;
@@ -33,20 +34,9 @@ export function decodeSummonCalibration(payload: Buffer): FishNetSummonCalibrati
 
 function readString(buffer: Buffer, offset: number): { value: string; nextOffset: number } {
   const length = readSignedPackedWhole(buffer, offset);
-  if (length.value < 0) throw new FishNetProtocolError("summon skill id must not be null");
+  if (length.value < 0) throw new FishNetProtocolError("summon calibration string must not be null");
   const nextOffset = checkedEnd(buffer, length.nextOffset, length.value);
   return { value: buffer.toString("utf8", length.nextOffset, nextOffset), nextOffset };
-}
-
-function readBoolean(
-  buffer: Buffer,
-  offset: number,
-  description: string,
-): { value: boolean; nextOffset: number } {
-  requireBytes(buffer, offset, 1, description);
-  const value = buffer[offset];
-  if (value !== 0 && value !== 1) throw new FishNetProtocolError(`invalid ${description}`);
-  return { value: value === 1, nextOffset: offset + 1 };
 }
 
 function requireComplete(buffer: Buffer, offset: number): void {
