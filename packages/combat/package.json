@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-combat",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "description": "Spirit Vale combat event tracking and replay utilities.",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -23,7 +23,7 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-capture": "^2.3.0",
+    "@kar-mi/spirit-vale-tools-capture": "^2.4.2",
     "@kar-mi/spirit-vale-tools-logging": "^0.9.0",
     "@kar-mi/spirit-vale-tools-metrics": "^0.2.0",
     "@kar-mi/spirit-vale-tools-skills": "^0.2.1",
