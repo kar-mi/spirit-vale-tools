@@ -16,7 +16,8 @@ export type FishNetWireCodec =
   | "vector3IntPacked"
   | "vector2"
   | "vector3"
-  | "quaternion";
+  | "quaternion"
+  | "networkObject";
 
 export type FishNetDecodedValue = boolean | number | string | number[] | null;
 

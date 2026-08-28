@@ -133,7 +133,8 @@ export const skillsComponentRpcs = [
       },
       {
         "name": "obj",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       },
       {
         "name": "position",

@@ -1,6 +1,6 @@
 import { FishNetProtocolError } from "./protocol.ts";
 import { resolveBundledMapName } from "./map-definitions/index.ts";
-import { checkedEnd, readFloatVector, readSignedPackedWhole, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
+import { checkedEnd, readFloatVector, readNetworkObjectReference, readSignedPackedWhole, readUnsignedPackedWhole, requireBytes } from "./wire-reader.ts";
 import type {
   DecodedFishNetPacket,
   FishNetDecodedField,
@@ -284,6 +284,10 @@ function decodeField(
       return { value: values, nextOffset };
     }
     case "quaternion": return readFloatVector(buffer, offset, 4);
+    case "networkObject": {
+      const reference = readNetworkObjectReference(buffer, offset);
+      return { value: reference.spawned ? reference.objectId : null, nextOffset: reference.nextOffset };
+    }
   }
 }
 

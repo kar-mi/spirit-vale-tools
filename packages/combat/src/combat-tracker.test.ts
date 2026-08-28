@@ -442,6 +442,50 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(trailing)).toEqual([]);
   });
 
+  test("falls back to SummonSkillSync for a summon restored at login, before any CalibrateSummons_T arrives", () => {
+    const tracker = new FishNetCombatTracker();
+    const sync: DecodedFishNetPacket = {
+      tick: 1,
+      objectId: 10,
+      networkBehaviourType: "SummoningComponent",
+      packetId: 900,
+      packetName: "syncType",
+      raw: Buffer.alloc(0),
+      payload: Buffer.alloc(0),
+      syncEntries: [
+        { index: 0, name: "SummonerSync", fields: [] },
+        { index: 2, name: "SummonSkillSync", fields: [
+          field("SkillId", "FictionalClone"),
+          field("Id", "FictionalClone Actor"),
+          field("Level", 1),
+        ] },
+      ],
+    };
+    expect(tracker.consume(sync)).toEqual([
+      expect.objectContaining({ kind: "summon", rpc: "SummonSkillSync", actorId: 10, skillId: "FictionalClone", stacks: 1 }),
+    ]);
+  });
+
+  test("lets a later CalibrateSummons_T snapshot supersede a SummonSkillSync fallback", () => {
+    const tracker = new FishNetCombatTracker();
+    const sync: DecodedFishNetPacket = {
+      tick: 1,
+      objectId: 10,
+      networkBehaviourType: "SummoningComponent",
+      packetId: 900,
+      packetName: "syncType",
+      raw: Buffer.alloc(0),
+      payload: Buffer.alloc(0),
+      syncEntries: [{ index: 2, name: "SummonSkillSync", fields: [field("SkillId", "FictionalClone")] }],
+    };
+    tracker.consume(sync);
+    // A duplicate sync for the same known skill emits nothing more.
+    expect(tracker.consume(sync)).toEqual([]);
+    expect(tracker.consume(summonCalibration(2, 10, ["FictionalClone", "FictionalClone"]))).toEqual([
+      expect.objectContaining({ skillId: "FictionalClone", stacks: 2 }),
+    ]);
+  });
+
   test("ignores a named summon calibration unless its component resolution is verified", () => {
     const tracker = new FishNetCombatTracker();
     const recovered = summonCalibration(1, 10, ["FictionalClone"]);

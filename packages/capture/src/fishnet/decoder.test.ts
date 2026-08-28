@@ -772,6 +772,41 @@ describe("FishNet bundles and sessions", () => {
       expect(sync?.undecodedPayload).toBeUndefined();
     });
 
+    test("decodes SummoningComponent's NetworkObject SyncTypes from the bundled map's own codec, and keeps walking to SummonSkillSync", () => {
+      // SummonerSync/PrimarySync (indices 0/1) are NetworkObject-typed; the data-mine export now
+      // states their codec directly (see extract.py's _SYNC_PRIMITIVE_CODECS), so no decode-time
+      // inference is needed for the walk to reach SummonSkillSync (index 2) after them.
+      const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+      const context = { reliable: true, connectionId: "summoning-network-object-sync" };
+      decoder.decode(tick(2, spawnWithoutLinks(4805, 4, 0)), context);
+      const skillId = "SyntheticSummon";
+      const summonId = `${skillId} Actor`;
+      const body = Buffer.concat([
+        Buffer.from([0]), packed(77), Buffer.from([1]), // SummonerSync: objectId 77, spawned
+        Buffer.from([1]), packed(65535), // PrimarySync: no-object sentinel
+        Buffer.from([2]), // SummonSkillSync
+        packed(Buffer.byteLength(skillId)), Buffer.from(skillId),
+        packed(Buffer.byteLength(summonId)), Buffer.from(summonId),
+        packed(3),
+      ]);
+      // Same objectId/componentIndex (6) as "uses the current monster prefab layout" below, whose
+      // bundled prefab-4/collection-0 layout binds component 6 to SummoningComponent.
+      const syncMessage = message(7, Buffer.concat([packed(4805), Buffer.from([1, 6]), u32(body.length), body]));
+      const [packet] = decoder.decode(tick(3, syncMessage), context);
+
+      expect(packet).toMatchObject({ packetName: "syncType", networkBehaviourType: "SummoningComponent" });
+      expect(packet?.undecodedPayload).toBeUndefined();
+      expect(packet?.syncEntries).toMatchObject([
+        { index: 0, name: "SummonerSync", fields: [{ name: "SummonerSync", value: 77 }] },
+        { index: 1, name: "PrimarySync", fields: [{ name: "PrimarySync", value: null }] },
+        { index: 2, name: "SummonSkillSync", fields: [
+          { name: "SkillId", value: skillId },
+          { name: "Id", value: summonId },
+          { name: "Level", value: 3 },
+        ] },
+      ]);
+    });
+
     test("keeps trailing bytes undecoded rather than guessing the next boundary", () => {
       const decoder = new FishNetSessionDecoder(twoSyncVarMap());
       const body = Buffer.concat([

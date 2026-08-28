@@ -178,7 +178,8 @@ export interface FishNetCombatStatusEvent {
 
 export interface FishNetCombatSummonEvent {
   kind: "summon";
-  rpc: "CalibrateSummons_T";
+  /** `SummonSkillSync` is a login-restore fallback: one active summon reported via SyncType rather than the batch RPC. */
+  rpc: "CalibrateSummons_T" | "SummonSkillSync";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
@@ -347,6 +348,10 @@ export class FishNetCombatTracker {
       ...(monsterIdentity ? [monsterIdentity] : []),
       ...(bossLifecycle ? [bossLifecycle] : []),
     ];
+    if (packet.packetName === "syncType" && matchesBehaviour(packet, "SummoningComponent")) {
+      events.push(...this.consumeSummonSkillSync(packet));
+      return events;
+    }
     if (packet.objectId === undefined || !packet.rpcName) {
       events.push(...this.recoverAmbiguousCombat(packet));
       return events;
@@ -586,6 +591,40 @@ export class FishNetCombatTracker {
       ...(level === undefined ? {} : { level }),
       actorIdentity: this.actorIdentityResolver?.(actorId),
     };
+  }
+
+  /**
+   * Login restores an existing summon through `SummonSkillSync` (a `SummoningComponent` SyncType),
+   * not `CalibrateSummons_T` - that RPC only fires on a later change, so without this the overlay
+   * shows nothing for a summon that was already active when the client connected.
+   *
+   * The sync carries one summon, not the full roster `CalibrateSummons_T` sends, so it only fills in
+   * a skill this tracker has not already seen for the actor; it never removes or overwrites a stack
+   * count the batch RPC already established.
+   */
+  private consumeSummonSkillSync(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
+    const entry = packet.syncEntries?.find((candidate) => candidate.name === "SummonSkillSync");
+    if (!entry) return [];
+    const skillId = entry.fields.find((entryField) => entryField.name === "SkillId")?.value;
+    if (typeof skillId !== "string") return [];
+    const actorId = packet.objectId!;
+    const stacks = this.summonStacks.get(actorId);
+    if (stacks?.has(skillId)) return [];
+
+    const current = new Map(stacks);
+    current.set(skillId, 1);
+    this.summonStacks.set(actorId, current);
+    return [{
+      kind: "summon",
+      rpc: "SummonSkillSync",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: decodedFieldRecord(packet),
+      actorId,
+      skillId,
+      stacks: 1,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    }];
   }
 
   private consumeSummonCalibration(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {

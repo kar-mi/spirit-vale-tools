@@ -53,7 +53,8 @@ export const summoningComponentRpcs = [
     "parameters": [
       {
         "name": "obj",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       }
     ]
   },
@@ -64,7 +65,8 @@ export const summoningComponentRpcs = [
     "parameters": [
       {
         "name": "obj",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       }
     ]
   },
@@ -79,12 +81,14 @@ export const summoningComponentSyncTypes = [
   {
     "index": 0,
     "name": "SummonerSync",
-    "typeName": "NetworkObject"
+    "typeName": "NetworkObject",
+    "codec": "networkObject"
   },
   {
     "index": 1,
     "name": "PrimarySync",
-    "typeName": "NetworkObject"
+    "typeName": "NetworkObject",
+    "codec": "networkObject"
   },
   {
     "index": 2,

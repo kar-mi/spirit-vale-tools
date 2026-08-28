@@ -283,7 +283,8 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "obj",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       }
     ]
   },
@@ -294,7 +295,8 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "obj",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       },
       {
         "name": "stats",
@@ -1996,7 +1998,8 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "sender",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       }
     ]
   },
@@ -2007,7 +2010,8 @@ export const playerControllerRpcs = [
     "parameters": [
       {
         "name": "sender",
-        "typeName": "FishNet.Object.NetworkObject"
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
       }
     ]
   },
