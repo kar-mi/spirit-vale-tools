@@ -7457,7 +7457,41 @@ export const playerSaveRpcs = [
       },
       {
         "name": "list",
-        "typeName": "CosmeticData[]"
+        "typeName": "CosmeticData[]",
+        "nullable": true,
+        "fields": [
+          {
+            "name": "Rarity",
+            "typeName": "ItemRarity",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Shiny",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          },
+          {
+            "name": "UID",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Refine",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Id",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Favorite",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          }
+        ],
+        "repeated": true
       }
     ]
   },

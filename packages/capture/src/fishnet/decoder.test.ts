@@ -1223,17 +1223,36 @@ describe("FishNet bundles and sessions", () => {
       expect(damage?.rpcName).not.toBe("Attack_C");
     });
 
-    test("leaves CalibrateSummons_T ambiguous - its array parameter is unevaluable", () => {
-      // Shape elimination cannot claim this one; FishNetCombatTracker recovers it instead.
+    test("decodes CalibrateSummons_T from its generated structured-array shape", () => {
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+      const context = { reliable: true, connectionId: "bundled-summons" };
+      decoder.decode(tick(2, spawnWithoutLinks(4804, 4, 0)), context);
       const summons = Buffer.concat([
         packed(2),
-        ...["SyntheticClone", "SyntheticClone"].map((id) =>
-          Buffer.concat([packed(Buffer.byteLength(id)), Buffer.from(id), Buffer.from([1, 0])])),
+        ...["SyntheticClone", "SyntheticClone"].map((skillId) => {
+          const summonId = `${skillId} Actor`;
+          return Buffer.concat([
+            packed(Buffer.byteLength(skillId)), Buffer.from(skillId),
+            packed(Buffer.byteLength(summonId)), Buffer.from(summonId),
+            packed(1),
+          ]);
+        }),
       ]);
-      const [packet] = decoder.decode(tick(3, targetRpc(4804, 6, 0, summons)), { reliable: true, connectionId: "bundled-summons" });
-      expect(packet).toMatchObject({ rpcResolution: "ambiguous" });
-      expect(packet?.rpcName).toBeUndefined();
+      const [packet] = decoder.decode(tick(3, targetRpc(4804, 6, 0, summons)), context);
+      expect(packet).toMatchObject({
+        rpcResolution: "verified",
+        networkBehaviourType: "SummoningComponent",
+        rpcName: "CalibrateSummons_T",
+        decodedFields: [
+          { name: "data.length", value: 2 },
+          { name: "data[0].SkillId", value: "SyntheticClone" },
+          { name: "data[0].Id", value: "SyntheticClone Actor" },
+          { name: "data[0].Level", value: 1 },
+          { name: "data[1].SkillId", value: "SyntheticClone" },
+          { name: "data[1].Id", value: "SyntheticClone Actor" },
+          { name: "data[1].Level", value: 1 },
+        ],
+      });
     });
   });
 

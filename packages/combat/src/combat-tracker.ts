@@ -9,7 +9,6 @@ import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-re
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
-import { decodeSummonCalibration } from "./summon-calibration.ts";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";
@@ -47,7 +46,7 @@ export interface FishNetCombatTrackerOptions {
   actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   /** Resolves healing mechanics for actors whose local character build is visible. */
   healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  /** The local player's network object id, when known. */
+  /** @deprecated Summon packets now require a verified object id; retained as an unused compatibility option. */
   localActorIdResolver?: () => number | undefined;
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */
   monsterCatalog?: FishNetMonsterCatalog;
@@ -186,8 +185,6 @@ export interface FishNetCombatSummonEvent {
   actorId: number;
   skillId: string;
   stacks: number;
-  /** True when the packet arrived unnamed and was recovered heuristically. See `recoverSummons`. */
-  recovered?: boolean;
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
@@ -261,6 +258,12 @@ interface RegenSourceState {
   candidateActivationIds?: string[];
 }
 
+interface SummonCalibrationEntry {
+  skillId: string;
+  summonId: string;
+  level: number;
+}
+
 const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> = {
   0: "normal",
   1: "critical",
@@ -271,8 +274,6 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 const CURRENT_STATUS_COMPONENT_INDICES = new Set([5, 6]);
 const CURRENT_HEALTH_COMPONENT_INDICES = new Set([2, 3]);
-/** Upper bound on a payload `recoverSummons` will even attempt. */
-const MAX_RECOVERED_SUMMON_BYTES = 256;
 /** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. */
 const HEALING_SKILL_IDS = new Set(["Heal", "HighHeal", "FieldHealing"]);
 /** Skill ids that heal indirectly by granting the "Regeneration" status (per packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
@@ -286,7 +287,6 @@ export class FishNetCombatTracker {
   private readonly skillLabels: Map<string, string>;
   private readonly actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   private readonly healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  private readonly localActorIdResolver?: () => number | undefined;
   private readonly monsterCatalog?: FishNetMonsterCatalog;
   private readonly bossCatalog?: FishNetBossCatalog;
   private readonly monsters?: FishNetMonsterDirectory;
@@ -322,7 +322,6 @@ export class FishNetCombatTracker {
     for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
     this.actorIdentityResolver = options.actorIdentityResolver;
     this.healingTraitsResolver = options.healingTraitsResolver;
-    this.localActorIdResolver = options.localActorIdResolver;
     this.monsterCatalog = options.monsterCatalog;
     if (options.monsterCatalog) this.monsters = new FishNetMonsterDirectory(options.monsterCatalog);
     this.bossCatalog = options.bossCatalog;
@@ -350,7 +349,6 @@ export class FishNetCombatTracker {
     ];
     if (packet.objectId === undefined || !packet.rpcName) {
       events.push(...this.recoverAmbiguousCombat(packet));
-      events.push(...this.recoverSummons(packet));
       return events;
     }
 
@@ -409,7 +407,9 @@ export class FishNetCombatTracker {
       }
       return events;
     }
-    if (packet.rpcName === "CalibrateSummons_T" && matchesBehaviour(packet, "SummoningComponent")) {
+    if (packet.rpcName === "CalibrateSummons_T"
+      && packet.rpcResolution === "verified"
+      && packet.networkBehaviourType === "SummoningComponent") {
       events.push(...this.consumeSummonCalibration(packet));
       return events;
     }
@@ -588,49 +588,9 @@ export class FishNetCombatTracker {
     };
   }
 
-  /**
-   * Last-resort recovery for a `CalibrateSummons_T` the capture layer could not name. Two paths lose
-   * it. An rpcLink whose registration never arrived carries no object id, no hash and no name at all
-   * - links are only ever learned from an `objectSpawn`, so if the player object's spawn is missed on
-   * a connection, every link on that object is dead for the connection's whole life. A plain
-   * targetRpc on an object with no bound components fares little better: wire hash 0 is shared by
-   * several behaviours, and with nothing bound there is nothing to eliminate against. Either way the
-   * summon tile stays blank until a map change respawns the player object and re-registers its links.
-   *
-   * This is a heuristic and deliberately narrow. `decodeSummonCalibration` must consume the payload
-   * exactly, at least one entry must decode, every skill id must be one the catalog knows, and the
-   * result is attributed to the local player because `CalibrateSummons_T` is a targetRpc no other
-   * client receives. An empty calibration - the "all summons gone" snapshot - is *not* recovered: it
-   * encodes as a single 0x01 byte, which carries no signature worth trusting.
-   */
-  private recoverSummons(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
-    // `recovered` counts as named: the decoder already corroborated a quarantined registration, so
-    // the normal path handles it and guessing again here would double count.
-    if (packet.rpcName || packet.rpcResolution === "verified" || packet.rpcResolution === "recovered") return [];
-    if (packet.payload.length < 2 || packet.payload.length > MAX_RECOVERED_SUMMON_BYTES) return [];
-    if (this.skillLabels.size === 0) return [];
-    const actorId = packet.objectId ?? this.localActorIdResolver?.();
-    if (actorId === undefined) return [];
-
-    let entries: ReturnType<typeof decodeSummonCalibration>;
-    try {
-      entries = decodeSummonCalibration(packet.payload);
-    } catch {
-      return [];
-    }
-    if (entries.length === 0) return [];
-    if (!entries.every(({ skillId }) => this.skillLabels.has(skillId))) return [];
-
-    return this.applySummonSnapshot(actorId, packet, entries).map((event) => ({ ...event, recovered: true }));
-  }
-
   private consumeSummonCalibration(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
-    let entries: ReturnType<typeof decodeSummonCalibration>;
-    try {
-      entries = decodeSummonCalibration(packet.payload);
-    } catch {
-      return [];
-    }
+    const entries = decodedSummonCalibration(packet);
+    if (!entries) return [];
     return this.applySummonSnapshot(packet.objectId!, packet, entries);
   }
 
@@ -638,7 +598,7 @@ export class FishNetCombatTracker {
   private applySummonSnapshot(
     actorId: number,
     packet: DecodedFishNetPacket,
-    entries: ReturnType<typeof decodeSummonCalibration>,
+    entries: readonly SummonCalibrationEntry[],
   ): FishNetCombatSummonEvent[] {
     const previous = this.summonStacks.get(actorId) ?? new Map<string, number>();
     const current = new Map<string, number>();
@@ -657,7 +617,7 @@ export class FishNetCombatTracker {
       rpc: "CalibrateSummons_T",
       tick: packet.tick,
       payloadBytes: packet.payload.length,
-      fields: {},
+      fields: decodedFieldRecord(packet),
       actorId,
       skillId,
       stacks: current.get(skillId) ?? 0,
@@ -1064,6 +1024,24 @@ function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue 
 
 function decodedFieldRecord(packet: DecodedFishNetPacket): Record<string, FishNetDecodedValue> {
   return Object.fromEntries(packet.decodedFields?.map(({ name, value }) => [name, value]) ?? []);
+}
+
+/** Reads only the generated nested-field shape; missing, partial, or trailing data fails closed. */
+function decodedSummonCalibration(packet: DecodedFishNetPacket): SummonCalibrationEntry[] | undefined {
+  if (packet.undecodedPayload && packet.undecodedPayload.length > 0) return undefined;
+  const length = numberField(packet, "data.length");
+  if (length === undefined || !Number.isInteger(length) || length < 0) return undefined;
+
+  const entries: SummonCalibrationEntry[] = [];
+  for (let index = 0; index < length; index += 1) {
+    const skillId = stringField(packet, `data[${index}].SkillId`);
+    const summonId = stringField(packet, `data[${index}].Id`);
+    const level = numberField(packet, `data[${index}].Level`);
+    if (skillId === undefined || summonId === undefined
+      || level === undefined || !Number.isInteger(level) || level < 0) return undefined;
+    entries.push({ skillId, summonId, level });
+  }
+  return entries;
 }
 
 function matchesBehaviour(packet: DecodedFishNetPacket, expected: string): boolean {

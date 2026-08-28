@@ -12,7 +12,25 @@ export const summoningComponentRpcs = [
     "parameters": [
       {
         "name": "data",
-        "typeName": "SummoningComponent+SummonSkillData[]"
+        "typeName": "SummoningComponent+SummonSkillData[]",
+        "fields": [
+          {
+            "name": "SkillId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Id",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Level",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          }
+        ],
+        "repeated": true
       }
     ]
   },
@@ -71,7 +89,24 @@ export const summoningComponentSyncTypes = [
   {
     "index": 2,
     "name": "SummonSkillSync",
-    "typeName": "SummonSkillData"
+    "typeName": "SummonSkillData",
+    "fields": [
+      {
+        "name": "SkillId",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "Id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "Level",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
   },
   {
     "index": 3,

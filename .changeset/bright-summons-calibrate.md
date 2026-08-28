@@ -1,5 +1,6 @@
 ---
+"@kar-mi/spirit-vale-tools-capture": patch
 "@kar-mi/spirit-vale-tools-combat": patch
 ---
 
-Decode current summon calibration snapshots so summon stacks reach active-status consumers again.
+Generate and consume the verified nested summon-calibration fields, while dropping heuristic recovery of unnamed summon packets.

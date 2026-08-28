@@ -201,15 +201,17 @@ hash 2  targetRpc     ApplyRecall_T(obj)
 ```
 
 `CalibrateSummons_T` is a **complete snapshot**, not a delta: each entry is one
-live summon (`skillId`, `isPrimary`, `isMountedSummon`), so three clones means
-three entries with the same `skillId`. `consumeSummonCalibration` diffs it
+live summon (`SkillId`, `Id`, `Level`), so three clones means three entries with
+the same `SkillId`. The capture layer decodes the repeated nested structure from
+the generated RPC map, and `consumeSummonCalibration` diffs it
 against the previous snapshot and emits only changed counts, which is why an
 unchanged repeat produces no event.
 
 Being a target RPC it reaches only the summoner. Because it is also the *only*
-signal, a missed one leaves the count stale until the next snapshot —
-`recoverSummons` exists to claw back calibrations the capture layer could not
-name, gated on an exact-fit decode with catalog-known skill ids.
+signal, a missed one leaves the count stale until the next snapshot. Only a
+verified `SummoningComponent` resolution is accepted. Unnamed, recovered,
+partially decoded, or trailing-data packets are ignored; summon state is never
+recovered by interpreting an unresolved payload heuristically.
 
 `CloneEffect_C` and `ApplyRecall_T` are not consumed. `CloneEffect_C` fires on the
 *clone's* own object rather than the summoner's, carries no count, and lands only
