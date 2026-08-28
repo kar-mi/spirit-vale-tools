@@ -442,6 +442,22 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(trailing)).toEqual([]);
   });
 
+  test("counts an anonymous stack summon (e.g. a shinobi clone) whose entries carry a null Id", () => {
+    const tracker = new FishNetCombatTracker();
+    const clones = packet(1, 10, "SummoningComponent", "CalibrateSummons_T", [
+      field("data.length", 3),
+      ...[0, 1, 2].flatMap((index) => [
+        field(`data[${index}].SkillId`, "ShadowSeal"),
+        field(`data[${index}].Id`, null),
+        field(`data[${index}].Level`, 0),
+      ]),
+    ]);
+    clones.rpcResolution = "verified";
+    expect(tracker.consume(clones)).toEqual([
+      expect.objectContaining({ kind: "summon", skillId: "ShadowSeal", stacks: 3 }),
+    ]);
+  });
+
   function loadCharacterEffects(
     tick: number,
     actorId: number,

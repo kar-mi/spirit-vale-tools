@@ -10,3 +10,5 @@ A summon already active when the client connects is restored through `SummonSkil
 `SummoningComponent.SummonSkillSync` lives on the summoned object itself, not the owning actor - the fallback now credits the actor named by that same component's `SummonerSync` (remembered per summon object across updates that omit it) instead of the summon's own object id.
 
 Restore effects still active at login the same way: `PlayerSave.LoadCharacter_T`'s own `State.Effects` snapshot is the only packet that reports a buff that was already active when the client connects - `ApplyEffect_T`/`ApplyEffectDisplays_O` only fire on a later change or refresh, exactly like `CalibrateSummons_T` for summons.
+
+Fixes `CalibrateSummons_T` rejecting every entry for an anonymous stack summon (e.g. a shinobi's clones), which the game reports with a null `Id` rather than a named one like `"Cactus Boss"`. `Id` was never actually used, only validated - decoding now stops requiring it.

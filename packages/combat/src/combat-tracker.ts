@@ -262,7 +262,6 @@ interface RegenSourceState {
 
 interface SummonCalibrationEntry {
   skillId: string;
-  summonId: string;
   level: number;
 }
 
@@ -1135,11 +1134,11 @@ function decodedSummonCalibration(packet: DecodedFishNetPacket): SummonCalibrati
   const entries: SummonCalibrationEntry[] = [];
   for (let index = 0; index < length; index += 1) {
     const skillId = stringField(packet, `data[${index}].SkillId`);
-    const summonId = stringField(packet, `data[${index}].Id`);
     const level = numberField(packet, `data[${index}].Level`);
-    if (skillId === undefined || summonId === undefined
-      || level === undefined || !Number.isInteger(level) || level < 0) return undefined;
-    entries.push({ skillId, summonId, level });
+    // `Id` is deliberately not read or required here: it's null for an anonymous stack summon (e.g.
+    // a shinobi clone), unlike a named one (e.g. "Cactus Boss"), and nothing downstream needs it.
+    if (skillId === undefined || level === undefined || !Number.isInteger(level) || level < 0) return undefined;
+    entries.push({ skillId, level });
   }
   return entries;
 }
