@@ -3,17 +3,17 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import type { FishNetStatusDefinition, FishNetStatusEffect } from "../src/catalog.ts";
-import { StatusDefinitions } from "../src/definitions/statuses.ts";
+import type { FishNetStatusDefinition, FishNetStatusEffect } from "../packages/statuses/src/catalog.ts";
+import { StatusDefinitions } from "../packages/statuses/src/definitions/statuses.ts";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_FILE = path.resolve(SCRIPT_DIR, "../src/definitions/statuses.ts");
+const OUTPUT_FILE = path.resolve(SCRIPT_DIR, "../packages/statuses/src/definitions/statuses.ts");
 
 function resolveDataMineJsonDir(): string {
   const arg = process.argv[2];
   if (!arg) {
     throw new Error(
-      "Usage: bun run packages/statuses/scripts/aggregate-durations.ts <path/to/data-mine/data/json>",
+      "Usage: bun run scripts/aggregate-durations.ts <path/to/data-mine/data/json>",
     );
   }
   return path.resolve(process.cwd(), arg);
