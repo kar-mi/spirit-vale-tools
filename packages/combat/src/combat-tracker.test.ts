@@ -547,6 +547,27 @@ describe("FishNetCombatTracker", () => {
     };
   }
 
+  /** Just the owner reference, as arrives when a summon's `SummonSkillSync` was reported separately (or earlier). */
+  function summonerSyncOnly(tick: number, summonObjectId: number, ownerActorId: number): DecodedFishNetPacket {
+    return {
+      tick,
+      objectId: summonObjectId,
+      networkBehaviourType: "SummoningComponent",
+      packetId: 900,
+      packetName: "syncType",
+      raw: Buffer.alloc(0),
+      payload: Buffer.alloc(0),
+      syncEntries: [{ index: 0, name: "SummonerSync", fields: [field("SummonerSync", ownerActorId)] }],
+    };
+  }
+
+  function objectDespawn(tick: number, objectId: number): DecodedFishNetPacket {
+    return {
+      tick, objectId, packetId: 4, packetName: "objectDespawn",
+      raw: Buffer.alloc(0), payload: Buffer.alloc(0),
+    };
+  }
+
   test("falls back to SummonSkillSync for a summon restored at login, before any CalibrateSummons_T arrives", () => {
     const tracker = new FishNetCombatTracker();
     expect(tracker.consume(summonSkillSync(1, 20, "FictionalClone", 10))).toEqual([
@@ -559,11 +580,49 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(summonSkillSync(1, 20, "FictionalClone"))).toEqual([]);
   });
 
-  test("remembers a summon's owner from an earlier packet when a later one omits SummonerSync", () => {
+  test("counts the summon once SummonerSync arrives, even when SummonSkillSync was reported first", () => {
     const tracker = new FishNetCombatTracker();
-    tracker.consume(summonSkillSync(1, 20, "FictionalClone", 10));
-    expect(tracker.consume(summonSkillSync(2, 20, "FictionalBloom"))).toEqual([
-      expect.objectContaining({ actorId: 10, skillId: "FictionalBloom" }),
+    expect(tracker.consume(summonSkillSync(1, 20, "FictionalClone"))).toEqual([]);
+    expect(tracker.consume(summonerSyncOnly(2, 20, 10))).toEqual([
+      expect.objectContaining({ actorId: 10, skillId: "FictionalClone", stacks: 1 }),
+    ]);
+  });
+
+  test("counts two summon objects reporting the same skill as two stacks, not one", () => {
+    const tracker = new FishNetCombatTracker();
+    expect(tracker.consume(summonSkillSync(1, 20, "SummonSkeleton", 10))).toEqual([
+      expect.objectContaining({ actorId: 10, skillId: "SummonSkeleton", stacks: 1 }),
+    ]);
+    expect(tracker.consume(summonSkillSync(2, 21, "SummonSkeleton", 10))).toEqual([
+      expect.objectContaining({ actorId: 10, skillId: "SummonSkeleton", stacks: 2 }),
+    ]);
+  });
+
+  test("a second summon object still needs its own SummonerSync, even once another object's owner is known", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(summonSkillSync(1, 20, "SummonSkeleton", 10));
+    expect(tracker.consume(summonSkillSync(2, 21, "SummonSkeleton"))).toEqual([]);
+  });
+
+  test("ignores a duplicate SummonSkillSync for the same object", () => {
+    const tracker = new FishNetCombatTracker();
+    const sync = summonSkillSync(1, 20, "FictionalClone", 10);
+    tracker.consume(sync);
+    expect(tracker.consume(sync)).toEqual([]);
+  });
+
+  test("corrects the stack count when a summon object despawns, and forgets its owner/skill", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(summonSkillSync(1, 20, "SummonSkeleton", 10));
+    tracker.consume(summonSkillSync(2, 21, "SummonSkeleton", 10));
+    expect(tracker.consume(objectDespawn(3, 20))).toEqual([
+      expect.objectContaining({ actorId: 10, skillId: "SummonSkeleton", stacks: 1 }),
+    ]);
+
+    // The despawned id is reused by an unrelated summon for a different actor - no leftover attribution.
+    expect(tracker.consume(summonSkillSync(4, 20, "SummonCactus"))).toEqual([]);
+    expect(tracker.consume(summonerSyncOnly(5, 20, 99))).toEqual([
+      expect.objectContaining({ actorId: 99, skillId: "SummonCactus", stacks: 1 }),
     ]);
   });
 
@@ -571,11 +630,19 @@ describe("FishNetCombatTracker", () => {
     const tracker = new FishNetCombatTracker();
     const sync = summonSkillSync(1, 20, "FictionalClone", 10);
     tracker.consume(sync);
-    // A duplicate sync for the same known skill emits nothing more.
+    // A duplicate sync for the same known object emits nothing more.
     expect(tracker.consume(sync)).toEqual([]);
     expect(tracker.consume(summonCalibration(2, 10, ["FictionalClone", "FictionalClone"]))).toEqual([
       expect.objectContaining({ skillId: "FictionalClone", stacks: 2 }),
     ]);
+  });
+
+  test("stops applying the SummonSkillSync fallback for an actor once a CalibrateSummons_T snapshot has been seen", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(summonCalibration(1, 10, ["FictionalClone"]));
+    // A summon object despawning after the batch RPC now owns this actor must not double-decrement.
+    tracker.consume(summonSkillSync(2, 20, "FictionalClone", 10));
+    expect(tracker.consume(objectDespawn(3, 20))).toEqual([]);
   });
 
   test("ignores a named summon calibration unless its component resolution is verified", () => {

@@ -265,6 +265,14 @@ interface SummonCalibrationEntry {
   level: number;
 }
 
+/** One summoned object's accumulated `SummonSkillSync`/`SummonerSync` state, keyed by its own network object id. Order-independent: either field may arrive first. */
+interface PendingSummonSkillState {
+  ownerActorId?: number;
+  skillId?: string;
+  /** Set once this object has contributed +1 to its owner's stack count, so it isn't counted twice. */
+  counted: boolean;
+}
+
 interface LoginEffectEntry {
   statusId: string;
   level: number;
@@ -304,8 +312,10 @@ export class FishNetCombatTracker {
   private readonly bossIdentities = new Map<number, string>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
-  /** A summoned object's own network id -> its owner's, from `SummoningComponent.SummonerSync`. */
-  private readonly summonOwners = new Map<number, number>();
+  /** Pending `SummonSkillSync`/`SummonerSync` state per summoned object's own network id, until both are known. */
+  private readonly summonSkillSyncState = new Map<number, PendingSummonSkillState>();
+  /** Actors for whom a `CalibrateSummons_T` snapshot has been seen; the `SummonSkillSync` fallback stops touching their stacks from then on, since the batch RPC now fully owns them. */
+  private readonly authoritativeSummonActors = new Set<number>();
   private readonly recentDamageSignatures = new Set<string>();
   private recentDamageTick: number | undefined;
   private nextActivation = 1;
@@ -341,6 +351,7 @@ export class FishNetCombatTracker {
     // Spawn and sync packets carry no RPC, so this has to run before the early return below.
     const monsterIdentity = this.monsterIdentity(packet.tick, this.monsters?.consume(packet));
     const bossLifecycle = this.bossIdentityLifecycle(packet);
+    const summonLifecycle = this.consumeSummonObjectLifecycle(packet);
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
       this.reset();
       return uniqueMonsterIdentityEvents([
@@ -356,6 +367,7 @@ export class FishNetCombatTracker {
     const events: FishNetCombatEvent[] = [
       ...(monsterIdentity ? [monsterIdentity] : []),
       ...(bossLifecycle ? [bossLifecycle] : []),
+      ...(summonLifecycle ? [summonLifecycle] : []),
     ];
     if (packet.packetName === "syncType" && matchesBehaviour(packet, "SummoningComponent")) {
       events.push(...this.consumeSummonSkillSync(packet));
@@ -441,7 +453,8 @@ export class FishNetCombatTracker {
     this.bossIdentities.clear();
     this.activeRegenSources.clear();
     this.summonStacks.clear();
-    this.summonOwners.clear();
+    this.summonSkillSyncState.clear();
+    this.authoritativeSummonActors.clear();
     this.recentDamageSignatures.clear();
     this.recentDamageTick = undefined;
     this.monsters?.reset();
@@ -646,50 +659,85 @@ export class FishNetCombatTracker {
    * shows nothing for a summon that was already active when the client connected.
    *
    * `SummonSkillSync` lives on the summoned object's own `SummoningComponent`, not the owner's - the
-   * packet's `objectId` names the summon (e.g. the cactus), not the actor to credit. `SummonerSync`,
-   * a sibling SyncType on that same component, is the owner reference; FishNet sends every dirty
-   * SyncType on login together, so it is normally in the same packet, but only a change re-sends a
-   * SyncType, so `summonOwners` remembers it for a later `SummonSkillSync`-only update too.
-   *
-   * The sync carries one summon, not the full roster `CalibrateSummons_T` sends, so it only fills in
-   * a skill this tracker has not already seen for the actor; it never removes or overwrites a stack
-   * count the batch RPC already established.
+   * packet's `objectId` names the summon (e.g. one skeleton), not the actor to credit. `SummonerSync`,
+   * a sibling SyncType on that same component, is the owner reference. FishNet sends every dirty
+   * SyncType on login together, so both usually arrive in the same packet, but not always in the same
+   * order, and only a change re-sends a SyncType afterward - so `summonSkillSyncState` accumulates
+   * whichever field arrives first, per summon object, until both are known. Each summon object
+   * contributes its own +1 once (never more), so two objects reporting the same skill both count -
+   * this is per-object state, not a "have I seen this skill" flag.
    */
   private consumeSummonSkillSync(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
     const summonObjectId = packet.objectId!;
     const summonerSync = packet.syncEntries
       ?.find((candidate) => candidate.name === "SummonerSync")
       ?.fields.find((entryField) => entryField.name === "SummonerSync")?.value;
-    if (typeof summonerSync === "number") this.summonOwners.set(summonObjectId, summonerSync);
+    const skillId = packet.syncEntries
+      ?.find((candidate) => candidate.name === "SummonSkillSync")
+      ?.fields.find((entryField) => entryField.name === "SkillId")?.value;
+    if (typeof summonerSync !== "number" && typeof skillId !== "string") return [];
 
-    const entry = packet.syncEntries?.find((candidate) => candidate.name === "SummonSkillSync");
-    if (!entry) return [];
-    const skillId = entry.fields.find((entryField) => entryField.name === "SkillId")?.value;
-    if (typeof skillId !== "string") return [];
-    const actorId = typeof summonerSync === "number" ? summonerSync : this.summonOwners.get(summonObjectId);
-    if (actorId === undefined) return [];
-    const stacks = this.summonStacks.get(actorId);
-    if (stacks?.has(skillId)) return [];
+    const state = this.summonSkillSyncState.get(summonObjectId) ?? { counted: false };
+    if (typeof summonerSync === "number") state.ownerActorId = summonerSync;
+    if (typeof skillId === "string") state.skillId = skillId;
+    this.summonSkillSyncState.set(summonObjectId, state);
 
-    const current = new Map(stacks);
-    current.set(skillId, 1);
-    this.summonStacks.set(actorId, current);
-    return [{
+    if (state.counted || state.ownerActorId === undefined || state.skillId === undefined) return [];
+    // Once a real snapshot has been seen for this actor, it fully owns their summon stacks.
+    if (this.authoritativeSummonActors.has(state.ownerActorId)) return [];
+
+    state.counted = true;
+    return [this.applySummonDelta(state.ownerActorId, state.skillId, 1, packet, "SummonSkillSync")];
+  }
+
+  /**
+   * Clears a summon object's `SummonSkillSync` bookkeeping on despawn (or a respawn reusing the same
+   * network object id), so a later reused id starts fresh rather than inheriting a stale owner/skill.
+   * Also corrects the stack count for an object this tracker itself counted in, unless a
+   * `CalibrateSummons_T` snapshot has since taken over that actor's stacks (which will correct the
+   * count on its own).
+   */
+  private consumeSummonObjectLifecycle(packet: DecodedFishNetPacket): FishNetCombatSummonEvent | undefined {
+    if ((packet.packetName !== "objectDespawn" && packet.packetName !== "objectSpawn") || packet.objectId === undefined) {
+      return undefined;
+    }
+    const state = this.summonSkillSyncState.get(packet.objectId);
+    if (!state) return undefined;
+    this.summonSkillSyncState.delete(packet.objectId);
+    if (!state.counted || state.ownerActorId === undefined || state.skillId === undefined) return undefined;
+    if (this.authoritativeSummonActors.has(state.ownerActorId)) return undefined;
+    return this.applySummonDelta(state.ownerActorId, state.skillId, -1, packet, "SummonSkillSync");
+  }
+
+  /** Adjusts one actor's stack count for one skill by `delta` and reports the resulting total. */
+  private applySummonDelta(
+    actorId: number,
+    skillId: string,
+    delta: number,
+    packet: DecodedFishNetPacket,
+    rpc: FishNetCombatSummonEvent["rpc"],
+  ): FishNetCombatSummonEvent {
+    const stacks = new Map(this.summonStacks.get(actorId));
+    const nextCount = Math.max(0, (stacks.get(skillId) ?? 0) + delta);
+    if (nextCount === 0) stacks.delete(skillId); else stacks.set(skillId, nextCount);
+    if (stacks.size === 0) this.summonStacks.delete(actorId); else this.summonStacks.set(actorId, stacks);
+    return {
       kind: "summon",
-      rpc: "SummonSkillSync",
+      rpc,
       tick: packet.tick,
       payloadBytes: packet.payload.length,
       fields: decodedFieldRecord(packet),
       actorId,
       skillId,
-      stacks: 1,
+      stacks: nextCount,
       actorIdentity: this.actorIdentityResolver?.(actorId),
-    }];
+    };
   }
 
   private consumeSummonCalibration(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
     const entries = decodedSummonCalibration(packet);
     if (!entries) return [];
+    this.authoritativeSummonActors.add(packet.objectId!);
     return this.applySummonSnapshot(packet.objectId!, packet, entries);
   }
 
