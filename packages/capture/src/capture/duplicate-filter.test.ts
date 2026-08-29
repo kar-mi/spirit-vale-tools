@@ -6,7 +6,7 @@ import type { CapturedTransportPacket } from "../types.ts";
 describe("DuplicateFilter", () => {
   test("suppresses a relayed copy that differs only in the rewritten endpoints", () => {
     const filter = new DuplicateFilter();
-    const payload = "041300c22a0a7ff105df08";
+    const payload = "0413000102030405060708";
     expect(filter.admit(udpPacket({ payload, sourcePort: 59159, destinationPort: 59171 }), 1_000)).toBe(true);
     expect(filter.admit(udpPacket({ payload, sourcePort: 7005, destinationPort: 59171 }), 1_000)).toBe(false);
     expect(filter.suppressedCount).toBe(1);
@@ -22,8 +22,8 @@ describe("DuplicateFilter", () => {
   test("admits a byte-identical payload travelling the other way", () => {
     // A peer echoing a control payload back is two datagrams, not one relayed twice.
     const filter = new DuplicateFilter();
-    expect(filter.admit(udpPacket({ payload: "020000020300000000", direction: "outbound" }), 1_000)).toBe(true);
-    expect(filter.admit(udpPacket({ payload: "020000020300000000", direction: "inbound" }), 1_000)).toBe(true);
+    expect(filter.admit(udpPacket({ payload: "0200000102000000", direction: "outbound" }), 1_000)).toBe(true);
+    expect(filter.admit(udpPacket({ payload: "0200000102000000", direction: "inbound" }), 1_000)).toBe(true);
     expect(filter.suppressedCount).toBe(0);
   });
 
@@ -38,7 +38,7 @@ describe("DuplicateFilter", () => {
 
   test("still collapses a relayed copy, whose local port the relay leaves alone", () => {
     const filter = new DuplicateFilter();
-    const payload = "041300c22a0a7ff105df08";
+    const payload = "0413000102030405060708";
     expect(filter.admit(udpPacket({ payload, sourcePort: 7_001, destinationPort: 57_472 }), 1_000)).toBe(true);
     expect(filter.admit(udpPacket({ payload, sourcePort: 64_878, destinationPort: 57_472 }), 1_000)).toBe(false);
     expect(filter.suppressedCount).toBe(1);
@@ -90,8 +90,8 @@ function udpPacket(
     direction: options.direction ?? "inbound",
     loopback: false,
     ipVersion: 4,
-    sourceIP: "192.168.50.235",
-    destinationIP: "167.114.209.119",
+    sourceIP: "192.0.2.10",
+    destinationIP: "198.51.100.20",
     sourcePort: options.sourcePort ?? 1111,
     destinationPort: options.destinationPort ?? 2222,
     truncated: false,

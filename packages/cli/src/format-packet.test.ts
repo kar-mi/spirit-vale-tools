@@ -24,7 +24,7 @@ function udpPacket(direction: "inbound" | "outbound"): CapturedUdpPacket {
     sourcePort: outbound ? 50000 : 7007,
     destinationPort: outbound ? 7007 : 50000,
     truncated: false,
-    payload: Buffer.from(outbound ? "032000" : "042000e68b47f982e2de08", "hex"),
+    payload: Buffer.from(outbound ? "032000" : "0420000102030405060708", "hex"),
   };
 }
 

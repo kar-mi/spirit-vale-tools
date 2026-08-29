@@ -125,8 +125,8 @@ Capture answers that question for you rather than leaving it to inspection. Alon
 reports the busiest discarded flows and a verdict on each:
 
 ```
-[dropped]  3818 udp 192.168.50.235:57473 -> 45.33.85.82:23249   (unrelated)
-[dropped]  1628 udp 167.114.173.41:7001 -> 192.168.50.235:57472 (game traffic)
+[dropped]  3818 udp 192.0.2.10:57473 -> 203.0.113.5:23249   (unrelated)
+[dropped]  1628 udp 198.51.100.20:7001 -> 192.0.2.10:57472 (game traffic)
 ```
 
 The verdict comes from LiteNetLib sequence numbers: a real stream is overwhelmingly consecutive,
