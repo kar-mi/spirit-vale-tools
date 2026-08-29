@@ -5,7 +5,7 @@ import type { Pointer } from "bun:ffi";
 
 import { formatIpv6 } from "./ip-address.ts";
 
-export type NpcapAvailability = "ready" | "missing" | "admin-only" | "error";
+export type NpcapAvailability = "ready" | "missing" | "error";
 
 export interface NpcapStatus {
   availability: NpcapAvailability;
@@ -41,6 +41,7 @@ export interface NpcapRuntime {
 }
 
 const ERROR_BUFFER_SIZE = 512;
+const PCAP_ERROR_PERM_DENIED = -8;
 
 export class SystemNpcapRuntime implements NpcapRuntime {
   private api?: LoadedNpcap;
@@ -68,15 +69,6 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       default:
         return { availability: "missing", detail: `Missing packet capture, not supported on this platform.` };
     }
-
-
-
-    if (await isAdminOnlyInstall()) {
-      return {
-        availability: "admin-only",
-        detail: `${expectedCaptureLibraryName()} is installed for administrators only; reinstall it with that restriction unchecked`,
-      };
-    }
     try {
       const api = this.load();
       const version = String(api.symbols.pcap_lib_version());
@@ -94,7 +86,15 @@ export class SystemNpcapRuntime implements NpcapRuntime {
         default:
           throw new Error("Platform not supported.");
       }
-      this.readyStatus = { availability: "ready", detail: `${version} is ready`, version };
+      const devices = this.enumerateDevices(api);
+      if (devices.length === 0) {
+        return {
+          availability: "error",
+          detail: "Npcap reported no captureable network adapters; access may require elevation",
+          version,
+        };
+      }
+      this.readyStatus = { availability: "ready", detail: "Npcap is ready", version };
       return this.readyStatus;
     } catch (error) {
       return { availability: "error", detail: errorMessage(error) };
@@ -104,7 +104,10 @@ export class SystemNpcapRuntime implements NpcapRuntime {
   async listDevices(): Promise<NpcapDevice[]> {
     const status = await this.status();
     if (status.availability !== "ready") throw new Error(status.detail);
-    const api = this.load();
+    return this.enumerateDevices(this.load());
+  }
+
+  private enumerateDevices(api: LoadedNpcap): NpcapDevice[] {
     const resultPointer = new Uint8Array(8);
     const errorBuffer = new Uint8Array(ERROR_BUFFER_SIZE);
     const result = api.symbols.pcap_findalldevs(resultPointer, errorBuffer);
@@ -151,6 +154,11 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       check(api.symbols.pcap_set_buffer_size(handle, 10 * 1024 * 1024), handle, api, "set capture buffer size");
       check(api.symbols.pcap_set_immediate_mode(handle, 1), handle, api, "enable immediate mode");
       const activated = api.symbols.pcap_activate(handle);
+      if (activated === PCAP_ERROR_PERM_DENIED) {
+        throw new Error(
+          `Npcap denied access to ${device.description}; run elevated or reinstall Npcap without administrator-only access: ${pcapError(api, handle)}`,
+        );
+      }
       if (activated < 0) throw new Error(`Npcap could not activate ${device.description}: ${pcapError(api, handle)}`);
       const dataLink = api.symbols.pcap_datalink(handle);
       const program = new Uint8Array(16);
@@ -365,27 +373,6 @@ function expectedCaptureLibraryName(): string {
   switch (process.platform) {
     case "win32": return "Npcap";
     case "linux": return "libpcap";
-    default: throw new Error(`${process.platform} Platform not supported.`);
-  }
-}
-
-async function isAdminOnlyInstall(): Promise<boolean> {
-  switch (process.platform) {
-    case "win32": {
-      try {
-        const child = Bun.spawn({
-          cmd: ["reg.exe", "query", "HKLM\\SYSTEM\\CurrentControlSet\\Services\\npcap\\Parameters", "/v", "AdminOnly"],
-          stdout: "pipe",
-          stderr: "ignore",
-          windowsHide: true,
-        });
-        const output = await new Response(child.stdout).text();
-        return await child.exited === 0 && /AdminOnly\s+REG_DWORD\s+0x1\b/i.test(output);
-      } catch {
-        return false;
-      }
-    }
-    case "linux": return false;
     default: throw new Error(`${process.platform} Platform not supported.`);
   }
 }

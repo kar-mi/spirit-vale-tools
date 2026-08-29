@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { chooseDeviceByRouteOutput } from "./adapter-selection.ts";
+import { chooseDeviceByRouteAddress } from "./adapter-selection.ts";
 import { DATA_LINK, extractIpPacket } from "./link-layer.ts";
 import { parseTransportPacket } from "./packet-parser.ts";
-import { WindowsTargetTracker, parseNetstat, parseTaskList } from "./target-tracker.ts";
+import { WindowsTargetTracker } from "./target-tracker.ts";
 import type { NpcapDevice } from "./npcap.ts";
 
 const devices: NpcapDevice[] = [
@@ -12,12 +12,8 @@ const devices: NpcapDevice[] = [
 ];
 
 describe("Npcap capture behavior", () => {
-  test("selects the lowest-metric default route by adapter address", () => {
-    const output = [
-      "0.0.0.0  0.0.0.0  192.0.2.1  192.0.2.10  25",
-      "0.0.0.0  0.0.0.0  198.51.100.1  198.51.100.10  5",
-    ].join("\r\n");
-    expect(chooseDeviceByRouteOutput(devices, output)?.name).toBe("device-b");
+  test("selects the adapter carrying the default route", () => {
+    expect(chooseDeviceByRouteAddress(devices, "198.51.100.10")?.name).toBe("device-b");
   });
 
   test("strips Ethernet VLAN and loopback headers", () => {
@@ -41,12 +37,6 @@ describe("Npcap capture behavior", () => {
     const parsedTcp = parseTransportPacket(tcp, context());
     expect(parsedTcp).toMatchObject({ protocol: "tcp", tcpFlags: 0x18 });
     expect(parsedTcp?.payload).toEqual(Buffer.from([3]));
-  });
-
-  test("parses fictional process and endpoint command output", () => {
-    expect(parseTaskList('"FictionalGame.exe","4242","Console","1","10,000 K"\r\n')).toEqual([4242]);
-    const endpoints = parseNetstat("UDP    0.0.0.0:50000    *:*    4242\r\n", "udp");
-    expect(endpoints).toEqual([{ protocol: "udp", address: "0.0.0.0", port: 50_000, processId: 4242 }]);
   });
 
   test("recovers after a target snapshot failure without losing the refresh loop", async () => {

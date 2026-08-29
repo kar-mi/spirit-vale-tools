@@ -1,5 +1,67 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 2.6.0
+
+### Minor Changes
+
+- 5d7affc: `PacketCapture` now reports which connection the game is on: a `connection` event as each one opens and closes, and a `connectionId` getter for the current one.
+  
+  Consumers previously had to infer this from FishNet's `authenticated`, which arrives once per connection. Losing that one packet left them pinned to a connection the game had already left, discarding everything the live one sent. LiteNetLib announces every connect and disconnect, so no single packet decides it.
+
+## 2.5.1
+
+### Patch Changes
+
+- cf80075: A packet waiting to be attributed to the target process is now held for several `netstat` refreshes rather than one.
+  
+  Neither endpoint of a freshly opened socket has been reported yet, so every connection's first packets are held. One refresh gave them a single chance to land, and since a refresh spawns two processes it often did not: the opening of a connection was discarded on that race, the connect and the authentication with it. Packets given up on are now reported as a warning instead of dropped silently.
+
+## 2.5.0
+
+### Minor Changes
+
+- ad11639: Query Windows directly through `kernel32`/`iphlpapi` instead of shelling out to
+  `tasklist.exe`, `netstat.exe`, `route.exe`, and `reg.exe`. Target tracking now walks a
+  Toolhelp32 process snapshot and reads the PID-owned TCP/UDP tables through
+  `GetExtendedTcpTable`/`GetExtendedUdpTable`, and adapter selection reads the default
+  route through `GetBestRoute` and `GetIpAddrTable`. The tracker refreshes once per
+  second, so this removes four process spawns and their console-output parsing from
+  every refresh tick, and drops the locale- and format-sensitivity of scraping
+  `netstat`/`tasklist`/`route` text.
+  
+  The new `win32-system.ts` states each `MIB_*_OWNER_PID` row layout once as data - row
+  size plus the address, port, and owning-PID offsets per protocol and address family -
+  so one reader walks all four table shapes rather than two near-duplicate readers
+  branching on family, and the remaining struct constants (`PROCESSENTRY32W`,
+  `MIB_IPFORWARDROW`, `MIB_IPADDRROW`) are named where they are used.
+  
+  `NpcapAvailability` no longer includes `"admin-only"`. That state was detected by
+  reading the `npcap` service's `AdminOnly` registry value through `reg.exe`; an
+  admin-only install is now reported when it actually blocks capture - `status()` returns
+  `"error"` when Npcap enumerates no adapters, and opening a device surfaces
+  `PCAP_ERROR_PERM_DENIED` with guidance to run elevated or reinstall Npcap without the
+  administrator-only restriction. Consumers matching on the removed `"admin-only"` value
+  should handle `"error"` instead.
+  
+  `parseTaskList` and `parseNetstat` are gone from `target-tracker.ts`, and
+  `chooseDeviceByRouteOutput` is replaced by `chooseDeviceByRouteAddress`, which takes the
+  resolved address rather than `route.exe` output. None of these were exported from the
+  package entrypoints.
+
+## 2.4.2
+
+### Patch Changes
+
+- f1694a0: Generate and consume the verified nested summon-calibration fields, while dropping heuristic recovery of unnamed summon packets. `CalibrateSummons_T` no longer requires each entry's `Id` to be a non-null string - it's null for an anonymous stack summon (e.g. a shinobi's clones), unlike a named one (e.g. `"Cactus Boss"`), and it was never actually used, only validated.
+  
+  Decode `NetworkObject`-typed SyncTypes (`SummoningComponent`'s `SummonerSync`/`PrimarySync`, now carrying an explicit codec in the regenerated FishNet map) and consume `SummonSkillSync` as a login-restore fallback for `CalibrateSummons_T`.
+  
+  A summon already active when the client connects is restored through `SummonSkillSync`, not `CalibrateSummons_T` - that RPC only fires on a later change. Because `SummonerSync`/`PrimarySync` previously had no decodable codec, the SyncType walk halted before ever reaching `SummonSkillSync`, so the overlay showed nothing for a summon restored at login. The combat tracker now fills in that one summon from `SummonSkillSync` without overwriting whatever a later `CalibrateSummons_T` snapshot reports.
+  
+  `SummoningComponent.SummonSkillSync` lives on the summoned object itself, not the owning actor - the fallback credits the actor named by that same component's `SummonerSync`, tracked per summon object rather than per actor so `SummonSkillSync` and `SummonerSync` can arrive in either order, two objects reporting the same skill (e.g. two summoned clones) each count as their own stack, and a despawned object's contribution is corrected and forgotten rather than leaking onto a reused network object id.
+  
+  Restore effects still active at login the same way: `PlayerSave.LoadCharacter_T`'s own `State.Effects` snapshot is the only packet that reports a buff that was already active when the client connects - `ApplyEffect_T`/`ApplyEffectDisplays_O` only fire on a later change or refresh, exactly like `CalibrateSummons_T` for summons.
+
 ## 2.4.1
 
 ### Patch Changes

@@ -9,7 +9,6 @@ import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-re
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
-import { decodeSummonCalibration } from "./summon-calibration.ts";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";
@@ -47,7 +46,7 @@ export interface FishNetCombatTrackerOptions {
   actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   /** Resolves healing mechanics for actors whose local character build is visible. */
   healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  /** The local player's network object id, when known. */
+  /** @deprecated Summon packets now require a verified object id; retained as an unused compatibility option. */
   localActorIdResolver?: () => number | undefined;
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */
   monsterCatalog?: FishNetMonsterCatalog;
@@ -162,7 +161,8 @@ export interface FishNetCombatDeathEvent {
 
 export interface FishNetCombatStatusEvent {
   kind: "status";
-  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O" | "ApplySkillDisplay_O" | "RemoveSkillDisplay_O";
+  /** `LoadCharacter_T` is a login-restore fallback: an effect already active when the client connects, from the character save's own snapshot rather than a live apply. */
+  rpc: "ApplyEffect_T" | "RemoveEffect_T" | "ApplyEffectDisplays_O" | "ApplySkillDisplay_O" | "RemoveSkillDisplay_O" | "LoadCharacter_T";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
@@ -171,7 +171,7 @@ export interface FishNetCombatStatusEvent {
   /** Absent on `ApplyEffectDisplays_O`, which carries no level; consumers keep the last known one. */
   level?: number;
   action: "applied" | "removed";
-  /** Server-reported time left, from `ApplyEffectDisplays_O` only. */
+  /** Server-reported time left, from `ApplyEffectDisplays_O`/`LoadCharacter_T` only. */
   remainingSeconds?: number;
   stacks?: number;
   actorIdentity?: FishNetCombatActorIdentity;
@@ -179,15 +179,14 @@ export interface FishNetCombatStatusEvent {
 
 export interface FishNetCombatSummonEvent {
   kind: "summon";
-  rpc: "CalibrateSummons_T";
+  /** `SummonSkillSync` is a login-restore fallback: one active summon reported via SyncType rather than the batch RPC. */
+  rpc: "CalibrateSummons_T" | "SummonSkillSync";
   tick: number;
   payloadBytes: number;
   fields: Record<string, FishNetDecodedValue>;
   actorId: number;
   skillId: string;
   stacks: number;
-  /** True when the packet arrived unnamed and was recovered heuristically. See `recoverSummons`. */
-  recovered?: boolean;
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
@@ -261,6 +260,26 @@ interface RegenSourceState {
   candidateActivationIds?: string[];
 }
 
+interface SummonCalibrationEntry {
+  skillId: string;
+  level: number;
+}
+
+/** One summoned object's accumulated `SummonSkillSync`/`SummonerSync` state, keyed by its own network object id. Order-independent: either field may arrive first. */
+interface PendingSummonSkillState {
+  ownerActorId?: number;
+  skillId?: string;
+  /** Set once this object has contributed +1 to its owner's stack count, so it isn't counted twice. */
+  counted: boolean;
+}
+
+interface LoginEffectEntry {
+  statusId: string;
+  level: number;
+  remainingSeconds?: number;
+  stacks: number;
+}
+
 const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> = {
   0: "normal",
   1: "critical",
@@ -271,8 +290,6 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 const CURRENT_STATUS_COMPONENT_INDICES = new Set([5, 6]);
 const CURRENT_HEALTH_COMPONENT_INDICES = new Set([2, 3]);
-/** Upper bound on a payload `recoverSummons` will even attempt. */
-const MAX_RECOVERED_SUMMON_BYTES = 256;
 /** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. */
 const HEALING_SKILL_IDS = new Set(["Heal", "HighHeal", "FieldHealing"]);
 /** Skill ids that heal indirectly by granting the "Regeneration" status (per packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
@@ -286,7 +303,6 @@ export class FishNetCombatTracker {
   private readonly skillLabels: Map<string, string>;
   private readonly actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   private readonly healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  private readonly localActorIdResolver?: () => number | undefined;
   private readonly monsterCatalog?: FishNetMonsterCatalog;
   private readonly bossCatalog?: FishNetBossCatalog;
   private readonly monsters?: FishNetMonsterDirectory;
@@ -296,6 +312,10 @@ export class FishNetCombatTracker {
   private readonly bossIdentities = new Map<number, string>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
+  /** Pending `SummonSkillSync`/`SummonerSync` state per summoned object's own network id, until both are known. */
+  private readonly summonSkillSyncState = new Map<number, PendingSummonSkillState>();
+  /** Actors for whom a `CalibrateSummons_T` snapshot has been seen; the `SummonSkillSync` fallback stops touching their stacks from then on, since the batch RPC now fully owns them. */
+  private readonly authoritativeSummonActors = new Set<number>();
   private readonly recentDamageSignatures = new Set<string>();
   private recentDamageTick: number | undefined;
   private nextActivation = 1;
@@ -322,7 +342,6 @@ export class FishNetCombatTracker {
     for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
     this.actorIdentityResolver = options.actorIdentityResolver;
     this.healingTraitsResolver = options.healingTraitsResolver;
-    this.localActorIdResolver = options.localActorIdResolver;
     this.monsterCatalog = options.monsterCatalog;
     if (options.monsterCatalog) this.monsters = new FishNetMonsterDirectory(options.monsterCatalog);
     this.bossCatalog = options.bossCatalog;
@@ -332,6 +351,7 @@ export class FishNetCombatTracker {
     // Spawn and sync packets carry no RPC, so this has to run before the early return below.
     const monsterIdentity = this.monsterIdentity(packet.tick, this.monsters?.consume(packet));
     const bossLifecycle = this.bossIdentityLifecycle(packet);
+    const summonLifecycle = this.consumeSummonObjectLifecycle(packet);
     if (packet.packetName === "authenticated" || packet.packetName === "disconnect") {
       this.reset();
       return uniqueMonsterIdentityEvents([
@@ -347,10 +367,14 @@ export class FishNetCombatTracker {
     const events: FishNetCombatEvent[] = [
       ...(monsterIdentity ? [monsterIdentity] : []),
       ...(bossLifecycle ? [bossLifecycle] : []),
+      ...(summonLifecycle ? [summonLifecycle] : []),
     ];
+    if (packet.packetName === "syncType" && matchesBehaviour(packet, "SummoningComponent")) {
+      events.push(...this.consumeSummonSkillSync(packet));
+      return events;
+    }
     if (packet.objectId === undefined || !packet.rpcName) {
       events.push(...this.recoverAmbiguousCombat(packet));
-      events.push(...this.recoverSummons(packet));
       return events;
     }
 
@@ -409,8 +433,16 @@ export class FishNetCombatTracker {
       }
       return events;
     }
-    if (packet.rpcName === "CalibrateSummons_T" && matchesBehaviour(packet, "SummoningComponent")) {
+    if (packet.rpcName === "CalibrateSummons_T"
+      && packet.rpcResolution === "verified"
+      && packet.networkBehaviourType === "SummoningComponent") {
       events.push(...this.consumeSummonCalibration(packet));
+      return events;
+    }
+    if (packet.rpcName === "LoadCharacter_T"
+      && packet.rpcResolution === "verified"
+      && packet.networkBehaviourType === "PlayerSave") {
+      events.push(...this.consumeLoginEffects(packet));
       return events;
     }
     return events;
@@ -421,6 +453,8 @@ export class FishNetCombatTracker {
     this.bossIdentities.clear();
     this.activeRegenSources.clear();
     this.summonStacks.clear();
+    this.summonSkillSyncState.clear();
+    this.authoritativeSummonActors.clear();
     this.recentDamageSignatures.clear();
     this.recentDamageTick = undefined;
     this.monsters?.reset();
@@ -589,48 +623,121 @@ export class FishNetCombatTracker {
   }
 
   /**
-   * Last-resort recovery for a `CalibrateSummons_T` the capture layer could not name. Two paths lose
-   * it. An rpcLink whose registration never arrived carries no object id, no hash and no name at all
-   * - links are only ever learned from an `objectSpawn`, so if the player object's spawn is missed on
-   * a connection, every link on that object is dead for the connection's whole life. A plain
-   * targetRpc on an object with no bound components fares little better: wire hash 0 is shared by
-   * several behaviours, and with nothing bound there is nothing to eliminate against. Either way the
-   * summon tile stays blank until a map change respawns the player object and re-registers its links.
-   *
-   * This is a heuristic and deliberately narrow. `decodeSummonCalibration` must consume the payload
-   * exactly, at least one entry must decode, every skill id must be one the catalog knows, and the
-   * result is attributed to the local player because `CalibrateSummons_T` is a targetRpc no other
-   * client receives. An empty calibration - the "all summons gone" snapshot - is *not* recovered: it
-   * encodes as a single 0x01 byte, which carries no signature worth trusting.
+   * Login restores whichever effects were active at save time through `PlayerSave.LoadCharacter_T`'s
+   * own `State.Effects` snapshot - no other packet reports them. Unlike `ApplyEffectDisplays_O`
+   * (which repeats and self-heals), this fires once per login, so a status it lists that never gets
+   * an explicit apply afterward would otherwise never appear at all.
    */
-  private recoverSummons(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
-    // `recovered` counts as named: the decoder already corroborated a quarantined registration, so
-    // the normal path handles it and guessing again here would double count.
-    if (packet.rpcName || packet.rpcResolution === "verified" || packet.rpcResolution === "recovered") return [];
-    if (packet.payload.length < 2 || packet.payload.length > MAX_RECOVERED_SUMMON_BYTES) return [];
-    if (this.skillLabels.size === 0) return [];
-    const actorId = packet.objectId ?? this.localActorIdResolver?.();
-    if (actorId === undefined) return [];
+  private consumeLoginEffects(packet: DecodedFishNetPacket): FishNetCombatStatusEvent[] {
+    const entries = decodedLoginEffects(packet);
+    if (!entries) return [];
+    const actorId = packet.objectId!;
+    return entries.map((entry): FishNetCombatStatusEvent => ({
+      kind: "status",
+      rpc: "LoadCharacter_T",
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: {
+        Id: entry.statusId,
+        Level: entry.level,
+        Duration: entry.remainingSeconds ?? null,
+        Stacks: entry.stacks,
+      },
+      actorId,
+      statusId: entry.statusId,
+      level: entry.level,
+      action: "applied",
+      ...(entry.remainingSeconds === undefined ? {} : { remainingSeconds: entry.remainingSeconds }),
+      stacks: entry.stacks,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    }));
+  }
 
-    let entries: ReturnType<typeof decodeSummonCalibration>;
-    try {
-      entries = decodeSummonCalibration(packet.payload);
-    } catch {
-      return [];
+  /**
+   * Login restores an existing summon through `SummonSkillSync` (a `SummoningComponent` SyncType),
+   * not `CalibrateSummons_T` - that RPC only fires on a later change, so without this the overlay
+   * shows nothing for a summon that was already active when the client connected.
+   *
+   * `SummonSkillSync` lives on the summoned object's own `SummoningComponent`, not the owner's - the
+   * packet's `objectId` names the summon (e.g. one skeleton), not the actor to credit. `SummonerSync`,
+   * a sibling SyncType on that same component, is the owner reference. FishNet sends every dirty
+   * SyncType on login together, so both usually arrive in the same packet, but not always in the same
+   * order, and only a change re-sends a SyncType afterward - so `summonSkillSyncState` accumulates
+   * whichever field arrives first, per summon object, until both are known. Each summon object
+   * contributes its own +1 once (never more), so two objects reporting the same skill both count -
+   * this is per-object state, not a "have I seen this skill" flag.
+   */
+  private consumeSummonSkillSync(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
+    const summonObjectId = packet.objectId!;
+    const summonerSync = packet.syncEntries
+      ?.find((candidate) => candidate.name === "SummonerSync")
+      ?.fields.find((entryField) => entryField.name === "SummonerSync")?.value;
+    const skillId = packet.syncEntries
+      ?.find((candidate) => candidate.name === "SummonSkillSync")
+      ?.fields.find((entryField) => entryField.name === "SkillId")?.value;
+    if (typeof summonerSync !== "number" && typeof skillId !== "string") return [];
+
+    const state = this.summonSkillSyncState.get(summonObjectId) ?? { counted: false };
+    if (typeof summonerSync === "number") state.ownerActorId = summonerSync;
+    if (typeof skillId === "string") state.skillId = skillId;
+    this.summonSkillSyncState.set(summonObjectId, state);
+
+    if (state.counted || state.ownerActorId === undefined || state.skillId === undefined) return [];
+    // Once a real snapshot has been seen for this actor, it fully owns their summon stacks.
+    if (this.authoritativeSummonActors.has(state.ownerActorId)) return [];
+
+    state.counted = true;
+    return [this.applySummonDelta(state.ownerActorId, state.skillId, 1, packet, "SummonSkillSync")];
+  }
+
+  /**
+   * Clears a summon object's `SummonSkillSync` bookkeeping on despawn (or a respawn reusing the same
+   * network object id), so a later reused id starts fresh rather than inheriting a stale owner/skill.
+   * Also corrects the stack count for an object this tracker itself counted in, unless a
+   * `CalibrateSummons_T` snapshot has since taken over that actor's stacks (which will correct the
+   * count on its own).
+   */
+  private consumeSummonObjectLifecycle(packet: DecodedFishNetPacket): FishNetCombatSummonEvent | undefined {
+    if ((packet.packetName !== "objectDespawn" && packet.packetName !== "objectSpawn") || packet.objectId === undefined) {
+      return undefined;
     }
-    if (entries.length === 0) return [];
-    if (!entries.every(({ skillId }) => this.skillLabels.has(skillId))) return [];
+    const state = this.summonSkillSyncState.get(packet.objectId);
+    if (!state) return undefined;
+    this.summonSkillSyncState.delete(packet.objectId);
+    if (!state.counted || state.ownerActorId === undefined || state.skillId === undefined) return undefined;
+    if (this.authoritativeSummonActors.has(state.ownerActorId)) return undefined;
+    return this.applySummonDelta(state.ownerActorId, state.skillId, -1, packet, "SummonSkillSync");
+  }
 
-    return this.applySummonSnapshot(actorId, packet, entries).map((event) => ({ ...event, recovered: true }));
+  /** Adjusts one actor's stack count for one skill by `delta` and reports the resulting total. */
+  private applySummonDelta(
+    actorId: number,
+    skillId: string,
+    delta: number,
+    packet: DecodedFishNetPacket,
+    rpc: FishNetCombatSummonEvent["rpc"],
+  ): FishNetCombatSummonEvent {
+    const stacks = new Map(this.summonStacks.get(actorId));
+    const nextCount = Math.max(0, (stacks.get(skillId) ?? 0) + delta);
+    if (nextCount === 0) stacks.delete(skillId); else stacks.set(skillId, nextCount);
+    if (stacks.size === 0) this.summonStacks.delete(actorId); else this.summonStacks.set(actorId, stacks);
+    return {
+      kind: "summon",
+      rpc,
+      tick: packet.tick,
+      payloadBytes: packet.payload.length,
+      fields: decodedFieldRecord(packet),
+      actorId,
+      skillId,
+      stacks: nextCount,
+      actorIdentity: this.actorIdentityResolver?.(actorId),
+    };
   }
 
   private consumeSummonCalibration(packet: DecodedFishNetPacket): FishNetCombatSummonEvent[] {
-    let entries: ReturnType<typeof decodeSummonCalibration>;
-    try {
-      entries = decodeSummonCalibration(packet.payload);
-    } catch {
-      return [];
-    }
+    const entries = decodedSummonCalibration(packet);
+    if (!entries) return [];
+    this.authoritativeSummonActors.add(packet.objectId!);
     return this.applySummonSnapshot(packet.objectId!, packet, entries);
   }
 
@@ -638,7 +745,7 @@ export class FishNetCombatTracker {
   private applySummonSnapshot(
     actorId: number,
     packet: DecodedFishNetPacket,
-    entries: ReturnType<typeof decodeSummonCalibration>,
+    entries: readonly SummonCalibrationEntry[],
   ): FishNetCombatSummonEvent[] {
     const previous = this.summonStacks.get(actorId) ?? new Map<string, number>();
     const current = new Map<string, number>();
@@ -657,7 +764,7 @@ export class FishNetCombatTracker {
       rpc: "CalibrateSummons_T",
       tick: packet.tick,
       payloadBytes: packet.payload.length,
-      fields: {},
+      fields: decodedFieldRecord(packet),
       actorId,
       skillId,
       stacks: current.get(skillId) ?? 0,
@@ -1064,6 +1171,50 @@ function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue 
 
 function decodedFieldRecord(packet: DecodedFishNetPacket): Record<string, FishNetDecodedValue> {
   return Object.fromEntries(packet.decodedFields?.map(({ name, value }) => [name, value]) ?? []);
+}
+
+/** Reads only the generated nested-field shape; missing, partial, or trailing data fails closed. */
+function decodedSummonCalibration(packet: DecodedFishNetPacket): SummonCalibrationEntry[] | undefined {
+  if (packet.undecodedPayload && packet.undecodedPayload.length > 0) return undefined;
+  const length = numberField(packet, "data.length");
+  if (length === undefined || !Number.isInteger(length) || length < 0) return undefined;
+
+  const entries: SummonCalibrationEntry[] = [];
+  for (let index = 0; index < length; index += 1) {
+    const skillId = stringField(packet, `data[${index}].SkillId`);
+    const level = numberField(packet, `data[${index}].Level`);
+    // `Id` is deliberately not read or required here: it's null for an anonymous stack summon (e.g.
+    // a shinobi clone), unlike a named one (e.g. "Cactus Boss"), and nothing downstream needs it.
+    if (skillId === undefined || level === undefined || !Number.isInteger(level) || level < 0) return undefined;
+    entries.push({ skillId, level });
+  }
+  return entries;
+}
+
+/** Reads only the generated `State.Effects` nested-field shape; missing, partial, or trailing data fails closed. */
+function decodedLoginEffects(packet: DecodedFishNetPacket): LoginEffectEntry[] | undefined {
+  if (packet.undecodedPayload && packet.undecodedPayload.length > 0) return undefined;
+  const length = numberField(packet, "data.State.Effects.length");
+  if (length === undefined || !Number.isInteger(length) || length < 0) return undefined;
+
+  const entries: LoginEffectEntry[] = [];
+  for (let index = 0; index < length; index += 1) {
+    const statusId = stringField(packet, `data.State.Effects[${index}].Id`);
+    const level = numberField(packet, `data.State.Effects[${index}].Level`);
+    const duration = numberField(packet, `data.State.Effects[${index}].Duration`);
+    const stacks = numberField(packet, `data.State.Effects[${index}].Stacks`);
+    if (statusId === undefined
+      || level === undefined || !Number.isInteger(level) || level < 0
+      || duration === undefined
+      || stacks === undefined || !Number.isInteger(stacks) || stacks < 0) return undefined;
+    entries.push({
+      statusId,
+      level,
+      ...(duration < 0 || !Number.isFinite(duration) ? {} : { remainingSeconds: duration }),
+      stacks,
+    });
+  }
+  return entries;
 }
 
 function matchesBehaviour(packet: DecodedFishNetPacket, expected: string): boolean {

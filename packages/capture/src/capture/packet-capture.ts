@@ -8,13 +8,14 @@ import { formatIpv6 } from "./ip-address.ts";
 import { extractIpPacket, supportsDataLink } from "./link-layer.ts";
 import { SystemNpcapRuntime } from "./npcap.ts";
 import { parseTransportPacket } from "./packet-parser.ts";
-import { WindowsTargetTracker } from "./target-tracker.ts";
+import { TARGET_REFRESH_INTERVAL_MS, WindowsTargetTracker } from "./target-tracker.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket, FishNetRpcMap } from "../fishnet/types.ts";
 import type { NpcapDevice, NpcapRuntime, NpcapSession, NpcapStatus } from "./npcap.ts";
 import type { TargetSnapshotProvider } from "./target-tracker.ts";
 import type {
   CaptureConfig,
+  CaptureConnectionEvent,
   CaptureTargetStatus,
   CapturedTcpPacket,
   CapturedTransportPacket,
@@ -24,8 +25,18 @@ import type {
 
 const POLL_INTERVAL_MS = 2;
 const MAX_POLL_BATCH = 128;
-const PENDING_PACKET_LIMIT = 4_096;
-const PENDING_PACKET_MAX_AGE_MS = 1_000;
+const PENDING_PACKET_LIMIT = 16_384;
+/**
+ * How many refreshes a packet waits to be attributed to the target before it is given up on.
+ *
+ * A packet is held whenever neither endpoint is one `netstat` has reported for the process, which
+ * is the state every socket is in for its first moments. Holding for one refresh gave a new socket
+ * a single chance, and since a refresh spawns two processes it often did not land inside that one
+ * window: the opening of a connection was discarded on that race, the connect and the
+ * authentication with it. Several refreshes make it a margin rather than a coin toss.
+ */
+const PENDING_PACKET_MAX_AGE_MS = TARGET_REFRESH_INTERVAL_MS * 5;
+const PENDING_DROP_REPORT_MS = 10_000;
 const systemRuntime = new SystemNpcapRuntime();
 
 export interface PacketCaptureDependencies {
@@ -60,6 +71,9 @@ export class PacketCapture extends EventEmitter {
   private decodeFishNet = false;
   private fishNetRpcMap: FishNetRpcMap | undefined;
   private fishNetSessionDecoder: FishNetSessionDecoder | null = null;
+  private currentConnectionId?: string;
+  private droppedPending = 0;
+  private droppedReportedAtMs = 0;
   private _state: CaptureState = "stopped";
 
   constructor(dependencies: PacketCaptureDependencies = {}) {
@@ -73,12 +87,18 @@ export class PacketCapture extends EventEmitter {
     return this._state;
   }
 
+  /** The connection last seen opening and not since closing, undefined until one is observed. */
+  get connectionId(): string | undefined {
+    return this.currentConnectionId;
+  }
+
   override on(event: "started", listener: () => void): this;
   override on(event: "packet", listener: (packet: CapturedTcpPacket) => void): this;
   override on(event: "udpPacket", listener: (packet: CapturedUdpPacket) => void): this;
   override on(event: "transportPacket", listener: (packet: CapturedTransportPacket) => void): this;
   override on(event: "liteNetPacket", listener: (packet: CapturedLiteNetLibPacket) => void): this;
   override on(event: "fishNetPacket", listener: (packet: CapturedFishNetPacket) => void): this;
+  override on(event: "connection", listener: (event: CaptureConnectionEvent) => void): this;
   override on(event: "targetStatus", listener: (status: CaptureTargetStatus) => void): this;
   override on(event: "warning", listener: (message: string) => void): this;
   override on(event: "error", listener: (error: Error) => void): this;
@@ -176,8 +196,10 @@ export class PacketCapture extends EventEmitter {
             packet.direction = direction;
             this.emitTransportPacket(packet);
           } else {
-            this.pending.push({ packet, observedAt: Date.now() });
-            if (this.pending.length > PENDING_PACKET_LIMIT) this.pending.splice(0, this.pending.length - PENDING_PACKET_LIMIT);
+            // The oldest held packets are a connection's opening, which is the part worth keeping,
+            // so a full buffer turns away what is arriving rather than discarding what it holds.
+            if (this.pending.length >= PENDING_PACKET_LIMIT) this.droppedPending += 1;
+            else this.pending.push({ packet, observedAt: Date.now() });
           }
         }
       }
@@ -192,11 +214,18 @@ export class PacketCapture extends EventEmitter {
   }
 
   private flushPending(): void {
-    if (!this.target || this.pending.length === 0) return;
+    if (!this.target) return;
+    if (this.pending.length === 0) {
+      this.reportDroppedPending();
+      return;
+    }
     const cutoff = Date.now() - PENDING_PACKET_MAX_AGE_MS;
     const remaining: PendingPacket[] = [];
     for (const candidate of this.pending) {
-      if (candidate.observedAt < cutoff) continue;
+      if (candidate.observedAt < cutoff) {
+        this.droppedPending += 1;
+        continue;
+      }
       const direction = this.target.classify(candidate.packet);
       if (!direction) remaining.push(candidate);
       else {
@@ -205,6 +234,18 @@ export class PacketCapture extends EventEmitter {
       }
     }
     this.pending = remaining;
+    this.reportDroppedPending();
+  }
+
+  /** Reports packets given up on unattributed, which is how a connection loses its opening. */
+  private reportDroppedPending(): void {
+    if (this.droppedPending === 0) return;
+    const now = Date.now();
+    this.droppedReportedAtMs ||= now;
+    if (now - this.droppedReportedAtMs < PENDING_DROP_REPORT_MS) return;
+    this.emitSafely("warning", `gave up on ${this.droppedPending} packets that could not be attributed to the target process`);
+    this.droppedPending = 0;
+    this.droppedReportedAtMs = now;
   }
 
   private emitTransportPacket(packet: CapturedTransportPacket): void {
@@ -219,6 +260,7 @@ export class PacketCapture extends EventEmitter {
       for (const decoded of decodeLiteNetLibDatagram(packet.payload)) {
         const captured = { ...decoded, udpPacket: packet } satisfies CapturedLiteNetLibPacket;
         this.emitSafely("liteNetPacket", captured);
+        this.trackConnection(captured);
         if (this.decodeFishNet) this.emitFishNetPacket(captured);
       }
     } catch (error) {
@@ -227,11 +269,32 @@ export class PacketCapture extends EventEmitter {
     }
   }
 
+  /**
+   * Follows the connection the game is playing on.
+   *
+   * FishNet says so once per connection, in `authenticated`; a consumer that misses that packet
+   * stays pinned to a connection the game has left, discarding everything the live one sends.
+   * Connects and disconnects are announced continually, so losing one of those costs nothing.
+   */
+  private trackConnection(packet: CapturedLiteNetLibPacket): void {
+    const { property } = packet.packet;
+    if (property !== "connectRequest" && property !== "connectAccept" && property !== "disconnect") return;
+    const connectionId = connectionIdFor(packet);
+    if (property === "disconnect") {
+      if (this.currentConnectionId === connectionId) this.currentConnectionId = undefined;
+      this.emitSafely("connection", { connectionId, state: "closed" } satisfies CaptureConnectionEvent);
+      return;
+    }
+    // A connect repeats until it is answered, so only the first one is worth reporting.
+    if (this.currentConnectionId === connectionId) return;
+    this.currentConnectionId = connectionId;
+    this.emitSafely("connection", { connectionId, state: "opened" } satisfies CaptureConnectionEvent);
+  }
+
   private emitFishNetPacket(packet: CapturedLiteNetLibPacket): void {
     const { property, payload } = packet.packet;
     const udp = packet.udpPacket;
-    const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
-    const connectionId = `${endpoints[0]}<->${endpoints[1]}#${packet.packet.connectionNumber}`;
+    const connectionId = connectionIdFor(packet);
     if (property === "connectRequest" || property === "connectAccept" || property === "disconnect") {
       this.fishNetSessionDecoder?.reset(connectionId);
       return;
@@ -285,7 +348,17 @@ export class PacketCapture extends EventEmitter {
     this.fishNetRpcMap = undefined;
     this.fishNetSessionDecoder?.reset();
     this.fishNetSessionDecoder = null;
+    this.currentConnectionId = undefined;
+    this.droppedPending = 0;
+    this.droppedReportedAtMs = 0;
   }
+}
+
+/** Names a connection by its endpoint pair, so both directions of the same socket agree. */
+function connectionIdFor(packet: CapturedLiteNetLibPacket): string {
+  const udp = packet.udpPacket;
+  const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
+  return `${endpoints[0]}<->${endpoints[1]}#${packet.packet.connectionNumber}`;
 }
 
 function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "outbound" {

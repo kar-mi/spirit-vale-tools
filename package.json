@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
-    "@changesets/cli": "^2.29.8",
+    "@changesets/cli": "^3.0.0",
     "typescript": "^7.0.2"
   },
   "engines": {

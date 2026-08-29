@@ -1,4 +1,5 @@
 import type { NpcapDevice } from "./npcap.ts";
+import { defaultRouteIpv4Address } from "./win32-system.ts";
 
 export interface AdapterResolution {
   device?: NpcapDevice;
@@ -14,7 +15,7 @@ export async function resolveCaptureDevice(
     const requested = devices.find((device) => device.name === requestedName);
     if (requested) return { device: requested, usedFallback: false };
   }
-  const automatic = await defaultRouteDevice(devices) ?? devices.find(isUsable) ?? devices[0];
+  const automatic = defaultRouteDevice(devices) ?? devices.find(isUsable) ?? devices[0];
   return {
     device: automatic,
     usedFallback: Boolean(requestedName),
@@ -24,30 +25,17 @@ export async function resolveCaptureDevice(
   };
 }
 
-export function chooseDeviceByRouteOutput(devices: readonly NpcapDevice[], output: string): NpcapDevice | undefined {
-  const routes = output.split(/\r?\n/).flatMap((line) => {
-    const columns = line.trim().split(/\s+/);
-    if (columns[0] !== "0.0.0.0" || columns[1] !== "0.0.0.0" || columns.length < 5) return [];
-    const metric = Number(columns[4]);
-    return [{ address: columns[3]!, metric: Number.isFinite(metric) ? metric : Number.MAX_SAFE_INTEGER }];
-  }).sort((left, right) => left.metric - right.metric);
-  for (const route of routes) {
-    const match = devices.find((device) => device.addresses.includes(route.address));
-    if (match) return match;
-  }
-  return undefined;
+export function chooseDeviceByRouteAddress(
+  devices: readonly NpcapDevice[],
+  address: string,
+): NpcapDevice | undefined {
+  return devices.find((device) => device.addresses.includes(address));
 }
 
-async function defaultRouteDevice(devices: readonly NpcapDevice[]): Promise<NpcapDevice | undefined> {
+function defaultRouteDevice(devices: readonly NpcapDevice[]): NpcapDevice | undefined {
   try {
-    const child = Bun.spawn({
-      cmd: ["route.exe", "PRINT", "0.0.0.0"],
-      stdout: "pipe",
-      stderr: "ignore",
-      windowsHide: true,
-    });
-    const output = await new Response(child.stdout).text();
-    return await child.exited === 0 ? chooseDeviceByRouteOutput(devices, output) : undefined;
+    const address = defaultRouteIpv4Address();
+    return address ? chooseDeviceByRouteAddress(devices, address) : undefined;
   } catch {
     return undefined;
   }

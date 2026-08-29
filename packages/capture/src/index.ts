@@ -42,6 +42,7 @@ export { decodeBossGravestone } from "./fishnet/boss-gravestone.ts";
 export type { BossGravestone } from "./fishnet/boss-gravestone.ts";
 export type {
   CaptureConfig,
+  CaptureConnectionEvent,
   CaptureProtocol,
   CaptureState,
   CaptureTargetStatus,

@@ -57,3 +57,9 @@ export interface CaptureTargetStatus {
 }
 
 export type CaptureState = "stopped" | "starting" | "running" | "stopping";
+
+/** A transport connection opening or closing, reported as LiteNetLib announces it. */
+export interface CaptureConnectionEvent {
+  connectionId: string;
+  state: "opened" | "closed";
+}
