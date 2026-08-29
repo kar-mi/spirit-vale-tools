@@ -54,7 +54,7 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       default: return { availability: "error", detail: `${expectedCaptureLibraryName()} capture is supported only on Windows & linux.` };
     }
     const dllPath = npcapDllPath();
-    
+
     switch(process.platform) {
       case "win32":
           if (!existsSync(dllPath)) {
@@ -68,9 +68,9 @@ export class SystemNpcapRuntime implements NpcapRuntime {
       default:
         return { availability: "missing", detail: `Missing packet capture, not supported on this platform.` };
     }
-    
 
-    
+
+
     if (await isAdminOnlyInstall()) {
       return {
         availability: "admin-only",
@@ -385,7 +385,7 @@ async function isAdminOnlyInstall(): Promise<boolean> {
         return false;
       }
     }
-    case "linux": return false; // TODO: check if running as root/sudo or user is member of a group with CAP_NET_RAW & CAP_NET_ADMIN permissions.
+    case "linux": return false;
     default: throw new Error(`${process.platform} Platform not supported.`);
   }
 }
