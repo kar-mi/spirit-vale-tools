@@ -110,7 +110,7 @@ describe("statusDurationSeconds", () => {
   });
 
   test("leaves explicit toggles and placeholder-duration buffs without computed timers", () => {
-    for (const id of ["Might", "Fury", "Berserk", "HighGuard", "Elusive"]) {
+    for (const id of ["Focus", "Might", "Fury", "Berserk", "HighGuard", "Elusive"]) {
       expect(statusDurationSeconds(resolveFishNetStatus(id), 1)).toBeUndefined();
     }
   });

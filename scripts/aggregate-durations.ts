@@ -45,7 +45,7 @@ interface DataMineEntry {
 const NAMED_SCALAR_DURATION_FIELDS = ["ComboReady", "CastReady"];
 
 // Statuses to always leave without duration data, regardless of what the data-mine declares.
-const NO_DURATION_OVERRIDE_IDS = new Set(["Fury", "Might"]);
+const NO_DURATION_OVERRIDE_IDS = new Set(["Focus", "Fury", "Might"]);
 
 interface GrantTuple {
   granterId: string;
