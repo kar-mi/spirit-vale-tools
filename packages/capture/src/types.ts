@@ -11,6 +11,13 @@ export interface CaptureConfig {
   targetProcessName?: string;
   /** Stable Npcap device name. Omit to select the default-route adapter automatically. */
   deviceName?: string;
+  /**
+   * Collapse the redundant copies a redirecting VPN puts on the wire. Defaults to true.
+   *
+   * Without this a relayed datagram is captured more than once and counted twice downstream.
+   * Disable only to inspect the wire exactly as observed.
+   */
+  suppressDuplicates?: boolean;
   /** Decode captured UDP payloads as LiteNetLib 1.x packets. Defaults to false. */
   decodeLiteNetLib?: boolean;
   /** Decode verified FishNet headers inside LiteNetLib data packets. Implies decodeLiteNetLib. */

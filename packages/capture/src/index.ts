@@ -40,6 +40,7 @@ export type {
 } from "./fishnet/monster-directory.ts";
 export { decodeBossGravestone } from "./fishnet/boss-gravestone.ts";
 export type { BossGravestone } from "./fishnet/boss-gravestone.ts";
+export type { DroppedFlow } from "./capture/drop-diagnostics.ts";
 export type {
   CaptureConfig,
   CaptureConnectionEvent,

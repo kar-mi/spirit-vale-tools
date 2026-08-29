@@ -4,6 +4,8 @@ import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib
 import { loadBundledFishNetRpcMap } from "../fishnet/builtin-maps.ts";
 import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoder.ts";
 import { resolveCaptureDevice } from "./adapter-selection.ts";
+import { DuplicateFilter } from "./duplicate-filter.ts";
+import { DropDiagnostics } from "./drop-diagnostics.ts";
 import { formatIpv6 } from "./ip-address.ts";
 import { extractIpPacket, supportsDataLink } from "./link-layer.ts";
 import { SystemNpcapRuntime } from "./npcap.ts";
@@ -11,6 +13,7 @@ import { parseTransportPacket } from "./packet-parser.ts";
 import { TARGET_REFRESH_INTERVAL_MS, WindowsTargetTracker } from "./target-tracker.ts";
 import type { CapturedLiteNetLibPacket } from "../litenetlib/types.ts";
 import type { CapturedFishNetPacket, FishNetRpcMap } from "../fishnet/types.ts";
+import type { DroppedFlow } from "./drop-diagnostics.ts";
 import type { NpcapDevice, NpcapRuntime, NpcapSession, NpcapStatus } from "./npcap.ts";
 import type { TargetSnapshotProvider } from "./target-tracker.ts";
 import type {
@@ -29,14 +32,15 @@ const PENDING_PACKET_LIMIT = 16_384;
 /**
  * How many refreshes a packet waits to be attributed to the target before it is given up on.
  *
- * A packet is held whenever neither endpoint is one `netstat` has reported for the process, which
- * is the state every socket is in for its first moments. Holding for one refresh gave a new socket
- * a single chance, and since a refresh spawns two processes it often did not land inside that one
- * window: the opening of a connection was discarded on that race, the connect and the
- * authentication with it. Several refreshes make it a margin rather than a coin toss.
+ * A packet is held whenever neither endpoint is one the endpoint table has reported for the
+ * process, which is the state every socket is in for its first moments. Holding for a single
+ * refresh gave a new socket one chance to appear, and it often did not land inside that one window:
+ * the opening of a connection was discarded on that race, the connect and the authentication with
+ * it. Several refreshes make it a margin rather than a coin toss.
  */
 const PENDING_PACKET_MAX_AGE_MS = TARGET_REFRESH_INTERVAL_MS * 5;
 const PENDING_DROP_REPORT_MS = 10_000;
+const DUPLICATE_REPORT_MS = 10_000;
 const systemRuntime = new SystemNpcapRuntime();
 
 export interface PacketCaptureDependencies {
@@ -74,6 +78,11 @@ export class PacketCapture extends EventEmitter {
   private currentConnectionId?: string;
   private droppedPending = 0;
   private droppedReportedAtMs = 0;
+  private duplicateFilter: DuplicateFilter | null = null;
+  private duplicateReportedAtMs = 0;
+  private relayObserved = false;
+  private readonly dropDiagnostics = new DropDiagnostics();
+  private deviceLabel = "";
   private _state: CaptureState = "stopped";
 
   constructor(dependencies: PacketCaptureDependencies = {}) {
@@ -100,6 +109,7 @@ export class PacketCapture extends EventEmitter {
   override on(event: "fishNetPacket", listener: (packet: CapturedFishNetPacket) => void): this;
   override on(event: "connection", listener: (event: CaptureConnectionEvent) => void): this;
   override on(event: "targetStatus", listener: (status: CaptureTargetStatus) => void): this;
+  override on(event: "droppedFlows", listener: (flows: DroppedFlow[]) => void): this;
   override on(event: "warning", listener: (message: string) => void): this;
   override on(event: "error", listener: (error: Error) => void): this;
   override on(event: "stopped", listener: () => void): this;
@@ -125,9 +135,11 @@ export class PacketCapture extends EventEmitter {
         ? config.fishNetRpcMap ?? loadBundledFishNetRpcMap(config.fishNetBuildFingerprint)
         : undefined;
       this.fishNetSessionDecoder = decodeFishNet ? new FishNetSessionDecoder(this.fishNetRpcMap) : null;
+      this.duplicateFilter = (config.suppressDuplicates ?? true) ? new DuplicateFilter() : null;
       const devices = await this.runtime.listDevices();
       const resolved = await resolveCaptureDevice(devices, config.deviceName);
       if (!resolved.device) throw new Error("Npcap did not report a usable network adapter");
+      this.deviceLabel = resolved.device.description || resolved.device.name;
       const filter = config.filter ?? Array.from(new Set(protocols)).join(" or ");
       this.session = await this.runtime.open(resolved.device, filter);
       if (!supportsDataLink(this.session.dataLink)) {
@@ -169,6 +181,7 @@ export class PacketCapture extends EventEmitter {
     this.polling = true;
     try {
       this.flushPending();
+      this.reportSuppressedDuplicates();
       for (let index = 0; index < MAX_POLL_BATCH; index += 1) {
         const captured = this.session.nextPacket();
         if (!captured) break;
@@ -193,7 +206,7 @@ export class PacketCapture extends EventEmitter {
           } else {
             // The oldest held packets are a connection's opening, which is the part worth keeping,
             // so a full buffer turns away what is arriving rather than discarding what it holds.
-            if (this.pending.length >= PENDING_PACKET_LIMIT) this.droppedPending += 1;
+            if (this.pending.length >= PENDING_PACKET_LIMIT) this.recordDropped(packet);
             else this.pending.push({ packet, observedAt: Date.now() });
           }
         }
@@ -208,6 +221,12 @@ export class PacketCapture extends EventEmitter {
     }
   }
 
+  /** Counts a packet given up on and folds it into the drop diagnostics. */
+  private recordDropped(packet: CapturedTransportPacket): void {
+    this.droppedPending += 1;
+    this.dropDiagnostics.record(packet);
+  }
+
   private flushPending(): void {
     if (!this.target) return;
     if (this.pending.length === 0) {
@@ -218,7 +237,7 @@ export class PacketCapture extends EventEmitter {
     const remaining: PendingPacket[] = [];
     for (const candidate of this.pending) {
       if (candidate.observedAt < cutoff) {
-        this.droppedPending += 1;
+        this.recordDropped(candidate.packet);
         continue;
       }
       const direction = this.target.classify(candidate.packet);
@@ -232,18 +251,47 @@ export class PacketCapture extends EventEmitter {
     this.reportDroppedPending();
   }
 
+  /** Reports copies a relay put on the wire, naming the adapter in case a better one exists. */
+  private reportSuppressedDuplicates(): void {
+    if (!this.duplicateFilter || this.duplicateFilter.suppressedCount === 0) return;
+    const now = Date.now();
+    this.duplicateReportedAtMs ||= now;
+    if (now - this.duplicateReportedAtMs < DUPLICATE_REPORT_MS) return;
+    const total = this.duplicateFilter.takeSuppressedCount();
+    this.emitSafely(
+      "warning",
+      `suppressed ${total} duplicate packets on ${this.deviceLabel}; a VPN or proxy is relaying this traffic`
+        + ", so select the adapter carrying it directly if decoding looks incomplete",
+    );
+    this.duplicateReportedAtMs = now;
+  }
+
   /** Reports packets given up on unattributed, which is how a connection loses its opening. */
   private reportDroppedPending(): void {
     if (this.droppedPending === 0) return;
     const now = Date.now();
     this.droppedReportedAtMs ||= now;
     if (now - this.droppedReportedAtMs < PENDING_DROP_REPORT_MS) return;
-    this.emitSafely("warning", `gave up on ${this.droppedPending} packets that could not be attributed to the target process`);
+    // Most of what goes unattributed is other software's UDP, so this does not blame the relay.
+    const relay = this.relayObserved ? "; a VPN or proxy is also relaying traffic on this adapter" : "";
+    this.emitSafely("warning", `gave up on ${this.droppedPending} packets that could not be attributed to the target process${relay}`);
+    this.emitSafely("droppedFlows", this.dropDiagnostics.topFlows());
+    if (this.dropDiagnostics.hasGameTraffic) {
+      this.emitSafely(
+        "warning",
+        "some discarded traffic carries sequenced game packets, so the target process does not own"
+          + " every socket its traffic uses; capture that adapter directly or report these flows",
+      );
+    }
     this.droppedPending = 0;
     this.droppedReportedAtMs = now;
   }
 
   private emitTransportPacket(packet: CapturedTransportPacket): void {
+    if (this.duplicateFilter && !this.duplicateFilter.admit(packet)) {
+      this.relayObserved = true;
+      return;
+    }
     if (packet.protocol === "tcp") this.emitSafely("packet", packet);
     else this.emitSafely("udpPacket", packet);
     this.emitSafely("transportPacket", packet);
@@ -346,14 +394,26 @@ export class PacketCapture extends EventEmitter {
     this.currentConnectionId = undefined;
     this.droppedPending = 0;
     this.droppedReportedAtMs = 0;
+    this.duplicateFilter?.reset();
+    this.duplicateFilter = null;
+    this.duplicateReportedAtMs = 0;
+    this.relayObserved = false;
+    this.dropDiagnostics.reset();
+    this.deviceLabel = "";
   }
 }
 
-/** Names a connection by its endpoint pair, so both directions of the same socket agree. */
+/**
+ * Names a connection by the game's own socket, so both directions of it agree.
+ *
+ * The endpoint pair is the obvious name and breaks behind a relay: it rewrites the peer's endpoint
+ * asymmetrically, so the two directions sort to different pairs and everything keyed on the name
+ * splits in half. The local port survives that and already identifies the socket on this host.
+ */
 function connectionIdFor(packet: CapturedLiteNetLibPacket): string {
   const udp = packet.udpPacket;
-  const endpoints = [`${udp.sourceIP}:${udp.sourcePort}`, `${udp.destinationIP}:${udp.destinationPort}`].sort();
-  return `${endpoints[0]}<->${endpoints[1]}#${packet.packet.connectionNumber}`;
+  const localPort = udp.direction === "outbound" ? udp.sourcePort : udp.destinationPort;
+  return `local:${localPort}#${packet.packet.connectionNumber}`;
 }
 
 function inferDirection(ipPacket: Buffer, device: NpcapDevice): "inbound" | "outbound" {

@@ -188,8 +188,8 @@ describe("PacketCapture connection tracking", () => {
     await Bun.sleep(10);
 
     expect(events).toEqual([
-      { connectionId: "192.0.2.10:50000<->198.51.100.20:7004#0", state: "opened" },
-      { connectionId: "192.0.2.10:50000<->198.51.100.20:7004#0", state: "closed" },
+      { connectionId: "local:50000#0", state: "opened" },
+      { connectionId: "local:50000#0", state: "closed" },
     ]);
     expect(capture.connectionId).toBeUndefined();
     await capture.stop();
@@ -204,7 +204,7 @@ describe("PacketCapture connection tracking", () => {
     await capture.start({ protocols: ["udp"], decodeLiteNetLib: true });
     await Bun.sleep(10);
 
-    expect(capture.connectionId).toBe("192.0.2.10:50001<->198.51.100.20:7004#0");
+    expect(capture.connectionId).toBe("local:50001#0");
     await capture.stop();
   });
 
@@ -218,7 +218,23 @@ describe("PacketCapture connection tracking", () => {
     await capture.start({ protocols: ["udp"], decodeLiteNetLib: true });
     await Bun.sleep(10);
 
-    expect(capture.connectionId).toBe("192.0.2.10:50001<->198.51.100.20:7004#0");
+    expect(capture.connectionId).toBe("local:50001#0");
+    await capture.stop();
+  });
+
+  test("names one connection once when a relay rewrites the peer endpoint", async () => {
+    // Keyed on the endpoint pair, a relay's asymmetric rewrite reports one connection as two.
+    const runtime = new FakeRuntime();
+    runtime.packets.push(packet(control(CONNECT_REQUEST, 50_000)));
+    runtime.packets.push(packet(relayedControl(CONNECT_ACCEPT, 50_000, 9_999)));
+    const capture = new PacketCapture({ runtime, platform: "win32" });
+    const events: CaptureConnectionEvent[] = [];
+    capture.on("connection", (event) => events.push(event));
+
+    await capture.start({ protocols: ["udp"], decodeLiteNetLib: true });
+    await Bun.sleep(10);
+
+    expect(events).toEqual([{ connectionId: "local:50000#0", state: "opened" }]);
     await capture.stop();
   });
 
@@ -229,7 +245,7 @@ describe("PacketCapture connection tracking", () => {
 
     await capture.start({ protocols: ["udp"], decodeLiteNetLib: true });
     await Bun.sleep(10);
-    expect(capture.connectionId).toBe("192.0.2.10:50000<->198.51.100.20:7004#0");
+    expect(capture.connectionId).toBe("local:50000#0");
 
     await capture.stop();
     expect(capture.connectionId).toBeUndefined();
@@ -261,4 +277,21 @@ const DISCONNECT = 7;
 
 function control(property: number, sourcePort: number): Buffer {
   return udpDatagram(Buffer.from([property, 0, 0, 0]), sourcePort);
+}
+
+/** An inbound datagram whose peer port a relay has rewritten. */
+function relayedControl(property: number, localPort: number, relayPort: number): Buffer {
+  const payload = Buffer.from([property, 0, 0, 0]);
+  const total = 20 + 8 + payload.length;
+  const data = Buffer.alloc(total);
+  data[0] = 0x45;
+  data.writeUInt16BE(total, 2);
+  data[9] = 17;
+  data.set([198, 51, 100, 20], 12);
+  data.set([192, 0, 2, 10], 16);
+  data.writeUInt16BE(relayPort, 20);
+  data.writeUInt16BE(localPort, 22);
+  data.writeUInt16BE(8 + payload.length, 24);
+  payload.copy(data, 28);
+  return data;
 }

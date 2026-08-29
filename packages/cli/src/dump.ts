@@ -38,6 +38,7 @@ const combatOnly = Bun.argv.includes("--combat-only");
 const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
 const fishNetBuildFingerprint = option("--fishnet-build");
+const suppressDuplicates = !Bun.argv.includes("--no-dedup");
 const combatFingerprint = fishNetBuildFingerprint;
 const semanticMap = combatOnly && combatFingerprint
   && BUNDLED_GAME_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
@@ -71,6 +72,13 @@ capture.on("started", () => {
 capture.on("warning", (message) => {
   logger.log("capture.warning", { message });
   console.error(`[warning] ${message}`);
+});
+capture.on("droppedFlows", (flows) => {
+  if (flows.length === 0) return;
+  logger.log("capture.droppedFlows", { flows: flows.map(({ flow, packets, verdict }) => ({ flow, packets, verdict })) });
+  for (const { flow, packets, verdict } of flows) {
+    console.error(`[dropped] ${packets} total ${flow} (${verdict})`);
+  }
 });
 capture.on("error", (error) => {
   logger.log("capture.error", { message: error.message });
@@ -125,6 +133,7 @@ await capture.start({
   deviceName: option("--adapter"),
   protocols: protocols as CaptureProtocol[],
   targetProcessName,
+  suppressDuplicates,
   decodeLiteNetLib,
   decodeFishNet,
   fishNetBuildFingerprint,
