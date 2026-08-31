@@ -1,10 +1,10 @@
-import type { FishNetRecoveryStyle, FishNetSemanticMap } from "./semantic-map.ts";
 import type { DecodedFishNetPacket } from "../types.ts";
+
+export type FishNetRecoveryStyle = "standard" | "passive-regeneration" | "drain" | "unknown";
 
 /** Classifies the generated, structurally decoded FloaterSettings on HealthComponent.Recover_C. */
 export function classifyFishNetRecoveryStyle(
   packet: Pick<DecodedFishNetPacket, "networkBehaviourType" | "rpcName" | "decodedFields">,
-  _semanticMap?: Pick<FishNetSemanticMap, "recoveryStyles">,
 ): FishNetRecoveryStyle {
   if (packet.rpcName !== "Recover_C" || packet.networkBehaviourType !== "HealthComponent") return "unknown";
   const value = (name: string) => packet.decodedFields?.find((field) => field.name === name)?.value;

@@ -275,7 +275,7 @@ function syntheticString(value: string): Buffer {
   return Buffer.concat([packed(bytes.length), bytes]);
 }
 
-function semanticMap(): FishNetRpcMap {
+function syntheticRpcMap(): FishNetRpcMap {
   return {
     buildFingerprint: "synthetic-build-v2",
     metadataVersion: 31,
@@ -486,7 +486,7 @@ describe("FishNet bundles and sessions", () => {
   });
 
   test("binds behaviour definitions and decodes verified common fields", () => {
-    const decoder = new FishNetSessionDecoder(semanticMap());
+    const decoder = new FishNetSessionDecoder(syntheticRpcMap());
     const fixedRpc = message(8, Buffer.concat([
       packed(7),
       Buffer.from([1, 2]),
@@ -554,7 +554,7 @@ describe("FishNet bundles and sessions", () => {
 
   test("preserves initial SyncType bytes embedded in an object spawn", () => {
     const initialSyncTypes = Buffer.from("020100036d6f62", "hex");
-    const [spawn] = new FishNetSessionDecoder(semanticMap()).decode(
+    const [spawn] = new FishNetSessionDecoder(syntheticRpcMap()).decode(
       tick(21, spawnWithLink(8, 2, 901, 0x1234, 9, -1, initialSyncTypes)),
       { reliable: true, connectionId: "spawn-sync" },
     );
@@ -564,7 +564,7 @@ describe("FishNet bundles and sessions", () => {
   });
 
   test("decodes structured SyncType fields after the index and preserves trailing bytes", () => {
-    const baseMap = semanticMap();
+    const baseMap = syntheticRpcMap();
     const baseBehaviour = baseMap.behaviours[0];
     if (!baseBehaviour) throw new Error("synthetic behaviour missing");
     const behaviour: FishNetBehaviourDefinition = { ...baseBehaviour, syncTypes: [{

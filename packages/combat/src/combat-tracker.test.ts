@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { FishNetCombatTracker } from "./combat-tracker.ts";
-import type { DecodedFishNetPacket, FishNetDecodedField, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedField } from "@kar-mi/spirit-vale-tools-capture";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 
 function packet(
@@ -830,28 +830,6 @@ describe("FishNetCombatTracker", () => {
       expect(events[0]).toMatchObject({ kind: "activation", phase: "inferred" });
       expect(events[1]).toMatchObject({ kind: "damage", attribution: "inferred" });
     }
-  });
-
-  test("prefers a compatible semantic override over an extracted catalog label", () => {
-    const skillCatalog: FishNetSkillCatalog = {
-      buildFingerprint: "synthetic-build",
-      skills: [{ id: "SyntheticArc", displayName: "Catalog Arc", kinds: ["active"] }],
-    };
-    const semanticMap: FishNetSemanticMap = {
-      buildFingerprint: "synthetic-build",
-      verifiedSkillLabels: [{
-        networkBehaviourType: "SkillsComponent",
-        rpcName: "CastBegin_C",
-        field: "dto.Id",
-        value: "SyntheticArc",
-        label: "Override Arc",
-        confidence: "synthetic",
-        repetitions: 2,
-      }],
-      recoveryStyles: [],
-    };
-    const tracker = new FishNetCombatTracker({ skillCatalog, semanticMap });
-    expect(tracker.consume(cast(1, 10, "SyntheticArc"))[0]).toMatchObject({ sourceLabel: "Override Arc" });
   });
 
   test("rejects mismatched metadata builds", () => {

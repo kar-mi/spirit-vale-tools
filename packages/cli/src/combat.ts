@@ -1,8 +1,4 @@
 import {
-  BUNDLED_GAME_BUILD_FINGERPRINTS,
-  loadBundledFishNetSemanticMap,
-} from "@kar-mi/spirit-vale-tools-capture";
-import {
   DamageReducer,
   CURRENT_BOSS_SKILL_NAMES,
   FishNetActorDirectory,
@@ -21,10 +17,6 @@ function options(name: string): string[] {
 const inputs = options("--input");
 if (inputs.length === 0) throw new Error("at least one --input <capture.jsonl> is required; inputs are replayed in order");
 const fishNetBuildFingerprint = options("--fishnet-build")[0];
-const semanticMap = fishNetBuildFingerprint
-  && BUNDLED_GAME_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === fishNetBuildFingerprint)
-  ? loadBundledFishNetSemanticMap(fishNetBuildFingerprint)
-  : undefined;
 
 const finished: { encounter: EncounterAggregate; tanked?: EncounterAggregate }[] = [];
 const tanked = new MeterReducer({ kind: "tanked" });
@@ -42,7 +34,6 @@ const result = await replayCombatCaptures(inputs, {
   directory: new FishNetActorDirectory(),
   tracker: new FishNetCombatTracker({
     ...(fishNetBuildFingerprint === undefined ? {} : { buildFingerprint: fishNetBuildFingerprint }),
-    ...(semanticMap === undefined ? {} : { semanticMap }),
     monsterCatalog: mobIdentityDefinitionsById(),
     bossCatalog: CURRENT_BOSS_SKILL_NAMES,
   }),

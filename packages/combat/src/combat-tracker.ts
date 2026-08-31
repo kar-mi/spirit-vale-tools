@@ -3,9 +3,8 @@ import {
   CURRENT_GAME_BUILD_FINGERPRINT,
   FishNetMonsterDirectory,
   loadBundledFishNetRpcMap,
-  loadBundledFishNetSemanticMap,
 } from "@kar-mi/spirit-vale-tools-capture";
-import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetRpcMap, FishNetSemanticMap, FishNetSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetRpcMap, FishNetSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
 import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
@@ -45,8 +44,6 @@ export interface FishNetCombatTrackerOptions {
   hitGraceTicks?: number;
   /** Maximum age of an activation that never completes. Defaults to 900 ticks. */
   activationMaxAgeTicks?: number;
-  /** Semantic labels for skill wire identifiers. Defaults to the current bundled build. */
-  semanticMap?: FishNetSemanticMap;
   /** Extracted public skill metadata. Defaults to the current bundled build when available. */
   skillCatalog?: FishNetSkillCatalog;
   buildFingerprint?: string;
@@ -370,10 +367,8 @@ export class FishNetCombatTracker {
     this.activationMaxAgeTicks = maxAge;
     const buildFingerprint = options.buildFingerprint
       ?? options.skillCatalog?.buildFingerprint
-      ?? options.semanticMap?.buildFingerprint
       ?? CURRENT_GAME_BUILD_FINGERPRINT;
     assertMatchingBuild("skill catalog", options.skillCatalog?.buildFingerprint, buildFingerprint);
-    assertMatchingBuild("semantic map", options.semanticMap?.buildFingerprint, buildFingerprint);
     const skillCatalog = options.skillCatalog ?? tryLoadBundledSkillCatalog(buildFingerprint);
     const rpcMap = tryLoadBundledRpcMap(buildFingerprint);
     this.healthComponentIndices = healthComponentIndices(rpcMap);
@@ -382,11 +377,7 @@ export class FishNetCombatTracker {
     this.regenerationSkillIds = currentSemantics ? REGENERATION_SKILL_IDS : new Set();
     this.barrierSkillIds = currentSemantics ? BARRIER_SKILL_IDS : new Set();
     this.barrierStatusIds = currentSemantics ? BARRIER_STATUS_IDS : new Set();
-    const semanticMap = options.semanticMap ?? (skillCatalog
-      ? tryLoadBundledSemanticMap(buildFingerprint)
-      : loadBundledFishNetSemanticMap(buildFingerprint));
     this.skillLabels = new Map(skillCatalog?.skills.map(({ id, displayName }) => [id, displayName]) ?? []);
-    for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
     this.actorIdentityResolver = options.actorIdentityResolver;
     this.healingTraitsResolver = options.healingTraitsResolver;
     this.monsterCatalog = options.monsterCatalog;
@@ -1592,14 +1583,6 @@ function tryLoadBundledSkillCatalog(buildFingerprint: string): FishNetSkillCatal
 function tryLoadBundledRpcMap(buildFingerprint: string): FishNetRpcMap | undefined {
   try {
     return loadBundledFishNetRpcMap(buildFingerprint);
-  } catch {
-    return undefined;
-  }
-}
-
-function tryLoadBundledSemanticMap(buildFingerprint: string): FishNetSemanticMap | undefined {
-  try {
-    return loadBundledFishNetSemanticMap(buildFingerprint);
   } catch {
     return undefined;
   }

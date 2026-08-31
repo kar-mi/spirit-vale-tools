@@ -19,14 +19,8 @@ export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishn
 export { resolveBundledMapName } from "./fishnet/mapping/map-names.ts";
 export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/mapping/bundled-rpc-map.ts";
-export { loadBundledFishNetSemanticMap } from "./fishnet/inference/semantic-map.ts";
-export type {
-  FishNetRecoveryStyle,
-  FishNetRecoveryStyleDefinition,
-  FishNetSemanticMap,
-  FishNetSkillLabel,
-} from "./fishnet/inference/semantic-map.ts";
 export { classifyFishNetRecoveryStyle } from "./fishnet/inference/recovery-style.ts";
+export type { FishNetRecoveryStyle } from "./fishnet/inference/recovery-style.ts";
 export { FishNetEternalTowerTracker } from "./fishnet/tracking/eternal-tower.ts";
 export type { FishNetEternalTowerSnapshot } from "./fishnet/tracking/eternal-tower.ts";
 export {

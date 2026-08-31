@@ -1,7 +1,3 @@
-import {
-  BUNDLED_GAME_BUILD_FINGERPRINTS,
-  loadBundledFishNetSemanticMap,
-} from "@kar-mi/spirit-vale-tools-capture";
 import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
 import { CURRENT_BOSS_SKILL_NAMES, FishNetActorDirectory, FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
@@ -39,15 +35,9 @@ const decodeFishNet = Bun.argv.includes("--decode-fishnet") || combatOnly;
 const decodeLiteNetLib = Bun.argv.includes("--decode-litenetlib") || decodeFishNet;
 const fishNetBuildFingerprint = option("--fishnet-build");
 const suppressDuplicates = !Bun.argv.includes("--no-dedup");
-const combatFingerprint = fishNetBuildFingerprint;
-const semanticMap = combatOnly && combatFingerprint
-  && BUNDLED_GAME_BUILD_FINGERPRINTS.some((fingerprint) => fingerprint === combatFingerprint)
-  ? loadBundledFishNetSemanticMap(combatFingerprint)
-  : undefined;
 const combatTracker = combatOnly
   ? new FishNetCombatTracker({
       buildFingerprint: fishNetBuildFingerprint,
-      semanticMap,
       // Names each hit's target from its spawn packet.
       monsterCatalog: mobIdentityDefinitionsById(),
       bossCatalog: CURRENT_BOSS_SKILL_NAMES,
