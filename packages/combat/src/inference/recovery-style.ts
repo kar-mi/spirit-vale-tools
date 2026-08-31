@@ -1,4 +1,4 @@
-import type { DecodedFishNetPacket } from "../types.ts";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 
 export type FishNetRecoveryStyle = "standard" | "passive-regeneration" | "drain" | "unknown";
 

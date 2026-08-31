@@ -1,4 +1,5 @@
 export { FishNetCombatTracker } from "./combat-tracker.ts";
+export type { FishNetRecoveryStyle } from "./inference/recovery-style.ts";
 export { createBossCatalog, CURRENT_BOSS_SKILL_NAMES } from "./boss-catalog.ts";
 export { FishNetActorDirectory } from "./actor-directory.ts";
 export { FishNetStatusTracker } from "./status-tracker.ts";

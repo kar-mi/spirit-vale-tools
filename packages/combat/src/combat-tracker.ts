@@ -1,14 +1,15 @@
 import {
-  classifyFishNetRecoveryStyle,
   CURRENT_GAME_BUILD_FINGERPRINT,
   FishNetMonsterDirectory,
   loadBundledFishNetRpcMap,
 } from "@kar-mi/spirit-vale-tools-capture";
-import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetRpcMap, FishNetSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRpcMap, FishNetSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
 import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
+import { classifyFishNetRecoveryStyle } from "./inference/recovery-style.ts";
+import type { FishNetRecoveryStyle } from "./inference/recovery-style.ts";
 import {
   BARRIER_SKILL_IDS,
   BARRIER_STATUS_IDS,
