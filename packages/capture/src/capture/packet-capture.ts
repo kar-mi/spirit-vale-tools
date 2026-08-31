@@ -1,8 +1,8 @@
 import { EventEmitter } from "node:events";
 
 import { decodeLiteNetLibDatagram, LiteNetLibProtocolError } from "../litenetlib/decoder.ts";
-import { loadBundledFishNetRpcMap } from "../fishnet/builtin-maps.ts";
-import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoder.ts";
+import { loadBundledFishNetRpcMap } from "../fishnet/mapping/bundled-rpc-map.ts";
+import { FishNetProtocolError, FishNetSessionDecoder } from "../fishnet/decoding/decoder.ts";
 import { resolveCaptureDevice } from "./adapter-selection.ts";
 import { DuplicateFilter } from "./duplicate-filter.ts";
 import { DropDiagnostics } from "./drop-diagnostics.ts";

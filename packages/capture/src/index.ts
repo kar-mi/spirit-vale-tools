@@ -9,37 +9,37 @@ export {
   decodeFishNetPayload,
   FishNetProtocolError,
   FishNetSessionDecoder,
-} from "./fishnet/decoder.ts";
-export { loadBundledFishNetRpcMap } from "./fishnet/builtin-maps.ts";
-export { findPrefab } from "./fishnet/rpc-resolution.ts";
-export { decodeFieldRun } from "./fishnet/field-decoder.ts";
-export type { FieldDecodeRun } from "./fishnet/field-decoder.ts";
-export { characterDataParameter } from "./fishnet/character-data-schema.ts";
-export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/network-transform-decoder.ts";
-export { resolveBundledMapName } from "./fishnet/map-definitions/index.ts";
+} from "./fishnet/decoding/decoder.ts";
+export { loadBundledFishNetRpcMap } from "./fishnet/mapping/bundled-rpc-map.ts";
+export { findPrefab } from "./fishnet/mapping/rpc-map.ts";
+export { decodeFieldRun } from "./fishnet/decoding/fields.ts";
+export type { FieldDecodeRun } from "./fishnet/decoding/fields.ts";
+export { characterDataParameter } from "./fishnet/schema/character-data.ts";
+export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/decoding/network-transform.ts";
+export { resolveBundledMapName } from "./fishnet/mapping/map-names.ts";
 export { compact, count, warnings } from "./text-format.ts";
-export type { BundledFishNetBuildFingerprint } from "./fishnet/builtin-maps.ts";
-export { loadBundledFishNetSemanticMap } from "./fishnet/semantic-map.ts";
+export type { BundledFishNetBuildFingerprint } from "./fishnet/mapping/bundled-rpc-map.ts";
+export { loadBundledFishNetSemanticMap } from "./fishnet/inference/semantic-map.ts";
 export type {
   FishNetRecoveryStyle,
   FishNetRecoveryStyleDefinition,
   FishNetSemanticMap,
   FishNetSkillLabel,
-} from "./fishnet/semantic-map.ts";
-export { classifyFishNetRecoveryStyle } from "./fishnet/recovery-style.ts";
-export { FishNetEternalTowerTracker } from "./fishnet/eternal-tower-tracker.ts";
-export type { FishNetEternalTowerSnapshot } from "./fishnet/eternal-tower-tracker.ts";
+} from "./fishnet/inference/semantic-map.ts";
+export { classifyFishNetRecoveryStyle } from "./fishnet/inference/recovery-style.ts";
+export { FishNetEternalTowerTracker } from "./fishnet/tracking/eternal-tower.ts";
+export type { FishNetEternalTowerSnapshot } from "./fishnet/tracking/eternal-tower.ts";
 export {
   FishNetMonsterDirectory,
   decodeMonsterSpawn,
-} from "./fishnet/monster-directory.ts";
+} from "./fishnet/tracking/monsters.ts";
 export type {
   FishNetMonsterDirectoryChange,
   FishNetMonsterLevels,
   FishNetMonsterSpawn,
-} from "./fishnet/monster-directory.ts";
-export { decodeBossGravestone } from "./fishnet/boss-gravestone.ts";
-export type { BossGravestone } from "./fishnet/boss-gravestone.ts";
+} from "./fishnet/tracking/monsters.ts";
+export { decodeBossGravestone } from "./fishnet/tracking/boss-gravestone.ts";
+export type { BossGravestone } from "./fishnet/tracking/boss-gravestone.ts";
 export type { DroppedFlow } from "./capture/drop-diagnostics.ts";
 export type {
   CaptureConfig,

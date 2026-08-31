@@ -352,7 +352,7 @@ function roundAwayFromZero(value: number): number { return value < 0 ? -Math.rou
 /** A reconstructed node: either a leaf value (string/number/boolean/null) or nested named fields. */
 type FieldNode = { [key: string]: unknown };
 
-/** Rebuilds `field-decoder.ts`'s dot/bracket-flattened field names (e.g. `equips[0].itemId`, or
+/** Rebuilds `fishnet/decoding/fields.ts`'s dot/bracket-flattened field names (e.g. `equips[0].itemId`, or
  * `equips.length` for a repeated field's element count) into a nested lookup tree, so the
  * projection logic below can read `CharacterData` by field name instead of wire position.
  */

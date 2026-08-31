@@ -2,7 +2,7 @@ export type {
   FishNetDecodedField,
   FishNetDecodedValue,
   FishNetWireCodec,
-} from "./definitions/codecs.ts";
+} from "./schema/codecs.ts";
 export type {
   FishNetBehaviourDefinition,
   FishNetBroadcastDefinition,
@@ -12,7 +12,7 @@ export type {
   FishNetRpcMap,
   FishNetRpcParameter,
   FishNetSyncTypeDefinition,
-} from "./definitions/rpc-map.ts";
+} from "./schema/rpc-map.ts";
 export type {
   CapturedFishNetPacket,
   DecodedFishNetPacket,
@@ -23,8 +23,8 @@ export type {
   FishNetRpcResolution,
   FishNetSpawnSyncEntry,
   FishNetSyncEntry,
-} from "./definitions/protocol.ts";
+} from "./schema/packets.ts";
 export type {
   DecodedNetworkTransform,
   NetworkTransformAxes,
-} from "./network-transform-decoder.ts";
+} from "./decoding/network-transform.ts";

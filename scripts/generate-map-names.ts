@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Regenerates `packages/capture/src/fishnet/map-definitions/current-build.ts` from a
+ * Regenerates `packages/capture/src/fishnet/generated/map-names.current.ts` from a
  * `maps.json` export for the current game build, replacing the hand-pasted table added in
  * commit 70a8d83.
  *
@@ -14,7 +14,7 @@
  * data-mine-style export lives relative to this repo (that varies per machine/checkout and is
  * not this repo's concern to hardcode).
  *
- * After running: review the diff under `map-definitions/current-build.ts`, then run the capture
+ * After running: review `generated/map-names.current.ts`, then run the capture
  * package's tests.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -24,7 +24,7 @@ import path from "node:path";
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = path.resolve(
   SCRIPT_DIR,
-  "../packages/capture/src/fishnet/map-definitions/current-build.ts",
+  "../packages/capture/src/fishnet/generated/map-names.current.ts",
 );
 
 interface DataMineMap {
@@ -74,7 +74,7 @@ function main(): void {
   const inputFile = resolveInputFile();
   const maps = loadMaps(inputFile);
 
-  let content = "/** Generated from the matched current-build static map catalog. */\n";
+  let content = "/** AUTO-GENERATED from the matched current-build static map catalog. */\n";
   content += "export const CURRENT_BUILD_MAP_NAMES: Readonly<Record<number, string>> = {\n";
   content += formatEntries(maps);
   content += "\n};\n";
