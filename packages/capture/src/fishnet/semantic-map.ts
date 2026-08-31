@@ -23,6 +23,7 @@ export interface FishNetRecoveryStyleDefinition {
 export interface FishNetSemanticMap {
   readonly buildFingerprint: string;
   readonly verifiedSkillLabels: readonly FishNetSkillLabel[];
+  /** @deprecated Recovery settings are structurally decoded from the generated RPC map. */
   readonly recoveryStyles?: readonly FishNetRecoveryStyleDefinition[];
 }
 

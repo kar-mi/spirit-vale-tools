@@ -92,6 +92,14 @@ function serverRpc(objectId: number, componentIndex: number, hash: number, paylo
   ]));
 }
 
+function observersRpc(objectId: number, componentIndex: number, hash: number, payload: Buffer): Buffer {
+  const wireHash = hash > 0xff ? u16(hash) : Buffer.from([hash]);
+  return message(9, Buffer.concat([
+    packed(objectId), Buffer.from([1, componentIndex]),
+    packed(wireHash.length + payload.length), wireHash, payload,
+  ]));
+}
+
 function syncType(objectId: number, componentIndex: number, body: Buffer): Buffer {
   return message(7, Buffer.concat([
     packed(objectId), Buffer.from([1, componentIndex]), u32(body.length), body,
@@ -282,6 +290,34 @@ describe("bundled FishNet maps", () => {
       value: -1,
     }));
     expect(unsourced[1]?.undecodedPayload).toBeUndefined();
+  });
+
+  test.each([
+    [false, false, 150, 0],
+    [false, true, 0, 0],
+    [false, true, -150, 0.75],
+  ] as const)("fully decodes Recover_C FloaterSettings %#", (disableFloater, disableSfx, offset, scale) => {
+    const payload = Buffer.concat([
+      packed(37), Buffer.from([Number(disableFloater), Number(disableSfx)]), packed(offset), f32(scale),
+    ]);
+    const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
+    const results = decoder.decode(tick(11, Buffer.concat([
+      spawnWithoutLinks(77, 0, 4),
+      observersRpc(77, 2, 1, payload),
+    ])), { reliable: true, connectionId: "synthetic-recovery" });
+
+    expect(results[1]).toMatchObject({
+      networkBehaviourType: "HealthComponent",
+      rpcName: "Recover_C",
+      decodedFields: [
+        { name: "amount", value: 37 },
+        { name: "settings.DisableFloater", value: disableFloater },
+        { name: "settings.DisableSfx", value: disableSfx },
+        { name: "settings.Offset", value: offset },
+        { name: "settings.Scale", value: scale },
+      ],
+    });
+    expect(results[1]?.undecodedPayload).toBeUndefined();
   });
 
   test("decodes a StatusComponent Data/Level/JobLevel sync bundle from the committed map", () => {

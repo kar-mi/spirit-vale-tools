@@ -76,6 +76,7 @@ export type {
   FishNetCombatDeathEvent,
   FishNetCombatEvent,
   FishNetCombatHealEvent,
+  FishNetCombatShieldEvent,
   FishNetCombatMonsterIdentityEvent,
   FishNetCombatStatusEvent,
   FishNetCombatSummonEvent,
@@ -86,6 +87,7 @@ export type {
   FishNetHealAttribution,
   FishNetHealingTraits,
   FishNetHitResult,
+  FishNetShieldAction,
 } from "./combat-tracker.ts";
 export { FishNetPositionTracker } from "./position-tracker.ts";
 export type {

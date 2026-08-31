@@ -26,6 +26,10 @@ function healed(value: number): FishNetCombatEvent {
   } as FishNetCombatEvent;
 }
 
+function unattributedHeal(value: number): FishNetCombatEvent {
+  return { ...healed(value), actorId: undefined, targetId: 1, attribution: "unattributed" } as FishNetCombatEvent;
+}
+
 function directHealed(value: number): FishNetCombatEvent {
   return {
     kind: "heal",
@@ -120,6 +124,12 @@ describe("healing meter", () => {
     const reducer = healingMeter();
     reducer.consumeCombat(directHealed(150), 1_000, IDENTITIES);
     expect(total(reducer)).toBe(150);
+  });
+
+  test("does not silently credit an unattributed target as its own healer", () => {
+    const reducer = healingMeter();
+    reducer.consumeCombat(unattributedHeal(225), 1_000, IDENTITIES);
+    expect(total(reducer)).toBe(0);
   });
 
   test("ignores a full heal", () => {

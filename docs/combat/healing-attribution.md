@@ -24,32 +24,36 @@ healed target is always known (it's the RPC's `objectId`), but the game
 genuinely never sends who did the healing. This isn't a decoding gap or a
 missing RPC-map entry; the field doesn't exist on the wire.
 
+`FloaterSettings` itself is now fully build-derived and decoded as
+`DisableFloater`, `DisableSfx`, `Offset`, and `Scale`. Those fields classify
+standard, passive-regeneration, and drain recovery without build-specific raw
+payload signatures; they still do not contain a healer.
+
 ## How attribution works today
 
 Since the RPC itself is silent, `combat-tracker.ts` infers the healer from
 nearby skill activity instead, via two separate paths:
 
-**Instant heals** (`HEALING_SKILL_IDS`: `Heal`, `HighHeal`, `FieldHealing`) —
+**Instant heals** — the eligible skill set is generated from active skills with
+negative healing values in the data-mine rather than maintained by hand. When
 when a `Recover_C` lands, the tracker looks for an activation whose skill id is
 in the allowlist, whose declared cast target (`CastBegin_C`'s `targetId`)
 matches the heal's recipient, and whose cast is still within its short
 post-complete grace window (`hitGraceTicks`, default 30 ticks). Exactly one
-match → `attribution: "exact"`/`"inferred"`; more than one overlapping
+match → `attribution: "inferred"`; more than one overlapping
 candidate → `"ambiguous"`; no match → `"unattributed"`.
 
-**Regeneration-status heals** (`REGEN_SKILL_IDS`: `HealAll`, `Sanctuary`,
-`GuardianBond`, `SanctuaryField`) — these skills grant the `Regeneration`
+**Regeneration-status heals** — eligible skills are generated from skills that
+grant the `Regeneration`
 status (see `packages/statuses/src/definitions/statuses.ts`) rather than
 healing immediately, so the same cast/target/tick correlation is applied once,
 at the moment `StatusComponent.ApplyEffect_T` grants `Regeneration`. The
 result is cached per target and reused for every subsequent `Recover_C` tick
 on that target until `RemoveEffect_T` clears the status.
 
-Both paths are best-effort allowlists built by hand from observed captures and
-the skill/status data files, not something the game or decoder derives
-automatically — skills that heal but aren't yet in one of these sets will
-resolve as `"unattributed"` even though a matching cast is right there in the
-activation log.
+Both paths remain best-effort correlations, but their eligibility comes from
+the current build's extracted skill/status configuration. Unknown, overlapping,
+or unobserved casters remain explicitly unattributed or ambiguous.
 
 ## Known limitations
 
@@ -73,9 +77,9 @@ activation log.
   `(targetId, amount)` pairs repeating every ~30 ticks indefinitely — passive
   HP/resource regen on nearby NPCs/players with no cast behind them at all,
   not a matching failure.
-- **`SkillsComponent.Recover_C` is a different RPC and is ignored.** Same
-  method name, same `(amount, settings)` shape, but it lives on
-  `SkillsComponent` instead of `HealthComponent`. The tracker filters by
-  component, not by inferred meaning — we haven't decoded `FloaterSettings` to
-  confirm it's specifically mana/resource recovery, only that it's excluded
-  from heal attribution.
+- **`SkillsComponent.Recover_C` is a different RPC and is ignored.** It has the
+  same fully decoded `(amount, settings)` shape, but lives on `SkillsComponent`
+  and represents resource recovery rather than restored health.
+
+Unattributed heals retain their destination but have no `actorId`; meters no
+longer reinterpret the destination as a self-healing source.

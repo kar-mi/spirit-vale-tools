@@ -142,7 +142,8 @@ function healingHit(
 ): MeterHit | undefined {
   if (event.kind !== "heal") return undefined;
   if (!Number.isFinite(event.value) || event.value <= 0) return undefined;
-  const healerId = event.actorId ?? event.targetId;
+  const healerId = event.actorId;
+  if (healerId === undefined) return undefined;
   const identity = identities.get(healerId);
   if (!identity) return undefined;
   return {

@@ -1,18 +1,21 @@
 import type { FishNetRecoveryStyle, FishNetSemanticMap } from "./semantic-map.ts";
 import type { DecodedFishNetPacket } from "./types.ts";
 
-/** Classifies the game-defined FloaterSettings trailing a HealthComponent.Recover_C payload. */
+/** Classifies the generated, structurally decoded FloaterSettings on HealthComponent.Recover_C. */
 export function classifyFishNetRecoveryStyle(
-  packet: Pick<DecodedFishNetPacket, "networkBehaviourType" | "rpcName" | "undecodedPayload">,
-  semanticMap: Pick<FishNetSemanticMap, "recoveryStyles"> | undefined,
+  packet: Pick<DecodedFishNetPacket, "networkBehaviourType" | "rpcName" | "decodedFields">,
+  _semanticMap?: Pick<FishNetSemanticMap, "recoveryStyles">,
 ): FishNetRecoveryStyle {
-  const settings = packet.undecodedPayload;
-  if (!settings || !semanticMap) return "unknown";
-  const payloadHex = settings.toString("hex");
-  return semanticMap.recoveryStyles?.find((definition) =>
-    definition.rpcName === packet.rpcName
-    && (packet.networkBehaviourType === undefined
-      || definition.networkBehaviourType === packet.networkBehaviourType)
-    && definition.undecodedPayloadHex === payloadHex
-  )?.style ?? "unknown";
+  if (packet.rpcName !== "Recover_C" || packet.networkBehaviourType !== "HealthComponent") return "unknown";
+  const value = (name: string) => packet.decodedFields?.find((field) => field.name === name)?.value;
+  const disableFloater = value("settings.DisableFloater");
+  const disableSfx = value("settings.DisableSfx");
+  const offset = value("settings.Offset");
+  const scale = value("settings.Scale");
+  if (typeof disableFloater !== "boolean" || typeof disableSfx !== "boolean"
+    || typeof offset !== "number" || typeof scale !== "number") return "unknown";
+  if (!disableFloater && disableSfx && offset < 0 && scale > 0) return "drain";
+  if (!disableFloater && disableSfx && offset === 0 && scale === 0) return "passive-regeneration";
+  if (!disableFloater && !disableSfx && offset > 0 && scale === 0) return "standard";
+  return "unknown";
 }

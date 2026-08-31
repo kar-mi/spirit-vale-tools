@@ -2,13 +2,21 @@ import {
   classifyFishNetRecoveryStyle,
   CURRENT_GAME_BUILD_FINGERPRINT,
   FishNetMonsterDirectory,
+  loadBundledFishNetRpcMap,
   loadBundledFishNetSemanticMap,
 } from "@kar-mi/spirit-vale-tools-capture";
-import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetSemanticMap } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectoryChange, FishNetRecoveryStyle, FishNetRpcMap, FishNetSemanticMap, FishNetSyncEntry } from "@kar-mi/spirit-vale-tools-capture";
 import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
+import {
+  BARRIER_SKILL_IDS,
+  BARRIER_STATUS_IDS,
+  COMBAT_SEMANTICS_BUILD_FINGERPRINT,
+  DIRECT_HEALING_SKILL_IDS,
+  REGENERATION_SKILL_IDS,
+} from "./generated/combat-semantics.ts";
 
 export type FishNetCombatActionKind = "skill" | "basicAttack" | "inferred";
 export type FishNetCombatActionPhase = "begin" | "complete" | "interrupt" | "cancel" | "inferred";
@@ -228,6 +236,29 @@ export interface FishNetCombatHealEvent {
   actorIdentity?: FishNetCombatActorIdentity;
 }
 
+export type FishNetShieldAction = "gained" | "absorbed" | "cleared" | "reduced";
+
+export interface FishNetCombatShieldEvent {
+  kind: "shield";
+  rpc: "barrierSync";
+  tick: number;
+  payloadBytes: number;
+  fields: Record<string, FishNetDecodedValue>;
+  targetId: number;
+  /** The inferred shield applier. Absent when attribution is ambiguous or unavailable. */
+  actorId?: number;
+  sourceId?: string;
+  sourceLabel?: string;
+  value: number;
+  barrierBefore: number;
+  barrierAfter: number;
+  action: FishNetShieldAction;
+  attribution: FishNetHealAttribution;
+  activationId?: string;
+  candidateActivationIds?: string[];
+  actorIdentity?: FishNetCombatActorIdentity;
+}
+
 export type FishNetCombatEvent =
   | FishNetCombatMonsterIdentityEvent
   | FishNetCombatActivationEvent
@@ -236,6 +267,7 @@ export type FishNetCombatEvent =
   | FishNetCombatStatusEvent
   | FishNetCombatSummonEvent
   | FishNetCombatHealEvent
+  | FishNetCombatShieldEvent
   | FishNetCombatFullHealEvent;
 
 interface ActivationState {
@@ -258,6 +290,11 @@ interface RegenSourceState {
   sourceLabel?: string;
   activationId?: string;
   candidateActivationIds?: string[];
+}
+
+interface BarrierState extends RegenSourceState {
+  value: number;
+  statusActive: boolean;
 }
 
 interface SummonCalibrationEntry {
@@ -289,11 +326,6 @@ const HIT_RESULTS: Readonly<Record<number, Exclude<FishNetHitResult, number>>> =
 };
 const SKILL_RPC_NAMES = new Set(["CastBegin_C", "AutoCast_C", "ToggleBegin_C", "CastComplete_C", "CastInterrupt_C", "CastCancel_C"]);
 const CURRENT_STATUS_COMPONENT_INDICES = new Set([5, 6]);
-const CURRENT_HEALTH_COMPONENT_INDICES = new Set([2, 3]);
-/** Known healing skill ids, from observed CastBegin_C/AutoCast_C activations. */
-const HEALING_SKILL_IDS = new Set(["Heal", "HighHeal", "FieldHealing"]);
-/** Skill ids that heal indirectly by granting the "Regeneration" status (per packages/statuses/src/definitions/statuses.ts) rather than an immediate Recover_C. */
-const REGEN_SKILL_IDS = new Set(["HealAll", "Sanctuary", "GuardianBond", "SanctuaryField"]);
 const REGEN_STATUS_ID = "Regeneration";
 
 /** Converts decoded FishNet RPCs into actor-grouped combat events and summaries. */
@@ -306,11 +338,17 @@ export class FishNetCombatTracker {
   private readonly monsterCatalog?: FishNetMonsterCatalog;
   private readonly bossCatalog?: FishNetBossCatalog;
   private readonly monsters?: FishNetMonsterDirectory;
-  private readonly semanticMap?: FishNetSemanticMap;
+  private readonly healthComponentIndices: ReadonlySet<number>;
+  private readonly directHealingSkillIds: ReadonlySet<string>;
+  private readonly regenerationSkillIds: ReadonlySet<string>;
+  private readonly barrierSkillIds: ReadonlySet<string>;
+  private readonly barrierStatusIds: ReadonlySet<string>;
   private readonly activations = new Map<string, ActivationState>();
   /** Curated boss names are valid only for the lifetime of their network object id. */
   private readonly bossIdentities = new Map<number, string>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
+  private readonly barriers = new Map<number, BarrierState>();
+  private readonly recentDamageTargets = new Set<number>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
   /** Pending `SummonSkillSync`/`SummonerSync` state per summoned object's own network id, until both are known. */
   private readonly summonSkillSyncState = new Map<number, PendingSummonSkillState>();
@@ -334,10 +372,16 @@ export class FishNetCombatTracker {
     assertMatchingBuild("skill catalog", options.skillCatalog?.buildFingerprint, buildFingerprint);
     assertMatchingBuild("semantic map", options.semanticMap?.buildFingerprint, buildFingerprint);
     const skillCatalog = options.skillCatalog ?? tryLoadBundledSkillCatalog(buildFingerprint);
+    const rpcMap = tryLoadBundledRpcMap(buildFingerprint);
+    this.healthComponentIndices = healthComponentIndices(rpcMap);
+    const currentSemantics = buildFingerprint === COMBAT_SEMANTICS_BUILD_FINGERPRINT;
+    this.directHealingSkillIds = currentSemantics ? DIRECT_HEALING_SKILL_IDS : new Set();
+    this.regenerationSkillIds = currentSemantics ? REGENERATION_SKILL_IDS : new Set();
+    this.barrierSkillIds = currentSemantics ? BARRIER_SKILL_IDS : new Set();
+    this.barrierStatusIds = currentSemantics ? BARRIER_STATUS_IDS : new Set();
     const semanticMap = options.semanticMap ?? (skillCatalog
       ? tryLoadBundledSemanticMap(buildFingerprint)
       : loadBundledFishNetSemanticMap(buildFingerprint));
-    this.semanticMap = semanticMap;
     this.skillLabels = new Map(skillCatalog?.skills.map(({ id, displayName }) => [id, displayName]) ?? []);
     for (const { value, label } of semanticMap?.verifiedSkillLabels ?? []) this.skillLabels.set(value, label);
     this.actorIdentityResolver = options.actorIdentityResolver;
@@ -363,12 +407,14 @@ export class FishNetCombatTracker {
     if (this.recentDamageTick !== packet.tick) {
       this.recentDamageTick = packet.tick;
       this.recentDamageSignatures.clear();
+      this.recentDamageTargets.clear();
     }
     const events: FishNetCombatEvent[] = [
       ...(monsterIdentity ? [monsterIdentity] : []),
       ...(bossLifecycle ? [bossLifecycle] : []),
       ...(summonLifecycle ? [summonLifecycle] : []),
     ];
+    events.push(...this.consumeBarrierSync(packet));
     if (packet.packetName === "syncType" && matchesBehaviour(packet, "SummoningComponent")) {
       events.push(...this.consumeSummonSkillSync(packet));
       return events;
@@ -452,10 +498,12 @@ export class FishNetCombatTracker {
     this.activations.clear();
     this.bossIdentities.clear();
     this.activeRegenSources.clear();
+    this.barriers.clear();
     this.summonStacks.clear();
     this.summonSkillSyncState.clear();
     this.authoritativeSummonActors.clear();
     this.recentDamageSignatures.clear();
+    this.recentDamageTargets.clear();
     this.recentDamageTick = undefined;
     this.monsters?.reset();
   }
@@ -541,6 +589,12 @@ export class FishNetCombatTracker {
       actorId,
       actorIdentity: this.actorIdentityResolver?.(actorId),
     } as const;
+    for (const display of batch.applies) {
+      if (this.barrierStatusIds.has(display.statusId)) this.observeBarrierStatus(actorId, true, packet.tick);
+    }
+    for (const statusId of batch.removes) {
+      if (this.barrierStatusIds.has(statusId)) this.observeBarrierStatus(actorId, false, packet.tick);
+    }
     return [
       ...batch.applies.map((display): FishNetCombatStatusEvent => ({
         ...base,
@@ -568,7 +622,7 @@ export class FishNetCombatTracker {
       });
     }
 
-    if (packet.rpcHash !== 1 || !CURRENT_HEALTH_COMPONENT_INDICES.has(packet.networkBehaviourIndex)) return [];
+    if (packet.rpcHash !== 1 || !this.healthComponentIndices.has(packet.networkBehaviourIndex)) return [];
     let amount: ReturnType<typeof readSignedPackedWhole>;
     try {
       amount = readSignedPackedWhole(packet.payload, 0);
@@ -576,21 +630,18 @@ export class FishNetCombatTracker {
       return [];
     }
     if (amount.value < 0) return [];
-    const settings = packet.payload.subarray(amount.nextOffset);
-    const settingsHex = settings.toString("hex");
-    const knownHealthRecovery = this.semanticMap?.recoveryStyles?.some((definition) =>
-      definition.networkBehaviourType === "HealthComponent"
-      && definition.rpcName === "Recover_C"
-      && definition.undecodedPayloadHex === settingsHex
-    ) ?? false;
-    if (!knownHealthRecovery) return [];
+    const settings = decodeFloaterSettings(packet.payload, amount.nextOffset);
+    if (!settings) return [];
 
     return [this.consumeRecover({
       ...packet,
       networkBehaviourType: "HealthComponent",
       rpcName: "Recover_C",
-      decodedFields: [{ name: "amount", codec: "packedInt32", value: amount.value }],
-      undecodedPayload: settings,
+      decodedFields: [
+        { name: "amount", codec: "packedInt32", value: amount.value },
+        ...settings,
+      ],
+      undecodedPayload: undefined,
     })];
   }
 
@@ -868,6 +919,7 @@ export class FishNetCombatTracker {
         actorIdentity: this.actorIdentityResolver?.(actorId),
       }];
     }
+    if (value > 0) this.recentDamageTargets.add(packet.objectId!);
     const hitCode = requiredNumberField(packet, "dmg.Hit");
     const hitResult = HIT_RESULTS[hitCode] ?? hitCode;
     const targetId = packet.objectId!;
@@ -918,7 +970,8 @@ export class FishNetCombatTracker {
     } else if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
-      attribution = candidate.inferred ? "inferred" : "exact";
+      // Recover_C never carries a healer; even a unique matching cast remains correlation.
+      attribution = "inferred";
       activationId = candidate.id;
     } else {
       attribution = "ambiguous";
@@ -972,7 +1025,7 @@ export class FishNetCombatTracker {
   private consumeRecover(packet: DecodedFishNetPacket): FishNetCombatHealEvent {
     const targetId = packet.objectId!;
     const value = requiredNumberField(packet, "amount");
-    const recoveryStyle = classifyFishNetRecoveryStyle(packet, this.semanticMap);
+    const recoveryStyle = classifyFishNetRecoveryStyle(packet);
     if (recoveryStyle === "passive-regeneration") {
       return this.createSelfRecovery(packet, value, recoveryStyle, "passive-regeneration", "Passive regeneration");
     }
@@ -980,7 +1033,7 @@ export class FishNetCombatTracker {
       const source = drainRecoverySource(this.healingTraitsResolver?.(targetId));
       return this.createSelfRecovery(packet, value, recoveryStyle, source.sourceId, source.sourceLabel);
     }
-    const candidates = this.eligibleHealActivations(packet.tick, targetId, HEALING_SKILL_IDS);
+    const candidates = this.eligibleHealActivations(packet.tick, targetId, this.directHealingSkillIds);
 
     let attribution: FishNetHealAttribution;
     let actorId: number | undefined;
@@ -991,7 +1044,8 @@ export class FishNetCombatTracker {
     if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
-      attribution = candidate.inferred ? "inferred" : "exact";
+      // Recover_C never carries a healer; even a unique matching cast remains correlation.
+      attribution = "inferred";
       actorId = candidate.actorId;
       sourceId = candidate.sourceId;
       sourceLabel = candidate.sourceLabel;
@@ -1032,6 +1086,68 @@ export class FishNetCombatTracker {
       candidateActivationIds,
       actorIdentity: actorId === undefined ? undefined : this.actorIdentityResolver?.(actorId),
     };
+  }
+
+  private consumeBarrierSync(packet: DecodedFishNetPacket): FishNetCombatShieldEvent[] {
+    if (packet.objectId === undefined) return [];
+    if (packet.packetName === "objectDespawn") {
+      this.barriers.delete(packet.objectId);
+      return [];
+    }
+    const values = barrierSyncValues(packet);
+    if (values.length === 0) return [];
+    const targetId = packet.objectId;
+    const events: FishNetCombatShieldEvent[] = [];
+    for (const barrierAfter of values) {
+      if (!Number.isInteger(barrierAfter) || barrierAfter < 0) continue;
+      const previous = this.barriers.get(targetId);
+      if (!previous || packet.packetName === "objectSpawn") {
+        this.barriers.set(targetId, { value: barrierAfter, statusActive: previous?.statusActive ?? false });
+        continue;
+      }
+      const barrierBefore = previous.value;
+      if (barrierAfter === barrierBefore) continue;
+      let source: RegenSourceState = previous;
+      let action: FishNetShieldAction;
+      if (barrierAfter > barrierBefore) {
+        source = sourceFromCandidates(this.eligibleHealActivations(packet.tick, targetId, this.barrierSkillIds));
+        action = "gained";
+      } else if (barrierAfter === 0 && !previous.statusActive) {
+        action = "cleared";
+      } else if (this.recentDamageTargets.has(targetId)) {
+        action = "absorbed";
+      } else {
+        action = "reduced";
+      }
+      const attribution: FishNetHealAttribution = source.candidateActivationIds
+        ? "ambiguous"
+        : source.actorId === undefined ? "unattributed" : "inferred";
+      events.push({
+        kind: "shield",
+        rpc: "barrierSync",
+        tick: packet.tick,
+        payloadBytes: packet.payload.length,
+        fields: { barrierSync: barrierAfter },
+        targetId,
+        actorId: source.actorId,
+        sourceId: source.sourceId,
+        sourceLabel: source.sourceLabel,
+        value: Math.abs(barrierAfter - barrierBefore),
+        barrierBefore,
+        barrierAfter,
+        action,
+        attribution,
+        activationId: source.activationId,
+        candidateActivationIds: source.candidateActivationIds,
+        actorIdentity: source.actorId === undefined ? undefined : this.actorIdentityResolver?.(source.actorId),
+      });
+      this.barriers.set(targetId, {
+        ...source,
+        value: barrierAfter,
+        statusActive: barrierAfter === 0 ? false : previous.statusActive,
+      });
+    }
+    return events;
   }
 
   private createSelfRecovery(
@@ -1076,7 +1192,7 @@ export class FishNetCombatTracker {
     const actorId = packet.objectId!;
     if (statusId === REGEN_STATUS_ID) {
       if (packet.rpcName === "ApplyEffect_T") {
-        const candidates = this.eligibleHealActivations(packet.tick, actorId, REGEN_SKILL_IDS);
+        const candidates = this.eligibleHealActivations(packet.tick, actorId, this.regenerationSkillIds);
         if (candidates.length === 1) {
           const [candidate] = candidates;
           if (!candidate) throw new Error("missing combat activation candidate");
@@ -1095,6 +1211,9 @@ export class FishNetCombatTracker {
         this.activeRegenSources.delete(actorId);
       }
     }
+    if (this.barrierStatusIds.has(statusId)) {
+      this.observeBarrierStatus(actorId, packet.rpcName === "ApplyEffect_T", packet.tick);
+    }
     return {
       kind: "status",
       rpc: packet.rpcName as "ApplyEffect_T" | "RemoveEffect_T",
@@ -1107,6 +1226,16 @@ export class FishNetCombatTracker {
       action: packet.rpcName === "ApplyEffect_T" ? "applied" : "removed",
       actorIdentity: this.actorIdentityResolver?.(actorId),
     };
+  }
+
+  private observeBarrierStatus(actorId: number, applied: boolean, tick: number): void {
+    const current = this.barriers.get(actorId) ?? { value: 0, statusActive: false };
+    if (!applied) {
+      this.barriers.set(actorId, { ...current, statusActive: false });
+      return;
+    }
+    const source = sourceFromCandidates(this.eligibleHealActivations(tick, actorId, this.barrierSkillIds));
+    this.barriers.set(actorId, { ...current, ...source, statusActive: true });
   }
 
   private createActivation(
@@ -1163,6 +1292,66 @@ function drainRecoverySource(traits: FishNetHealingTraits | undefined): { source
     return { sourceId: "health-leech", sourceLabel: "Health Leech" };
   }
   return { sourceId: "siphon-health-leech", sourceLabel: "Siphon / Health Leech" };
+}
+
+function sourceFromCandidates(candidates: ActivationState[]): RegenSourceState {
+  if (candidates.length === 1) {
+    const candidate = candidates[0]!;
+    return {
+      actorId: candidate.actorId,
+      sourceId: candidate.sourceId,
+      sourceLabel: candidate.sourceLabel,
+      activationId: candidate.id,
+    };
+  }
+  return candidates.length > 1
+    ? { candidateActivationIds: candidates.map(({ id }) => id) }
+    : {};
+}
+
+function barrierSyncValues(packet: DecodedFishNetPacket): number[] {
+  const values: number[] = [];
+  const read = (entry: FishNetSyncEntry, behaviourType?: string) => {
+    if (behaviourType !== undefined && behaviourType !== "HealthComponent") return;
+    if (entry.index !== 2 && entry.name !== "barrierSync") return;
+    const value = entry.fields.find(({ name }) => name === "barrierSync")?.value;
+    if (typeof value === "number") values.push(value);
+  };
+  for (const entry of packet.spawnSyncEntries ?? []) read(entry, entry.networkBehaviourType);
+  if (packet.packetName === "syncType" && matchesBehaviour(packet, "HealthComponent")) {
+    for (const entry of packet.syncEntries ?? []) read(entry, packet.networkBehaviourType);
+    if (!packet.syncEntries) {
+      const value = numberField(packet, "barrierSync");
+      if ((packet.syncIndex === 2 || packet.syncName === "barrierSync") && value !== undefined) values.push(value);
+    }
+  }
+  return values;
+}
+
+function decodeFloaterSettings(payload: Buffer, start: number): NonNullable<DecodedFishNetPacket["decodedFields"]> | undefined {
+  if (payload.length - start < 2) return undefined;
+  const disableFloater = payload[start];
+  const disableSfx = payload[start + 1];
+  if ((disableFloater !== 0 && disableFloater !== 1) || (disableSfx !== 0 && disableSfx !== 1)) return undefined;
+  let offset;
+  try {
+    offset = readSignedPackedWhole(payload, start + 2);
+  } catch {
+    return undefined;
+  }
+  if (payload.length - offset.nextOffset !== 4) return undefined;
+  return [
+    { name: "settings.DisableFloater", codec: "boolean", value: disableFloater === 1 },
+    { name: "settings.DisableSfx", codec: "boolean", value: disableSfx === 1 },
+    { name: "settings.Offset", codec: "packedInt32", value: offset.value },
+    { name: "settings.Scale", codec: "float32", value: payload.readFloatLE(offset.nextOffset) },
+  ];
+}
+
+function healthComponentIndices(map: FishNetRpcMap | undefined): ReadonlySet<number> {
+  return new Set(map?.prefabs?.flatMap(({ components }) =>
+    components.filter(({ typeName }) => typeName === "HealthComponent").map(({ index }) => index)
+  ) ?? []);
 }
 
 function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {
@@ -1269,7 +1458,12 @@ function isCompleteDamagePacket(packet: DecodedFishNetPacket, requireVectors: bo
 }
 
 function isCompleteRecoverPacket(packet: DecodedFishNetPacket): boolean {
-  return numberField(packet, "amount") !== undefined;
+  return numberField(packet, "amount") !== undefined
+    && typeof field(packet, "settings.DisableFloater") === "boolean"
+    && typeof field(packet, "settings.DisableSfx") === "boolean"
+    && numberField(packet, "settings.Offset") !== undefined
+    && numberField(packet, "settings.Scale") !== undefined
+    && (!packet.undecodedPayload || packet.undecodedPayload.length === 0);
 }
 
 function nullableStringField(packet: DecodedFishNetPacket, name: string): string | null | undefined {
@@ -1321,6 +1515,14 @@ function uniqueMonsterIdentityEvents(events: FishNetCombatMonsterIdentityEvent[]
 function tryLoadBundledSkillCatalog(buildFingerprint: string): FishNetSkillCatalog | undefined {
   try {
     return loadBundledSkillCatalog(buildFingerprint);
+  } catch {
+    return undefined;
+  }
+}
+
+function tryLoadBundledRpcMap(buildFingerprint: string): FishNetRpcMap | undefined {
+  try {
+    return loadBundledFishNetRpcMap(buildFingerprint);
   } catch {
     return undefined;
   }

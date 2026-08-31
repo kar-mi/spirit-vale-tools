@@ -96,10 +96,18 @@ function castTargeting(tick: number, actorId: number, sourceId: string, targetId
 }
 
 function recover(tick: number, targetId: number, amount: number, settingsHex?: string): DecodedFishNetPacket {
+  const settings = settingsHex === "00010000000000"
+    ? [false, true, 0, 0] as const
+    : settingsHex === "0001ab020000403f"
+      ? [false, true, -150, 0.75] as const
+      : [false, false, 150, 0] as const;
   const result = packet(tick, targetId, "HealthComponent", "Recover_C", [
     field("amount", amount),
+    field("settings.DisableFloater", settings[0]),
+    field("settings.DisableSfx", settings[1]),
+    field("settings.Offset", settings[2]),
+    field("settings.Scale", settings[3]),
   ]);
-  if (settingsHex) result.undecodedPayload = Buffer.from(settingsHex, "hex");
   return result;
 }
 
@@ -110,6 +118,23 @@ function statusEffect(
   fields: FishNetDecodedField[],
 ): DecodedFishNetPacket {
   return packet(tick, actorId, "StatusComponent", rpcName, fields);
+}
+
+function barrierSync(tick: number, targetId: number, value: number): DecodedFishNetPacket {
+  const barrierField = field("barrierSync", value);
+  return {
+    tick,
+    objectId: targetId,
+    networkBehaviourType: "HealthComponent",
+    packetId: 901,
+    packetName: "syncType",
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    syncIndex: 2,
+    syncName: "barrierSync",
+    decodedFields: [barrierField],
+    syncEntries: [{ index: 2, name: "barrierSync", fields: [barrierField] }],
+  };
 }
 
 function summonCalibration(
@@ -372,7 +397,7 @@ describe("FishNetCombatTracker", () => {
       expect(tracker.consume(ambiguousObserver(3, 71, 5, 5, Buffer.concat([payload, Buffer.from([0xff])])))).toEqual([]);
     });
 
-    test("recovers Health Recover_C only from exact build-specific settings", () => {
+    test("recovers Health Recover_C only from structurally valid settings on generated component positions", () => {
       const tracker = new FishNetCombatTracker();
       const standardSettings = Buffer.from("0000ac0200000000", "hex");
       const payload = Buffer.concat([packed(37), standardSettings]);
@@ -684,7 +709,7 @@ describe("FishNetCombatTracker", () => {
     expect(hit).toMatchObject({
       kind: "damage",
       sourceLabel: "Twin Cleave",
-      attribution: "exact",
+      attribution: "inferred",
       activationId: first && "activationId" in first ? first.activationId : undefined,
     });
   });
@@ -920,6 +945,54 @@ describe("FishNetCombatTracker", () => {
     expect(tracker.consume(statusEffect(1, 10, "ApplyEffect_T", [field("level", 2)]))).toEqual([]);
   });
 
+  describe("shield lifecycle", () => {
+    test("attributes a barrier gain and carries its source through absorption and clearing", () => {
+      const tracker = new FishNetCombatTracker();
+      expect(tracker.consume(barrierSync(1, 20, 0))).toEqual([]);
+      tracker.consume(castTargeting(2, 10, "Barrier", 20));
+      tracker.consume(statusEffect(3, 20, "ApplyEffect_T", [field("statusId", "Barrier"), field("level", 2)]));
+
+      expect(tracker.consume(barrierSync(4, 20, 400))).toEqual([
+        expect.objectContaining({
+          kind: "shield", action: "gained", actorId: 10, targetId: 20,
+          sourceId: "Barrier", sourceLabel: "Sacred Aegis", value: 400,
+          barrierBefore: 0, barrierAfter: 400, attribution: "inferred",
+        }),
+      ]);
+
+      tracker.consume(damage(5, 20, 90, "SyntheticStrike", 100));
+      expect(tracker.consume(barrierSync(5, 20, 300))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "absorbed", actorId: 10, targetId: 20, value: 100 }),
+      ]);
+
+      tracker.consume(statusEffect(6, 20, "RemoveEffect_T", [field("statusId", "Barrier"), field("level", 2)]));
+      expect(tracker.consume(barrierSync(6, 20, 0))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "cleared", actorId: 10, targetId: 20, value: 300 }),
+      ]);
+    });
+
+    test("keeps an uncorrelated barrier gain unattributed", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      expect(tracker.consume(barrierSync(2, 20, 250))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "gained", targetId: 20, attribution: "unattributed" }),
+      ]);
+      expect(tracker.consume(barrierSync(3, 20, 200))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "reduced", targetId: 20, attribution: "unattributed" }),
+      ]);
+    });
+
+    test("marks overlapping barrier casts ambiguous", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      tracker.consume(castTargeting(2, 10, "Barrier", 20));
+      tracker.consume(castTargeting(2, 11, "Barrier", 20));
+      expect(tracker.consume(barrierSync(3, 20, 300))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "gained", attribution: "ambiguous", targetId: 20 }),
+      ]);
+    });
+  });
+
   test("attributes a heal to the caster when a single matching healing activation targets the recipient", () => {
     const tracker = new FishNetCombatTracker();
     const [cast] = tracker.consume(castTargeting(1, 10, "Heal", 20));
@@ -933,7 +1006,7 @@ describe("FishNetCombatTracker", () => {
       actorId: 10,
       sourceId: "Heal",
       value: 150,
-      attribution: "exact",
+      attribution: "inferred",
       activationId: cast && "activationId" in cast ? cast.activationId : undefined,
     });
   });

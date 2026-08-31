@@ -100,7 +100,29 @@ export const healthComponentRpcs = [
       },
       {
         "name": "settings",
-        "typeName": "FloaterSettings"
+        "typeName": "FloaterSettings",
+        "fields": [
+          {
+            "name": "DisableFloater",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          },
+          {
+            "name": "DisableSfx",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          },
+          {
+            "name": "Offset",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Scale",
+            "typeName": "System.Single",
+            "codec": "float32"
+          }
+        ]
       }
     ]
   },

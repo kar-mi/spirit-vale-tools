@@ -1,8 +1,19 @@
 import { describe, expect, test } from "bun:test";
 
-import { loadDpsReplay } from "./replay.ts";
+import { loadDpsReplay, parseDpsLogRecord } from "./replay.ts";
 
 describe("loadDpsReplay", () => {
+  test("accepts complete shield lifecycle records and rejects incomplete ones", () => {
+    expect(parseDpsLogRecord("combat.event", {
+      kind: "shield", rpc: "barrierSync", tick: 10, actorId: 1, targetId: 2,
+      sourceId: "Barrier", sourceLabel: "Sacred Aegis", value: 300,
+      barrierBefore: 0, barrierAfter: 300, action: "gained", attribution: "inferred",
+    })).toMatchObject({ kind: "shield", action: "gained", targetId: 2 });
+    expect(parseDpsLogRecord("combat.event", {
+      kind: "shield", tick: 10, targetId: 2, value: 300, action: "gained", attribution: "inferred",
+    })).toBeUndefined();
+  });
+
   test("loads sanitized JSON Lines, splits encounters, and counts invalid records", async () => {
     const basePath = `${import.meta.dir}/../../../.local/replay-test-${crypto.randomUUID()}`;
     const file = Bun.file(`${basePath}.jsonl`);

@@ -122,11 +122,27 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
   }
   if (value["kind"] === "heal") {
     if (!isFiniteNumber(value["targetId"]) || !isFiniteNumber(value["value"])) return undefined;
+    if (value["attribution"] !== undefined
+      && value["attribution"] !== "exact"
+      && value["attribution"] !== "inferred"
+      && value["attribution"] !== "ambiguous"
+      && value["attribution"] !== "unattributed") return undefined;
     if (value["recoveryStyle"] !== undefined
       && value["recoveryStyle"] !== "standard"
       && value["recoveryStyle"] !== "passive-regeneration"
       && value["recoveryStyle"] !== "drain"
       && value["recoveryStyle"] !== "unknown") return undefined;
+    return value as unknown as FishNetCombatEvent;
+  }
+  if (value["kind"] === "shield") {
+    if (!isFiniteNumber(value["targetId"])
+      || !isFiniteNumber(value["value"])
+      || !isFiniteNumber(value["barrierBefore"])
+      || !isFiniteNumber(value["barrierAfter"])
+      || (value["action"] !== "gained" && value["action"] !== "absorbed"
+        && value["action"] !== "cleared" && value["action"] !== "reduced")
+      || (value["attribution"] !== "exact" && value["attribution"] !== "inferred"
+        && value["attribution"] !== "ambiguous" && value["attribution"] !== "unattributed")) return undefined;
     return value as unknown as FishNetCombatEvent;
   }
   if ((value["kind"] !== "damage" && value["kind"] !== "death")
