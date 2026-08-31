@@ -110,6 +110,8 @@ export interface CharacterStatBreakdown {
 /** Server-actual values synced for the local player's unit components. */
 export interface CharacterRecordValues {
   currentHealth?: number;
+  /** Current absorb shield from `HealthComponent.barrierSync`. */
+  currentShield?: number;
   /** Effective HP ceiling: authoritative `maxHealth` when present, otherwise a settled regen inference. */
   normalizedMaxHp?: number;
   maxHealth?: number;

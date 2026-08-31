@@ -49,4 +49,19 @@ describe("bundled syncvar names", () => {
       ],
     });
   });
+
+  test("retains the build-derived BondSync relationship layout", () => {
+    expect(findSyncType(map, "SkillsComponent", 2)).toMatchObject({
+      name: "BondSync",
+      fields: [{
+        name: "Entries",
+        repeated: true,
+        fields: [
+          { name: "Other", codec: "networkObject" },
+          { name: "SkillId", codec: "stringUtf8Packed" },
+          { name: "Caster", codec: "boolean" },
+        ],
+      }],
+    });
+  });
 });

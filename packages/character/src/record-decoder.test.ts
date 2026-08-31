@@ -28,6 +28,12 @@ describe("decodeCharacterRecordSync", () => {
       .toEqual({ currentHealth: 500 });
   });
 
+  test("decodes the current shield from a HealthComponent sync", () => {
+    // Hand-constructed: syncvar 2 (`barrierSync`), zigzag-varint-encoding 350.
+    expect(decodeCharacterRecordSync(syncPacket("HealthComponent", "02bc05")))
+      .toEqual({ currentShield: 350 });
+  });
+
   test("decodes mana from a SkillsComponent sync", () => {
     // Hand-constructed: index 1 (max) then index 0 (current), both zigzag-varint-encoding 200.
     expect(decodeCharacterRecordSync(syncPacket("SkillsComponent", "019003009003")))
@@ -60,6 +66,7 @@ describe("decodeCharacterSpawnRecords", () => {
     expect(decodeCharacterSpawnRecords([
       spawnEntry("HealthComponent", "healthSync", 750),
       spawnEntry("HealthComponent", "maxHealthSync", 1_000),
+      spawnEntry("HealthComponent", "barrierSync", 350),
       spawnEntry("SkillsComponent", "manaSync", 120),
       spawnEntry("SkillsComponent", "maxManaSync", 240),
       spawnEntry("MoveComponent", "MoveSpeed", 8.925),
@@ -67,6 +74,7 @@ describe("decodeCharacterSpawnRecords", () => {
     ])).toEqual({
       currentHealth: 750,
       maxHealth: 1_000,
+      currentShield: 350,
       currentMana: 120,
       maxMana: 240,
       moveSpeed: 8.925,

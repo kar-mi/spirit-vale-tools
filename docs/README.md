@@ -13,8 +13,8 @@ implementation, and contributor references.
   — notes on calculated character stats.
 - [Combat packets](combat/combat-packets.md) — which RPCs become combat events,
   what each carries on the wire, and which feeds are not consumed yet.
-- [Healing attribution](combat/healing-attribution.md) — why heal-to-healer
-  attribution is best-effort, and its known limitations.
+- [Healing attribution](combat/healing-attribution.md) — exact and inferred
+  source/target paths for healing events.
 - [Positions and ground loot](positions.md) — consuming world coordinates for
   players, monsters, and dropped items, and why they stay live-only.
 

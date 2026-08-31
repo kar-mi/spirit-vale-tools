@@ -320,6 +320,30 @@ export const skillsComponentSyncTypes = [
   {
     "index": 2,
     "name": "BondSync",
-    "typeName": "BondDto"
+    "typeName": "BondDto",
+    "fields": [
+      {
+        "name": "Entries",
+        "typeName": "System.Collections.Generic.List`1[[SkillsComponent+BondEntry, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "repeated": true,
+        "fields": [
+          {
+            "name": "Other",
+            "typeName": "FishNet.Object.NetworkObject",
+            "codec": "networkObject"
+          },
+          {
+            "name": "SkillId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Caster",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          }
+        ]
+      }
+    ]
   }
 ] as const satisfies readonly FishNetSyncTypeDefinition[];

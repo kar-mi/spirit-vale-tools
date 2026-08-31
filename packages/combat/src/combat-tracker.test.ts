@@ -95,6 +95,14 @@ function castTargeting(tick: number, actorId: number, sourceId: string, targetId
   ]);
 }
 
+function autoCastTargeting(tick: number, actorId: number, sourceId: string, targetId: number): DecodedFishNetPacket {
+  return packet(tick, actorId, "SkillsComponent", "AutoCast_C", [
+    field("dto.Id", sourceId),
+    field("dto.Level", 1),
+    field("obj", targetId),
+  ]);
+}
+
 function recover(tick: number, targetId: number, amount: number, settingsHex?: string): DecodedFishNetPacket {
   const settings = settingsHex === "00010000000000"
     ? [false, true, 0, 0] as const
@@ -134,6 +142,34 @@ function barrierSync(tick: number, targetId: number, value: number): DecodedFish
     syncName: "barrierSync",
     decodedFields: [barrierField],
     syncEntries: [{ index: 2, name: "barrierSync", fields: [barrierField] }],
+  };
+}
+
+function bondSync(
+  tick: number,
+  targetId: number,
+  entries: readonly { otherId: number; skillId: string; caster: boolean }[],
+): DecodedFishNetPacket {
+  const fields = [
+    field("Entries.length", entries.length),
+    ...entries.flatMap((entry, index) => [
+      field(`Entries[${index}].Other`, entry.otherId),
+      field(`Entries[${index}].SkillId`, entry.skillId),
+      field(`Entries[${index}].Caster`, entry.caster),
+    ]),
+  ];
+  return {
+    tick,
+    objectId: targetId,
+    networkBehaviourType: "SkillsComponent",
+    packetId: 902,
+    packetName: "syncType",
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    syncIndex: 2,
+    syncName: "BondSync",
+    decodedFields: fields,
+    syncEntries: [{ index: 2, name: "BondSync", fields }],
   };
 }
 
@@ -1011,6 +1047,21 @@ describe("FishNetCombatTracker", () => {
     });
   });
 
+  test("uses AutoCast_C's NetworkObject target to attribute a heal", () => {
+    const tracker = new FishNetCombatTracker();
+    const [cast] = tracker.consume(autoCastTargeting(1, 10, "Heal", 20));
+    const [heal] = tracker.consume(recover(2, 20, 150));
+
+    expect(cast).toMatchObject({ kind: "activation", rpc: "AutoCast_C", targetId: 20 });
+    expect(heal).toMatchObject({
+      kind: "heal",
+      targetId: 20,
+      actorId: 10,
+      sourceId: "Heal",
+      attribution: "inferred",
+    });
+  });
+
   test("marks overlapping healing activations targeting the same recipient as ambiguous", () => {
     const tracker = new FishNetCombatTracker();
     const [first] = tracker.consume(castTargeting(1, 10, "Heal", 20));
@@ -1162,6 +1213,29 @@ describe("FishNetCombatTracker", () => {
       attribution: "inferred",
       activationId,
     });
+  });
+
+  test("uses BondSync to recover a Guardian Bond caster when the cast packet was missed", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(bondSync(1, 20, [{ otherId: 10, skillId: "GuardianBond", caster: false }]));
+    const [heal] = tracker.consume(recover(2, 20, 50));
+
+    expect(heal).toMatchObject({
+      kind: "heal",
+      targetId: 20,
+      actorId: 10,
+      sourceId: "GuardianBond",
+      sourceLabel: "Guardian Bond",
+      attribution: "inferred",
+    });
+  });
+
+  test("does not treat the caster-side BondSync entry as another healer", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(bondSync(1, 10, [{ otherId: 20, skillId: "GuardianBond", caster: true }]));
+    const [heal] = tracker.consume(recover(2, 10, 50));
+
+    expect(heal).toMatchObject({ kind: "heal", targetId: 10, attribution: "unattributed" });
   });
 
   test("stops attributing Recover_C ticks once RemoveEffect_T clears the Regeneration status", () => {

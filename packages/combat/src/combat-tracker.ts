@@ -276,7 +276,7 @@ interface ActivationState {
   actionKind: FishNetCombatActionKind;
   sourceId?: string;
   sourceLabel?: string;
-  /** The cast's declared target (from CastBegin_C's targetId field), when known. */
+  /** Target from `CastBegin_C.targetId` or `AutoCast_C.obj`. */
   targetId?: number;
   startTick: number;
   endTick?: number;
@@ -290,6 +290,7 @@ interface RegenSourceState {
   sourceLabel?: string;
   activationId?: string;
   candidateActivationIds?: string[];
+  ambiguous?: boolean;
 }
 
 interface BarrierState extends RegenSourceState {
@@ -347,6 +348,8 @@ export class FishNetCombatTracker {
   /** Curated boss names are valid only for the lifetime of their network object id. */
   private readonly bossIdentities = new Map<number, string>();
   private readonly activeRegenSources = new Map<number, RegenSourceState>();
+  /** Guardian Bond sources keyed by recipient actor. */
+  private readonly bondRegenSources = new Map<number, RegenSourceState>();
   private readonly barriers = new Map<number, BarrierState>();
   private readonly recentDamageTargets = new Set<number>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
@@ -414,6 +417,7 @@ export class FishNetCombatTracker {
       ...(bossLifecycle ? [bossLifecycle] : []),
       ...(summonLifecycle ? [summonLifecycle] : []),
     ];
+    this.consumeBondSync(packet);
     events.push(...this.consumeBarrierSync(packet));
     if (packet.packetName === "syncType" && matchesBehaviour(packet, "SummoningComponent")) {
       events.push(...this.consumeSummonSkillSync(packet));
@@ -498,6 +502,7 @@ export class FishNetCombatTracker {
     this.activations.clear();
     this.bossIdentities.clear();
     this.activeRegenSources.clear();
+    this.bondRegenSources.clear();
     this.barriers.clear();
     this.summonStacks.clear();
     this.summonSkillSyncState.clear();
@@ -832,7 +837,10 @@ export class FishNetCombatTracker {
       const sourceId = rpcName === "ToggleBegin_C" ? stringField(packet, "id") : stringField(packet, "dto.Id");
       if (!sourceId) return undefined;
       const activation = this.createActivation(actorId, "skill", packet.tick, sourceId, false);
-      activation.targetId = numberField(packet, "targetId");
+      // Both fields decode to the target's object id.
+      activation.targetId = rpcName === "AutoCast_C"
+        ? numberField(packet, "obj")
+        : numberField(packet, "targetId");
       return {
         kind: "activation",
         rpc: rpcName,
@@ -970,7 +978,7 @@ export class FishNetCombatTracker {
     } else if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
-      // Recover_C never carries a healer; even a unique matching cast remains correlation.
+      // Recover_C has no source field, so a matching cast remains inferred.
       attribution = "inferred";
       activationId = candidate.id;
     } else {
@@ -1044,7 +1052,7 @@ export class FishNetCombatTracker {
     if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
-      // Recover_C never carries a healer; even a unique matching cast remains correlation.
+      // Recover_C has no source field, so a matching cast remains inferred.
       attribution = "inferred";
       actorId = candidate.actorId;
       sourceId = candidate.sourceId;
@@ -1054,8 +1062,8 @@ export class FishNetCombatTracker {
       attribution = "ambiguous";
       candidateActivationIds = candidates.map(({ id }) => id);
     } else {
-      const regenSource = this.activeRegenSources.get(targetId);
-      if (regenSource?.candidateActivationIds) {
+      const regenSource = this.activeRegenSources.get(targetId) ?? this.bondRegenSources.get(targetId);
+      if (regenSource?.candidateActivationIds || regenSource?.ambiguous) {
         attribution = "ambiguous";
         candidateActivationIds = regenSource.candidateActivationIds;
       } else if (regenSource?.actorId !== undefined) {
@@ -1148,6 +1156,30 @@ export class FishNetCombatTracker {
       });
     }
     return events;
+  }
+
+  /** Reads Guardian Bond sources from recipient-side BondSync entries. */
+  private consumeBondSync(packet: DecodedFishNetPacket): void {
+    if (packet.objectId === undefined) return;
+    if (packet.packetName === "objectDespawn") {
+      this.bondRegenSources.delete(packet.objectId);
+      return;
+    }
+    const entries = bondSyncEntries(packet);
+    if (!entries) return;
+    const sources = entries.filter((entry) => !entry.caster && this.regenerationSkillIds.has(entry.skillId));
+    if (sources.length === 0) {
+      this.bondRegenSources.delete(packet.objectId);
+    } else if (sources.length === 1) {
+      const source = sources[0]!;
+      this.bondRegenSources.set(packet.objectId, {
+        actorId: source.otherId,
+        sourceId: source.skillId,
+        sourceLabel: this.skillLabels.get(source.skillId) ?? source.skillId,
+      });
+    } else {
+      this.bondRegenSources.set(packet.objectId, { ambiguous: true });
+    }
   }
 
   private createSelfRecovery(
@@ -1326,6 +1358,43 @@ function barrierSyncValues(packet: DecodedFishNetPacket): number[] {
     }
   }
   return values;
+}
+
+interface BondSyncEntry {
+  otherId: number;
+  skillId: string;
+  caster: boolean;
+}
+
+function bondSyncEntries(packet: DecodedFishNetPacket): BondSyncEntry[] | undefined {
+  const decode = (entry: FishNetSyncEntry, behaviourType?: string): BondSyncEntry[] | undefined => {
+    if (behaviourType !== undefined && behaviourType !== "SkillsComponent") return undefined;
+    if (entry.index !== 2 && entry.name !== "BondSync") return undefined;
+    const length = entry.fields.find(({ name }) => name === "Entries.length")?.value;
+    if (typeof length !== "number" || !Number.isInteger(length) || length < 0) return undefined;
+    const result: BondSyncEntry[] = [];
+    for (let index = 0; index < length; index += 1) {
+      const prefix = `Entries[${index}]`;
+      const otherId = entry.fields.find(({ name }) => name === `${prefix}.Other`)?.value;
+      const skillId = entry.fields.find(({ name }) => name === `${prefix}.SkillId`)?.value;
+      const caster = entry.fields.find(({ name }) => name === `${prefix}.Caster`)?.value;
+      if (typeof otherId !== "number" || typeof skillId !== "string" || typeof caster !== "boolean") return undefined;
+      result.push({ otherId, skillId, caster });
+    }
+    return result;
+  };
+
+  for (const entry of packet.spawnSyncEntries ?? []) {
+    const result = decode(entry, entry.networkBehaviourType);
+    if (result) return result;
+  }
+  if (packet.packetName === "syncType" && matchesBehaviour(packet, "SkillsComponent")) {
+    for (const entry of packet.syncEntries ?? []) {
+      const result = decode(entry, packet.networkBehaviourType);
+      if (result) return result;
+    }
+  }
+  return undefined;
 }
 
 function decodeFloaterSettings(payload: Buffer, start: number): NonNullable<DecodedFishNetPacket["decodedFields"]> | undefined {

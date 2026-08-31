@@ -228,6 +228,7 @@ describe("FishNetCharacterTracker", () => {
       spawnSyncEntries: [
         spawnEntry("HealthComponent", "healthSync", 750),
         spawnEntry("HealthComponent", "maxHealthSync", 1_000),
+        spawnEntry("HealthComponent", "barrierSync", 350),
         spawnEntry("SkillsComponent", "manaSync", 120),
         spawnEntry("SkillsComponent", "maxManaSync", 240),
         spawnEntry("MoveComponent", "MoveSpeed", 8.925),
@@ -241,10 +242,23 @@ describe("FishNetCharacterTracker", () => {
     expect(tracker.state().records).toMatchObject({
       currentHealth: 750,
       maxHealth: 1_000,
+      currentShield: 350,
       currentMana: 120,
       maxMana: 240,
       moveSpeed: 8.925,
     });
+  });
+
+  test("tracks the pinned local player's current shield from barrierSync", () => {
+    const tracker = new FishNetCharacterTracker();
+    tracker.consume(pinPacket(202));
+
+    expect(tracker.consume(syncPacket(202, "HealthComponent", "02bc05"))).toBe(true);
+    expect(tracker.state().records).toMatchObject({ currentShield: 350 });
+
+    // The same SyncType on another actor must not replace the local shield.
+    tracker.consume(syncPacket(303, "HealthComponent", "028813"));
+    expect(tracker.state().records).toMatchObject({ currentShield: 350 });
   });
 
   test("rekeys a buffered physical spawn without promoting it before logical-object proof", () => {

@@ -165,22 +165,18 @@ which is what keeps totals from doubling.
 hash 1  observersRpc  Recover_C(amount: packedInt32, settings: FloaterSettings)
 ```
 
-The healed target is the RPC's `objectId`. There is no healer field on the wire
-at all, so attribution is inferred from nearby cast activity — see
-[healing attribution](healing-attribution.md) for how, and for its limits.
-The generated map fully decodes `FloaterSettings` (`DisableFloater`,
-`DisableSfx`, `Offset`, `Scale`), so recovery style classification no longer
-depends on opaque payload signatures.
+The target is the RPC's `objectId`; `Recover_C` has no source field.
+`FloaterSettings` provides `DisableFloater`, `DisableSfx`, `Offset`, and `Scale`.
+Source attribution uses targeted activations, active regeneration state, and
+Guardian Bond relationships. See [healing attribution](healing-attribution.md).
 
 ## Shields
 
-`HealthComponent.barrierSync` is an absolute barrier total for the SyncType's
-own object. The tracker retains the previous value and emits `kind: "shield"`
-events for gains, absorbed/reduced amounts, and clears. `targetId` is therefore
-exact. The wire carries no applier, so `actorId` is correlated from current-build
-barrier skill/status metadata and nearby targeted casts; ambiguous and
-unattributed sources remain explicit. Initial spawn state seeds the tracker and
-does not count as newly applied shielding.
+`HealthComponent.barrierSync` is the absolute shield amount for its object.
+Changes emit `kind: "shield"` events with an exact `targetId`. Gains correlate
+their source from barrier metadata and a targeted `CastBegin_C.targetId` or
+`AutoCast_C.obj`; the SyncVar itself has no source field. Initial spawn state
+sets the baseline without emitting a gain.
 
 ## Skill activations
 
@@ -194,8 +190,8 @@ hash 8  observersRpc  ToggleBegin_C(id: string)
 `SkillStateDto` is rich — `Id`, `Level`, `CurrentCooldown`, `Cooldown`,
 `Duration`, `CooldownRecoveryRate`, `MinCooldown`, `Cost`, `Charges`,
 `CastTime`, `Delay`, `Area`, `Range`, `LeapType` — so a cast carries the caster's
-full cooldown state, not just which skill fired. Only `Id`, `Level` and
-`targetId` are used today.
+full cooldown state, not just which skill fired. The tracker uses `Id`, `Level`,
+and the appropriate target field (`targetId` or `obj`).
 
 Activations exist mainly to attribute damage and heals: `consumeDamage`
 correlates a hit against recent activations by source id within `hitGraceTicks`

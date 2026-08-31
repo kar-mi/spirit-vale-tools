@@ -6,7 +6,11 @@ export function decodeCharacterRecordSync(packet: CapturedFishNetPacket): Partia
   switch (packet.networkBehaviourType) {
     case "HealthComponent": {
       const values = readPackedPairs(packet.payload);
-      return recordUpdate({ currentHealth: values.get(0), maxHealth: values.get(1) });
+      return recordUpdate({
+        currentHealth: values.get(0),
+        maxHealth: values.get(1),
+        currentShield: values.get(2),
+      });
     }
     case "SkillsComponent": {
       const values = readPackedPairs(packet.payload);
@@ -29,6 +33,7 @@ export function decodeCharacterSpawnRecords(entries: readonly FishNetSpawnSyncEn
     if (entry.networkBehaviourType === "HealthComponent") {
       if (entry.name === "healthSync") update.currentHealth = value;
       else if (entry.name === "maxHealthSync") update.maxHealth = value;
+      else if (entry.name === "barrierSync") update.currentShield = value;
     } else if (entry.networkBehaviourType === "SkillsComponent") {
       if (entry.name === "manaSync") update.currentMana = value;
       else if (entry.name === "maxManaSync") update.maxMana = value;
