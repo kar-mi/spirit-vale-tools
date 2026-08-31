@@ -17,7 +17,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/capture.ts ./src/fishnet/wire-reader.ts --outdir ./dist --target bun --format esm && bunx tsc --project ./tsconfig.build.json"
+    "build": "bun build ./src/index.ts ./src/capture.ts ./src/fishnet/decoding/wire-reader.ts --outdir ./dist --target bun --format esm && bunx tsc --project ./tsconfig.build.json"
   },
   "exports": {
     ".": {
@@ -25,8 +25,8 @@
       "default": "./dist/index.js"
     },
     "./wire-reader": {
-      "types": "./dist/fishnet/wire-reader.d.ts",
-      "default": "./dist/fishnet/wire-reader.js"
+      "types": "./dist/fishnet/decoding/wire-reader.d.ts",
+      "default": "./dist/fishnet/decoding/wire-reader.js"
     },
     "./capture": {
       "types": "./dist/capture.d.ts",
