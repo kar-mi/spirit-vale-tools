@@ -400,6 +400,14 @@ describe("combat read model", () => {
       expect(breakdown.enemies.map((enemy) => enemy.targetId).sort()).toEqual([90, 91]);
       const auroraOnNinety = breakdown.skills.filter((row) => row.attackerRowId === "name:aurora" && row.targetId === 90);
       expect(auroraOnNinety.map((row) => [row.sourceId, row.damage]).sort()).toEqual([["skill:ember", 50], ["skill:strike", 100]]);
+
+      // The tanked breakdown is the mirror: the attacker (Cave Warden) is the enemy, grouped by the
+      // party member taking the hit, and rebuilt from the indexed tables.
+      const tanked = store.getEnemyBreakdown(SESSION, encounterId, "tanked");
+      expect(tanked.enemies.map((enemy) => [enemy.targetId, enemy.label])).toEqual([[500, "Cave Warden"]]);
+      expect(tanked.skills.map((row) => [row.attackerRowId, row.targetId, row.sourceId, row.damage]))
+        .toEqual([["name:aurora", 500, "skill:maul", 125]]);
+      await expectParity(context, model);
     } finally {
       await context.cleanup();
     }

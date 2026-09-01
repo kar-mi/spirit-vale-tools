@@ -178,7 +178,7 @@ export class LiveCombatService {
   private recordMeterEvent(event: FishNetCombatEvent, observedAtMs: number): void {
     if (this.meterId === undefined) return;
     const identities = this.reducer.identities;
-    this.tanked.consumeCombat(event, observedAtMs, identities);
+    this.tanked.consumeCombat(event, observedAtMs, identities, this.reducer.mobIdentities);
     this.healing.consumeCombat(event, observedAtMs, identities);
     this.lastEventAtMs = Math.max(this.lastEventAtMs ?? observedAtMs, observedAtMs);
   }

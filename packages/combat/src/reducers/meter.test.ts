@@ -4,7 +4,30 @@ import { MeterReducer } from "./meter.ts";
 import type { FishNetCombatEvent } from "../combat-tracker.ts";
 import type { CombatIdentity } from "./damage.ts";
 
-const IDENTITIES = new Map<number, CombatIdentity>([[1, { displayName: "Healer" } as CombatIdentity]]);
+const IDENTITIES = new Map<number, CombatIdentity>([
+  [1, { displayName: "Healer" } as CombatIdentity],
+  [2, { displayName: "Tank" } as CombatIdentity],
+]);
+
+function shield(
+  action: string,
+  actorId: number | undefined,
+  targetId: number,
+  value: number,
+  incoming?: { actorId: number; sourceId: string; sourceLabel: string },
+): FishNetCombatEvent {
+  return {
+    kind: "shield", rpc: "barrierSync", tick: 0, payloadBytes: 0, fields: {},
+    targetId, actorId, sourceId: "skill:aegis", sourceLabel: "Aegis", value,
+    barrierBefore: action === "gained" ? 0 : value, barrierAfter: action === "gained" ? value : 0,
+    action, attribution: actorId === undefined ? "unattributed" : "inferred",
+    ...(incoming === undefined ? {} : {
+      incomingActorId: incoming.actorId,
+      incomingSourceId: incoming.sourceId,
+      incomingSourceLabel: incoming.sourceLabel,
+    }),
+  } as FishNetCombatEvent;
+}
 
 function healingMeter(): MeterReducer {
   const reducer = new MeterReducer({ kind: "healing" });
@@ -111,6 +134,43 @@ describe("tanked meter", () => {
     reducer.consumeCombat(hit(90, 90, 500, 1), 1_000, IDENTITIES);
     expect(total(reducer)).toBe(0);
   });
+
+  test("keeps absorbed shield apart from damage taken", () => {
+    const reducer = tankedMeter();
+    reducer.consumeCombat(hit(90, 2, 400, 1), 1_000, IDENTITIES);
+    reducer.consumeCombat(
+      shield("absorbed", 1, 2, 150, { actorId: 90, sourceId: "skill:slam", sourceLabel: "Slam" }),
+      1_100,
+      IDENTITIES,
+    );
+    const tank = reducer.current?.activeActors.get(2);
+    expect(tank?.damage).toBe(400);
+    expect(tank?.absorbed).toBe(150);
+    expect(tank?.absorbedSkills.get("skill:slam")?.damage).toBe(150);
+    expect(tank?.absorbedByEnemy.get(90)).toBe(150);
+  });
+
+  test("attributes an unattributed absorb to a placeholder skill", () => {
+    const reducer = tankedMeter();
+    reducer.consumeCombat(shield("absorbed", 1, 2, 150), 1_100, IDENTITIES);
+    expect(reducer.current?.activeActors.get(2)?.absorbedSkills.get("absorbed:unknown")?.damage).toBe(150);
+  });
+
+  test("keeps a per-attacker breakdown of damage taken", () => {
+    const reducer = tankedMeter();
+    reducer.consumeCombat({ ...hit(90, 2, 400, 1), sourceId: "skill:slam", sourceLabel: "Slam" } as FishNetCombatEvent, 1_000, IDENTITIES);
+    reducer.consumeCombat({ ...hit(91, 2, 100, 1), sourceId: "skill:cleave", sourceLabel: "Cleave" } as FishNetCombatEvent, 1_100, IDENTITIES);
+    const tank = reducer.current?.activeActors.get(2);
+    expect(tank?.targetDamage.get(90)).toBe(400);
+    expect(tank?.enemySkills.get(91)?.get("skill:cleave")?.damage).toBe(100);
+  });
+
+  test("ignores shield grants and expiries in the tank meter", () => {
+    const reducer = tankedMeter();
+    reducer.consumeCombat(shield("gained", 1, 2, 300), 1_000, IDENTITIES);
+    reducer.consumeCombat(shield("cleared", 1, 2, 300), 2_000, IDENTITIES);
+    expect(total(reducer)).toBe(0);
+  });
 });
 
 describe("healing meter", () => {
@@ -138,5 +198,24 @@ describe("healing meter", () => {
     reducer.consumeCombat(healed(400), 1_000, IDENTITIES);
     reducer.consumeCombat(fullHealed(), 2_000, IDENTITIES);
     expect(total(reducer)).toBe(400);
+  });
+
+  test("credits the caster for an applied shield", () => {
+    const reducer = healingMeter();
+    reducer.consumeCombat(shield("gained", 1, 2, 300), 1_000, IDENTITIES);
+    expect(reducer.current?.activeActors.get(1)?.damage).toBe(300);
+  });
+
+  test("ignores absorbed and cleared shield in the healing meter", () => {
+    const reducer = healingMeter();
+    reducer.consumeCombat(shield("absorbed", 1, 2, 150), 1_000, IDENTITIES);
+    reducer.consumeCombat(shield("cleared", 1, 2, 150), 2_000, IDENTITIES);
+    expect(total(reducer)).toBe(0);
+  });
+
+  test("does not credit an unattributed shield grant", () => {
+    const reducer = healingMeter();
+    reducer.consumeCombat(shield("gained", undefined, 2, 300), 1_000, IDENTITIES);
+    expect(total(reducer)).toBe(0);
   });
 });

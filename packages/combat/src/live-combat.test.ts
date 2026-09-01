@@ -22,7 +22,31 @@ function heal(actorId: number, targetId: number, value: number, atMs: number): F
   } as FishNetCombatEvent;
 }
 
+function absorbed(targetId: number, value: number, atMs: number, attacker: number): FishNetCombatEvent {
+  return {
+    kind: "shield", rpc: "barrierSync", tick: atMs, payloadBytes: 0, fields: {}, targetId,
+    value, barrierBefore: value, barrierAfter: 0, action: "absorbed", attribution: "inferred",
+    incomingActorId: attacker, incomingSourceId: "skill:slam", incomingSourceLabel: "Slam",
+  } as FishNetCombatEvent;
+}
+
 describe("LiveCombatService", () => {
+  test("carries shield absorption on the tanked detail apart from damage taken", () => {
+    const service = new LiveCombatService({ idleGapMs: 10_000 });
+    service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);
+    service.consumeCombat(damage(1, 90, 100, 1_000, 0), 1_000);
+    service.consumeCombat(damage(90, 1, 40, 2_000, 1), 2_000);
+    service.consumeCombat(absorbed(1, 150, 2_000, 90), 2_000);
+
+    const tanked = service.getState(3_000).current?.tps.detail;
+    expect(tanked?.totalDamage).toBe(40);
+    expect(tanked?.totalAbsorbed).toBe(150);
+    const victim = tanked?.actors[0];
+    expect(victim?.damage).toBe(40);
+    expect(victim?.absorbed).toBe(150);
+    expect(victim?.absorbedSkills?.[0]).toMatchObject({ sourceLabel: "Slam", damage: 150 });
+  });
+
   test("aggregates TPS and HPS beside bounded DPS state", () => {
     const service = new LiveCombatService({ idleGapMs: 10_000 });
     service.consumeIdentity(identity(1, "Aurora", 0) as never, 0);

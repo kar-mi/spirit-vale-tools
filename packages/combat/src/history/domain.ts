@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 /** Bump whenever the tables below change; only combat is dropped and re-indexed. */
-export const COMBAT_DOMAIN_VERSION = 7;
+export const COMBAT_DOMAIN_VERSION = 8;
 export const COMBAT_DOMAIN_NAME = "combat";
 
 const SCHEMA = `
@@ -56,6 +56,8 @@ create table if not exists combat_actors (
   hits integer not null default 0,
   critical_hits integer not null default 0,
   kills integer not null default 0,
+  -- Tanked meter only: damage a shield on this actor soaked, kept apart from the damage column (raw damage taken).
+  absorbed integer not null default 0,
   -- The current-DPS rate estimator: its accumulated rate and the time that rate was last advanced
   -- to. Needed so a pass that resumes mid-encounter reports the same currentDps as one that never
   -- stopped. Two numbers, where a trailing window of recent hits used to be serialised here.
@@ -105,11 +107,13 @@ create table if not exists combat_timeline_buckets (
   primary key (session_id, encounter_id, meter, actor_index, origin, bucket_index)
 );
 
--- Per rendered DPS actor lifetime, per enemy, per skill. The actor index prevents a reused network
--- actor id from assigning the same hit to two rows that are actually different players.
+-- Per rendered actor lifetime, per enemy, per skill. The meter column is 'dps' (outgoing party
+-- damage by enemy skill) or 'tanked' (incoming damage by enemy skill). The actor index prevents a
+-- reused network actor id from assigning the same hit to two rows that are actually different players.
 create table if not exists combat_enemy_skills (
   session_id text not null,
   encounter_id text not null,
+  meter text not null default 'dps',
   actor_index integer not null,
   target_id integer not null,
   source_id text not null,
@@ -117,7 +121,7 @@ create table if not exists combat_enemy_skills (
   damage integer not null default 0,
   hits integer not null default 0,
   critical_hits integer not null default 0,
-  primary key (session_id, encounter_id, actor_index, target_id, source_id)
+  primary key (session_id, encounter_id, meter, actor_index, target_id, source_id)
 );
 
 create table if not exists combat_enemies (

@@ -46,6 +46,10 @@ export interface FishNetDpsActorRow {
   mobsHit: number;
   skills: FishNetDpsSkillRow[];
   timeline: FishNetDpsTimelinePoint[];
+  /** Tanked meter only: damage a shield on this actor soaked, apart from `damage` (raw damage taken). */
+  absorbed?: number;
+  /** Tanked meter only: absorbed amount broken down by the incoming enemy skill that was soaked. */
+  absorbedSkills?: FishNetDpsSkillRow[];
   /** True when the row contains damage that has not been verified to a player identity. */
   isUnidentified?: boolean;
 }
@@ -59,6 +63,8 @@ export interface FishNetDpsEncounterSnapshot {
   endedAtMs?: number;
   durationMs: number;
   totalDamage: number;
+  /** Tanked meter only: total damage soaked by party shields, apart from `totalDamage`. */
+  totalAbsorbed?: number;
   partyDps: number;
   partyCurrentDps: number;
   actors: FishNetDpsActorRow[];

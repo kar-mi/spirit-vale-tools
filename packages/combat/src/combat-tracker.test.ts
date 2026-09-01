@@ -985,6 +985,34 @@ describe("FishNetCombatTracker", () => {
       ]);
     });
 
+    test("reads a full absorb as absorbed, not an expiry, and names the incoming hit", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      tracker.consume(barrierSync(2, 20, 300));
+      // No barrier status is tracked for this shield, and the hit takes it to exactly zero.
+      tracker.consume(damage(3, 20, 90, "SyntheticStrike", 300));
+      expect(tracker.consume(barrierSync(3, 20, 0))).toEqual([
+        expect.objectContaining({
+          kind: "shield", action: "absorbed", targetId: 20, value: 300,
+          incomingActorId: 90, incomingSourceId: "SyntheticStrike",
+        }),
+      ]);
+    });
+
+    test("pairs a fully-soaked hit (zero HP damage) with the barrier drop", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      tracker.consume(barrierSync(2, 20, 500));
+      // The barrier ate the whole hit, so the damage packet reports 0 to HP.
+      tracker.consume(damage(3, 20, 90, "SyntheticStrike", 0));
+      expect(tracker.consume(barrierSync(3, 20, 200))).toEqual([
+        expect.objectContaining({
+          kind: "shield", action: "absorbed", targetId: 20, value: 300,
+          incomingActorId: 90, incomingSourceId: "SyntheticStrike",
+        }),
+      ]);
+    });
+
     test("keeps an uncorrelated barrier gain unattributed", () => {
       const tracker = new FishNetCombatTracker();
       tracker.consume(barrierSync(1, 20, 0));

@@ -251,6 +251,10 @@ export interface FishNetCombatShieldEvent {
   barrierBefore: number;
   barrierAfter: number;
   action: FishNetShieldAction;
+  /** For `absorbed`: the incoming hit that the barrier soaked, when the tick's damage packet was seen first. */
+  incomingActorId?: number;
+  incomingSourceId?: string;
+  incomingSourceLabel?: string;
   attribution: FishNetHealAttribution;
   activationId?: string;
   candidateActivationIds?: string[];
@@ -349,7 +353,8 @@ export class FishNetCombatTracker {
   /** Guardian Bond sources keyed by recipient actor. */
   private readonly bondRegenSources = new Map<number, RegenSourceState>();
   private readonly barriers = new Map<number, BarrierState>();
-  private readonly recentDamageTargets = new Set<number>();
+  /** The most recent positive incoming hit this tick, per target, so an absorb can name the skill that caused it. */
+  private readonly recentDamageHits = new Map<number, { actorId: number; sourceId: string; sourceLabel: string }>();
   private readonly summonStacks = new Map<number, Map<string, number>>();
   /** Pending `SummonSkillSync`/`SummonerSync` state per summoned object's own network id, until both are known. */
   private readonly summonSkillSyncState = new Map<number, PendingSummonSkillState>();
@@ -402,7 +407,7 @@ export class FishNetCombatTracker {
     if (this.recentDamageTick !== packet.tick) {
       this.recentDamageTick = packet.tick;
       this.recentDamageSignatures.clear();
-      this.recentDamageTargets.clear();
+      this.recentDamageHits.clear();
     }
     const events: FishNetCombatEvent[] = [
       ...(monsterIdentity ? [monsterIdentity] : []),
@@ -500,7 +505,7 @@ export class FishNetCombatTracker {
     this.summonSkillSyncState.clear();
     this.authoritativeSummonActors.clear();
     this.recentDamageSignatures.clear();
-    this.recentDamageTargets.clear();
+    this.recentDamageHits.clear();
     this.recentDamageTick = undefined;
     this.monsters?.reset();
   }
@@ -919,7 +924,9 @@ export class FishNetCombatTracker {
         actorIdentity: this.actorIdentityResolver?.(actorId),
       }];
     }
-    if (value > 0) this.recentDamageTargets.add(packet.objectId!);
+    // Any hit this tick, including a value of 0: a hit that a barrier fully soaks reports no HP
+    // damage, so the 0-value packet is exactly what pairs with the barrier drop below.
+    if (value >= 0) this.recentDamageHits.set(packet.objectId!, { actorId, sourceId, sourceLabel });
     const hitCode = requiredNumberField(packet, "dmg.Hit");
     const hitResult = HIT_RESULTS[hitCode] ?? hitCode;
     const targetId = packet.objectId!;
@@ -1112,13 +1119,17 @@ export class FishNetCombatTracker {
       if (barrierAfter > barrierBefore) {
         source = sourceFromCandidates(this.eligibleHealActivations(packet.tick, targetId, this.barrierSkillIds));
         action = "gained";
+      } else if (this.recentDamageHits.has(targetId)) {
+        // A barrier that shrinks on the same tick the target was hit soaked that hit — whether it
+        // dropped part-way or to zero. Only checked before "cleared" so a full absorb is not lost
+        // as an expiry (many barrier buffs carry no status this tracker recognises).
+        action = "absorbed";
       } else if (barrierAfter === 0 && !previous.statusActive) {
         action = "cleared";
-      } else if (this.recentDamageTargets.has(targetId)) {
-        action = "absorbed";
       } else {
         action = "reduced";
       }
+      const incoming = action === "absorbed" ? this.recentDamageHits.get(targetId) : undefined;
       const attribution: FishNetHealAttribution = source.candidateActivationIds
         ? "ambiguous"
         : source.actorId === undefined ? "unattributed" : "inferred";
@@ -1136,6 +1147,11 @@ export class FishNetCombatTracker {
         barrierBefore,
         barrierAfter,
         action,
+        ...(incoming === undefined ? {} : {
+          incomingActorId: incoming.actorId,
+          incomingSourceId: incoming.sourceId,
+          incomingSourceLabel: incoming.sourceLabel,
+        }),
         attribution,
         activationId: source.activationId,
         candidateActivationIds: source.candidateActivationIds,

@@ -44,6 +44,12 @@ export interface ActorAggregate {
   /** Enemy target id -> skill id -> outgoing damage attributed to this actor lifetime. */
   enemySkills: Map<number, Map<string, EnemySkillStats>>;
   skills: Map<string, SkillAggregate>;
+  /** Damage a shield on this actor soaked. Tracked apart from {@link damage} so TPS totals stay raw damage taken. */
+  absorbed: number;
+  /** Absorbed amount keyed by the incoming enemy skill that was soaked. */
+  absorbedSkills: Map<string, SkillAggregate>;
+  /** Absorbed amount keyed by the attacking enemy id. */
+  absorbedByEnemy: Map<number, number>;
   encounterSeries: BucketSeries;
   actorSeries: BucketSeries;
   /** Exponentially-weighted recent rate behind `currentDps`. Two numbers, whatever the encounter length. */
@@ -451,6 +457,25 @@ export function recordHit(actor: ActorAggregate, hit: RecordedHit, maxTimelineBu
   if (hit.critical) skill.criticalHits += 1;
 }
 
+/** Folds one hit into an `enemySkills`-style map: enemy id -> skill id -> stats. */
+export function foldEnemySkill(
+  byEnemy: Map<number, Map<string, EnemySkillStats>>,
+  enemyId: number,
+  sourceId: string,
+  sourceLabel: string,
+  value: number,
+  critical: boolean,
+): void {
+  const bySkill = byEnemy.get(enemyId) ?? new Map<string, EnemySkillStats>();
+  byEnemy.set(enemyId, bySkill);
+  const stats = bySkill.get(sourceId) ?? { sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
+  stats.sourceLabel = sourceLabel;
+  stats.damage += value;
+  stats.hits += 1;
+  if (critical) stats.criticalHits += 1;
+  bySkill.set(sourceId, stats);
+}
+
 /** Rejected at construction rather than when the first actor is created, so a bad value fails fast. */
 export function positiveTau(value: number): number {
   if (!Number.isFinite(value) || value <= 0) throw new Error("currentTauSeconds must be a positive finite number");
@@ -469,15 +494,14 @@ function recordEnemyHit(
   observedAtMs: number,
   mobIdentities: ReadonlyMap<number, string>,
 ): void {
-  const bySkill = actor.enemySkills.get(event.targetId) ?? new Map<string, EnemySkillStats>();
-  actor.enemySkills.set(event.targetId, bySkill);
-  const stats = bySkill.get(event.sourceId)
-    ?? { sourceLabel: event.sourceLabel, damage: 0, hits: 0, criticalHits: 0 };
-  stats.sourceLabel = event.sourceLabel;
-  stats.damage += event.value;
-  stats.hits += 1;
-  if (event.hitResult === "critical") stats.criticalHits += 1;
-  bySkill.set(event.sourceId, stats);
+  foldEnemySkill(
+    actor.enemySkills,
+    event.targetId,
+    event.sourceId,
+    event.sourceLabel,
+    event.value,
+    event.hitResult === "critical",
+  );
   if (!encounter.enemyFirstSeenAtMs.has(event.targetId)) {
     encounter.enemyFirstSeenAtMs.set(event.targetId, observedAtMs);
   }
@@ -502,6 +526,9 @@ export function createActor(
     criticalHits: 0,
     kills: 0,
     skills: new Map(),
+    absorbed: 0,
+    absorbedSkills: new Map(),
+    absorbedByEnemy: new Map(),
     encounterSeries: createSeries(encounterStartedAtMs, ANALYSIS_BUCKET_MS),
     actorSeries: createSeries(encounterStartedAtMs, ANALYSIS_BUCKET_MS),
     currentRate: typeof currentRate === "number" ? new EwmaRate({ tauSeconds: currentRate }) : currentRate,

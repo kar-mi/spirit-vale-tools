@@ -145,32 +145,35 @@ export class CombatHistoryStore {
     };
   }
 
-  /** Per-attacker, per-enemy, per-skill damage for one encounter, with the enemy picker ordered by first sighting and duplicate monster names disambiguated. */
-  getEnemyBreakdown(sessionId: string, encounterId: string): CombatEnemyBreakdown {
-    const enemies = this.model.database
+  /**
+   * Per-attacker, per-enemy, per-skill damage for one encounter, with the enemy picker ordered by
+   * first sighting and duplicate monster names disambiguated. `meter` selects outgoing party damage
+   * (`"dps"`, the default) or incoming damage taken (`"tanked"`).
+   */
+  getEnemyBreakdown(sessionId: string, encounterId: string, meter: "dps" | "tanked" = "dps"): CombatEnemyBreakdown {
+    const enemyRows = this.model.database
       .query<{ target_id: number; display_name: string | null; first_seen_at_ms: number }, [string, string]>(
         "select target_id, display_name, first_seen_at_ms from combat_enemies where session_id = ? and encounter_id = ? order by first_seen_at_ms, target_id",
       )
       .all(sessionId, encounterId);
-
-    const counts = new Map<string, number>();
-    for (const enemy of enemies) {
-      const name = enemy.display_name ?? `Enemy ${enemy.target_id}`;
-      counts.set(name, (counts.get(name) ?? 0) + 1);
+    const names = new Map<number, string | null>(enemyRows.map((enemy) => [enemy.target_id, enemy.display_name] as const));
+    if (meter === "tanked") {
+      // Pure attackers (never damaged by the party) are not in `combat_enemies`; their names live in
+      // the session-wide mob identity map the indexer persists.
+      const state = this.model.database
+        .query<{ mob_identities_json: string }, [string]>(
+          "select mob_identities_json from combat_stream_state where session_id = ?",
+        )
+        .get(sessionId);
+      for (const [id, name] of JSON.parse(state?.mob_identities_json ?? "[]") as [number, string][]) {
+        if (!names.get(id)) names.set(id, name);
+      }
     }
-    const nextIndex = new Map<string, number>();
-    const options = enemies.map((enemy) => {
-      const name = enemy.display_name ?? `Enemy ${enemy.target_id}`;
-      if ((counts.get(name) ?? 0) <= 1) return { targetId: enemy.target_id, label: name };
-      const index = (nextIndex.get(name) ?? 0) + 1;
-      nextIndex.set(name, index);
-      return { targetId: enemy.target_id, label: `${name} (${index})` };
-    });
 
     // Timelines are the bulk of an encounter load and nothing below reads one. `includeAllAnonymous`
     // keeps a row that is still inside the live meter's grace period: hiding it here would drop its
     // damage from the breakdown while the enemy picker, fed by the same hits, still lists its target.
-    const encounter = this.loadEncounter(sessionId, encounterId, "dps", { withTimeline: false });
+    const encounter = this.loadEncounter(sessionId, encounterId, meter, { withTimeline: false });
     const skills: CombatEnemySkillRow[] = encounter
       ? displayActorAggregates(encounter, { includeAllAnonymous: true }).flatMap(({ rowId, actor }) => [...actor.enemySkills].flatMap(
         ([targetId, bySkill]) => [...bySkill].map(([sourceId, stats]) => ({
@@ -184,6 +187,25 @@ export class CombatHistoryStore {
         })),
       )).sort((left, right) => right.damage - left.damage)
       : [];
+
+    // Both pickers list only enemies with skill rows for this meter (damaged by the party, or
+    // landed an incoming hit), ordered by `combat_enemies` first-sighting, then any extras by id.
+    const pickerIds = orderedEnemyIds(skills, enemyRows);
+
+    const counts = new Map<string, number>();
+    for (const targetId of pickerIds) {
+      const name = names.get(targetId) ?? `Enemy ${targetId}`;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    const nextIndex = new Map<string, number>();
+    const options = pickerIds.map((targetId) => {
+      const name = names.get(targetId) ?? `Enemy ${targetId}`;
+      if ((counts.get(name) ?? 0) <= 1) return { targetId, label: name };
+      const index = (nextIndex.get(name) ?? 0) + 1;
+      nextIndex.set(name, index);
+      return { targetId, label: `${name} (${index})` };
+    });
+
     return { encounterId, enemies: options, skills };
   }
 
@@ -319,6 +341,7 @@ interface ActorRow {
   uid: string | null;
   active_identity: number;
   damage: number;
+  absorbed: number;
   first_damage_at_ms: number | null;
   last_damage_at_ms: number | null;
   hits: number;
@@ -345,6 +368,7 @@ function hydrateActor(
   if (row.uid !== null) actor.uid = row.uid;
   actor.activeIdentity = row.active_identity === 1;
   actor.damage = row.damage;
+  actor.absorbed = row.absorbed;
   if (row.first_damage_at_ms !== null) actor.firstDamageAtMs = row.first_damage_at_ms;
   if (row.last_damage_at_ms !== null) actor.lastDamageAtMs = row.last_damage_at_ms;
   actor.hits = row.hits;
@@ -375,12 +399,12 @@ function hydrateActor(
     actor.targetDamage.set(target.target_id, target.damage);
   }
 
-  if (meter === "dps") {
+  if (meter === "dps" || meter === "tanked") {
     for (const enemySkill of database
-      .query<{ target_id: number; source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, number]>(
-        "select target_id, source_id, source_label, damage, hits, critical_hits from combat_enemy_skills where session_id = ? and encounter_id = ? and actor_index = ?",
+      .query<{ target_id: number; source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, string, number]>(
+        "select target_id, source_id, source_label, damage, hits, critical_hits from combat_enemy_skills where session_id = ? and encounter_id = ? and meter = ? and actor_index = ?",
       )
-      .all(sessionId, encounterId, row.actor_index)) {
+      .all(sessionId, encounterId, meter, row.actor_index)) {
       const bySkill = actor.enemySkills.get(enemySkill.target_id) ?? new Map();
       actor.enemySkills.set(enemySkill.target_id, bySkill);
       bySkill.set(enemySkill.source_id, {
@@ -389,6 +413,29 @@ function hydrateActor(
         hits: enemySkill.hits,
         criticalHits: enemySkill.critical_hits,
       });
+    }
+  }
+
+  if (meter === "tanked") {
+    for (const skill of database
+      .query<{ source_id: string; source_label: string; damage: number; hits: number; critical_hits: number }, [string, string, number]>(
+        "select source_id, source_label, damage, hits, critical_hits from combat_skills where session_id = ? and encounter_id = ? and meter = 'absorbed' and actor_index = ?",
+      )
+      .all(sessionId, encounterId, row.actor_index)) {
+      actor.absorbedSkills.set(skill.source_id, {
+        sourceId: skill.source_id,
+        sourceLabel: skill.source_label,
+        damage: skill.damage,
+        hits: skill.hits,
+        criticalHits: skill.critical_hits,
+      });
+    }
+    for (const target of database
+      .query<{ target_id: number; damage: number }, [string, string, number]>(
+        "select target_id, damage from combat_targets where session_id = ? and encounter_id = ? and meter = 'absorbed' and actor_index = ?",
+      )
+      .all(sessionId, encounterId, row.actor_index)) {
+      actor.absorbedByEnemy.set(target.target_id, target.damage);
     }
   }
 
@@ -406,6 +453,18 @@ function hydrateActor(
     }
   }
   return actor;
+}
+
+/** Enemy ids that have a skill row for this meter, `combat_enemies` first-seen order first, then the rest by id. */
+function orderedEnemyIds(
+  skills: CombatEnemySkillRow[],
+  enemyRows: readonly { target_id: number }[],
+): number[] {
+  const withSkills = new Set(skills.map((skill) => skill.targetId));
+  const ordered = enemyRows.map((enemy) => enemy.target_id).filter((id) => withSkills.has(id));
+  const seen = new Set(ordered);
+  const rest = [...withSkills].filter((id) => !seen.has(id)).sort((left, right) => left - right);
+  return [...ordered, ...rest];
 }
 
 function summary(sessionId: string, row: EncounterRow): CombatEncounterSummary {

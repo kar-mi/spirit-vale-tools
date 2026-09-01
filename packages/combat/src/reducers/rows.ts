@@ -27,6 +27,7 @@ export function renderEncounter(
   const durationMs = Math.max(minimumDurationMs, encounter.lastDamageAtMs - encounter.startedAtMs);
   const mergedActors = mergeActors(encounter.actors);
   const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
+  const totalAbsorbed = mergedActors.reduce((sum, actor) => sum + actor.absorbed, 0);
   const rowForActor = (actor: ActorAggregate, rowId: string): FishNetDpsActorRow => actorRow(
     actor,
     rowId,
@@ -93,6 +94,7 @@ export function renderEncounter(
     ...(encounter.endedAtMs === undefined ? {} : { endedAtMs: encounter.endedAtMs }),
     durationMs,
     totalDamage,
+    ...(totalAbsorbed <= 0 ? {} : { totalAbsorbed }),
     partyDps: perSecond(totalDamage, durationMs),
     partyCurrentDps,
     actors,
@@ -123,6 +125,14 @@ function actorRow(
     }))
     .sort(compareRows);
   const series = alignment === "actor" ? actor.actorSeries : actor.encounterSeries;
+  const absorbedSkills = actor.absorbed <= 0 ? undefined : [...actor.absorbedSkills.values()]
+    .map((skill): FishNetDpsSkillRow => ({
+      ...skill,
+      dps: perSecond(skill.damage, durationMs),
+      contribution: skill.damage / actor.absorbed,
+      ...(skill.hits === 0 ? {} : { critRate: skill.criticalHits / skill.hits }),
+    }))
+    .sort(compareRows);
   return {
     rowId,
     actorIds: [...actor.actorIds],
@@ -131,6 +141,8 @@ function actorRow(
     durationMs,
     ...(actor.lastDamageAtMs === undefined ? {} : { lastDamageAtMs: actor.lastDamageAtMs }),
     damage: actor.damage,
+    ...(actor.absorbed <= 0 ? {} : { absorbed: actor.absorbed }),
+    ...(absorbedSkills === undefined || absorbedSkills.length === 0 ? {} : { absorbedSkills }),
     dps: perSecond(actor.damage, durationMs),
     currentDps: actor.currentRate.rateAt(nowMs, { fromMs: startedAtMs, minimumMs: minimumDurationMs }),
     contribution: partyDamage === 0 ? 0 : actor.damage / partyDamage,
@@ -206,7 +218,7 @@ export function actorRowId(actor: ActorAggregate): string {
 function mergeActors(actors: readonly ActorAggregate[]): ActorAggregate[] {
   const merged = new Map<string, ActorAggregate>();
   for (const actor of actors) {
-    if (actor.damage <= 0) continue;
+    if (actor.damage <= 0 && actor.absorbed <= 0) continue;
     const displayName = actor.displayName?.trim() || undefined;
     // The merge key is the row id by construction: a row is exactly one merged aggregate, so the
     // two must never drift apart or stored `rowId`s stop matching the rows they name.
@@ -281,6 +293,21 @@ function accumulate(target: ActorAggregate, actor: ActorAggregate): void {
     } else {
       target.skills.set(skill.sourceId, { ...skill });
     }
+  }
+  target.absorbed += actor.absorbed;
+  for (const skill of actor.absorbedSkills.values()) {
+    const current = target.absorbedSkills.get(skill.sourceId);
+    if (current) {
+      current.sourceLabel = skill.sourceLabel;
+      current.damage += skill.damage;
+      current.hits += skill.hits;
+      current.criticalHits += skill.criticalHits;
+    } else {
+      target.absorbedSkills.set(skill.sourceId, { ...skill });
+    }
+  }
+  for (const [enemyId, value] of actor.absorbedByEnemy) {
+    target.absorbedByEnemy.set(enemyId, (target.absorbedByEnemy.get(enemyId) ?? 0) + value);
   }
 }
 
