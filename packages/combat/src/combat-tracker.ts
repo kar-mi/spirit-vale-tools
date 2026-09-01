@@ -977,8 +977,7 @@ export class FishNetCombatTracker {
     } else if (candidates.length === 1) {
       const [candidate] = candidates;
       if (!candidate) throw new Error("missing combat activation candidate");
-      // Recover_C has no source field, so a matching cast remains inferred.
-      attribution = "inferred";
+      attribution = candidate.inferred ? "inferred" : "exact";
       activationId = candidate.id;
     } else {
       attribution = "ambiguous";
@@ -1097,9 +1096,9 @@ export class FishNetCombatTracker {
 
   private consumeBarrierSync(packet: DecodedFishNetPacket): FishNetCombatShieldEvent[] {
     if (packet.objectId === undefined) return [];
-    if (packet.packetName === "objectDespawn") {
+    if (packet.packetName === "objectDespawn" || packet.packetName === "objectSpawn") {
       this.barriers.delete(packet.objectId);
-      return [];
+      if (packet.packetName === "objectDespawn") return [];
     }
     const values = barrierSyncValues(packet);
     if (values.length === 0) return [];
@@ -1169,9 +1168,9 @@ export class FishNetCombatTracker {
   /** Reads Guardian Bond sources from recipient-side BondSync entries. */
   private consumeBondSync(packet: DecodedFishNetPacket): void {
     if (packet.objectId === undefined) return;
-    if (packet.packetName === "objectDespawn") {
+    if (packet.packetName === "objectDespawn" || packet.packetName === "objectSpawn") {
       this.bondRegenSources.delete(packet.objectId);
-      return;
+      if (packet.packetName === "objectDespawn") return;
     }
     const entries = bondSyncEntries(packet);
     if (!entries) return;

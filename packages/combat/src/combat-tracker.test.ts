@@ -173,6 +173,22 @@ function bondSync(
   };
 }
 
+function objectSpawn(
+  tick: number,
+  objectId: number,
+  spawnSyncEntries: DecodedFishNetPacket["spawnSyncEntries"] = [],
+): DecodedFishNetPacket {
+  return {
+    tick,
+    objectId,
+    packetId: 903,
+    packetName: "objectSpawn",
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    spawnSyncEntries,
+  };
+}
+
 function summonCalibration(
   tick: number,
   actorId: number,
@@ -745,7 +761,7 @@ describe("FishNetCombatTracker", () => {
     expect(hit).toMatchObject({
       kind: "damage",
       sourceLabel: "Twin Cleave",
-      attribution: "inferred",
+      attribution: "exact",
       activationId: first && "activationId" in first ? first.activationId : undefined,
     });
   });
@@ -1033,6 +1049,36 @@ describe("FishNetCombatTracker", () => {
         expect.objectContaining({ kind: "shield", action: "gained", attribution: "ambiguous", targetId: 20 }),
       ]);
     });
+
+    test("drops barrier state when an object id is reused without a barrier spawn sync", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      tracker.consume(castTargeting(2, 10, "Barrier", 20));
+      tracker.consume(barrierSync(3, 20, 300));
+
+      tracker.consume(objectSpawn(4, 20));
+
+      expect(tracker.consume(barrierSync(5, 20, 0))).toEqual([]);
+    });
+
+    test("does not carry barrier status through a reused id's spawn sync", () => {
+      const tracker = new FishNetCombatTracker();
+      tracker.consume(barrierSync(1, 20, 0));
+      tracker.consume(statusEffect(2, 20, "ApplyEffect_T", [field("statusId", "Barrier"), field("level", 2)]));
+      const spawnedBarrier = field("barrierSync", 300);
+
+      tracker.consume(objectSpawn(3, 20, [{
+        componentIndex: 0,
+        index: 2,
+        name: "barrierSync",
+        networkBehaviourType: "HealthComponent",
+        fields: [spawnedBarrier],
+      }]));
+
+      expect(tracker.consume(barrierSync(4, 20, 0))).toEqual([
+        expect.objectContaining({ kind: "shield", action: "cleared", targetId: 20 }),
+      ]);
+    });
   });
 
   test("attributes a heal to the caster when a single matching healing activation targets the recipient", () => {
@@ -1234,6 +1280,17 @@ describe("FishNetCombatTracker", () => {
       sourceLabel: "Guardian Bond",
       attribution: "inferred",
     });
+  });
+
+  test("drops Guardian Bond attribution when an object id is reused without BondSync", () => {
+    const tracker = new FishNetCombatTracker();
+    tracker.consume(bondSync(1, 20, [{ otherId: 10, skillId: "GuardianBond", caster: false }]));
+
+    tracker.consume(objectSpawn(2, 20));
+
+    expect(tracker.consume(recover(3, 20, 50))).toEqual([
+      expect.objectContaining({ kind: "heal", targetId: 20, attribution: "unattributed" }),
+    ]);
   });
 
   test("does not treat the caster-side BondSync entry as another healer", () => {
