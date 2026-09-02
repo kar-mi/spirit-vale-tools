@@ -1,4 +1,4 @@
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot, FishNetDpsSkillRow, FishNetPersonalMatch } from "./snapshot.ts";
+import type { CombatActorRow, CombatEncounterSnapshot, CombatPersonalMatch, CombatSkillRow } from "./snapshot.ts";
 import { DEFAULT_MINIMUM_DURATION_MS, createActor } from "./damage.ts";
 import type { ActorAggregate, EncounterAggregate, EnemySkillStats } from "./damage.ts";
 import { addSeries, seriesPoints } from "./timeline.ts";
@@ -17,7 +17,7 @@ const DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS = 10_000;
 export function renderEncounter(
   encounter: EncounterAggregate,
   options: RenderOptions = {},
-): FishNetDpsEncounterSnapshot {
+): CombatEncounterSnapshot {
   const minimumDurationMs = options.minimumDurationMs ?? DEFAULT_MINIMUM_DURATION_MS;
   const anonymousIdentityGraceMs = options.anonymousIdentityGraceMs ?? DEFAULT_ANONYMOUS_IDENTITY_GRACE_MS;
   const personalName = options.personalName ?? "";
@@ -28,7 +28,7 @@ export function renderEncounter(
   const mergedActors = mergeActors(encounter.actors);
   const totalDamage = mergedActors.reduce((sum, actor) => sum + actor.damage, 0);
   const totalAbsorbed = mergedActors.reduce((sum, actor) => sum + actor.absorbed, 0);
-  const rowForActor = (actor: ActorAggregate, rowId: string): FishNetDpsActorRow => actorRow(
+  const rowForActor = (actor: ActorAggregate, rowId: string): CombatActorRow => actorRow(
     actor,
     rowId,
     encounter.startedAtMs,
@@ -60,7 +60,7 @@ export function renderEncounter(
   const personalActor = selectedPersonalActor ?? (normalizedPersonalName
     ? namedActors.find((actor) => normalizeName(actor.displayName ?? "") === normalizedPersonalName)
     : undefined);
-  const personalMatch: FishNetPersonalMatch = selectedPersonalActor
+  const personalMatch: CombatPersonalMatch = selectedPersonalActor
     ? "matched"
     : personalActorId !== undefined
       ? "missing"
@@ -115,9 +115,9 @@ function actorRow(
   minimumDurationMs: number,
   isUnidentified: boolean,
   alignment: "encounter" | "actor",
-): FishNetDpsActorRow {
+): CombatActorRow {
   const skills = [...actor.skills.values()]
-    .map((skill): FishNetDpsSkillRow => ({
+    .map((skill): CombatSkillRow => ({
       ...skill,
       dps: perSecond(skill.damage, durationMs),
       contribution: actor.damage === 0 ? 0 : skill.damage / actor.damage,
@@ -126,7 +126,7 @@ function actorRow(
     .sort(compareRows);
   const series = alignment === "actor" ? actor.actorSeries : actor.encounterSeries;
   const absorbedSkills = actor.absorbed <= 0 ? undefined : [...actor.absorbedSkills.values()]
-    .map((skill): FishNetDpsSkillRow => ({
+    .map((skill): CombatSkillRow => ({
       ...skill,
       dps: perSecond(skill.damage, durationMs),
       contribution: skill.damage / actor.absorbed,

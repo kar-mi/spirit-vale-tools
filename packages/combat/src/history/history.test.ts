@@ -8,7 +8,7 @@ import { encodeLogRecord, encodeLogStreamHeader, sanitizeCombatData } from "@kar
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
 import { loadDpsReplay } from "../replay/replay.ts";
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
+import type { CombatActorRow, CombatEncounterSnapshot } from "../reducers/snapshot.ts";
 import { createCombatDomain } from "./domain.ts";
 import { indexCombatStream } from "./importer.ts";
 import { CombatHistoryStore } from "./store.ts";
@@ -122,8 +122,8 @@ async function fixture(): Promise<Fixture> {
  * absolute epoch milliseconds so encounters stay comparable across sessions. Shift the legacy
  * snapshot onto the same base so everything else can be compared exactly.
  */
-function toAbsolute(snapshot: FishNetDpsEncounterSnapshot, originMs: number): FishNetDpsEncounterSnapshot {
-  const shiftRow = (row: FishNetDpsActorRow): FishNetDpsActorRow => ({
+function toAbsolute(snapshot: CombatEncounterSnapshot, originMs: number): CombatEncounterSnapshot {
+  const shiftRow = (row: CombatActorRow): CombatActorRow => ({
     ...row,
     ...(row.lastDamageAtMs === undefined ? {} : { lastDamageAtMs: row.lastDamageAtMs + originMs }),
   });

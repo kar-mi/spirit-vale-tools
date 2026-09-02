@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 
-import type { FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
+import type { CombatEncounterSnapshot } from "../reducers/snapshot.ts";
 import { createActor } from "../reducers/damage.ts";
 import type { ActorAggregate, EncounterAggregate } from "../reducers/damage.ts";
 import { displayActorAggregates, renderEncounter } from "../reducers/rows.ts";
@@ -268,7 +268,7 @@ export class CombatHistoryStore {
     sessionId: string,
     encounterId: string,
     options: GetEncounterOptions = {},
-  ): FishNetDpsEncounterSnapshot | undefined {
+  ): CombatEncounterSnapshot | undefined {
     const { meter = "dps", ...renderOptions } = options;
     const encounter = this.loadEncounter(sessionId, encounterId, meter);
     if (!encounter) return undefined;

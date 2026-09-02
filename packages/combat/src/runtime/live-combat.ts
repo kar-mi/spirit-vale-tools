@@ -1,10 +1,10 @@
 import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "../reducers/damage.ts";
 import type { CombatIdentity, EncounterAggregate } from "../reducers/damage.ts";
 import { MeterReducerGroup } from "../reducers/meter-group.ts";
 import { renderEncounter } from "../reducers/rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
+import type { CombatEncounterSnapshot } from "../reducers/snapshot.ts";
 
 export interface MeterRow {
   displayName: string;
@@ -26,11 +26,11 @@ export interface MeterEncounterSnapshot {
   rate: number;
   rows: MeterRow[];
   /** The same encounter rendered with the detail the DPS snapshot carries: per-skill rows, timeline buckets, crit rates, contribution shares and the personal row. */
-  detail: FishNetDpsEncounterSnapshot;
+  detail: CombatEncounterSnapshot;
 }
 
 export interface CombatEncounterRecord {
-  dps: FishNetDpsEncounterSnapshot;
+  dps: CombatEncounterSnapshot;
   tps: MeterEncounterSnapshot;
   hps: MeterEncounterSnapshot;
 }

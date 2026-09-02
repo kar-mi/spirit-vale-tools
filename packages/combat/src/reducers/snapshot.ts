@@ -1,5 +1,5 @@
 /** The rendered shape of one encounter, shared by every producer of it: the live service, the history read model, and a whole-log replay. */
-export interface FishNetDpsSkillRow {
+export interface CombatSkillRow {
   sourceId: string;
   sourceLabel: string;
   damage: number;
@@ -11,7 +11,7 @@ export interface FishNetDpsSkillRow {
   critRate?: number;
 }
 
-export interface FishNetDpsTimelinePoint {
+export interface CombatTimelinePoint {
   /** Milliseconds elapsed since the encounter began. */
   elapsedMs: number;
   /** Damage dealt during this time bucket. */
@@ -22,7 +22,7 @@ export interface FishNetDpsTimelinePoint {
   dps: number;
 }
 
-export interface FishNetDpsActorRow {
+export interface CombatActorRow {
   /** Stable identity for this rendered row, including merged and unidentified rows. */
   rowId: string;
   actorIds: number[];
@@ -44,19 +44,19 @@ export interface FishNetDpsActorRow {
   kills: number;
   /** Number of distinct enemy object IDs damaged by this actor during the encounter. */
   mobsHit: number;
-  skills: FishNetDpsSkillRow[];
-  timeline: FishNetDpsTimelinePoint[];
+  skills: CombatSkillRow[];
+  timeline: CombatTimelinePoint[];
   /** Tanked meter only: damage a shield on this actor soaked, apart from `damage` (raw damage taken). */
   absorbed?: number;
   /** Tanked meter only: absorbed amount broken down by the incoming enemy skill that was soaked. */
-  absorbedSkills?: FishNetDpsSkillRow[];
+  absorbedSkills?: CombatSkillRow[];
   /** True when the row contains damage that has not been verified to a player identity. */
   isUnidentified?: boolean;
 }
 
-export type FishNetPersonalMatch = "unconfigured" | "missing" | "matched" | "ambiguous";
+export type CombatPersonalMatch = "unconfigured" | "missing" | "matched" | "ambiguous";
 
-export interface FishNetDpsEncounterSnapshot {
+export interface CombatEncounterSnapshot {
   id: string;
   startedAtMs: number;
   lastDamageAtMs: number;
@@ -67,10 +67,10 @@ export interface FishNetDpsEncounterSnapshot {
   totalAbsorbed?: number;
   partyDps: number;
   partyCurrentDps: number;
-  actors: FishNetDpsActorRow[];
+  actors: CombatActorRow[];
   /** Actor ids on rows with no verified player identity. Each such actor keeps its own row. */
   unidentifiedActorIds: number[];
   personalName: string;
-  personalMatch: FishNetPersonalMatch;
-  personal?: FishNetDpsActorRow;
+  personalMatch: CombatPersonalMatch;
+  personal?: CombatActorRow;
 }

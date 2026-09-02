@@ -69,7 +69,7 @@ describe("DpsLogFollower", () => {
       const first = await createLogSession({ producer: "synthetic-test", streams: ["combat"], logDirectory: root });
       first.logger("combat").log("combat.event", combatRecord(300, 50));
       await first.close();
-      const follower = new DpsSessionLogFollower(root);
+      const follower = new DpsSessionLogFollower(root, { ticksPerSecond: 30 });
       const firstBatch = await follower.poll();
       expect(firstBatch).toMatchObject({ reset: true, missing: false, sessionId: first.id });
       expect(firstBatch.events).toHaveLength(1);

@@ -5,7 +5,7 @@ export { FishNetSummonTracker } from "./tracking/summon-tracker.ts";
 export { observeFishNetDamagePacket } from "./events/damage-observer.ts";
 export type { FishNetDamageObservation } from "./events/damage-observer.ts";
 export type { FishNetRecoveryStyle } from "./events/inference/recovery-style.ts";
-export { createBossCatalog, CURRENT_BOSS_SKILL_NAMES } from "./tracking/boss-catalog.ts";
+export { createBossCatalog } from "./tracking/boss-catalog.ts";
 export { FishNetActorDirectory } from "./tracking/actor-directory.ts";
 export { FishNetStatusTracker } from "./tracking/status-tracker.ts";
 export type { FishNetActiveStatus, FishNetStatusTrackerOptions } from "./tracking/status-tracker.ts";
@@ -56,13 +56,13 @@ export type { DisplayActorAggregate, DisplayActorOptions, RenderOptions } from "
 export { ANALYSIS_BUCKET_MS } from "./reducers/timeline.ts";
 export type { BucketSeries, TimelinePoint } from "./reducers/timeline.ts";
 export { DpsLogFollower, DpsSessionLogFollower } from "./replay/live-log.ts";
-export type { DpsLogBatch, TimedDpsLogEvent } from "./replay/live-log.ts";
+export type { DpsLogBatch, DpsSessionLogFollowerOptions, TimedDpsLogEvent } from "./replay/live-log.ts";
 export type {
-  FishNetDpsActorRow,
-  FishNetDpsEncounterSnapshot,
-  FishNetDpsSkillRow,
-  FishNetDpsTimelinePoint,
-  FishNetPersonalMatch,
+  CombatActorRow,
+  CombatEncounterSnapshot,
+  CombatPersonalMatch,
+  CombatSkillRow,
+  CombatTimelinePoint,
 } from "./reducers/snapshot.ts";
 export type {
   FishNetActorDirectoryOptions,

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { MeterReducer } from "./meter.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 import type { CombatIdentity } from "./damage.ts";
 
 const IDENTITIES = new Map<number, CombatIdentity>([

@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
-import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "../events/combat-events.ts";
 import { DamageReducer } from "./damage.ts";
 import type { EncounterAggregate } from "./damage.ts";
 import { renderEncounter } from "./rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
+import type { CombatEncounterSnapshot } from "./snapshot.ts";
 
 interface HarnessOptions {
   idleGapMs?: number;
@@ -76,17 +76,17 @@ class MeterHarness {
     return this.personalActorId;
   }
 
-  getSnapshots(nowMs?: number): FishNetDpsEncounterSnapshot[] {
+  getSnapshots(nowMs?: number): CombatEncounterSnapshot[] {
     const encounters = this.reducer.current ? [...this.finished, this.reducer.current] : this.finished;
     return encounters.map((encounter) => this.render(encounter, nowMs));
   }
 
-  getLatestSnapshot(nowMs?: number): FishNetDpsEncounterSnapshot | undefined {
+  getLatestSnapshot(nowMs?: number): CombatEncounterSnapshot | undefined {
     const encounter = this.reducer.current ?? this.finished.at(-1);
     return encounter ? this.render(encounter, nowMs) : undefined;
   }
 
-  private render(encounter: EncounterAggregate, nowMs?: number): FishNetDpsEncounterSnapshot {
+  private render(encounter: EncounterAggregate, nowMs?: number): CombatEncounterSnapshot {
     return renderEncounter(encounter, {
       ...(nowMs === undefined ? {} : { nowMs }),
       ...(this.minimumDurationMs === undefined ? {} : { minimumDurationMs: this.minimumDurationMs }),

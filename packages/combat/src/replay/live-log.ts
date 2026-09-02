@@ -7,7 +7,7 @@ import {
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { JsonlTailReadResult, LiveLogSessionFollowerOptions } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 import { parseDpsLogRecord } from "./replay.ts";
 
 export interface TimedDpsLogEvent {
@@ -114,15 +114,14 @@ export type DpsSessionLogFollowerOptions =
 export class DpsSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<DpsLogFollower, DpsLogBatch>;
 
-  constructor(logDirectory?: string, ticksPerSecond = 30, options: DpsSessionLogFollowerOptions = {}) {
-    const { ticksPerSecond: ticksOverride, ...tuning } = options;
-    const ticks = ticksOverride ?? ticksPerSecond;
+  constructor(logDirectory?: string, options: DpsSessionLogFollowerOptions = {}) {
+    const { ticksPerSecond = 30, ...tuning } = options;
     this.inner = new LiveLogSessionFollower({
       stream: "combat",
       ...(logDirectory === undefined ? {} : { logDirectory }),
       ...tuning,
       readerOptions: { createDecoder: decoderForText, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
-      createFollower: (path) => new DpsLogFollower(path, ticks),
+      createFollower: (path) => new DpsLogFollower(path, ticksPerSecond),
       mergeSessionChange: (batch, changedSession) => ({
         ...batch,
         reset: batch.reset || changedSession,
@@ -134,7 +133,7 @@ export class DpsSessionLogFollower {
 
   /** Follows the stream without polling: the returned follower wakes on a watcher event and yields only batches that carry something. */
   static watch(logDirectory?: string, options: DpsSessionLogFollowerOptions = {}): DpsSessionLogFollower {
-    return new DpsSessionLogFollower(logDirectory, options.ticksPerSecond ?? 30, options);
+    return new DpsSessionLogFollower(logDirectory, options);
   }
 
   poll(): Promise<DpsLogBatch> {

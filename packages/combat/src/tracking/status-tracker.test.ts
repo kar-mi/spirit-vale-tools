@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { FishNetStatusTracker } from "./status-tracker.ts";
-import type { FishNetCombatActivationEvent, FishNetCombatDeathEvent, FishNetCombatStatusEvent, FishNetCombatSummonEvent } from "./combat-tracker.ts";
+import type { FishNetCombatActivationEvent, FishNetCombatDeathEvent, FishNetCombatStatusEvent, FishNetCombatSummonEvent } from "../events/combat-events.ts";
 
 const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
   buildFingerprint: "synthetic-build",

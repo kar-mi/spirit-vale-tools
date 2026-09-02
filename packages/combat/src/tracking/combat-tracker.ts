@@ -39,52 +39,21 @@ import {
 import { FishNetMonsterIdentityTracker } from "./monster-identity.ts";
 import { FishNetSummonTracker } from "./summon-tracker.ts";
 import type {
-  FishNetBossCatalog,
   FishNetCombatActionKind,
   FishNetCombatActionPhase,
   FishNetCombatActivationEvent,
   FishNetCombatActorIdentity,
-  FishNetCombatDamageEvent,
-  FishNetCombatDeathEvent,
   FishNetCombatEvent,
-  FishNetCombatFullHealEvent,
   FishNetCombatHealEvent,
-  FishNetCombatMonsterIdentityEvent,
   FishNetCombatShieldEvent,
   FishNetCombatStatusEvent,
-  FishNetCombatSummonEvent,
   FishNetCombatTrackerOptions,
   FishNetDamageAttribution,
   FishNetHealAttribution,
   FishNetHealingTraits,
   FishNetHitResult,
-  FishNetMonsterCatalog,
   FishNetShieldAction,
 } from "../events/combat-events.ts";
-
-export type {
-  FishNetBossCatalog,
-  FishNetCombatActionKind,
-  FishNetCombatActionPhase,
-  FishNetCombatActivationEvent,
-  FishNetCombatActorIdentity,
-  FishNetCombatDamageEvent,
-  FishNetCombatDeathEvent,
-  FishNetCombatEvent,
-  FishNetCombatFullHealEvent,
-  FishNetCombatHealEvent,
-  FishNetCombatMonsterIdentityEvent,
-  FishNetCombatShieldEvent,
-  FishNetCombatStatusEvent,
-  FishNetCombatSummonEvent,
-  FishNetCombatTrackerOptions,
-  FishNetDamageAttribution,
-  FishNetHealAttribution,
-  FishNetHealingTraits,
-  FishNetHitResult,
-  FishNetMonsterCatalog,
-  FishNetShieldAction,
-};
 
 interface ActivationState {
   id: string;

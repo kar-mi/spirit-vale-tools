@@ -1,6 +1,5 @@
 import {
   DamageReducer,
-  CURRENT_BOSS_SKILL_NAMES,
   FishNetActorDirectory,
   FishNetCombatTracker,
   MeterReducer,
@@ -35,7 +34,6 @@ const result = await replayCombatCaptures(inputs, {
   tracker: new FishNetCombatTracker({
     ...(fishNetBuildFingerprint === undefined ? {} : { buildFingerprint: fishNetBuildFingerprint }),
     monsterCatalog: mobIdentityDefinitionsById(),
-    bossCatalog: CURRENT_BOSS_SKILL_NAMES,
   }),
   onEvent: (event, observedAtMs) => {
     lastObservedAtMs = observedAtMs;

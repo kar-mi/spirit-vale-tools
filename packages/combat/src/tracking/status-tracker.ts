@@ -13,7 +13,7 @@ import type {
   FishNetCombatEvent,
   FishNetCombatStatusEvent,
   FishNetCombatSummonEvent,
-} from "./combat-tracker.ts";
+} from "../events/combat-events.ts";
 
 export interface FishNetActiveStatus {
   statusId: string;

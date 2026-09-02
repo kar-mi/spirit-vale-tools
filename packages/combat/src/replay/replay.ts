@@ -1,13 +1,13 @@
 import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 import { DamageReducer } from "../reducers/damage.ts";
 import type { EncounterAggregate } from "../reducers/damage.ts";
 import { renderEncounter } from "../reducers/rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
+import type { CombatEncounterSnapshot } from "../reducers/snapshot.ts";
 import { isRecord, LogRecordLineDecoder, readTextLines } from "@kar-mi/spirit-vale-tools-logging";
 
 export interface DpsReplayResult {
-  snapshots: FishNetDpsEncounterSnapshot[];
+  snapshots: CombatEncounterSnapshot[];
   invalidLines: number;
 }
 

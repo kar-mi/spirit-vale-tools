@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { LiveCombatService } from "./live-combat.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 
 function identity(actorId: number, displayName: string, atMs: number): FishNetCombatEvent {
   return { kind: "actorIdentity", operation: "upsert", tick: atMs, actorId, displayName } as unknown as FishNetCombatEvent;

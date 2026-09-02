@@ -3,7 +3,7 @@ import { LogRecordLineDecoder, readTextLines } from "@kar-mi/spirit-vale-tools-l
 import { FishNetActorDirectory } from "../tracking/actor-directory.ts";
 import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
 import { FishNetCombatTracker } from "../tracking/combat-tracker.ts";
-import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../events/combat-events.ts";
 
 export interface CombatCaptureReplayOptions {
   tracker: FishNetCombatTracker;

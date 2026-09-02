@@ -36,8 +36,6 @@ export interface FishNetCombatTrackerOptions {
   actorIdentityResolver?: (actorId: number) => FishNetCombatActorIdentity | undefined;
   /** Resolves healing mechanics for actors whose local character build is visible. */
   healingTraitsResolver?: (actorId: number) => FishNetHealingTraits | undefined;
-  /** @deprecated Summon packets now require a verified object id; retained as an unused compatibility option. */
-  localActorIdResolver?: () => number | undefined;
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */
   monsterCatalog?: FishNetMonsterCatalog;
   /** Fallback names for otherwise-anonymous bosses; game-provided identities always win. */
