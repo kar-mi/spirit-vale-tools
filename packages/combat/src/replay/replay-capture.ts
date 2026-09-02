@@ -1,9 +1,9 @@
 import { FishNetTransportReplay } from "@kar-mi/spirit-vale-tools-capture";
 import { LogRecordLineDecoder, readTextLines } from "@kar-mi/spirit-vale-tools-logging";
-import { FishNetActorDirectory } from "./actor-directory.ts";
-import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import { FishNetCombatTracker } from "./combat-tracker.ts";
-import type { FishNetCombatEvent } from "./combat-tracker.ts";
+import { FishNetActorDirectory } from "../tracking/actor-directory.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import { FishNetCombatTracker } from "../tracking/combat-tracker.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 
 export interface CombatCaptureReplayOptions {
   tracker: FishNetCombatTracker;

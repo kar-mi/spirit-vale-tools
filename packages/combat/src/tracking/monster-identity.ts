@@ -5,7 +5,7 @@ import type {
   FishNetCombatActivationEvent,
   FishNetCombatMonsterIdentityEvent,
   FishNetMonsterCatalog,
-} from "./combat-events.ts";
+} from "../events/combat-events.ts";
 
 export interface FishNetMonsterIdentityTrackerOptions {
   /** Names monsters seen spawning, emitting identity lifecycle events keyed by network object id. */

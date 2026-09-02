@@ -6,8 +6,8 @@ import {
   LiveLogSessionFollower,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { JsonlTailReadResult, LiveLogSessionFollowerOptions } from "@kar-mi/spirit-vale-tools-logging";
-import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import type { FishNetCombatEvent } from "./combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import { parseDpsLogRecord } from "./replay.ts";
 
 export interface TimedDpsLogEvent {

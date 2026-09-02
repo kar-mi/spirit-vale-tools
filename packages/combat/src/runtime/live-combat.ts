@@ -1,10 +1,10 @@
-import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
-import type { FishNetCombatEvent } from "./combat-tracker.ts";
-import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "./reducers/damage.ts";
-import type { CombatIdentity, EncounterAggregate } from "./reducers/damage.ts";
-import { MeterReducerGroup } from "./reducers/meter-group.ts";
-import { renderEncounter } from "./reducers/rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
+import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "../reducers/damage.ts";
+import type { CombatIdentity, EncounterAggregate } from "../reducers/damage.ts";
+import { MeterReducerGroup } from "../reducers/meter-group.ts";
+import { renderEncounter } from "../reducers/rows.ts";
+import type { FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
 
 export interface MeterRow {
   displayName: string;

@@ -6,7 +6,7 @@ import {
 import type { FishNetStatusCatalog } from "@kar-mi/spirit-vale-tools-statuses";
 import { FishNetSkillDirectory, loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
-import { normalizeName } from "./reducers/rows.ts";
+import { normalizeName } from "../reducers/rows.ts";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type {
   FishNetCombatActivationEvent,

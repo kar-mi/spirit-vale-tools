@@ -1,5 +1,5 @@
-import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
-import type { FishNetCombatEvent } from "../combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import type { CombatIdentity, EncounterAggregate } from "./damage.ts";
 import { MeterReducer } from "./meter.ts";
 import type { MeterKind } from "./meter.ts";

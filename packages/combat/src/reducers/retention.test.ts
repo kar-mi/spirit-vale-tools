@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FishNetCombatEvent } from "../combat-tracker.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import { DamageReducer, MOB_IDENTITY_PREFIX } from "./damage.ts";
 
 const LOOKBACK_MS = 10_000;

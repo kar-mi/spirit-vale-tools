@@ -8,7 +8,7 @@ import {
   field,
   objectSpawn,
   statusEffect,
-} from "./testing/combat-packets.ts";
+} from "../testing/combat-packets.ts";
 
 describe("shield lifecycle", () => {
   test("attributes a barrier gain and carries its source through absorption and clearing", () => {

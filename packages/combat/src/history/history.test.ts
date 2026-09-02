@@ -7,8 +7,8 @@ import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 import { encodeLogRecord, encodeLogStreamHeader, sanitizeCombatData } from "@kar-mi/spirit-vale-tools-logging";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
-import { loadDpsReplay } from "../replay.ts";
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "../snapshot.ts";
+import { loadDpsReplay } from "../replay/replay.ts";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot } from "../reducers/snapshot.ts";
 import { createCombatDomain } from "./domain.ts";
 import { indexCombatStream } from "./importer.ts";
 import { CombatHistoryStore } from "./store.ts";

@@ -20,7 +20,7 @@ import {
   effectEntry,
   effectDisplayPayload,
   ambiguousObserver,
-} from "./testing/combat-packets.ts";
+} from "../testing/combat-packets.ts";
 
 describe("FishNetCombatTracker", () => {
   test("emits one flat monster identity event instead of repeating identity on hits", () => {

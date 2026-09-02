@@ -1,6 +1,6 @@
 import { EwmaRate } from "@kar-mi/spirit-vale-tools-metrics";
-import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
-import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent, FishNetCombatEvent } from "../combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent, FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import { ANALYSIS_BUCKET_MS, addToSeries, createSeries } from "./timeline.ts";
 import type { BucketSeries } from "./timeline.ts";
 

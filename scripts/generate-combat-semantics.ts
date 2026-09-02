@@ -64,7 +64,7 @@ export const REGENERATION_SKILL_IDS = new Set(${JSON.stringify(regenerationSkill
 export const BARRIER_SKILL_IDS = new Set(${JSON.stringify(barrierSkillIds, null, 2)});
 export const BARRIER_STATUS_IDS = new Set(${JSON.stringify(barrierStatusIds, null, 2)});
 `;
-const outputPath = path.resolve(import.meta.dir, "../packages/combat/src/generated/combat-semantics.ts");
+const outputPath = path.resolve(import.meta.dir, "../packages/combat/src/events/generated/combat-semantics.ts");
 mkdirSync(path.dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, output, "utf8");
 console.log(`Generated combat semantics: ${directHealingSkillIds.length} direct heals, ${regenerationSkillIds.length} regeneration skills, ${barrierSkillIds.length} barrier skills.`);

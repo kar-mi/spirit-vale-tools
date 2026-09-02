@@ -2,7 +2,7 @@ import type { Statement } from "bun:sqlite";
 import type { IndexStreamRequest, IndexStreamResult, ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
-import { parseDpsLogRecord } from "../replay.ts";
+import { parseDpsLogRecord } from "../replay/replay.ts";
 import { DamageReducer, createActor } from "../reducers/damage.ts";
 import type { CombatIdentity, DamageReducerOptions, DeathHitRecord, DeathRecord, EncounterAggregate } from "../reducers/damage.ts";
 import { MeterReducerGroup } from "../reducers/meter-group.ts";

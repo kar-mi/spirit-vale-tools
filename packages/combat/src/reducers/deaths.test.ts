@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
-import type { FishNetCombatEvent } from "../combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import { DamageReducer } from "./damage.ts";
 
 const PIKI = 15_004;

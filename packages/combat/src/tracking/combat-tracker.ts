@@ -6,18 +6,18 @@ import type { DecodedFishNetPacket, FishNetRpcMap } from "@kar-mi/spirit-vale-to
 import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
-import { nullableStringField, numberField } from "./decoded-fields.ts";
-import { decodeEffectDisplays } from "./effect-display.ts";
-import { classifyFishNetRecoveryStyle } from "./inference/recovery-style.ts";
-import { observeFishNetDamagePacket } from "./damage-observer.ts";
-import type { FishNetRecoveryStyle } from "./inference/recovery-style.ts";
+import { nullableStringField, numberField } from "../events/decoded-fields.ts";
+import { decodeEffectDisplays } from "../events/effect-display.ts";
+import { classifyFishNetRecoveryStyle } from "../events/inference/recovery-style.ts";
+import { observeFishNetDamagePacket } from "../events/damage-observer.ts";
+import type { FishNetRecoveryStyle } from "../events/inference/recovery-style.ts";
 import {
   BARRIER_SKILL_IDS,
   BARRIER_STATUS_IDS,
   COMBAT_SEMANTICS_BUILD_FINGERPRINT,
   DIRECT_HEALING_SKILL_IDS,
   REGENERATION_SKILL_IDS,
-} from "./generated/combat-semantics.ts";
+} from "../events/generated/combat-semantics.ts";
 import {
   barrierSyncValues,
   bondSyncEntries,
@@ -35,7 +35,7 @@ import {
   resolveDamageSource,
   stringField,
   uniqueMonsterIdentityEvents,
-} from "./combat-decoding.ts";
+} from "../events/combat-decoding.ts";
 import { FishNetMonsterIdentityTracker } from "./monster-identity.ts";
 import { FishNetSummonTracker } from "./summon-tracker.ts";
 import type {
@@ -60,7 +60,7 @@ import type {
   FishNetHitResult,
   FishNetMonsterCatalog,
   FishNetShieldAction,
-} from "./combat-events.ts";
+} from "../events/combat-events.ts";
 
 export type {
   FishNetBossCatalog,

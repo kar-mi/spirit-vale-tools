@@ -1,7 +1,7 @@
 import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
-import { decodedFieldRecord, decodedSummonCalibration } from "./combat-decoding.ts";
-import type { SummonCalibrationEntry } from "./combat-decoding.ts";
-import type { FishNetCombatActorIdentity, FishNetCombatSummonEvent } from "./combat-events.ts";
+import { decodedFieldRecord, decodedSummonCalibration } from "../events/combat-decoding.ts";
+import type { SummonCalibrationEntry } from "../events/combat-decoding.ts";
+import type { FishNetCombatActorIdentity, FishNetCombatSummonEvent } from "../events/combat-events.ts";
 
 /** One summoned object's accumulated `SummonSkillSync`/`SummonerSync` state, keyed by its own network object id. Order-independent: either field may arrive first. */
 interface PendingSummonSkillState {

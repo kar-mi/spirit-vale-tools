@@ -10,7 +10,7 @@ ambiguity, and the quarantine that survives a re-authentication — see
 
 ## Dispatch
 
-`consume()` in `packages/combat/src/combat-tracker.ts` matches on `rpcName` plus
+`consume()` in `packages/combat/src/tracking/combat-tracker.ts` matches on `rpcName` plus
 the owning behaviour, and returns zero or more events per packet:
 
 | RPC | Behaviour | Event |
@@ -84,7 +84,7 @@ derived from captures. Each entry:
 | — | byte `0`/`1` | meaning unestablished; validated then discarded |
 
 Then a `List<string>` of ids to remove. `decodeEffectDisplays`
-(`packages/combat/src/effect-display.ts`) is strict: it must consume the payload
+(`packages/combat/src/events/effect-display.ts`) is strict: it must consume the payload
 exactly, or it throws and the packet is skipped rather than half-read.
 
 Framing alone could not pin these fields — `u8` and packed int encode

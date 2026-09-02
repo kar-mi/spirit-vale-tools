@@ -26,7 +26,7 @@ already exposed as ordinary `decodedFields`.
 
 ## Consuming position events
 
-`FishNetPositionTracker` in `packages/combat/src/position-tracker.ts` turns the
+`FishNetPositionTracker` in `packages/combat/src/tracking/position-tracker.ts` turns the
 two feeds into whole positions. Feed it every decoded packet:
 
 ```ts

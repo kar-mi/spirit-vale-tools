@@ -1,4 +1,4 @@
-import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot, FishNetDpsSkillRow, FishNetPersonalMatch } from "../snapshot.ts";
+import type { FishNetDpsActorRow, FishNetDpsEncounterSnapshot, FishNetDpsSkillRow, FishNetPersonalMatch } from "./snapshot.ts";
 import { DEFAULT_MINIMUM_DURATION_MS, createActor } from "./damage.ts";
 import type { ActorAggregate, EncounterAggregate, EnemySkillStats } from "./damage.ts";
 import { addSeries, seriesPoints } from "./timeline.ts";

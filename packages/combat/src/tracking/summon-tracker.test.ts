@@ -8,7 +8,7 @@ import {
   summonCalibration,
   summonSkillSync,
   summonerSyncOnly,
-} from "./testing/combat-packets.ts";
+} from "../testing/combat-packets.ts";
 
 describe("FishNetSummonTracker (via FishNetCombatTracker)", () => {
   test("emits changed summon stack counts from authoritative calibration snapshots", () => {

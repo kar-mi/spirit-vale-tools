@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
-import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "../combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatDamageEvent, FishNetCombatDeathEvent } from "../tracking/combat-tracker.ts";
 import { DamageReducer } from "./damage.ts";
 import type { EncounterAggregate } from "./damage.ts";
 import { renderEncounter } from "./rows.ts";
-import type { FishNetDpsEncounterSnapshot } from "../snapshot.ts";
+import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
 
 interface HarnessOptions {
   idleGapMs?: number;

@@ -1,5 +1,5 @@
-import type { FishNetActorIdentityEvent } from "../actor-directory.ts";
-import type { FishNetCombatEvent } from "../combat-tracker.ts";
+import type { FishNetActorIdentityEvent } from "../tracking/actor-directory.ts";
+import type { FishNetCombatEvent } from "../tracking/combat-tracker.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, createActor, foldEnemySkill, isPositiveHit, positiveTau, recordHit } from "./damage.ts";
 import type { ActorAggregate, CombatIdentity, EncounterAggregate } from "./damage.ts";
 
