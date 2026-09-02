@@ -76,7 +76,7 @@ export function loadBundledItemCatalog(
   }
   return {
     buildFingerprint: BUNDLED_CATALOG.buildFingerprint,
-    items: BUNDLED_CATALOG.items.map((item) => ({ ...item })),
+    items: BUNDLED_CATALOG.items.map(cloneDefinition),
   };
 }
 
@@ -89,14 +89,14 @@ export class FishNetItemDirectory {
       if (this.definitions.has(key)) {
         throw new Error(`duplicate item definition for type ${definition.itemType} ${JSON.stringify(definition.id)}`);
       }
-      this.definitions.set(key, definition);
+      this.definitions.set(key, cloneDefinition(definition));
     }
   }
 
   resolve(itemType: number, itemId: string | null | undefined): FishNetItemDefinition | undefined {
     return itemId === null || itemId === undefined
       ? undefined
-      : this.definitions.get(itemKey(itemType, itemId));
+      : cloneOptional(this.definitions.get(itemKey(itemType, itemId)));
   }
 
   require(itemType: number, itemId: string): FishNetItemDefinition {
@@ -122,4 +122,12 @@ export function requireFishNetItem(itemType: number, itemId: string): FishNetIte
 
 function itemKey(itemType: number, itemId: string): string {
   return `${itemType}|${itemId}`;
+}
+
+function cloneOptional(definition: FishNetItemDefinition | undefined): FishNetItemDefinition | undefined {
+  return definition ? cloneDefinition(definition) : undefined;
+}
+
+function cloneDefinition(definition: FishNetItemDefinition): FishNetItemDefinition {
+  return structuredClone(definition);
 }

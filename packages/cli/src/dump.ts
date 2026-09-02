@@ -9,11 +9,7 @@ import {
   liteNetLibPacketData,
   transportPacketData,
 } from "./format-packet.ts";
-
-function option(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index >= 0 ? Bun.argv[index + 1] : undefined;
-}
+import { option } from "./args.ts";
 
 const durationText = option("--duration");
 const durationSeconds = durationText === undefined ? undefined : Number(durationText);

@@ -2,7 +2,7 @@ import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
 import type { FishNetCombatEvent } from "./combat-tracker.ts";
 import { DEFAULT_CURRENT_TAU_SECONDS, DamageReducer } from "./reducers/damage.ts";
 import type { CombatIdentity, EncounterAggregate } from "./reducers/damage.ts";
-import { MeterReducer } from "./reducers/meter.ts";
+import { MeterReducerGroup } from "./reducers/meter-group.ts";
 import { renderEncounter } from "./reducers/rows.ts";
 import type { FishNetDpsEncounterSnapshot } from "./snapshot.ts";
 
@@ -62,8 +62,7 @@ export class LiveCombatService {
   private readonly minimumDurationMs: number;
   private readonly retainedFinishedEncounters: number;
   private readonly onEncounterFinished?: LiveCombatOptions["onEncounterFinished"];
-  private readonly tanked: MeterReducer;
-  private readonly healing: MeterReducer;
+  private readonly meters: MeterReducerGroup;
   private meterId?: string;
   private lastEventAtMs?: number;
   /** The finished encounter is retained as aggregates rather than a rendered record, so changing the personal actor re-renders it too. */
@@ -89,8 +88,7 @@ export class LiveCombatService {
       maxTimelineBuckets: timelinePoints,
       onEncounterFinished: (encounter) => this.finishMeter(encounter),
     });
-    this.tanked = new MeterReducer({ kind: "tanked", currentTauSeconds: this.currentTauSeconds, maxTimelineBuckets: timelinePoints });
-    this.healing = new MeterReducer({ kind: "healing", currentTauSeconds: this.currentTauSeconds, maxTimelineBuckets: timelinePoints });
+    this.meters = new MeterReducerGroup({ currentTauSeconds: this.currentTauSeconds, maxTimelineBuckets: timelinePoints });
   }
 
   consumeIdentity(event: FishNetActorIdentityEvent, observedAtMs: number): void {
@@ -98,8 +96,7 @@ export class LiveCombatService {
     const previous = event.operation === "reset" ? undefined : this.reducer.identities.get(event.actorId);
     const hadIdentities = this.reducer.identities.size > 0;
     this.reducer.consumeIdentity(event, observedAtMs);
-    this.tanked.consumeIdentity(event);
-    this.healing.consumeIdentity(event);
+    this.meters.consumeIdentity(event);
     if (this.identityChanged(event, previous, hadIdentities)) this.revision += 1;
   }
 
@@ -171,31 +168,32 @@ export class LiveCombatService {
     if (this.meterId === encounter.id) return;
     this.meterId = encounter.id;
     this.lastEventAtMs = encounter.startedAtMs;
-    this.tanked.begin(encounter.id, encounter.startedAtMs);
-    this.healing.begin(encounter.id, encounter.startedAtMs);
   }
 
   private recordMeterEvent(event: FishNetCombatEvent, observedAtMs: number): void {
     if (this.meterId === undefined) return;
-    const identities = this.reducer.identities;
-    this.tanked.consumeCombat(event, observedAtMs, identities, this.reducer.mobIdentities);
-    this.healing.consumeCombat(event, observedAtMs, identities);
+    this.meters.consumeCombat(
+      this.reducer.current,
+      event,
+      observedAtMs,
+      this.reducer.identities,
+      this.reducer.mobIdentities,
+    );
     this.lastEventAtMs = Math.max(this.lastEventAtMs ?? observedAtMs, observedAtMs);
   }
 
   private finishMeter(encounter: EncounterAggregate): void {
     this.ensureMeter(encounter);
     const endedAtMs = encounter.endedAtMs ?? encounter.lastDamageAtMs;
+    const meterAggregates = this.meters.finish(endedAtMs);
     const finished: FinishedEncounter = {
       encounter,
       endedAtMs,
       lastEventAtMs: this.lastEventAtMs ?? encounter.lastDamageAtMs,
-      ...(this.tanked.current === undefined ? {} : { tanked: this.tanked.current }),
-      ...(this.healing.current === undefined ? {} : { healing: this.healing.current }),
+      ...(meterAggregates.get("tanked") === undefined ? {} : { tanked: meterAggregates.get("tanked")! }),
+      ...(meterAggregates.get("healing") === undefined ? {} : { healing: meterAggregates.get("healing")! }),
     };
     const record = this.renderRecord(encounter, endedAtMs, finished);
-    this.tanked.finish(endedAtMs);
-    this.healing.finish(endedAtMs);
     this.meterId = undefined;
     this.lastEventAtMs = undefined;
     this.latestFinished = this.retainedFinishedEncounters > 0 ? finished : undefined;
@@ -234,8 +232,8 @@ export class LiveCombatService {
         minimumDurationMs: this.minimumDurationMs,
         ...personal,
       }),
-      tps: render(finished ? finished.tanked : this.tanked.current),
-      hps: render(finished ? finished.healing : this.healing.current),
+      tps: render(finished ? finished.tanked : this.meters.current("tanked")),
+      hps: render(finished ? finished.healing : this.meters.current("healing")),
     };
   }
 }

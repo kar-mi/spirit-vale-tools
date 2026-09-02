@@ -5,8 +5,7 @@ import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import { parseDpsLogRecord } from "../replay.ts";
 import { DamageReducer, createActor } from "../reducers/damage.ts";
 import type { CombatIdentity, DamageReducerOptions, DeathHitRecord, DeathRecord, EncounterAggregate } from "../reducers/damage.ts";
-import { MeterReducer } from "../reducers/meter.ts";
-import type { MeterKind } from "../reducers/meter.ts";
+import { MeterReducerGroup } from "../reducers/meter-group.ts";
 import { takeDirtyFrom } from "../reducers/timeline.ts";
 import { COMBAT_DOMAIN_NAME } from "./domain.ts";
 
@@ -15,11 +14,6 @@ type StoredMeter = "dps" | "tanked" | "healing";
 
 /** Pseudo-meter tag for the shield-absorption rows parked in `combat_skills`/`combat_targets` beside the tanked rows. */
 const ABSORBED_METER = "absorbed";
-
-const METER_KINDS: readonly { meter: StoredMeter; kind: MeterKind }[] = [
-  { meter: "tanked", kind: "tanked" },
-  { meter: "healing", kind: "healing" },
-];
 
 export interface IndexCombatStreamOptions extends Pick<DamageReducerOptions, "idleGapMs" | "currentTauSeconds"> {
   sessionId: string;
@@ -37,20 +31,13 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
   let lastObservedAtMs = 0;
 
   // The tanked and healing meters follow the damage reducer's encounter boundaries; only outgoing party damage defines an encounter.
-  const meters = METER_KINDS.map(({ meter, kind }) => ({
-    meter,
-    reducer: new MeterReducer({
-      kind,
-      ...(options.currentTauSeconds === undefined ? {} : { currentTauSeconds: options.currentTauSeconds }),
-    }),
-  }));
+  const meters = new MeterReducerGroup({
+    ...(options.currentTauSeconds === undefined ? {} : { currentTauSeconds: options.currentTauSeconds }),
+  });
   const meterAggregates = new Map<string, Map<StoredMeter, EncounterAggregate>>();
 
   const captureMeters = (encounterId: string): void => {
-    const byMeter = meterAggregates.get(encounterId) ?? new Map<StoredMeter, EncounterAggregate>();
-    for (const entry of meters) {
-      if (entry.reducer.current) byMeter.set(entry.meter, entry.reducer.current);
-    }
+    const byMeter = new Map<StoredMeter, EncounterAggregate>(meters.snapshot());
     if (byMeter.size > 0) meterAggregates.set(encounterId, byMeter);
   };
 
@@ -60,7 +47,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
     createEncounterId: () => `enc-${currentSequence}`,
     onEncounterFinished: (encounter) => {
       captureMeters(encounter.id);
-      for (const entry of meters) entry.reducer.finish(encounter.endedAtMs ?? encounter.lastDamageAtMs);
+      meters.finish(encounter.endedAtMs ?? encounter.lastDamageAtMs);
       finished.push(encounter);
     },
   });
@@ -73,9 +60,8 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
     reducer.resume(open);
     // Restore the meters' open aggregates too, or a resumed pass would restart their totals at zero
     // while the damage totals continued.
-    for (const entry of meters) {
-      entry.reducer.resume(loadMeterAggregate(model, sessionId, open, entry.meter));
-    }
+    meters.resume("tanked", loadMeterAggregate(model, sessionId, open, "tanked"));
+    meters.resume("healing", loadMeterAggregate(model, sessionId, open, "healing"));
   }
 
   const request: IndexStreamRequest = {
@@ -115,7 +101,7 @@ export async function indexCombatStream(model: ReadModel, options: IndexCombatSt
       reducer.identities.clear();
       reducer.mobIdentities.clear();
       reducer.recentHits.clear();
-      for (const entry of meters) entry.reducer.reset();
+      meters.reset();
       meterAggregates.clear();
       finished.length = 0;
     },
@@ -158,7 +144,7 @@ function statements(model: ReadModel): { query: (sql: string) => Statement } {
 
 function consume(
   reducer: DamageReducer,
-  meters: readonly { meter: StoredMeter; reducer: MeterReducer }[],
+  meters: MeterReducerGroup,
   record: LogRecord,
   note: (sequence: number, observedAtMs: number) => void,
 ): void {
@@ -169,18 +155,13 @@ function consume(
   note(record.sequence, observedAtMs);
   if (event.kind === "actorIdentity") {
     reducer.consumeIdentity(event, observedAtMs);
-    for (const entry of meters) entry.reducer.consumeIdentity(event);
+    meters.consumeIdentity(event);
     return;
   }
   // The reducer owns encounter boundaries, so it runs first: it may close an encounter that has gone
   // idle, and an incoming hit or heal arriving after that cutoff belongs to no encounter at all.
   reducer.consumeCombat(event, observedAtMs);
-  const encounter = reducer.current;
-  if (!encounter) return;
-  for (const entry of meters) {
-    if (entry.reducer.current?.id !== encounter.id) entry.reducer.begin(encounter.id, encounter.startedAtMs);
-    entry.reducer.consumeCombat(event, observedAtMs, reducer.identities, reducer.mobIdentities);
-  }
+  meters.consumeCombat(reducer.current, event, observedAtMs, reducer.identities, reducer.mobIdentities);
 }
 
 /** Writes through the model's statement cache so repeated indexing reuses prepared SQL. */

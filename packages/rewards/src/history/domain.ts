@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import type { ReadModelDomain } from "@kar-mi/spirit-vale-tools-sqlite";
 
 export const REWARDS_DOMAIN_NAME = "rewards";
-export const REWARDS_DOMAIN_VERSION = 3;
+export const REWARDS_DOMAIN_VERSION = 4;
 
 const SCHEMA = `
 create table if not exists reward_kills (session_id text not null, kill_id text not null, sequence integer not null, recorded_at_ms integer not null, tick integer not null, mob_id text not null, display_name text not null, mob_level integer not null, mob_rank integer, boss integer not null, object_id integer not null, experience integer not null, job_experience integer not null, coins integer not null, attributed integer not null default 1, primary key(session_id, kill_id));

@@ -86,6 +86,12 @@ describe("log record encoding", () => {
     expect(parseLogStreamHeader({ ...HEADER, producer: "" })).toBeUndefined();
   });
 
+  test("accepts every declared stream in a header", () => {
+    for (const stream of ["capture", "combat", "market", "rewards", "other"] as const) {
+      expect(parseLogStreamHeader({ ...HEADER, stream })?.stream).toBe(stream);
+    }
+  });
+
   test("rejects records that are not records", () => {
     expect(parseLogRecord({ kind: "damage", tick: 1 })).toBeUndefined();
     expect(parseLogRecord({ seq: 0, at: 1, type: "combat.event", data: {} })).toBeUndefined();

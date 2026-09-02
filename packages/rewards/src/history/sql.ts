@@ -17,19 +17,19 @@ export const REWARD_SQL = {
     on conflict(session_id, mob_id, category, item_id) do update set count = count + excluded.count`,
   insertUnmatched: `insert or ignore into reward_unmatched_events
     (session_id, sequence, recorded_at_ms, reason, reward, experience, job_experience, coins)
-    values ($sessionId, $sequence, $atMs, $reason, $reward, $experience, $jobExperience, 0)`,
+    values ($sessionId, $sequence, $atMs, $reason, $reward, $experience, $jobExperience, $coins)`,
   insertUnmatchedDrop: `insert or replace into reward_unmatched_drops
     (session_id, sequence, category, item_id, count) values ($sessionId, $sequence, $category, $itemId, $count)`,
   upsertUnmatched: `insert into reward_unmatched_totals
     (session_id, unmatched, experience, job_experience, coins, ambiguous, expired, unidentified)
-    values ($sessionId, 1, $experience, $jobExperience, 0, $ambiguous, $expired, $unidentified)
+    values ($sessionId, 1, $experience, $jobExperience, $coins, $ambiguous, $expired, $unidentified)
     on conflict(session_id) do update set
       unmatched = unmatched + 1, experience = experience + excluded.experience,
-      job_experience = job_experience + excluded.job_experience,
+      job_experience = job_experience + excluded.job_experience, coins = coins + excluded.coins,
       ambiguous = ambiguous + excluded.ambiguous, expired = expired + excluded.expired,
       unidentified = unidentified + excluded.unidentified`,
   summaryKills: "select coalesce(sum(experience), 0) as experience, coalesce(sum(job_experience), 0) as job_experience, coalesce(sum(coins), 0) as coins, count(*) as kills from reward_kills where session_id = $sessionId",
-  summaryUnmatched: "select coalesce(unmatched, 0) as unmatched, coalesce(experience, 0) as experience, coalesce(job_experience, 0) as job_experience, coalesce(ambiguous, 0) as ambiguous, coalesce(expired, 0) as expired, coalesce(unidentified, 0) as unidentified from reward_unmatched_totals where session_id = $sessionId",
+  summaryUnmatched: "select coalesce(unmatched, 0) as unmatched, coalesce(experience, 0) as experience, coalesce(job_experience, 0) as job_experience, coalesce(coins, 0) as coins, coalesce(ambiguous, 0) as ambiguous, coalesce(expired, 0) as expired, coalesce(unidentified, 0) as unidentified from reward_unmatched_totals where session_id = $sessionId",
   listKills: "select * from reward_kills where session_id = $sessionId",
   chartKills: "select recorded_at_ms, experience, job_experience, coins from reward_kills where session_id = $sessionId order by recorded_at_ms, sequence",
   chart: `with events as (

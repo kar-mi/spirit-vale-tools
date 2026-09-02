@@ -24,10 +24,10 @@ function writeRecord(model: ReadModel, _database: Database, sessionId: string, r
     model.statement(REWARD_SQL.upsertMob).run({ sessionId, mobId: event.mob.mobId, displayName: event.mob.displayName, level: event.mob.level, boss: event.mob.boss ? 1 : 0, attributed: event.attributed ? 1 : 0, experience: event.experience, jobExperience: event.jobExperience, coins: event.coins });
     for (const drop of event.drops) model.statement(REWARD_SQL.upsertMobDrop).run({ sessionId, mobId: event.mob.mobId, category: drop.category, itemId: drop.itemId, count: drop.count });
   } else {
-    const inserted = model.statement(REWARD_SQL.insertUnmatched).run({ sessionId, sequence: record.sequence, atMs, reason: event.reason, reward: event.reward, experience: event.reward === "experience" ? event.experience : 0, jobExperience: event.reward === "experience" ? event.jobExperience : 0 });
+    const inserted = model.statement(REWARD_SQL.insertUnmatched).run({ sessionId, sequence: record.sequence, atMs, reason: event.reason, reward: event.reward, experience: event.reward === "experience" ? event.experience : 0, jobExperience: event.reward === "experience" ? event.jobExperience : 0, coins: event.reward === "experience" ? event.coins : 0n });
     if (inserted.changes === 0) return 0;
     for (const drop of event.drops) model.statement(REWARD_SQL.insertUnmatchedDrop).run({ sessionId, sequence: record.sequence, category: drop.category, itemId: drop.itemId, count: drop.count });
-    model.statement(REWARD_SQL.upsertUnmatched).run({ sessionId, experience: event.reward === "experience" ? event.experience : 0, jobExperience: event.reward === "experience" ? event.jobExperience : 0, ambiguous: event.reason === "ambiguous" ? 1 : 0, expired: event.reason === "expired" ? 1 : 0, unidentified: event.reason === "unidentified" ? 1 : 0 });
+    model.statement(REWARD_SQL.upsertUnmatched).run({ sessionId, experience: event.reward === "experience" ? event.experience : 0, jobExperience: event.reward === "experience" ? event.jobExperience : 0, coins: event.reward === "experience" ? event.coins : 0n, ambiguous: event.reason === "ambiguous" ? 1 : 0, expired: event.reason === "expired" ? 1 : 0, unidentified: event.reason === "unidentified" ? 1 : 0 });
   }
   return 0;
 }

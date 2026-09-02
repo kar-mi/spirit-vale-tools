@@ -78,5 +78,5 @@ function isIsoDate(value: unknown): value is string {
 
 function isLogStream(value: unknown): value is LogStream {
   return value === "capture" || value === "combat"
-    || value === "rewards" || value === "other";
+    || value === "market" || value === "rewards" || value === "other";
 }

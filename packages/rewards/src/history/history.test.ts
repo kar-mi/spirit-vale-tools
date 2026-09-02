@@ -28,13 +28,13 @@ describe("reward history", () => {
       const store = new RewardHistoryStore(model);
       const summary = store.getSummary(SESSION, { recentKillLimit: 1, chartPoints: 2 });
       expect(summary.killCount).toBe(2); expect(summary.recentKills).toHaveLength(1); expect(summary.recentKills[0]!.tick).toBe(3_600_007); expect(summary.recentKills[0]!.mob.rank).toBe(4);
-      expect(summary.totalCoins).toBe(9007199254740995n); expect(summary.chart.length).toBeLessThanOrEqual(2); expect(summary.chart.reduce((sum, bucket) => sum + bucket.experience, 0)).toBe(205);
+      expect(summary.totalCoins).toBe(9007199254741994n); expect(summary.chart.length).toBeLessThanOrEqual(2); expect(summary.chart.reduce((sum, bucket) => sum + bucket.experience, 0)).toBe(205);
       const firstPage = store.listKills({ sessionId: SESSION, limit: 1 });
       expect(firstPage.nextCursor).toBeDefined();
       const secondPage = store.listKills({ sessionId: SESSION, limit: 1, cursor: firstPage.nextCursor });
       expect([...firstPage.items, ...secondPage.items].map((item) => item.id)).toEqual(["b", "a"]);
       expect(store.listKills({ sessionId: SESSION, mobId: "missing.mob" }).items).toEqual([]);
-      const again = await indexRewardStream(model, { sessionId: SESSION, sourcePath: logPath }); expect(again.recordsIndexed).toBe(0); expect(store.getSummary(SESSION).totalCoins).toBe(9007199254740995n);
+      const again = await indexRewardStream(model, { sessionId: SESSION, sourcePath: logPath }); expect(again.recordsIndexed).toBe(0); expect(store.getSummary(SESSION).totalCoins).toBe(9007199254741994n);
     } finally { model.close(); await rm(root, { recursive: true, force: true }); }
   });
 });

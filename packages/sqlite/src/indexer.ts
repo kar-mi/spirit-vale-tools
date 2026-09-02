@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 
-import { JsonlTailReader, isLogStreamHeader, isMissing, parseLogRecord } from "@kar-mi/spirit-vale-tools-logging";
+import { JsonlTailReader, LogRecordLineDecoder, isMissing } from "@kar-mi/spirit-vale-tools-logging";
 import type { Database } from "bun:sqlite";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 
@@ -96,6 +96,7 @@ async function indexFrom(
   let recordsIndexed = 0;
   let invalidLines = 0;
   let lastSequence = start.lastSequence;
+  const records = new LogRecordLineDecoder();
 
   for (;;) {
     const { missing, bytesRead, lines } = await reader.read();
@@ -103,21 +104,13 @@ async function indexFrom(
 
     const batch: LogRecord[] = [];
     for (const line of lines) {
-      if (!line.trim()) continue;
-      let value: unknown;
-      try {
-        value = JSON.parse(line);
-      } catch {
+      const decoded = records.decode(line);
+      if (decoded.kind === "empty" || decoded.kind === "header") continue;
+      if (decoded.kind === "invalid") {
         invalidLines += 1;
         continue;
       }
-      // A v2 file opens with a stream header, which carries no record and is not a malformed line.
-      if (isLogStreamHeader(value)) continue;
-      const record = parseLogRecord(value);
-      if (!record) {
-        invalidLines += 1;
-        continue;
-      }
+      const record = decoded.record;
       if (record.sequence <= lastSequence) {
         if (allowRegression) return { recordsIndexed, invalidLines, ...start, regressed: true };
         // Already re-read from byte 0, so a still-rewound record is anomalous data, not a stale offset.

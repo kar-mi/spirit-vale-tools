@@ -1,4 +1,4 @@
-import { FishNetCombatTracker } from "@kar-mi/spirit-vale-tools-combat";
+import { observeFishNetDamagePacket } from "@kar-mi/spirit-vale-tools-combat";
 import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { FishNetMonsterDirectory } from "@kar-mi/spirit-vale-tools-capture";
 import type { ExperienceCoinsState, RewardItem } from "./reward-decoder.ts";
@@ -103,7 +103,6 @@ export class FishNetMobDirectory {
 export class FishNetMobRewardTracker {
   private readonly catalog: MobRewardCatalog;
   private readonly correlationWindowTicks: number;
-  private readonly combat: FishNetCombatTracker;
   private readonly mobs: FishNetMobDirectory;
   private readonly pending: PendingKill[] = [];
   private readonly damagedTargets = new Set<number>();
@@ -116,7 +115,6 @@ export class FishNetMobRewardTracker {
     const window = options.correlationWindowTicks ?? 30;
     if (!Number.isInteger(window) || window < 0) throw new Error("correlationWindowTicks must be a non-negative integer");
     this.correlationWindowTicks = window;
-    this.combat = new FishNetCombatTracker({ buildFingerprint: this.catalog.buildFingerprint });
     this.mobs = new FishNetMobDirectory(this.catalog);
   }
 
@@ -128,23 +126,23 @@ export class FishNetMobRewardTracker {
     }
     const events = this.finalizeBefore(packet.tick - this.correlationWindowTicks);
     this.mobs.consume(packet);
-    for (const event of this.combat.consume(packet)) {
+    const damage = observeFishNetDamagePacket(packet);
+    if (damage) {
       // Team 0 is our side's outgoing damage.
-      if (event.kind === "damage" && event.team === 0 && event.value > 0) {
-        this.rememberDamagedTarget(event.targetId);
-        continue;
+      if (damage.kind === "damage" && damage.team === 0 && damage.value > 0) {
+        this.rememberDamagedTarget(damage.targetId);
+      } else if (damage.kind === "death") {
+        // A mob killed outright may only ever produce the death event, so that counts as our damage.
+        const damaged = this.damagedTargets.delete(damage.targetId) || (damage.team === 0 && damage.value > 0);
+        this.pending.push({
+          id: `kill-${this.nextKill++}`,
+          tick: damage.tick,
+          mob: this.mobs.get(damage.targetId),
+          drops: [],
+          ambiguous: false,
+          damaged,
+        });
       }
-      if (event.kind !== "death") continue;
-      // A mob killed outright may only ever produce the death event, so that counts as our damage.
-      const damaged = this.damagedTargets.delete(event.targetId) || (event.team === 0 && event.value > 0);
-      this.pending.push({
-        id: `kill-${this.nextKill++}`,
-        tick: event.tick,
-        mob: this.mobs.get(event.targetId),
-        drops: [],
-        ambiguous: false,
-        damaged,
-      });
     }
     const reward = decodeFishNetRewardPacket(packet);
     if (reward?.kind === "experienceState") this.consumeExperience(reward.tick, reward.state);
@@ -164,7 +162,6 @@ export class FishNetMobRewardTracker {
    */
   flushSessionBoundary(): FishNetMobRewardEvent[] {
     const events = [...this.flush(), ...this.queuedEvents.splice(0)];
-    this.combat.reset();
     return events.sort((left, right) => left.tick - right.tick);
   }
 
@@ -172,7 +169,6 @@ export class FishNetMobRewardTracker {
     this.pending.length = 0;
     this.queuedEvents.length = 0;
     this.baseline = undefined;
-    this.combat.reset();
     this.mobs.reset();
     this.damagedTargets.clear();
   }

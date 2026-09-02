@@ -1,6 +1,7 @@
 import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
 import type { RewardItem } from "./reward-decoder.ts";
 import type { MobRewardMobSummary, RecordedMobRewardKill } from "./session.ts";
+import { RewardAccumulator } from "./reward-aggregate.ts";
 
 export interface RewardChartBucket {
   startMs: number;
@@ -31,24 +32,14 @@ export interface LiveRewardOptions {
 
 export interface LiveRewardConsumeContext { recordedAt?: string | number }
 
-type MobAggregate = MobRewardMobSummary;
-
 export class LiveRewardService {
   private readonly recentKillLimit: number;
   private readonly chartPoints: number;
-  private readonly recent: RecordedMobRewardKill[] = [];
-  private readonly mobsById = new Map<string, MobAggregate>();
+  private readonly aggregate = new RewardAccumulator();
   private readonly buckets: RewardChartBucket[] = [];
   private chartOriginMs?: number;
   private chartWidthMs = 1;
   private revisionValue = 0;
-  private killCountValue = 0;
-  private totalExperienceValue = 0;
-  private totalJobExperienceValue = 0;
-  private totalCoinsValue = 0n;
-  private unmatchedValue = 0;
-  private unmatchedDropsValue: RewardItem[] = [];
-  private readonly reasons = { ambiguous: 0, expired: 0, unidentified: 0 };
 
   constructor(options: LiveRewardOptions = {}) {
     this.recentKillLimit = positive(options.recentKillLimit ?? 100, "recentKillLimit");
@@ -57,44 +48,30 @@ export class LiveRewardService {
 
   consume(event: FishNetMobRewardEvent, context: LiveRewardConsumeContext = {}): void {
     const timestamp = timestampOf(context.recordedAt, event.tick);
+    const recordedAt = context.recordedAt === undefined ? undefined : new Date(timestamp).toISOString();
+    if (!this.aggregate.consume(event, recordedAt)) return;
     if (event.kind === "kill") {
-      this.killCountValue += 1;
-      this.totalExperienceValue += event.experience;
-      this.totalJobExperienceValue += event.jobExperience;
-      this.totalCoinsValue += event.coins;
-      const kill = { ...event, ...(context.recordedAt === undefined ? {} : { recordedAt: new Date(timestamp).toISOString() }), mob: { ...event.mob }, drops: event.drops.map((drop) => ({ ...drop })) };
-      this.recent.unshift(kill);
-      this.recent.length = Math.min(this.recent.length, this.recentKillLimit);
-      const mob = this.mobsById.get(event.mob.mobId) ?? { ...event.mob, kills: 0, attributedKills: 0, experience: 0, jobExperience: 0, coins: 0n, drops: [] };
-      mob.kills += 1; if (event.attributed) mob.attributedKills += 1; mob.experience += event.experience; mob.jobExperience += event.jobExperience; mob.coins += event.coins;
-      mob.drops = mergeItems(mob.drops, event.drops); this.mobsById.set(event.mob.mobId, mob);
       this.addChart(timestamp, event.experience, event.jobExperience, event.coins);
-    } else {
-      this.unmatchedValue += 1; this.reasons[event.reason] += 1;
-      this.unmatchedDropsValue = mergeItems(this.unmatchedDropsValue, event.drops);
-      if (event.reward === "experience") {
-        this.totalExperienceValue += event.experience; this.totalJobExperienceValue += event.jobExperience;
-        this.addChart(timestamp, event.experience, event.jobExperience, 0n);
-      }
+    } else if (event.reward === "experience") {
+      this.addChart(timestamp, event.experience, event.jobExperience, event.coins);
     }
     this.revisionValue += 1;
   }
 
   reset(): void {
-    this.recent.length = 0; this.mobsById.clear(); this.buckets.length = 0;
+    this.aggregate.reset(); this.buckets.length = 0;
     this.chartOriginMs = undefined; this.chartWidthMs = 1;
-    this.revisionValue += 1; this.killCountValue = 0; this.totalExperienceValue = 0; this.totalJobExperienceValue = 0; this.totalCoinsValue = 0n;
-    this.unmatchedValue = 0; this.unmatchedDropsValue = []; this.reasons.ambiguous = 0; this.reasons.expired = 0; this.reasons.unidentified = 0;
+    this.revisionValue += 1;
   }
 
   snapshot(): RewardAggregateSnapshot {
+    const core = this.aggregate.snapshot(this.recentKillLimit);
     return {
-      revision: this.revisionValue, killCount: this.killCountValue,
-      recentKills: this.recent.map(cloneKill),
-      mobs: [...this.mobsById.values()].sort((a, b) => b.kills - a.kills || a.displayName.localeCompare(b.displayName)).map(cloneMob),
-      chart: this.buckets.map((bucket) => ({ ...bucket })), totalExperience: this.totalExperienceValue,
-      totalJobExperience: this.totalJobExperienceValue, totalCoins: this.totalCoinsValue,
-      unmatched: this.unmatchedValue, unmatchedDrops: this.unmatchedDropsValue.map((drop) => ({ ...drop })), unmatchedByReason: { ...this.reasons },
+      revision: this.revisionValue, killCount: this.aggregate.killCount,
+      recentKills: core.kills, mobs: core.mobs,
+      chart: this.buckets.map((bucket) => ({ ...bucket })), totalExperience: core.totalExperience,
+      totalJobExperience: core.totalJobExperience, totalCoins: core.totalCoins,
+      unmatched: core.unmatched, unmatchedDrops: core.unmatchedDrops, unmatchedByReason: core.unmatchedByReason,
     };
   }
 
@@ -128,6 +105,3 @@ export class LiveRewardService {
 
 function positive(value: number, name: string): number { if (!Number.isSafeInteger(value) || value < 1) throw new RangeError(`${name} must be a positive integer`); return value; }
 function timestampOf(value: string | number | undefined, fallback: number): number { const result = typeof value === "number" ? value : value === undefined ? fallback : Date.parse(value); return Number.isFinite(result) ? result : fallback; }
-function mergeItems(left: readonly RewardItem[], right: readonly RewardItem[]): RewardItem[] { const map = new Map<string, RewardItem>(); for (const item of [...left, ...right]) { const key = `${item.category}|${item.itemId}`; const old = map.get(key); if (old) old.count += item.count; else map.set(key, { ...item }); } return [...map.values()]; }
-function cloneKill(kill: RecordedMobRewardKill): RecordedMobRewardKill { return { ...kill, mob: { ...kill.mob }, drops: kill.drops.map((drop) => ({ ...drop })) }; }
-function cloneMob(mob: MobAggregate): MobAggregate { return { ...mob, drops: mob.drops.map((drop) => ({ ...drop })) }; }

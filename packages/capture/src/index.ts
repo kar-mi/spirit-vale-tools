@@ -17,6 +17,12 @@ export type { FieldDecodeRun } from "./fishnet/decoding/fields.ts";
 export { characterDataParameter } from "./fishnet/schema/character-data.ts";
 export { decodeNetworkTransformData, NETWORK_TRANSFORM_RPC_NAMES } from "./fishnet/decoding/network-transform.ts";
 export { resolveBundledMapName } from "./fishnet/mapping/map-names.ts";
+export { FishNetTransportReplay } from "./fishnet/replay.ts";
+export type {
+  FishNetReplayLogRecord,
+  FishNetReplayRecordResult,
+  FishNetTransportReplayStats,
+} from "./fishnet/replay.ts";
 export { compact, count, warnings } from "./text-format.ts";
 export type { BundledFishNetBuildFingerprint } from "./fishnet/mapping/bundled-rpc-map.ts";
 export { FishNetEternalTowerTracker } from "./fishnet/tracking/eternal-tower.ts";

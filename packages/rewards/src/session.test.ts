@@ -45,7 +45,7 @@ test("mob reward session separates identity misses from other unmatched rewards"
   expect(session.snapshot()).toMatchObject({
     totalExperience: 20,
     totalJobExperience: 7,
-    totalCoins: 0n,
+    totalCoins: 9n,
     unmatched: 3,
     unmatchedDrops: [{ category: "material", itemId: "training-material", count: 5 }],
     unmatchedByReason: { unidentified: 1, expired: 1, ambiguous: 1 },

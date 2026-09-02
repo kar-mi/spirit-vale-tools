@@ -9,36 +9,11 @@ import {
   replayMarketCapture,
 } from "@kar-mi/spirit-vale-tools-market";
 import type { FishNetMarketQuery } from "@kar-mi/spirit-vale-tools-market";
+import { bigintOption, jsonObject as encodeJsonObject, nonNegativeIntegerOption as integerOption, option, options } from "./args.ts";
 
-function option(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index >= 0 ? Bun.argv[index + 1] : undefined;
-}
-
-function options(name: string): string[] {
-  const values: string[] = [];
-  for (let index = 0; index < Bun.argv.length; index += 1) {
-    if (Bun.argv[index] !== name) continue;
-    const value = Bun.argv[index + 1];
-    if (value === undefined) throw new Error(`${name} requires a value`);
-    values.push(value);
-  }
-  return values;
-}
-
-function integerOption(name: string): number | undefined {
-  const text = option(name);
-  if (text === undefined) return undefined;
-  const value = Number(text);
-  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${name} must be a non-negative integer`);
-  return value;
-}
-
-function bigintOption(name: string): bigint | undefined {
-  const text = option(name);
-  if (text === undefined) return undefined;
-  try { return BigInt(text); } catch { throw new Error(`${name} must be an integer`); }
-}
+const MARKET_PRIVATE_FIELDS = new Set([
+  "sellerAccountId", "accountId", "visualSnapshotJson", "archetype", "compatibilityFingerprint", "payloadSchemaVersion",
+]);
 
 const input = option("--input");
 const live = Bun.argv.includes("--live");
@@ -130,11 +105,7 @@ function report(market: FishNetMarketTracker, marketQuery: FishNetMarketQuery): 
 }
 
 function jsonObject(value: unknown): JsonObject {
-  return JSON.parse(JSON.stringify(value, (key, entry) => {
-    if (key === "sellerAccountId" || key === "accountId" || key === "visualSnapshotJson" || key === "archetype"
-      || key === "compatibilityFingerprint" || key === "payloadSchemaVersion") return undefined;
-    return typeof entry === "bigint" ? entry.toString() : entry;
-  })) as JsonObject;
+  return encodeJsonObject(value, MARKET_PRIVATE_FIELDS);
 }
 
 function emitMetadataOnce(output: JsonLinesLogger, value: unknown): void {

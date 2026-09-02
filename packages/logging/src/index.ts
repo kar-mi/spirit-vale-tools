@@ -12,6 +12,8 @@ export {
   parseLogRecord,
   parseLogStreamHeader,
 } from "./record-codec.ts";
+export { decoderForText, LogRecordLineDecoder, readTextLines } from "./record-reader.ts";
+export type { DecodedLogLine } from "./record-reader.ts";
 export type {
   CreateLogSessionOptions,
   JsonLinesLoggerOptions,
@@ -50,3 +52,4 @@ export type {
   LogStream,
   LogStreamHeader,
 } from "./types.ts";
+export { compact, count, warnings } from "./text-format.ts";

@@ -2,12 +2,8 @@ import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import { createLogSession } from "@kar-mi/spirit-vale-tools-logging";
 import { FishNetMobRewardTracker, MobRewardSession } from "@kar-mi/spirit-vale-tools-rewards";
 import type { FishNetMobRewardEvent } from "@kar-mi/spirit-vale-tools-rewards";
-import type { JsonLinesLogger, JsonObject } from "@kar-mi/spirit-vale-tools-logging";
-
-function option(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index >= 0 ? Bun.argv[index + 1] : undefined;
-}
+import type { JsonLinesLogger } from "@kar-mi/spirit-vale-tools-logging";
+import { jsonObject, option } from "./args.ts";
 
 const outputPath = option("--output");
 const session = await createLogSession({
@@ -57,10 +53,6 @@ function emit(event: FishNetMobRewardEvent): void {
 function logMessage(output: JsonLinesLogger, type: string, message: string): void {
   output.log(type, { message });
   console.error(`[${type.endsWith("error") ? "error" : "warning"}] ${message}`);
-}
-
-function jsonObject(value: unknown): JsonObject {
-  return JSON.parse(JSON.stringify(value, (_key, entry) => typeof entry === "bigint" ? entry.toString() : entry)) as JsonObject;
 }
 
 process.on("SIGINT", () => void stop());

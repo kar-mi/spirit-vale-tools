@@ -10,10 +10,17 @@ describe("live reward aggregation", () => {
     for (let index = 0; index < 5; index += 1) service.consume(kill(index));
     service.consume({ kind: "unmatched", tick: 10, reason: "expired", reward: "experience", experience: 4, jobExperience: 1, coins: 999n, drops: [] });
     const snapshot = service.snapshot();
-    expect(snapshot.recentKills).toHaveLength(2); expect(snapshot.chart).toHaveLength(2); expect(snapshot.totalExperience).toBe(54); expect(snapshot.totalCoins).toBe(15n);
+    expect(snapshot.recentKills).toHaveLength(2); expect(snapshot.chart).toHaveLength(2); expect(snapshot.totalExperience).toBe(54); expect(snapshot.totalCoins).toBe(1_014n);
     snapshot.recentKills[0]!.drops.push({ category: "material", itemId: "mutated", count: 1 });
     expect(service.snapshot().recentKills[0]!.drops).toHaveLength(0);
     const revision = snapshot.revision; service.reset(); expect(service.snapshot().revision).toBe(revision + 1); expect(service.snapshot().killCount).toBe(0);
+  });
+
+  test("ignores duplicate kill ids consistently with session and history projections", () => {
+    const service = new LiveRewardService();
+    service.consume(kill(1));
+    service.consume(kill(1));
+    expect(service.snapshot()).toMatchObject({ killCount: 1, totalExperience: 10, totalCoins: 3n });
   });
 
   test("compacts the whole bucket generation instead of only the oldest pair", () => {

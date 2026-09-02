@@ -9,6 +9,7 @@ import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import { decodeEffectDisplays } from "./effect-display.ts";
 import { classifyFishNetRecoveryStyle } from "./inference/recovery-style.ts";
+import { observeFishNetDamagePacket } from "./damage-observer.ts";
 import type { FishNetRecoveryStyle } from "./inference/recovery-style.ts";
 import {
   BARRIER_SKILL_IDS,
@@ -441,7 +442,7 @@ export class FishNetCombatTracker {
     if ((packet.rpcName === "ApplyDamage_C" || packet.rpcName === "Death_C")
       && matchesBehaviour(packet, "HealthComponent")) {
       const death = packet.rpcName === "Death_C";
-      if (!isCompleteDamagePacket(packet, !death)) return events;
+      if (!observeFishNetDamagePacket(packet)) return events;
       events.push(...this.consumeDamage(packet, death));
       return events;
     }
@@ -1512,25 +1513,6 @@ function requiredVectorField(packet: DecodedFishNetPacket, name: string): number
   const value = field(packet, name);
   if (!Array.isArray(value)) throw new Error(`${packet.networkBehaviourType}.${packet.rpcName} is missing vector field ${name}`);
   return value;
-}
-
-function isCompleteDamagePacket(packet: DecodedFishNetPacket, requireVectors: boolean): boolean {
-  const numeric = [
-    "dmg.Team",
-    "dmg.Value",
-    "dmg.Type",
-    "dmg.Hit",
-    "dmg.Hits",
-    "dmg.AttackerId",
-    "dmg.Element",
-    "dmg.WeaponType",
-    "dmg.Range",
-  ];
-  return numeric.every((name) => numberField(packet, name) !== undefined)
-    && nullableStringField(packet, "dmg.DamageSourceId") !== undefined
-    && typeof field(packet, "dmg.IsClone") === "boolean"
-    && typeof field(packet, "dmg.IsSummon") === "boolean"
-    && (!requireVectors || (Array.isArray(field(packet, "position")) && Array.isArray(field(packet, "origin"))));
 }
 
 function isCompleteRecoverPacket(packet: DecodedFishNetPacket): boolean {

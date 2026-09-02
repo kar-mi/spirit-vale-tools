@@ -1,9 +1,9 @@
 import {
   DEFAULT_STREAM_BATCH_BYTES,
+  decoderForText,
   JsonlTailReader,
+  LogRecordLineDecoder,
   LiveLogSessionFollower,
-  isLogStreamHeader,
-  parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { JsonlTailReadResult, LiveLogSessionFollowerOptions } from "@kar-mi/spirit-vale-tools-logging";
 import type { FishNetActorIdentityEvent } from "./actor-directory.ts";
@@ -14,7 +14,6 @@ export interface TimedDpsLogEvent {
   event: FishNetActorIdentityEvent | FishNetCombatEvent;
   observedAtMs: number;
 }
-
 export interface DpsLogBatch {
   events: TimedDpsLogEvent[];
   invalidLines: number;
@@ -31,6 +30,7 @@ export interface DpsLogBatch {
 /** Incrementally reads an actively-written combat JSON Lines file. */
 export class DpsLogFollower {
   private readonly reader: JsonlTailReader;
+  private readonly records = new LogRecordLineDecoder();
   private recordedAtOriginMs?: number;
   private lastObservedAtMs = 0;
   private originTick?: number;
@@ -38,7 +38,7 @@ export class DpsLogFollower {
   private revision = 0;
 
   constructor(path: string, private readonly ticksPerSecond = 30) {
-    this.reader = new JsonlTailReader(path, { createDecoder: decoderFor, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
+    this.reader = new JsonlTailReader(path, { createDecoder: decoderForText, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
   }
 
   async poll(): Promise<DpsLogBatch> {
@@ -60,20 +60,13 @@ export class DpsLogFollower {
     const events: TimedDpsLogEvent[] = [];
     let invalidLines = 0;
     for (const line of lines) {
-      if (!line.trim()) continue;
-      let candidate: unknown;
-      try {
-        candidate = JSON.parse(line);
-      } catch {
+      const decoded = this.records.decode(line);
+      if (decoded.kind === "empty" || decoded.kind === "header") continue;
+      if (decoded.kind === "invalid") {
         invalidLines += 1;
         continue;
       }
-      if (isLogStreamHeader(candidate)) continue;
-      const record = parseLogRecord(candidate);
-      if (!record) {
-        invalidLines += 1;
-        continue;
-      }
+      const record = decoded.record;
       const event = parseDpsLogRecord(record.type, record.data);
       if (event === null) continue;
       if (!event) {
@@ -105,6 +98,7 @@ export class DpsLogFollower {
   }
 
   private resetState(): void {
+    this.records.reset();
     this.recordedAtOriginMs = undefined;
     this.lastObservedAtMs = 0;
     this.originTick = undefined;
@@ -127,7 +121,7 @@ export class DpsSessionLogFollower {
       stream: "combat",
       ...(logDirectory === undefined ? {} : { logDirectory }),
       ...tuning,
-      readerOptions: { createDecoder: decoderFor, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
+      readerOptions: { createDecoder: decoderForText, maxReadBytes: DEFAULT_STREAM_BATCH_BYTES },
       createFollower: (path) => new DpsLogFollower(path, ticks),
       mergeSessionChange: (batch, changedSession) => ({
         ...batch,
@@ -158,10 +152,4 @@ export class DpsSessionLogFollower {
   close(): void {
     this.inner.close();
   }
-}
-
-function decoderFor(firstChunk: Uint8Array): TextDecoder {
-  if (firstChunk[0] === 0xff && firstChunk[1] === 0xfe) return new TextDecoder("utf-16le");
-  if (firstChunk[0] === 0xfe && firstChunk[1] === 0xff) return new TextDecoder("utf-16be");
-  return new TextDecoder("utf-8");
 }

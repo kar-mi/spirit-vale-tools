@@ -2,11 +2,7 @@ import type { CaptureProtocol } from "@kar-mi/spirit-vale-tools-capture";
 import { PacketCapture } from "@kar-mi/spirit-vale-tools-capture/capture";
 import { FishNetActorDirectory, FishNetPositionTracker } from "@kar-mi/spirit-vale-tools-combat";
 import { FishNetCharacterTracker } from "@kar-mi/spirit-vale-tools-character";
-
-function option(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index >= 0 ? Bun.argv[index + 1] : undefined;
-}
+import { option } from "./args.ts";
 
 const targetProcessName = Bun.argv.includes("--all-processes") ? undefined : option("--process") ?? "SpiritVale.exe";
 const fishNetBuildFingerprint = option("--fishnet-build");

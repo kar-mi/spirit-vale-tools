@@ -3,9 +3,9 @@ import {
   DEFAULT_STREAM_BATCH_BYTES,
   isRecord as record,
   JsonlTailReader,
+  LogRecordLineDecoder,
   LiveLogSessionFollower,
-  isLogStreamHeader,
-  parseLogRecord,
+  readTextLines,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type {
   JsonlTailReadResult,
@@ -38,6 +38,7 @@ export interface RewardLogFollowerOptions {
 
 export class RewardLogFollower {
   private readonly reader: JsonlTailReader;
+  private readonly records = new LogRecordLineDecoder();
   private readonly session = new MobRewardSession();
   private readonly onExperience?: (experience: number, recordedAtMs: number) => void;
   private status: RewardLogStatus = "watching";
@@ -62,12 +63,10 @@ export class RewardLogFollower {
     let invalidLines = 0;
     let changed = false;
     for (const line of lines) {
-      if (!line.trim()) continue;
-      let candidate: unknown;
-      try { candidate = JSON.parse(line); } catch { invalidLines += 1; continue; }
-      if (isLogStreamHeader(candidate)) continue;
-      const record = parseLogRecord(candidate);
-      if (!record) { invalidLines += 1; continue; }
+      const decoded = this.records.decode(line);
+      if (decoded.kind === "empty" || decoded.kind === "header") continue;
+      if (decoded.kind === "invalid") { invalidLines += 1; continue; }
+      const record = decoded.record;
       if (record.type === "rewards.lifecycle") {
         const state = record.data["state"];
         if (state === "started") this.status = this.session.snapshot().kills.length > 0 ? "ready" : "watching";
@@ -92,6 +91,7 @@ export class RewardLogFollower {
   }
 
   private resetState(): void {
+    this.records.reset();
     this.session.reset();
     this.status = "watching";
   }
@@ -166,6 +166,7 @@ export interface LiveRewardLogBatch {
 /** Bounded follower for dashboards; the legacy RewardLogFollower remains full-history. */
 export class LiveRewardLogFollower {
   private readonly reader: JsonlTailReader;
+  private readonly records = new LogRecordLineDecoder();
   private readonly service: LiveRewardService;
   private readonly sourcePath: string;
   private status: RewardLogStatus = "watching";
@@ -175,13 +176,13 @@ export class LiveRewardLogFollower {
   }
   consumeRead({ missing, reset, lines }: JsonlTailReadResult): LiveRewardLogBatch {
     if (missing) return this.batch(true, false, false, 0);
-    if (reset) { this.service.reset(); this.status = "watching"; }
+    if (reset) { this.records.reset(); this.service.reset(); this.status = "watching"; }
     let invalidLines = 0; let changed = false;
     for (const line of lines) {
-      if (!line.trim()) continue;
-      let value: unknown; try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
-      if (isLogStreamHeader(value)) continue;
-      const record = parseLogRecord(value); if (!record) { invalidLines += 1; continue; }
+      const decoded = this.records.decode(line);
+      if (decoded.kind === "empty" || decoded.kind === "header") continue;
+      if (decoded.kind === "invalid") { invalidLines += 1; continue; }
+      const record = decoded.record;
       if (record.type === "rewards.lifecycle") { const state = record.data["state"]; if (state === "started") this.status = "ready"; else if (state === "stopped") this.status = "stopped"; else invalidLines += 1; changed = true; continue; }
       if (record.type === "rewards.error") { this.status = "error"; changed = true; continue; }
       const event = parseRewardLogRecord(record.type, record.data); if (!event) { if (record.type === "rewards.kill" || record.type === "rewards.unmatched") invalidLines += 1; continue; }
@@ -222,37 +223,16 @@ export class LiveRewardSessionLogFollower {
 
 export { LiveRewardSessionLogFollower as BoundedRewardSessionLogFollower };
 
-/** Splits a byte stream into lines without a Node builtin. */
-async function* readLines(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let pending = "";
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      pending += decoder.decode(value, { stream: true });
-      const lines = pending.split(/\r?\n/);
-      pending = lines.pop() ?? "";
-      yield* lines;
-    }
-    pending += decoder.decode();
-    if (pending) yield pending;
-  } finally {
-    reader.releaseLock();
-  }
-}
-
 export async function loadRewardReplay(path: string): Promise<{ snapshot: MobRewardSessionSnapshot; invalidLines: number }> {
   const session = new MobRewardSession();
+  const records = new LogRecordLineDecoder();
   let invalidLines = 0;
-  for await (const line of readLines(Bun.file(path).stream())) {
-    if (!line.trim()) continue;
-    let value: unknown;
-    try { value = JSON.parse(line); } catch { invalidLines += 1; continue; }
-    if (isLogStreamHeader(value)) continue;
-    const record = parseLogRecord(value);
-    if (!record || (record.type !== "rewards.kill" && record.type !== "rewards.unmatched")) continue;
+  for await (const line of readTextLines(Bun.file(path).stream())) {
+    const decoded = records.decode(line);
+    if (decoded.kind === "empty" || decoded.kind === "header") continue;
+    if (decoded.kind === "invalid") { invalidLines += 1; continue; }
+    const record = decoded.record;
+    if (record.type !== "rewards.kill" && record.type !== "rewards.unmatched") continue;
     const event = parseRewardLogRecord(record.type, record.data);
     if (!event) invalidLines += 1;
     else session.consume(event, { recordedAt: record.recordedAt });

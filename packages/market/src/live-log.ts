@@ -1,9 +1,8 @@
 import {
   DEFAULT_STREAM_BATCH_BYTES,
-  isLogStreamHeader,
   JsonlTailReader,
+  LogRecordLineDecoder,
   LiveLogSessionFollower,
-  parseLogRecord,
 } from "@kar-mi/spirit-vale-tools-logging";
 import type { JsonlTailReadResult, LiveLogSessionFollowerOptions, LiveLogStatus } from "@kar-mi/spirit-vale-tools-logging";
 import { parseMarketEventLogData } from "./event-log.ts";
@@ -25,6 +24,7 @@ export interface MarketLogBatch {
 
 export class MarketLogFollower {
   private readonly reader: JsonlTailReader;
+  private readonly records = new LogRecordLineDecoder();
   private readonly tracker = new FishNetMarketTracker();
   private status: MarketLogStatus = "watching";
   private observedAt?: string;
@@ -41,12 +41,10 @@ export class MarketLogFollower {
     let invalidLines = 0;
     let changed = false;
     for (const line of lines) {
-      if (!line.trim()) continue;
-      let candidate: unknown;
-      try { candidate = JSON.parse(line); } catch { invalidLines += 1; continue; }
-      if (isLogStreamHeader(candidate)) continue;
-      const record = parseLogRecord(candidate);
-      if (!record) { invalidLines += 1; continue; }
+      const decoded = this.records.decode(line);
+      if (decoded.kind === "empty" || decoded.kind === "header") continue;
+      if (decoded.kind === "invalid") { invalidLines += 1; continue; }
+      const record = decoded.record;
       if (record.type === "market.lifecycle") {
         const state = record.data["state"];
         if (state === "started") this.status = this.tracker.snapshot().listings.length ? "ready" : "watching";
@@ -69,6 +67,7 @@ export class MarketLogFollower {
   }
 
   private resetState(): void {
+    this.records.reset();
     this.tracker.reset();
     this.status = "watching";
     this.observedAt = undefined;
