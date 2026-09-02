@@ -1,5 +1,5 @@
-import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
-import type { RewardItem } from "./reward-decoder.ts";
+import type { FishNetMobRewardEvent } from "../tracking/reward-tracker.ts";
+import type { RewardItem } from "../tracking/reward-decoder.ts";
 import type { MobRewardMobSummary, RecordedMobRewardKill } from "./session.ts";
 import { RewardAccumulator } from "./reward-aggregate.ts";
 

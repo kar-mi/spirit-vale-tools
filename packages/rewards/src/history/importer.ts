@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import type { LogRecord } from "@kar-mi/spirit-vale-tools-logging";
 import type { IndexStreamResult, ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
-import { parseRewardLogRecord } from "../live-log.ts";
+import { parseRewardLogRecord } from "../stream/record.ts";
 import { REWARDS_DOMAIN_NAME, REWARD_TABLES } from "./domain.ts";
 import { REWARD_SQL } from "./sql.ts";
 

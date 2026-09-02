@@ -3,8 +3,8 @@ import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
 import { FishNetMonsterDirectory } from "@kar-mi/spirit-vale-tools-capture";
 import type { ExperienceCoinsState, RewardItem } from "./reward-decoder.ts";
 import { decodeFishNetRewardPacket } from "./reward-decoder.ts";
-import { loadBundledMobRewardCatalog } from "./catalog.ts";
-import type { MobRewardCatalog, MobRewardDefinition } from "./catalog.ts";
+import { loadBundledMobRewardCatalog } from "../catalog/catalog.ts";
+import type { MobRewardCatalog, MobRewardDefinition } from "../catalog/catalog.ts";
 
 export interface FishNetMobIdentity {
   objectId: number;

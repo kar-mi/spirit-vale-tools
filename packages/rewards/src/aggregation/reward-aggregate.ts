@@ -1,5 +1,5 @@
-import type { RewardItem } from "./reward-decoder.ts";
-import type { FishNetConfirmedMobKill, FishNetMobRewardEvent } from "./reward-tracker.ts";
+import type { RewardItem } from "../tracking/reward-decoder.ts";
+import type { FishNetConfirmedMobKill, FishNetMobRewardEvent } from "../tracking/reward-tracker.ts";
 
 export interface MobRewardMobSummary {
   mobId: string;

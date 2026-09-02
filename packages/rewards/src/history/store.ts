@@ -1,7 +1,7 @@
 import type { ReadModel } from "@kar-mi/spirit-vale-tools-sqlite";
-import type { RewardItem } from "../reward-decoder.ts";
-import type { MobRewardMobSummary, RecordedMobRewardKill } from "../session.ts";
-import type { RewardAggregateSnapshot, RewardChartBucket } from "../live-rewards.ts";
+import type { RewardItem } from "../tracking/reward-decoder.ts";
+import type { MobRewardMobSummary, RecordedMobRewardKill } from "../aggregation/session.ts";
+import type { RewardAggregateSnapshot, RewardChartBucket } from "../aggregation/live-rewards.ts";
 import { REWARD_SQL } from "./sql.ts";
 
 export interface Page<T> { items: T[]; nextCursor?: string }

@@ -1,4 +1,4 @@
-import type { FishNetMobRewardEvent } from "./reward-tracker.ts";
+import type { FishNetMobRewardEvent } from "../tracking/reward-tracker.ts";
 import { RewardAccumulator } from "./reward-aggregate.ts";
 import type { RewardAggregateCoreSnapshot } from "./reward-aggregate.ts";
 
@@ -24,4 +24,11 @@ export class MobRewardSession {
   reset(): void {
     this.aggregate.reset();
   }
+}
+
+export function emptySnapshot(): MobRewardSessionSnapshot {
+  return {
+    kills: [], mobs: [], totalExperience: 0, totalJobExperience: 0, totalCoins: 0n, unmatched: 0, unmatchedDrops: [],
+    unmatchedByReason: { ambiguous: 0, expired: 0, unidentified: 0 },
+  };
 }

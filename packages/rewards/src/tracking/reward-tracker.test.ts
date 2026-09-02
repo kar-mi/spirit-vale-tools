@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import type { DecodedFishNetPacket, FishNetDecodedField } from "@kar-mi/spirit-vale-tools-capture";
-import type { MobRewardCatalog } from "./catalog.ts";
+import type { MobRewardCatalog } from "../catalog/catalog.ts";
 import { FishNetMobRewardTracker } from "./reward-tracker.ts";
 
 const catalog: MobRewardCatalog = {

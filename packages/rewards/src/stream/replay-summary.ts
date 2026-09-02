@@ -1,5 +1,5 @@
 import { compact, count, warnings } from "@kar-mi/spirit-vale-tools-logging";
-import { loadRewardReplay } from "./live-log.ts";
+import { loadRewardReplay } from "./replay.ts";
 
 export interface RewardsReplaySummary {
   kills: number;
