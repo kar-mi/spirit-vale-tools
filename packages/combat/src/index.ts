@@ -1,4 +1,7 @@
 export { FishNetCombatTracker } from "./combat-tracker.ts";
+export { FishNetMonsterIdentityTracker } from "./monster-identity.ts";
+export type { FishNetMonsterIdentityTrackerOptions } from "./monster-identity.ts";
+export { FishNetSummonTracker } from "./summon-tracker.ts";
 export { observeFishNetDamagePacket } from "./damage-observer.ts";
 export type { FishNetDamageObservation } from "./damage-observer.ts";
 export type { FishNetRecoveryStyle } from "./inference/recovery-style.ts";
@@ -78,6 +81,7 @@ export type {
   FishNetCombatDamageEvent,
   FishNetCombatDeathEvent,
   FishNetCombatEvent,
+  FishNetCombatFullHealEvent,
   FishNetCombatHealEvent,
   FishNetCombatShieldEvent,
   FishNetCombatMonsterIdentityEvent,
@@ -91,7 +95,7 @@ export type {
   FishNetHealingTraits,
   FishNetHitResult,
   FishNetShieldAction,
-} from "./combat-tracker.ts";
+} from "./combat-events.ts";
 export { FishNetPositionTracker } from "./position-tracker.ts";
 export type {
   FishNetPosition,
