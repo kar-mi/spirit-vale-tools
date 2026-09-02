@@ -17,7 +17,7 @@ describe("FishNetSkillDirectory", () => {
   test("loads the current reduced catalog", () => {
     const catalog = loadBundledSkillCatalog();
     expect(catalog.buildFingerprint).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
-    expect(catalog.skills).toHaveLength(390);
+    expect(catalog.skills).toHaveLength(406);
     expect(resolveFishNetSkillDisplayName(catalog.skills[0]?.id)).toBe(catalog.skills[0]?.displayName);
     expect(() => loadBundledSkillCatalog("fictional-build")).toThrow("unknown skill catalog build");
   });
@@ -51,5 +51,15 @@ describe("FishNetSkillDirectory", () => {
       displayName: "Shadow Seal",
       spriteId: "Rogue18",
     });
+  });
+
+  test("tracks the current class mastery and internal skill set", () => {
+    expect(resolveFishNetSkill("Gunslinger_1")).toMatchObject({
+      displayName: "Loadout Rhythm",
+      kinds: ["passive", "mastery"],
+    });
+    expect(resolveFishNetSkill("Shinobi_5")).toMatchObject({ displayName: "Spiral Lock" });
+    expect(resolveFishNetSkill("BloodMagic")).toMatchObject({ displayName: "Blood Magic" });
+    expect(resolveFishNetSkill("CorpseExplosionSummon")).toBeUndefined();
   });
 });

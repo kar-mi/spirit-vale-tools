@@ -32,16 +32,25 @@ describe("FishNetStatusDirectory", () => {
     expect(resolveFishNetStatus("Bleeding")).toMatchObject({ displayName: "Bleeding", isDebuff: true });
   });
 
-  test("classifies hard-CC and negative-stat statuses as debuffs despite the source data's isDebuff flag", () => {
+  test("preserves the current source classifications for statuses", () => {
     for (const id of ["Stun", "Blind", "Silence", "Slow", "Frozen", "Curse", "ArmorBreak", "Weaken", "Vulnerability"]) {
-      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: true });
+      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: false });
     }
+    expect(resolveFishNetStatus("Bleeding")).toMatchObject({ isDebuff: true });
   });
 
   test("keeps self-cast buffs with drawbacks classified as buffs", () => {
     for (const id of ["Berserk", "Counter", "Cloaking", "Taunt", "HighGuard"]) {
       expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: false });
     }
+  });
+
+  test("tracks the current grenade and class statuses", () => {
+    expect(resolveFishNetStatus("ExplosiveGrenade")).toMatchObject({ displayName: "Explosive Grenade" });
+    expect(resolveFishNetStatus("FrostBite")).toMatchObject({ displayName: "Frost Bite", isDebuff: true });
+    expect(resolveFishNetStatus("Resolve")).toMatchObject({ displayName: "Resolve" });
+    expect(resolveFishNetStatus("LauncherBoost")).toBeUndefined();
+    expect(resolveFishNetStatus("LauncherPoison")).toBeUndefined();
   });
 
   test("resolves synthetic definitions and returns defensive copies", () => {

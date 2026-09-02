@@ -28,3 +28,21 @@ test("includes datamine-backed non-reward actors only in the combat identity cat
   });
   expect(identities.size).toBe(rewards.mobs.length + 7);
 });
+
+test("includes the current Nightmare Weaver reward definitions", () => {
+  const catalog = loadBundledMobRewardCatalog();
+  expect(catalog.mobs.find((mob) => mob.id === "NightmareWeaver")).toMatchObject({
+    displayName: "Echo Weaver",
+    level: 150,
+    boss: false,
+    baseExperience: 48_750,
+    baseCoins: 450,
+  });
+  expect(catalog.mobs.find((mob) => mob.id === "NightmareWeaverBoss")).toMatchObject({
+    displayName: "Echo Weaver Master",
+    level: 150,
+    boss: true,
+    baseExperience: 48_750,
+    baseCoins: 450,
+  });
+});
