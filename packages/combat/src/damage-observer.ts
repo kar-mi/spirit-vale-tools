@@ -1,4 +1,5 @@
-import type { DecodedFishNetPacket, FishNetDecodedValue } from "@kar-mi/spirit-vale-tools-capture";
+import type { DecodedFishNetPacket } from "@kar-mi/spirit-vale-tools-capture";
+import { field, nullableStringField, numberField } from "./decoded-fields.ts";
 
 export interface FishNetDamageObservation {
   kind: "damage" | "death";
@@ -33,18 +34,4 @@ export function observeFishNetDamagePacket(packet: DecodedFishNetPacket): FishNe
     value: numberField(packet, "dmg.Value")!,
     team: numberField(packet, "dmg.Team")!,
   };
-}
-
-function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {
-  return packet.decodedFields?.find((candidate) => candidate.name === name)?.value;
-}
-
-function numberField(packet: DecodedFishNetPacket, name: string): number | undefined {
-  const value = field(packet, name);
-  return typeof value === "number" ? value : undefined;
-}
-
-function nullableStringField(packet: DecodedFishNetPacket, name: string): string | null | undefined {
-  const value = field(packet, name);
-  return value === null || typeof value === "string" ? value : undefined;
 }

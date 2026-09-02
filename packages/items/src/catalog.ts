@@ -89,14 +89,14 @@ export class FishNetItemDirectory {
       if (this.definitions.has(key)) {
         throw new Error(`duplicate item definition for type ${definition.itemType} ${JSON.stringify(definition.id)}`);
       }
-      this.definitions.set(key, cloneDefinition(definition));
+      this.definitions.set(key, deepFreeze(cloneDefinition(definition)));
     }
   }
 
   resolve(itemType: number, itemId: string | null | undefined): FishNetItemDefinition | undefined {
     return itemId === null || itemId === undefined
       ? undefined
-      : cloneOptional(this.definitions.get(itemKey(itemType, itemId)));
+      : this.definitions.get(itemKey(itemType, itemId));
   }
 
   require(itemType: number, itemId: string): FishNetItemDefinition {
@@ -124,10 +124,12 @@ function itemKey(itemType: number, itemId: string): string {
   return `${itemType}|${itemId}`;
 }
 
-function cloneOptional(definition: FishNetItemDefinition | undefined): FishNetItemDefinition | undefined {
-  return definition ? cloneDefinition(definition) : undefined;
-}
-
 function cloneDefinition(definition: FishNetItemDefinition): FishNetItemDefinition {
   return structuredClone(definition);
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const nested of Object.values(value)) deepFreeze(nested);
+  return Object.freeze(value);
 }

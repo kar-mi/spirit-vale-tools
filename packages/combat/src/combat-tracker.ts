@@ -7,6 +7,7 @@ import type { DecodedFishNetPacket, FishNetDecodedValue, FishNetMonsterDirectory
 import { readSignedPackedWhole } from "@kar-mi/spirit-vale-tools-capture/wire-reader";
 import { loadBundledSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
 import type { FishNetSkillCatalog } from "@kar-mi/spirit-vale-tools-skills";
+import { field, nullableStringField, numberField } from "./decoded-fields.ts";
 import { decodeEffectDisplays } from "./effect-display.ts";
 import { classifyFishNetRecoveryStyle } from "./inference/recovery-style.ts";
 import { observeFishNetDamagePacket } from "./damage-observer.ts";
@@ -1431,10 +1432,6 @@ function healthComponentIndices(map: FishNetRpcMap | undefined): ReadonlySet<num
   ) ?? []);
 }
 
-function field(packet: DecodedFishNetPacket, name: string): FishNetDecodedValue | undefined {
-  return packet.decodedFields?.find((candidate) => candidate.name === name)?.value;
-}
-
 function decodedFieldRecord(packet: DecodedFishNetPacket): Record<string, FishNetDecodedValue> {
   return Object.fromEntries(packet.decodedFields?.map(({ name, value }) => [name, value]) ?? []);
 }
@@ -1487,11 +1484,6 @@ function matchesBehaviour(packet: DecodedFishNetPacket, expected: string): boole
   return packet.networkBehaviourType === undefined || packet.networkBehaviourType === expected;
 }
 
-function numberField(packet: DecodedFishNetPacket, name: string): number | undefined {
-  const value = field(packet, name);
-  return typeof value === "number" ? value : undefined;
-}
-
 function stringField(packet: DecodedFishNetPacket, name: string): string | undefined {
   const value = field(packet, name);
   return typeof value === "string" ? value : undefined;
@@ -1522,11 +1514,6 @@ function isCompleteRecoverPacket(packet: DecodedFishNetPacket): boolean {
     && numberField(packet, "settings.Offset") !== undefined
     && numberField(packet, "settings.Scale") !== undefined
     && (!packet.undecodedPayload || packet.undecodedPayload.length === 0);
-}
-
-function nullableStringField(packet: DecodedFishNetPacket, name: string): string | null | undefined {
-  const value = field(packet, name);
-  return typeof value === "string" || value === null ? value : undefined;
 }
 
 function damageSignature(
