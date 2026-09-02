@@ -10,29 +10,33 @@ ambiguity, and the quarantine that survives a re-authentication — see
 
 ## Dispatch
 
-`consume()` in `packages/combat/src/tracking/combat-tracker.ts` matches on `rpcName` plus
-the owning behaviour, and returns zero or more events per packet:
+`consume()` in `packages/combat/src/tracking/combat-tracker.ts` routes RPCs and
+SyncTypes by their owning behaviour and returns zero or more events per packet:
 
-| RPC | Behaviour | Event |
+| Signal | Behaviour | Event |
 | --- | --- | --- |
 | `CastBegin_C`, `AutoCast_C`, `CastComplete_C`, `CastInterrupt_C`, `CastCancel_C` | `SkillsComponent` | `activation` |
 | `Attack_C` | `CombatComponent` | `activation` (basic attack) |
-| `ApplyDamage_C` | `HealthComponent` | `damage` |
+| `ApplyDamage_C` | `HealthComponent` | `damage`, or `heal` when its value is negative |
 | `Death_C` | `HealthComponent` | `death` |
 | `Recover_C` | `HealthComponent` | `heal` |
 | `ApplyEffect_T`, `RemoveEffect_T` | `StatusComponent` | `status` |
 | `ApplyEffectDisplays_O` | `StatusComponent` | `status` (one per entry) |
 | `ApplySkillDisplay_O`, `RemoveSkillDisplay_O` | `StatusComponent` | `status` |
+| `LoadCharacter_T` | `PlayerSave` | `status` (one per saved active effect) |
 | `ToggleBegin_C` | `SkillsComponent` | `activation` |
 | `CalibrateSummons_T` | `SummoningComponent` | `summon` (one per changed skill) |
+| `SummonerSync`, `SummonSkillSync` | `SummoningComponent` | `summon` login fallback |
+| `barrierSync` | `HealthComponent` | `shield` |
 | `FullHeal_C` | `PlayerController` | `fullHeal` |
+| Object spawn/despawn | Object lifecycle | monster identity changes and per-object summon corrections |
+| Authentication/disconnect | Connection lifecycle | identity, summon, activation, healing, and shield state resets |
 
-The behaviour check is `matchesBehaviour`, which passes when the packet's
-behaviour type is *undefined* as well as when it matches. That deliberate
-looseness lets a packet whose component binding was never established still be
-handled, at the cost of accepting a same-hash RPC from another behaviour — which
-is why `SkillsComponent.Recover_C` (a real, distinct RPC sharing hash 1 with
-`HealthComponent.Recover_C`) is filtered out by behaviour rather than by hash.
+Most RPC paths use `matchesBehaviour`, which also accepts a packet whose
+behaviour type is unavailable. Payload validation and RPC resolution constrain
+those paths. `CalibrateSummons_T` and `LoadCharacter_T` are stricter: both require
+a verified resolution and their exact behaviour. `SkillsComponent.Recover_C`
+(mana recovery) is filtered from the health-healing path by behaviour.
 
 ## Status effects
 
@@ -53,6 +57,14 @@ no duration, so the expiry has to be derived from the bundled status catalog via
 
 They are also rare. In a ~7 minute capture with heavy combat these fired **34
 times across 6 actors**.
+
+### `LoadCharacter_T` — login snapshot
+
+`PlayerSave.LoadCharacter_T` carries the character save's active-effect
+snapshot. The tracker accepts it only with a verified `PlayerSave` resolution
+and emits an applied status for every complete `State.Effects` entry. This is
+the initial source for effects that were already active when the client
+connected; later status RPCs and display refreshes update the same status state.
 
 ### `ApplyEffectDisplays_O` — every actor in range
 
@@ -205,6 +217,8 @@ in a bare `id` rather than in a `SkillStateDto`.
 
 ```
 hash 0  targetRpc     CalibrateSummons_T(data: SummonSkillData[])
+sync 0                 SummonerSync(owner: NetworkObject)
+sync 2                 SummonSkillSync(data: SummonSkillData)
 hash 4  observersRpc  CloneEffect_C()
 hash 2  targetRpc     ApplyRecall_T(obj)
 ```
@@ -216,83 +230,20 @@ the generated RPC map, and `consumeSummonCalibration` diffs it
 against the previous snapshot and emits only changed counts, which is why an
 unchanged repeat produces no event.
 
-Being a target RPC it reaches only the summoner. Because it is also the *only*
-signal, a missed one leaves the count stale until the next snapshot. Only a
+Being a target RPC, `CalibrateSummons_T` reaches only the summoner. Only a
 verified `SummoningComponent` resolution is accepted. Unnamed, recovered,
 partially decoded, or trailing-data packets are ignored; summon state is never
 recovered by interpreting an unresolved payload heuristically.
+
+An existing summon is restored at login through SyncTypes on the summoned
+object. `SummonSkillSync` identifies the skill and `SummonerSync` identifies the
+owning actor. The two values may arrive in either order, so the summon tracker
+joins them by the summoned object's network object id and counts that object
+once both are known. Despawn removes a contribution established by this path.
+A later `CalibrateSummons_T` snapshot becomes authoritative for its actor and
+supersedes per-object fallback counting.
 
 `CloneEffect_C` and `ApplyRecall_T` are not consumed. `CloneEffect_C` fires on the
 *clone's* own object rather than the summoner's, carries no count, and lands only
 some tens of milliseconds before the calibration that follows it — so it cannot
 update a stack count on its own and buys no useful head start.
-
-## Feeds not consumed
-
-
-
-| Packet | Why it is left alone |
-| --- | --- |
-| `SummoningComponent.CloneEffect_C`, `ApplyRecall_T` | No count on the wire, and no useful head start over the calibration. |
-| Unidentified 16-bit-hash RPCs | Real traffic the map has no entry for; now correctly unresolved rather than wrongly named. |
-
-`PlayerController.FullHeal_C` *is* consumed, as its own `fullHeal` kind rather than
-a `heal`. It restores an actor outright, but the RPC declares no arguments so the
-wire carries no amount, and in game it is a town NPC service rather than combat
-healing. `reducers/meter.ts` only counts `kind: "heal"`, so the separate kind keeps
-a full health bar out of HPS structurally instead of via a flag someone has to
-remember. It fired **once** in a ~7 minute capture.
-
-Health and mana sync are *not* in this list: `HealthComponent` syncvars 0/1
-(current/max HP), `SkillsComponent` 0/1 (current/max mana) and `MoveComponent`
-move speed are decoded by `packages/character/src/record-decoder.ts`, which reads
-syncvar indexes positionally. The RPC map now also names those four positions, so `syncName` and a decoded field appear on
-health and mana updates. Indexes whose meaning is not established stay unnamed
-rather than guessed. That path is scoped to the **local** character either way, so
-per-actor health for other players and mobs is still unavailable to the combat
-side.
-
-## A resolved name is not proof
-
-`lookupRpc` matches a packet against *both* the 8-bit and 16-bit wire-hash
-readings and accepts whichever finds an entry. It does not check that the chosen
-method could have produced these bytes, so when a behaviour with many RPCs uses a
-16-bit hash whose low byte collides with another behaviour's 8-bit hash, the wrong
-method wins — and `inferBehaviourType` then binds that component index to the
-wrong behaviour, so the mistake outlives the packet.
-
-`FullHeal_C` was the clearest case. It declares no arguments, so a genuine one
-carries nothing; over one capture 122 of 123 packets named `FullHeal_C` arrived
-with a 1-byte payload on component index 1, which is not where `PlayerController`
-sits on a player object. That byte was the high half of a 16-bit hash
-(`1e66` → 26142). Exactly **one** was real.
-
-`applyRpcLookup` now refuses a match whose declared parameter list is empty when
-the packet carries bytes, and `parseFixedRpc` withdraws the inferred behaviour
-rather than binding the component from a refused match. Across the same capture
-that withdraws 141 names and re-points **none** — the guard can only ever take
-back a name, never invent or redirect one:
-
-| Withdrawn | |
-| --- | --- |
-| `PlayerController.FullHeal_C` | 122 |
-| `PlayerController.StopEmote_C` | 8 |
-| `SkillsComponent.CastCancel_C` | 5 |
-| `MoveComponent.Dodge_O` | 2 |
-| four others | 1 each |
-
-Damage, death, heal, status and summon counts are byte-identical either way; the
-only behavioural change is five phantom cast-cancels leaving the activation feed.
-
-The rule is deliberately narrow. A method whose parameters merely fail to decode
-is left alone, because the map models many payloads only partially —
-`PlayerSave.CharacterCallback_T` never fully decodes and is perfectly real. Only
-"declares no arguments, yet carries bytes" is airtight, and it is safe precisely
-because the map generator records parameters even for types it cannot break down:
-242 of 253 parameterised entries include such a type, so an empty parameter list
-genuinely means none.
-
-A softer version of the same check is still useful when investigating: decode a
-payload against its resolved signature and see whether it is consumed exactly.
-About 3% of resolved packets do not fit, and most of that residue is modelling
-gaps rather than misresolution — treat it as "look here", not "this is wrong".
