@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-logging",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Session-oriented logging utilities for Spirit Vale tools.",
   "license": "AGPL-3.0-only",
   "repository": {

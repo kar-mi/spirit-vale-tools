@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-skills",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Build-scoped Spirit Vale skill catalog utilities.",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -23,6 +23,6 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-capture": "^2.0.0"
+    "@kar-mi/spirit-vale-tools-capture": "^3.0.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@kar-mi/spirit-vale-tools-items",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Build-scoped Spirit Vale item catalog utilities.",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -23,6 +23,6 @@
     }
   },
   "dependencies": {
-    "@kar-mi/spirit-vale-tools-capture": "^2.2.0"
+    "@kar-mi/spirit-vale-tools-capture": "^3.0.0"
   }
 }
