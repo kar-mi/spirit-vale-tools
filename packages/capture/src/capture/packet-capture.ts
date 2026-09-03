@@ -119,7 +119,12 @@ export class PacketCapture extends EventEmitter {
 
   async start(config: CaptureConfig = {}): Promise<void> {
     if (this._state !== "stopped") throw new Error(`cannot start capture while it is ${this._state}`);
-    if (this.platform !== "win32") throw new Error("live packet capture is supported only on Windows");
+
+    switch (this.platform) {
+      case "win32": break; // supported
+      case "linux": break; // newly supported
+      default: throw new Error("live packet capture is not implemented for this platform.");
+    }
     const protocols = config.protocols ?? ["tcp", "udp"];
     if (protocols.length === 0 || protocols.some((protocol) => protocol !== "tcp" && protocol !== "udp")) {
       throw new Error("protocols must contain tcp, udp, or both");

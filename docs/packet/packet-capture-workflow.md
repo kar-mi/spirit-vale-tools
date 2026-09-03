@@ -7,7 +7,7 @@ The package does not bundle Npcap, install drivers, inject packets, or alter tra
 For the UDP decoding layers enabled by this workflow, see [Packet Decoding](packet-decoding.md). For the
 packages that consume decoded events, see [Packet Routing](packet-routing.md).
 
-## Prerequisites
+## Windows Prerequisites
 
 - Windows 10 or 11 x64
 - Bun 1.4 or newer for development
@@ -17,6 +17,66 @@ To run live capture without elevation, install Npcap with **Restrict Npcap
 driver's access to Administrators only** unchecked. Consumers can inspect
 `getNpcapStatus()` and `listNpcapDevices()` to report installation and adapter
 availability.
+
+## Linux Prerequisites
+
+- A standard linux distrobution
+- Bun 1.4 or newer for development
+- libpcap
+
+To run live capture without elevation, give bun `CAP_NET_RAW` & 
+`CAP_NET_ADMIN` permissions.
+
+```sh
+# sudo: substitute user (aka as temporary root)
+# setcap: Set capabilities
+# cap_net_raw: Allows raw and packet sockets (required for packet capture).
+# cap_net_admin: Allows network interface configuration and administration.
+# +ep: Adds the capabilities to the Effective and Permitted sets.
+# $(which bun): Specify which executable gets the permission, if you have more then 1 bun executable for example, or wish to create a wrapper, you may want to change this.
+sudo setcap 'cap_net_raw,cap_net_admin=+ep' $(which bun)
+
+# Verify permissions: You can verify the capabilities were set correctly using:
+getcap $(which bun)
+```
+
+Other Linux Capabilities & Permissions:
+
+* `capsh` for a temporary shell session with specified capabilities.
+* `CAP_AMBIENT` for ambient capabilities, allows for spawned child `execve()` processes to inherit capabilities.
+* `setuid` "set user identity and set group identity", the usual file permissions.
+* `docker` container with `--cap-add NET_RAW --cap-add NET_ADMIN`.
+* Wrappers, a script or program that sets the capabilities and launches the process. So you could have a `./bun_net_raw ./script.js` app, that launches regular `./bun` with the added capabilities, flags & commandline arguments. So that other bun scripts will continue to run without `NET_RAW` perms.
+
+Linux `capsh` & `CAP_AMBIENT` Example:
+
+```sh
+# Example: Launch bun in a shell with ambient capabilities
+sudo capsh --caps="cap_net_raw,cap_net_admin+ep" \
+           --keep=1 \
+           --user=$(whoami) \
+           --inh=cap_net_raw,cap_net_admin=i \
+           -- -c "export CAP_AMBIENT=1; bun /path/to/script.js"
+```
+
+Linux NixOS wrapper example:
+
+```nix
+nixosConfigurations.yourhostname = nixpkgs.lib.nixosSystem {
+  # …
+  modules = [
+    ({ pkgs, ... }: {
+      security.wrappers.bun_net_raw = {
+        source = "${pkgs.bun}/bin/bun";
+        owner = "root";
+        group = "root";
+        capabilities = "cap_net_raw,cap_net_admin+eip";
+      };
+    })
+    # …
+  ];
+};
+```
 
 ## Command-line capture
 
