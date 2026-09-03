@@ -38,7 +38,7 @@ export type {
 export { loadRewardReplay } from "./stream/replay.ts";
 export { RewardLogFollower, RewardSessionLogFollower } from "./stream/live-followers.ts";
 export { BoundedRewardLogFollower, BoundedRewardSessionLogFollower, LiveRewardLogFollower, LiveRewardSessionLogFollower } from "./stream/live-followers.ts";
-export type { LiveRewardLogBatch, RewardLogBatch, RewardLogFollowerOptions, RewardLogStatus } from "./stream/live-followers.ts";
+export type { LiveRewardGain, LiveRewardLogBatch, LiveRewardLogFollowerOptions, RewardLogBatch, RewardLogFollowerOptions, RewardLogStatus } from "./stream/live-followers.ts";
 export { LiveRewardService } from "./aggregation/live-rewards.ts";
 export type { LiveRewardOptions, LiveRewardConsumeContext, RewardAggregateSnapshot, RewardChartBucket } from "./aggregation/live-rewards.ts";
 export { parseRewardLogRecord } from "./stream/record.ts";

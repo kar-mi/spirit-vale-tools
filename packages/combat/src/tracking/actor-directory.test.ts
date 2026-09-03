@@ -596,3 +596,93 @@ function monsterSync(tick: number, objectId: number, mobId: string): DecodedFish
     decodedFields: [{ name: "Id", codec: "stringUtf8Packed", value: mobId }],
   };
 }
+
+function summonSync(tick: number, objectId: number, fieldName: "SummonerSync" | "PrimarySync"): DecodedFishNetPacket {
+  return {
+    tick,
+    packetId: 1,
+    packetName: "syncType",
+    raw: Buffer.alloc(0),
+    payload: Buffer.alloc(0),
+    objectId,
+    networkBehaviourType: "SummoningComponent",
+    syncIndex: fieldName === "SummonerSync" ? 0 : 1,
+    syncName: fieldName,
+    decodedFields: [{ name: fieldName, codec: "packedInt32", value: 999 }],
+  };
+}
+
+describe("FishNetActorDirectory with stickyPlayerIdentities", () => {
+  const identify = (tick: number, objectId: number, displayName: string): DecodedFishNetPacket =>
+    packet(tick, "syncType", objectId, visual(displayName));
+
+  test("still retains a player identity across its own despawn", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(identify(1, 123, "Aster Vale"));
+
+    expect(directory.consume(packet(2, "objectDespawn", 123))).toEqual([]);
+    expect(directory.getAttribution(123)).toMatchObject({ displayName: "Aster Vale" });
+  });
+
+  test("forgets an identity on despawn once summon/clone evidence marks the object", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(identify(1, 789, "Borrowed Name"));
+    directory.consume(summonSync(2, 789, "SummonerSync"));
+
+    expect(directory.consume(packet(3, "objectDespawn", 789))).toEqual([
+      { kind: "actorIdentity", operation: "remove", tick: 3, actorId: 789 },
+    ]);
+    expect(directory.getAttribution(789)).toBeUndefined();
+    expect(directory.snapshot()).toEqual([]);
+  });
+
+  test("a reused actor identified as a monster stays cleared through despawn", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(identify(1, 40, "Aster Vale"));
+
+    expect(directory.consume(monsterSync(2, 40, "NightmareShadow"))).toEqual([
+      { kind: "actorIdentity", operation: "remove", tick: 2, actorId: 40 },
+    ]);
+    expect(directory.consume(packet(3, "objectDespawn", 40))).toEqual([]);
+    expect(directory.getAttribution(40)).toBeUndefined();
+    expect(directory.snapshot()).toEqual([]);
+  });
+
+  test("does not mistake the owner's own SummoningComponent traffic for a summon", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(identify(1, 123, "Aster Vale"));
+    directory.consume(summonSync(2, 123, "PrimarySync"));
+
+    expect(directory.consume(packet(3, "objectDespawn", 123))).toEqual([]);
+    expect(directory.getAttribution(123)).toMatchObject({ displayName: "Aster Vale" });
+  });
+
+  test("despawning a summon that never had an attributed identity is a no-op", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(summonSync(1, 456, "SummonerSync"));
+
+    expect(directory.consume(packet(2, "objectDespawn", 456))).toEqual([]);
+  });
+
+  test("re-learning an identity for a cleared object lifts the despawn mask", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(summonSync(1, 456, "SummonerSync"));
+    directory.consume(identify(2, 456, "Real Player"));
+    directory.consume(packet(3, "objectDespawn", 456));
+    expect(directory.getAttribution(456)).toBeUndefined();
+
+    expect(directory.consume(identify(4, 456, "Real Player"))).toMatchObject([
+      { operation: "upsert", actorId: 456, displayName: "Real Player" },
+    ]);
+    expect(directory.getAttribution(456)).toMatchObject({ displayName: "Real Player" });
+  });
+
+  test("default (flag off) keeps a summon's identity after despawn, unchanged from before", () => {
+    const directory = new FishNetActorDirectory();
+    directory.consume(identify(1, 789, "Borrowed Name"));
+    directory.consume(summonSync(2, 789, "SummonerSync"));
+
+    expect(directory.consume(packet(3, "objectDespawn", 789))).toEqual([]);
+    expect(directory.getAttribution(789)).toMatchObject({ displayName: "Borrowed Name" });
+  });
+});
