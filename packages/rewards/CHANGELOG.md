@@ -1,5 +1,18 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.4.1
+
+### Patch Changes
+
+- 06ccd5e: Cut one coordinated release so every published tarball matches its source and
+  every internal dependency range resolves to matching code.
+- Updated dependencies [06ccd5e]
+  - @kar-mi/spirit-vale-tools-capture@3.0.1
+  - @kar-mi/spirit-vale-tools-logging@0.10.1
+  - @kar-mi/spirit-vale-tools-items@0.1.11
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.3
+  - @kar-mi/spirit-vale-tools-combat@5.0.1
+
 ## 1.4.0
 
 ### Minor Changes

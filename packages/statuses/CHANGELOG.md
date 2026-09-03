@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-statuses
 
+## 0.2.7
+
+### Patch Changes
+
+- 06ccd5e: Cut one coordinated release so every published tarball matches its source and
+  every internal dependency range resolves to matching code.
+- Updated dependencies [06ccd5e]
+  - @kar-mi/spirit-vale-tools-capture@3.0.1
+
 ## 0.2.6
 
 ### Patch Changes

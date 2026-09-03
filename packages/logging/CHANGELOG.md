@@ -1,5 +1,12 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.10.1
+
+### Patch Changes
+
+- 06ccd5e: Cut one coordinated release so every published tarball matches its source and
+  every internal dependency range resolves to matching code.
+
 ## 0.10.0
 
 ### Minor Changes
