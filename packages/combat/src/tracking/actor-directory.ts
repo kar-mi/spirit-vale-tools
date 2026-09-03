@@ -57,6 +57,13 @@ export interface FishNetActorDirectoryOptions {
   knownIdentities?: readonly FishNetKnownIdentity[];
   /** Invoked whenever a uid's cached displayName/archetype is newly learned or changed. */
   onIdentityLearned?: (identity: FishNetKnownIdentity) => void;
+  /**
+   * When true, an object with positive monster or summon/clone evidence
+   * (`MonsterController.Data` / `SummoningComponent.SummonerSync`) forgets its identity the moment
+   * it despawns, while a player's identity still survives its own despawn/respawn cycle. Default
+   * (false) keeps every identity until it is directly replaced.
+   */
+  stickyPlayerIdentities?: boolean;
 }
 
 /** Tracks public display names by the FishNet object IDs used by combat events. */
@@ -70,6 +77,10 @@ export class FishNetActorDirectory {
   private readonly observedPlayerActors = new Set<number>();
   /** UID-keyed names survive map-change resets when delta respawns repeat the UID. */
   private readonly uidIdentities = new Map<string, { displayName: string; archetype?: number }>();
+  /** Object ids with positive monster or summon/clone evidence (only tracked when `stickyPlayerIdentities`). */
+  private readonly nonPlayerActorIds = new Set<number>();
+  /** Object ids whose identity was force-cleared by a non-player despawn; lifted on the next upsert. */
+  private readonly clearedOnDespawn = new Set<number>();
   private nextSourceRevision = 1;
   private localIdentity?: FishNetLocalIdentity;
 
@@ -90,6 +101,11 @@ export class FishNetActorDirectory {
       return [{ kind: "actorIdentity", operation: "reset", tick: packet.tick }];
     }
 
+    if (this.options.stickyPlayerIdentities && packet.objectId !== undefined
+      && (hasMonsterIdentityEvidence(packet) || hasSummonIdentityEvidence(packet))) {
+      this.nonPlayerActorIds.add(packet.objectId);
+    }
+
     if (packet.packetName === "objectSpawn" && packet.objectId !== undefined) {
       const observedPlayerActor = this.observedPlayerActors.has(packet.objectId);
       const events = this.removeObject(packet.objectId, packet.tick, true);
@@ -101,7 +117,7 @@ export class FishNetActorDirectory {
         identityEligible,
       });
       if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, packet.objectId);
-      if (hasMonsterIdentityEvidence(packet)) {
+      if (hasMonsterIdentityEvidence(packet) || this.isStickyNonPlayer(packet)) {
         events.push(...this.clearPlayerIdentity(packet.objectId, packet.tick));
         events.push(...this.refreshOwner(ownerConnectionId, packet.tick, true));
         return events;
@@ -124,7 +140,12 @@ export class FishNetActorDirectory {
     }
 
     if (packet.packetName === "objectDespawn" && packet.objectId !== undefined) {
-      return this.removeObject(packet.objectId, packet.tick, true);
+      const events = this.removeObject(packet.objectId, packet.tick, true);
+      if (this.nonPlayerActorIds.delete(packet.objectId)) {
+        this.clearedOnDespawn.add(packet.objectId);
+        events.push(...this.reconcile(packet.objectId, undefined, packet.tick));
+      }
+      return events;
     }
 
     if (packet.packetName === "ownershipChange" && packet.objectId !== undefined) {
@@ -145,7 +166,7 @@ export class FishNetActorDirectory {
       );
     }
 
-    if (packet.objectId !== undefined && hasMonsterIdentityEvidence(packet)) {
+    if (packet.objectId !== undefined && (hasMonsterIdentityEvidence(packet) || this.isStickyNonPlayer(packet))) {
       return this.clearPlayerIdentity(packet.objectId, packet.tick);
     }
 
@@ -214,6 +235,7 @@ export class FishNetActorDirectory {
 
   /** Resolves a combat attacker even when the hit came from a newly allocated player object. */
   getAttribution(actorId: number): FishNetActorIdentity | undefined {
+    if (this.clearedOnDespawn.has(actorId)) return undefined;
     const direct = this.identities.get(actorId);
     if (direct) return { ...direct };
     const ownerConnectionId = this.objects.get(actorId)?.ownerConnectionId;
@@ -237,7 +259,9 @@ export class FishNetActorDirectory {
 
   /** Snapshots every currently known identity, for seeding a freshly rotated log with resolved names. */
   snapshot(): FishNetActorIdentity[] {
-    return [...this.identities.values()].map((identity) => ({ ...identity }));
+    return [...this.identities.values()]
+      .filter((identity) => !this.clearedOnDespawn.has(identity.actorId))
+      .map((identity) => ({ ...identity }));
   }
 
   /** Marks an attacker ID from a player-team combat event as eligible for owner-based identity propagation. */
@@ -328,6 +352,16 @@ export class FishNetActorDirectory {
     return events;
   }
 
+  /**
+   * A summon or clone the caller has opted to keep off the player roster - its own
+   * `SummoningComponent.SummonerSync` marks it. Owner-based attribution still resolves the summoner
+   * (`getAttribution` falls back through `ownerConnectionId`), so the summoner keeps damage credit;
+   * only the standalone identity row and its status bucket go away.
+   */
+  private isStickyNonPlayer(packet: DecodedFishNetPacket): boolean {
+    return this.options.stickyPlayerIdentities === true && hasSummonIdentityEvidence(packet);
+  }
+
   private clearPlayerIdentity(actorId: number, tick: number): FishNetActorIdentityEvent[] {
     this.observedPlayerActors.delete(actorId);
     this.identitySources.delete(actorId);
@@ -411,6 +445,7 @@ export class FishNetActorDirectory {
       && current.archetype === next.archetype
       && current.ownerConnectionId === next.ownerConnectionId
       && current.uid === next.uid) return [];
+    this.clearedOnDespawn.delete(actorId);
     this.identities.set(actorId, next);
     return [{ kind: "actorIdentity", operation: "upsert", tick, ...next }];
   }
@@ -435,6 +470,8 @@ export class FishNetActorDirectory {
     this.identitySources.clear();
     this.sourceRevisions.clear();
     this.observedPlayerActors.clear();
+    this.nonPlayerActorIds.clear();
+    this.clearedOnDespawn.clear();
     this.nextSourceRevision = 1;
   }
 }
@@ -481,6 +518,21 @@ function hasMonsterIdentityEvidence(packet: DecodedFishNetPacket): boolean {
     ?? decodedField(packet, "Monster.Id")
     ?? decodedField(packet, "Id");
   return typeof mobId === "string" && mobId.length > 0;
+}
+
+/**
+ * True when the packet is a summon/clone reporting its own `SummoningComponent.SummonerSync` - a
+ * back-reference to its owner. The owner's own `SummoningComponent` traffic (`PrimarySync`,
+ * `CalibrateSummons_T`) never carries this field, so an owner is not mistaken for their summon.
+ */
+function hasSummonIdentityEvidence(packet: DecodedFishNetPacket): boolean {
+  if (packet.packetName === "objectSpawn") {
+    return packet.spawnSyncEntries?.some(
+      (candidate) => candidate.networkBehaviourType === "SummoningComponent" && candidate.name === "SummonerSync",
+    ) ?? false;
+  }
+  if (packet.packetName !== "syncType" || packet.networkBehaviourType !== "SummoningComponent") return false;
+  return packet.decodedFields?.some((field) => field.name === "SummonerSync") ?? false;
 }
 
 const VISUAL_DATA_SYNC_INDEX = 5;

@@ -119,6 +119,19 @@ export class RewardSessionLogFollower {
   close(): void { this.inner.close(); }
 }
 
+/** A single reward gain, with the log's own recorded time rather than wall-clock consume time. */
+export interface LiveRewardGain {
+  experience: number;
+  jobExperience: number;
+  coins: bigint;
+  recordedAtMs: number;
+}
+
+export interface LiveRewardLogFollowerOptions extends LiveRewardOptions {
+  /** Invoked per kill / unmatched-experience event, for driving an external rate tracker. */
+  onGain?: (gain: LiveRewardGain) => void;
+}
+
 export interface LiveRewardLogBatch {
   snapshot: RewardAggregateSnapshot;
   invalidLines: number;
@@ -136,12 +149,14 @@ export class LiveRewardLogFollower {
   private readonly records = new LogRecordLineDecoder();
   private readonly service: LiveRewardService;
   private readonly sourcePath: string;
+  private readonly onGain?: (gain: LiveRewardGain) => void;
   private status: RewardLogStatus = "watching";
 
-  constructor(path: string, options: LiveRewardOptions = {}) {
+  constructor(path: string, options: LiveRewardLogFollowerOptions = {}) {
     this.sourcePath = path;
     this.reader = new JsonlTailReader(path, { maxReadBytes: DEFAULT_STREAM_BATCH_BYTES });
     this.service = new LiveRewardService(options);
+    this.onGain = options.onGain;
   }
 
   async poll(): Promise<LiveRewardLogBatch> {
@@ -167,6 +182,13 @@ export class LiveRewardLogFollower {
         continue;
       }
       this.service.consume(entry.event, { recordedAt: entry.recordedAt });
+      if (this.onGain && (entry.event.kind === "kill" || entry.event.reward === "experience")) {
+        const { experience, jobExperience, coins } = entry.event;
+        const recordedAtMs = Date.parse(entry.recordedAt);
+        if (!Number.isNaN(recordedAtMs) && (experience > 0 || jobExperience > 0 || coins > 0n)) {
+          this.onGain({ experience, jobExperience, coins, recordedAtMs });
+        }
+      }
       this.status = "ready";
     }
     return this.batch(false, reset, entries.length > 0, invalidLines);
@@ -182,7 +204,7 @@ export { LiveRewardLogFollower as BoundedRewardLogFollower };
 export class LiveRewardSessionLogFollower {
   private readonly inner: LiveLogSessionFollower<LiveRewardLogFollower, LiveRewardLogBatch>;
 
-  constructor(logDirectory?: string, options: LiveRewardOptions & RewardSessionFollowerTuning = {}) {
+  constructor(logDirectory?: string, options: LiveRewardLogFollowerOptions & RewardSessionFollowerTuning = {}) {
     const { fallbackPollMs, debounceMs, persistent, ...serviceOptions } = options;
     this.inner = new LiveLogSessionFollower({
       stream: "rewards",
@@ -197,7 +219,7 @@ export class LiveRewardSessionLogFollower {
     });
   }
 
-  static watch(logDirectory?: string, options: LiveRewardOptions & RewardSessionFollowerTuning = {}): LiveRewardSessionLogFollower {
+  static watch(logDirectory?: string, options: LiveRewardLogFollowerOptions & RewardSessionFollowerTuning = {}): LiveRewardSessionLogFollower {
     return new LiveRewardSessionLogFollower(logDirectory, options);
   }
 

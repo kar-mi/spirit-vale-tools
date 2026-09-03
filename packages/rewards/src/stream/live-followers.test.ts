@@ -60,6 +60,32 @@ describe("reward live projections", () => {
     });
   });
 
+  test("onGain fires per kill and unmatched-experience gain at the recorded time", () => {
+    const kill = JSON.stringify(rewardRecord("rewards.kill", {
+      kind: "kill", id: "kill-1", tick: 10,
+      mob: { objectId: 20, mobId: "training-sprite", displayName: "Training Sprite", level: 3, boss: false },
+      experience: 12, jobExperience: 4, coins: "7", drops: [],
+    }));
+    const unmatched = JSON.stringify(rewardRecord("rewards.unmatched", {
+      kind: "unmatched", tick: 11, reason: "expired", reward: "experience",
+      experience: 3, jobExperience: 0, coins: "0", drops: [],
+    }));
+    const pickup = JSON.stringify(rewardRecord("rewards.unmatched", {
+      kind: "unmatched", tick: 12, reason: "expired", reward: "pickup", drops: [],
+    }));
+    const lines = [kill, unmatched, pickup];
+
+    const gains: unknown[] = [];
+    new LiveRewardLogFollower("synthetic.jsonl", { onGain: (gain) => gains.push(gain) }).consumeRead({
+      missing: false, reset: false, lines, size: lines.join("\n").length, bytesRead: lines.join("\n").length,
+    });
+
+    expect(gains).toEqual([
+      { experience: 12, jobExperience: 4, coins: 7n, recordedAtMs: Date.parse("2026-01-01T00:00:05.000Z") },
+      { experience: 3, jobExperience: 0, coins: 0n, recordedAtMs: Date.parse("2026-01-01T00:00:05.000Z") },
+    ]);
+  });
+
   test("preserves lifecycle status and malformed-record semantics", () => {
     const follower = new RewardLogFollower("synthetic.jsonl");
     const malformedLifecycle = JSON.stringify(rewardRecord("rewards.lifecycle", { state: "unknown" }));
