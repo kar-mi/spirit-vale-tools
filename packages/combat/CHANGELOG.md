@@ -1,5 +1,33 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 5.0.0
+
+### Major Changes
+
+- 4e54be5: Split the oversized `combat-tracker.ts` into focused modules: event/option types now live in `combat-events.ts`, stateless packet decoders in `combat-decoding.ts`, and summon and monster/boss identity handling in the new composed `FishNetSummonTracker` and `FishNetMonsterIdentityTracker` classes (both exported). `FishNetCombatFullHealEvent` is now exported.
+  
+  Remove compatibility-only combat APIs: the deprecated, unused `localActorIdResolver` tracker option; the empty `CURRENT_BOSS_SKILL_NAMES` catalog; the positional `ticksPerSecond` argument from `DpsSessionLogFollower` in favor of `DpsSessionLogFollowerOptions.ticksPerSecond`; and the obsolete event-type re-exports from the `combat-tracker.ts` implementation module.
+  
+  Rename the snapshot types retained from the removed `FishNetDpsMeter`: `FishNetDpsEncounterSnapshot` to `CombatEncounterSnapshot`, `FishNetDpsActorRow` to `CombatActorRow`, `FishNetDpsSkillRow` to `CombatSkillRow`, `FishNetDpsTimelinePoint` to `CombatTimelinePoint`, and `FishNetPersonalMatch` to `CombatPersonalMatch`.
+
+### Minor Changes
+
+- e7df5f1: Add a `stickyPlayerIdentities` option to `FishNetActorDirectory`. When enabled, an object with
+  positive monster or summon/clone evidence (`MonsterController.Data` /
+  `SummoningComponent.SummonerSync`) is kept off the player identity roster: its display name is
+  never populated from owner-based propagation, and it is dropped from `getAttribution` / `snapshot`
+  as soon as the evidence is seen and again on despawn. Owner-based attribution still resolves the
+  summoner, so a summon's or clone's damage is still credited to its owner. A real player's identity
+  still survives its own despawn/respawn cycle. The default (option absent) is unchanged: every
+  identity is retained until it is directly replaced. This folds in behaviour the overlay previously
+  hand-rolled as a `FishNetActorDirectory` subclass.
+
+### Patch Changes
+
+- Updated dependencies [36031b4]
+  - @kar-mi/spirit-vale-tools-skills@0.2.3
+  - @kar-mi/spirit-vale-tools-statuses@0.2.6
+
 ## 4.0.0
 
 ### Major Changes
