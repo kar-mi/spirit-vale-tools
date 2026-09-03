@@ -1,5 +1,14 @@
 # @kar-mi/spirit-vale-tools-sqlite
 
+## 0.2.3
+
+### Patch Changes
+
+- 06ccd5e: Cut one coordinated release so every published tarball matches its source and
+  every internal dependency range resolves to matching code.
+- Updated dependencies [06ccd5e]
+  - @kar-mi/spirit-vale-tools-logging@0.10.1
+
 ## 0.2.2
 
 ### Patch Changes
