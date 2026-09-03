@@ -1,5 +1,22 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.4.0
+
+### Minor Changes
+
+- e7df5f1: Add an `onGain` callback to `LiveRewardLogFollower` / `LiveRewardSessionLogFollower`. It fires once
+  per confirmed kill and per unmatched-experience event with
+  `{ experience, jobExperience, coins, recordedAtMs }`, using the log's own recorded time, so a
+  consumer can drive an external rate tracker without re-reading the stream. New exported types:
+  `LiveRewardLogFollowerOptions`, `LiveRewardGain`.
+
+### Patch Changes
+
+- 36031b4: Regenerate the bundled skill, status, and monster reward catalogs from the current game-data export. This adds the Gunslinger and newer Shinobi skills, restores current grenade and class statuses, removes obsolete catalog entries, adopts the current status classifications and skill metadata, refreshes monster names, levels, coin values, and drops, and adds the two Nightmare Weaver reward definitions.
+- Updated dependencies [4e54be5]
+- Updated dependencies [e7df5f1]
+  - @kar-mi/spirit-vale-tools-combat@5.0.0
+
 ## 1.3.2
 
 ### Patch Changes
