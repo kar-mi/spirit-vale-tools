@@ -117,7 +117,7 @@ export class FishNetActorDirectory {
         identityEligible,
       });
       if (ownerConnectionId !== undefined) this.addOwnerObject(ownerConnectionId, packet.objectId);
-      if (hasMonsterIdentityEvidence(packet)) {
+      if (hasMonsterIdentityEvidence(packet) || this.isStickyNonPlayer(packet)) {
         events.push(...this.clearPlayerIdentity(packet.objectId, packet.tick));
         events.push(...this.refreshOwner(ownerConnectionId, packet.tick, true));
         return events;
@@ -166,7 +166,7 @@ export class FishNetActorDirectory {
       );
     }
 
-    if (packet.objectId !== undefined && hasMonsterIdentityEvidence(packet)) {
+    if (packet.objectId !== undefined && (hasMonsterIdentityEvidence(packet) || this.isStickyNonPlayer(packet))) {
       return this.clearPlayerIdentity(packet.objectId, packet.tick);
     }
 
@@ -350,6 +350,16 @@ export class FishNetActorDirectory {
     const events = retainIdentity ? [] : this.reconcile(actorId, undefined, tick);
     events.push(...this.refreshOwner(ownerConnectionId, tick, retainIdentity));
     return events;
+  }
+
+  /**
+   * A summon or clone the caller has opted to keep off the player roster - its own
+   * `SummoningComponent.SummonerSync` marks it. Owner-based attribution still resolves the summoner
+   * (`getAttribution` falls back through `ownerConnectionId`), so the summoner keeps damage credit;
+   * only the standalone identity row and its status bucket go away.
+   */
+  private isStickyNonPlayer(packet: DecodedFishNetPacket): boolean {
+    return this.options.stickyPlayerIdentities === true && hasSummonIdentityEvidence(packet);
   }
 
   private clearPlayerIdentity(actorId: number, tick: number): FishNetActorIdentityEvent[] {

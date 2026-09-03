@@ -624,16 +624,39 @@ describe("FishNetActorDirectory with stickyPlayerIdentities", () => {
     expect(directory.getAttribution(123)).toMatchObject({ displayName: "Aster Vale" });
   });
 
-  test("forgets an identity on despawn once summon/clone evidence marks the object", () => {
+  test("forgets an identity as soon as SummonerSync marks the object as a summon/clone", () => {
     const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
     directory.consume(identify(1, 789, "Borrowed Name"));
-    directory.consume(summonSync(2, 789, "SummonerSync"));
 
-    expect(directory.consume(packet(3, "objectDespawn", 789))).toEqual([
-      { kind: "actorIdentity", operation: "remove", tick: 3, actorId: 789 },
+    expect(directory.consume(summonSync(2, 789, "SummonerSync"))).toEqual([
+      { kind: "actorIdentity", operation: "remove", tick: 2, actorId: 789 },
     ]);
     expect(directory.getAttribution(789)).toBeUndefined();
     expect(directory.snapshot()).toEqual([]);
+
+    expect(directory.consume(packet(3, "objectDespawn", 789))).toEqual([]);
+    expect(directory.getAttribution(789)).toBeUndefined();
+  });
+
+  test("never propagates the owner's identity onto a summon object, but still credits the summoner", () => {
+    const directory = new FishNetActorDirectory({ stickyPlayerIdentities: true });
+    directory.consume(spawn(1, 40, 7, "PlayerController"));
+    directory.consume(packet(2, "syncType", 40, visual("Aster Vale")));
+
+    const events = directory.consume(
+      spawn(3, 50, 7, "SummoningComponent", undefined, [{
+        index: 0,
+        name: "SummonerSync",
+        componentIndex: 0,
+        networkBehaviourType: "SummoningComponent",
+        fields: [{ name: "SummonerSync", codec: "packedInt32", value: 7 }],
+      }]),
+    );
+
+    expect(events.some((event) => event.operation === "upsert" && event.actorId === 50)).toBe(false);
+    expect(directory.get(50)).toBeUndefined();
+    // Owner-based attribution still resolves the summoner, so the meter keeps crediting them.
+    expect(directory.getAttribution(50)).toMatchObject({ displayName: "Aster Vale" });
   });
 
   test("a reused actor identified as a monster stays cleared through despawn", () => {
