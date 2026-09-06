@@ -162,6 +162,8 @@ export interface FishNetCombatStatusEvent {
   /** Server-reported time left, from `ApplyEffectDisplays_O`/`LoadCharacter_T` only. */
   remainingSeconds?: number;
   stacks?: number;
+  /** Observer-reported ceiling for this status on its bearer; 0 means no ceiling declared, absent means not reported. */
+  maxStacks?: number;
   actorIdentity?: FishNetCombatActorIdentity;
 }
 

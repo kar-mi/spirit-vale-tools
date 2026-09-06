@@ -87,6 +87,12 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 1,
+    "damagePerc": 3,
+    "element": 3,
+    "appliedBy": [
+      "SacredBlast"
     ]
   },
   {
@@ -271,6 +277,19 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 1,
+    "damagePerc": 0,
+    "element": 0,
+    "appliedBy": [
+      "BleedCoating",
+      "BloodFrenzy",
+      "Cyclone",
+      "DarkClaw",
+      "Execute",
+      "NPC_BleedAttack",
+      "NPC_WideBleed",
+      "ShrapnelShot"
     ]
   },
   {
@@ -581,6 +600,21 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 1,
+    "damagePerc": 3,
+    "element": 4,
+    "appliedBy": [
+      "Combustion",
+      "ExplosiveGrenade",
+      "Fireball",
+      "FireField",
+      "FirePillar",
+      "FlameOrb",
+      "FlameOrbExplosion",
+      "Meteor",
+      "NPC_Burn",
+      "TetraVortexFire"
     ]
   },
   {
@@ -1168,6 +1202,18 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 1,
+    "damagePerc": 0,
+    "element": 8,
+    "appliedBy": [
+      "BoneSpear",
+      "CorpseExplosionEnemy",
+      "DeathCoilEnemy",
+      "DeathNova",
+      "DeathNovaField",
+      "DeathSpiral",
+      "DecayAura"
     ]
   },
   {
@@ -1791,7 +1837,10 @@ export class StatusDefinitions {
     "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
-    "effects": []
+    "effects": [],
+    "damage": 1,
+    "damagePerc": 3,
+    "element": 5
   },
   {
     "id": "Frozen",
@@ -2227,7 +2276,10 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
-    ]
+    ],
+    "damage": 0,
+    "damagePerc": 5,
+    "element": 0
   },
   {
     "id": "Lockdown",
@@ -2596,6 +2648,18 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 1,
+    "damagePerc": 0,
+    "element": 1,
+    "appliedBy": [
+      "NPC_Poison",
+      "NPC_WidePoison",
+      "PoisonField",
+      "PoisonGrenade",
+      "VenomBloom",
+      "VenomCoating",
+      "VenomStrike"
     ]
   },
   {
@@ -2761,6 +2825,19 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 0,
+    "damagePerc": 0.1,
+    "element": 0,
+    "appliedBy": [
+      "AxeThrow",
+      "Cyclone",
+      "DarkClaw",
+      "Enrage",
+      "Execute",
+      "GroundSlam",
+      "ShoutStun",
+      "WildCharge"
     ]
   },
   {
@@ -3775,6 +3852,12 @@ export class StatusDefinitions {
         "stacks": 0,
         "stacksPerLevel": 0
       }
+    ],
+    "damage": 0,
+    "damagePerc": 5,
+    "element": 0,
+    "appliedBy": [
+      "LifeDrainSummon"
     ]
   },
   {

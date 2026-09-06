@@ -304,6 +304,7 @@ export class FishNetCombatTracker {
         action: "applied",
         ...(display.remainingSeconds === undefined ? {} : { remainingSeconds: display.remainingSeconds }),
         stacks: display.stacks,
+        maxStacks: display.maxStacks,
       })),
       ...batch.removes.map((statusId): FishNetCombatStatusEvent => ({ ...base, statusId, action: "removed" })),
     ];

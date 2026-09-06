@@ -3,6 +3,18 @@ import { describe, expect, test } from "bun:test";
 import { loadDpsReplay, parseDpsLogRecord } from "./replay.ts";
 
 describe("loadDpsReplay", () => {
+  test("preserves reported ceilings through JSON replay and accepts older events without them", () => {
+    const base = { kind: "status", tick: 1, actorId: 900, statusId: "FictionalVenom", action: "applied" };
+    for (const maxStacks of [0, 12]) {
+      const decoded = JSON.parse(JSON.stringify({ ...base, maxStacks }));
+      expect(parseDpsLogRecord("combat.event", decoded)).toMatchObject({ maxStacks });
+    }
+    expect(parseDpsLogRecord("combat.event", base)).not.toHaveProperty("maxStacks");
+    for (const maxStacks of [-1, 1.5, "12", null, Infinity, NaN]) {
+      expect(parseDpsLogRecord("combat.event", { ...base, maxStacks })).toBeUndefined();
+    }
+  });
+
   test("accepts complete shield lifecycle records and rejects incomplete ones", () => {
     expect(parseDpsLogRecord("combat.event", {
       kind: "shield", rpc: "barrierSync", tick: 10, actorId: 1, targetId: 2,

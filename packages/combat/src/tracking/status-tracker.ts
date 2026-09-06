@@ -25,6 +25,8 @@ export interface FishNetActiveStatus {
   expiresAtMs?: number;
   remainingMs?: number;
   stacks?: number;
+  /** Last observer-reported ceiling on this bearer; 0 means no ceiling declared. Never inferred from the catalog. */
+  maxStacks?: number;
 }
 
 export interface FishNetStatusTrackerOptions {
@@ -40,6 +42,7 @@ interface TrackedStatus {
   expiresAtMs?: number;
   stacks?: number;
   summon?: true;
+  maxStacks?: number;
 }
 
 /** Feeds that repeat while a status is merely still active, rather than firing once when it starts. */
@@ -146,11 +149,13 @@ export class FishNetStatusTracker {
     const previous = statuses.get(event.statusId);
     const level = event.level ?? previous?.level ?? 1;
     const expiresAtMs = this.resolveExpiry(event, level, observedAtMs, previous);
+    const maxStacks = event.maxStacks ?? previous?.maxStacks;
     const tracked: TrackedStatus = {
       level,
       appliedAtMs: REFRESHING_FEEDS.has(event.rpc) ? previous?.appliedAtMs ?? observedAtMs : observedAtMs,
       ...(expiresAtMs === undefined ? {} : { expiresAtMs }),
       ...(event.stacks === undefined ? {} : { stacks: event.stacks }),
+      ...(maxStacks === undefined ? {} : { maxStacks }),
     };
     statuses.set(event.statusId, tracked);
     this.active.set(event.actorId, statuses);
@@ -260,6 +265,7 @@ export class FishNetStatusTracker {
         level: tracked.level,
         appliedAtMs: tracked.appliedAtMs,
         ...(tracked.stacks === undefined ? {} : { stacks: tracked.stacks }),
+        ...(tracked.maxStacks === undefined ? {} : { maxStacks: tracked.maxStacks }),
         ...(tracked.expiresAtMs === undefined || !timed
           ? {}
           : { expiresAtMs: tracked.expiresAtMs, remainingMs: Math.max(0, tracked.expiresAtMs - nowMs) }),
@@ -306,6 +312,7 @@ function sameTracked(previous: TrackedStatus | undefined, next: TrackedStatus): 
     && previous.appliedAtMs === next.appliedAtMs
     && previous.expiresAtMs === next.expiresAtMs
     && previous.stacks === next.stacks
+    && previous.maxStacks === next.maxStacks
     && previous.summon === next.summon;
 }
 

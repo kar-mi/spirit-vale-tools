@@ -290,6 +290,23 @@ describe("FishNetStatusTracker with the observers-facing display feed", () => {
 });
 
 describe("FishNetStatusTracker", () => {
+  test("keeps wire ceilings per bearer, updates zero, and forgets them after removal", () => {
+    const tracker = new FishNetStatusTracker({ statusCatalog: SYNTHETIC_CATALOG });
+    tracker.consumeStatus(statusEvent({ actorId: 900, maxStacks: 12 }), 0);
+    tracker.consumeStatus(statusEvent({ actorId: 901, maxStacks: 0 }), 0);
+    expect(tracker.getActiveStatuses(900, 0)[0]).toMatchObject({ maxStacks: 12 });
+    expect(tracker.getActiveStatuses(901, 0)[0]).toMatchObject({ maxStacks: 0 });
+    tracker.consumeStatus(statusEvent({ actorId: 900 }), 100);
+    expect(tracker.getActiveStatuses(900, 100)[0]).toMatchObject({ maxStacks: 12 });
+    const revision = tracker.revision;
+    tracker.consumeStatus(statusEvent({ actorId: 900, maxStacks: 0 }), 100);
+    expect(tracker.revision).toBeGreaterThan(revision);
+    expect(tracker.getActiveStatuses(900, 100)[0]).toMatchObject({ maxStacks: 0 });
+    tracker.consumeStatus(statusEvent({ actorId: 900, action: "removed" }), 200);
+    tracker.consumeStatus(statusEvent({ actorId: 900 }), 300);
+    expect(tracker.getActiveStatuses(900, 300)[0]).not.toHaveProperty("maxStacks");
+  });
+
   test("surfaces summon stacks as an indefinite skill-labeled buff", () => {
     const tracker = new FishNetStatusTracker({
       statusCatalog: SYNTHETIC_CATALOG,
