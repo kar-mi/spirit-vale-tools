@@ -455,6 +455,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 20,
     "effects": []
   },
   {
@@ -491,6 +492,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 5,
     "effects": []
   },
   {
@@ -1652,6 +1654,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 6,
     "effects": [
       {
         "id": "ExplosiveGrenade",
@@ -1997,6 +2000,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 5,
     "effects": []
   },
   {
@@ -2343,6 +2347,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 5,
     "effects": []
   },
   {
@@ -2743,6 +2748,7 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
+    "cooldown": 5,
     "effects": []
   },
   {

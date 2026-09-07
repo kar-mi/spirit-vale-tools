@@ -84,20 +84,29 @@ interval, not the whole status. The trade-off is that it carries **no level**.
 
 #### `QueuedEffectDisplay` on the wire
 
-The RPC map declares the array element as an opaque type, so the layout was
-derived from captures. Each entry:
+The datamine's `_STRUCTURED_LAYOUTS` now names this struct
+(`StatusComponent+QueuedEffectDisplay`, `Id`/`Duration`/`Stacks`/`StacksMax`/`ShowFx`,
+reflection-confirmed), so the RPC map carries its fields. The layout below was originally
+derived from captures and matches. Each entry:
 
 | Field | Codec | Meaning |
 | --- | --- | --- |
 | `statusId` | length-prefixed UTF-8 | catalog status id |
-| `remaining` | `float32` | seconds left; negative means no expiry |
-| `stacks` | packed int | current stack count |
+| `remaining` | `float32` | seconds left; negative means no expiry. The **longest** of the bearer's per-stack timers — not the nominal duration |
+| `stacks` | packed int | current stack total (latest value) |
 | `maxStacks` | packed int | server-declared ceiling, `0` when none |
-| — | byte `0`/`1` | meaning unestablished; validated then discarded |
+| `showFx` | byte `0`/`1` | cosmetic apply-flash flag; validated then discarded |
 
 Then a `List<string>` of ids to remove. `decodeEffectDisplays`
 (`packages/combat/src/events/effect-display.ts`) is strict: it must consume the payload
 exactly, or it throws and the packet is skipped rather than half-read.
+
+The server keeps one `QueuedEffectDisplay` per (bearer, status) in a dictionary
+(`StatusComponent.ApplyEffectDisplay`), `max`-ing the remaining time and overwriting the
+stack total, so **per-stack application data — who applied which stacks and when each
+expires — is never on the wire**, only this summary. The game's own
+`StatusEffectState` does hold a per-stack `List<float>` of timers; see the datamine's
+`statusTickInterval` formula note.
 
 Framing alone could not pin these fields — `u8` and packed int encode
 identically for small values, so three candidate layouts all consumed all 9,535

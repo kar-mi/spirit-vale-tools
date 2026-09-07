@@ -18,6 +18,11 @@ export interface FishNetStatusDefinition {
   readonly isDebuff: boolean;
   readonly maxLevel: number;
   readonly fixedDuration: boolean;
+  /**
+   * Re-application cooldown in seconds (`config.Cooldown`): the minimum gap before the same
+   * source can apply this status again. Present only when non-zero.
+   */
+  readonly cooldown?: number;
   readonly effects: readonly FishNetStatusEffect[];
   /** Flat per-tick damage coefficient (`config.Damage`); present only for damaging statuses. */
   readonly damage?: number;

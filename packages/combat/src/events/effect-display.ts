@@ -3,8 +3,12 @@ import { checkedEnd, readSignedPackedWhole, requireBytes } from "@kar-mi/spirit-
 
 interface FishNetEffectDisplay {
   statusId: string;
-  /** Seconds left on the status. */
+  /**
+   * Server's live remaining time: the longest of the bearer's per-stack timers for this
+   * status, not the nominal application duration. Absent when the status has no expiry.
+   */
   remainingSeconds?: number;
+  /** Current stack total on the bearer (latest value; per-stack timers are not sent). */
   stacks: number;
   /** Server-declared stack ceiling; 0 where the status declares none. */
   maxStacks: number;
@@ -15,7 +19,11 @@ export interface FishNetEffectDisplayBatch {
   removes: string[];
 }
 
-/** Decodes the batched status snapshot carried by `ApplyEffectDisplays_O`. */
+/**
+ * Decodes the batched status snapshot carried by `ApplyEffectDisplays_O`. The server keeps one
+ * `QueuedEffectDisplay` per (bearer, status) — latest stack total, longest remaining stack
+ * timer, and a cosmetic `ShowFx` flag — so per-stack application data is never on the wire.
+ */
 export function decodeEffectDisplays(payload: Buffer): FishNetEffectDisplayBatch {
   const applies: FishNetEffectDisplay[] = [];
   let offset = 0;
@@ -34,7 +42,9 @@ export function decodeEffectDisplays(payload: Buffer): FishNetEffectDisplayBatch
     offset = stacks.nextOffset;
     const maxStacks = readSignedPackedWhole(payload, offset);
     offset = maxStacks.nextOffset;
-    offset = readBoolean(payload, offset, "effect display flag").nextOffset;
+    // `QueuedEffectDisplay.ShowFx`: a cosmetic apply-flash flag the client uses for VFX only.
+    // Read to keep the cursor aligned; nothing downstream needs it.
+    offset = readBoolean(payload, offset, "effect display showFx flag").nextOffset;
 
     if (stacks.value < 0) throw new FishNetProtocolError("negative effect display stack count");
     applies.push({

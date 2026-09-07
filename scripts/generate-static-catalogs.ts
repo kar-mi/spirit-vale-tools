@@ -43,6 +43,7 @@ interface StatusEntry {
   config: {
     MaxLv: number;
     FixedDuration: number;
+    Cooldown?: number;
     Damage?: number;
     DamagePerc?: number;
     Element?: number;
@@ -181,6 +182,7 @@ function statusDefinition(entry: StatusEntry, grants: Map<string, GrantTuple[]>)
   const damagePerc = entry.config.DamagePerc ?? 0;
   const dealsDamage = damage > 0 || damagePerc > 0;
   const appliedBy = dealsDamage ? statusAppliedBy(entry.id, grants) : [];
+  const cooldown = typeof entry.config.Cooldown === "number" ? entry.config.Cooldown : 0;
   return {
     id: entry.id,
     displayName: entry.displayName,
@@ -188,6 +190,7 @@ function statusDefinition(entry: StatusEntry, grants: Map<string, GrantTuple[]>)
     isDebuff: entry.isDebuff,
     maxLevel: entry.config.MaxLv,
     fixedDuration: entry.config.FixedDuration === 1,
+    ...(cooldown > 0 ? { cooldown } : {}),
     effects: statusEffects(entry.id, entry.isDebuff, grants),
     ...(dealsDamage
       ? { damage, damagePerc, element: entry.config.Element ?? 0 }

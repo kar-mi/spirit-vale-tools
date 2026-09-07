@@ -10,12 +10,12 @@ function packed(value: number): Buffer {
   return Buffer.from(bytes);
 }
 
-function entry(statusId: string, remaining: number, stacks: number, maxStacks: number, flag = 0): Buffer {
+function entry(statusId: string, remaining: number, stacks: number, maxStacks: number, showFx = 0): Buffer {
   const seconds = Buffer.alloc(4);
   seconds.writeFloatLE(remaining);
   return Buffer.concat([
     packed(Buffer.byteLength(statusId)), Buffer.from(statusId),
-    seconds, packed(stacks), packed(maxStacks), Buffer.from([flag]),
+    seconds, packed(stacks), packed(maxStacks), Buffer.from([showFx]),
   ]);
 }
 
@@ -62,10 +62,17 @@ describe("decodeEffectDisplays", () => {
     // Trailing bytes mean the layout is not what we think it is; a lenient read would invent data.
     expect(() => decodeEffectDisplays(Buffer.concat([base, Buffer.from([0x00])]))).toThrow(/undecoded bytes/);
     expect(() => decodeEffectDisplays(base.subarray(0, base.length - 1))).toThrow();
-    // The trailing flag is only ever 0 or 1; anything else means we are misreading the entry.
+    // The trailing `ShowFx` flag is only ever 0 or 1; anything else means we are misreading the entry.
     const corrupted = Buffer.from(base);
     corrupted[corrupted.length - 2] = 0x7f;
     expect(() => decodeEffectDisplays(corrupted)).toThrow();
+  });
+
+  test("accepts an entry whose ShowFx flag is set", () => {
+    expect(decodeEffectDisplays(payload([entry("FictionalVenom", 5, 3, 0, 1)]))).toEqual({
+      applies: [{ statusId: "FictionalVenom", remainingSeconds: 5, stacks: 3, maxStacks: 0 }],
+      removes: [],
+    });
   });
 
   test("decodes a batch mixing a permanent status with timed ones", () => {
