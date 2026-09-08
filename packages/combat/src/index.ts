@@ -9,11 +9,6 @@ export { createBossCatalog } from "./tracking/boss-catalog.ts";
 export { FishNetActorDirectory } from "./tracking/actor-directory.ts";
 export { FishNetStatusTracker } from "./tracking/status-tracker.ts";
 export type { FishNetActiveStatus, FishNetStatusTrackerOptions } from "./tracking/status-tracker.ts";
-export { StatusDamageAttributionTracker } from "./tracking/status-damage-attribution.ts";
-export type {
-  StatusDamageAttributionOptions,
-  StatusStackShares,
-} from "./tracking/status-damage-attribution.ts";
 export { loadDpsReplay, parseDpsLogRecord } from "./replay/replay.ts";
 export type { DpsReplayResult } from "./replay/replay.ts";
 export { decodeCombatCaptureJsonLines, replayCombatCapture, replayCombatCaptures } from "./replay/replay-capture.ts";

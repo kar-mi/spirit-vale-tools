@@ -93,7 +93,7 @@ derived from captures and matches. Each entry:
 | --- | --- | --- |
 | `statusId` | length-prefixed UTF-8 | catalog status id |
 | `remaining` | `float32` | seconds left; negative means no expiry. The **longest** of the bearer's per-stack timers — not the nominal duration |
-| `stacks` | packed int | current stack total (latest value) |
+| `stacks` | packed int | current number of live, individually timed status stacks (latest aggregate value) |
 | `maxStacks` | packed int | server-declared ceiling, `0` when none |
 | `showFx` | byte `0`/`1` | cosmetic apply-flash flag; validated then discarded |
 
@@ -115,12 +115,19 @@ captured payloads exactly. What separated them was behaviour over time:
 ```
 ComboReady   4.000 → 3.000 → 2.667 → 1.833 → 4.000   float tracks wall clock,
                                                      resets on recast
-Poison      10.000 held steady while stacks climbed
+Poison      10.000 held steady while the aggregate live stack count climbed
              3 → 6 → 13 → 29 → 43 → 72
 ```
 
 and a captured `Might` entry that pins the last pair outright — `stacks = 22`,
 `maxStacks = 25`, which is exactly where Might caps.
+
+The growing Poison number is therefore not potency, accumulated damage, or
+poison-element damage. It is the number of Poison stacks whose independent
+timers have not yet expired. The individual timers exist only in server state;
+the observer RPC reports their aggregate count and longest remaining timer.
+See [Status damage and stacking](status-damage.md) for the game calculation,
+wire fields, and direct damage-attribution rules used by the combat package.
 
 Cross-checking the float against the catalog is *misleading*: the server sends
 live remaining time, not the nominal duration, so a valid `Haste` entry reads

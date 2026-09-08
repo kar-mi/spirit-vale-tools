@@ -5,8 +5,13 @@ export interface FishNetStatusEffect {
   readonly id: string;
   readonly duration: number;
   readonly durationPerLevel: number;
+  /**
+   * Historical game-data name for part of the application-quantity calculation. The game combines
+   * this with `stacks` in `SkillStatus.GetChance`; it is not simply a boolean proc probability.
+   */
   readonly chance: number;
   readonly chancePerLevel: number;
+  /** Another component of application quantity, not the observer's aggregate live stack count. */
   readonly stacks: number;
   readonly stacksPerLevel: number;
 }
