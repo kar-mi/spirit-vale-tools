@@ -73,8 +73,9 @@ application. A periodic event whose source is the damaging status is a tick, not
 
 Periodic status damage does not need to be inferred from stack ownership. Each damage event
 carries the server-provided attacker id in `dmg.AttackerId`, along with the bearer, status source,
-damage value, and damage type. Consumers attribute a Poison tick by grouping its damage value by
-that attacker identity, just as they do for a direct hit.
+damage value, and damage type. Consumers attribute any status tick by grouping its damage value
+by that attacker identity, just as they do for a direct hit. Poison, Burning, Bleed, and other
+damaging statuses all use this same damage-event path; the status id is the event's source.
 
 Clones and other player-controlled combat objects can deal damage under an actor id distinct from
 the visible player object. Spawn ownership and actor-identity continuity associate those aliases
