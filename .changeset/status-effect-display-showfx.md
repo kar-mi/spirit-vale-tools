@@ -1,18 +1,19 @@
 ---
 "@kar-mi/spirit-vale-tools-statuses": minor
 "@kar-mi/spirit-vale-tools-capture": patch
-"@kar-mi/spirit-vale-tools-combat": patch
+"@kar-mi/spirit-vale-tools-combat": minor
 ---
 
-Name the `ApplyEffectDisplays_O` wire fields and carry status re-application cooldowns.
+Expose damaging-status metadata and preserve the complete `ApplyEffectDisplays_O` status summary.
 
-- `capture`: the datamine now describes `StatusComponent+QueuedEffectDisplay`, so the
-  generated RPC map spells out its fields (`Id`, `Duration`, `Stacks`, `StacksMax`,
-  `ShowFx`) instead of an opaque array element.
-- `combat`: `decodeEffectDisplays` names the trailing byte `ShowFx` — a cosmetic
-  apply-flash flag — and documents that the feed is a per-(bearer, status) summary
-  (latest stack total, longest remaining stack timer); per-stack application data is
-  never on the wire.
-- `statuses`: `FishNetStatusDefinition` gains `cooldown` (`config.Cooldown`, seconds),
-  the minimum gap before the same source can re-apply a status; present only when
-  non-zero.
+- `statuses`: `FishNetStatusDefinition` gains per-tick damage metadata (`damage`,
+  `damagePerc`, and `element`), the skill/coating application graph (`appliedBy`), and
+  non-zero status re-application `cooldown` values. An `isDamagingStatus` helper identifies
+  definitions with positive flat or percentage damage.
+- `capture`: the generated RPC map names the `StatusComponent+QueuedEffectDisplay` fields
+  (`Id`, `Duration`, `Stacks`, `StacksMax`, and `ShowFx`) instead of leaving each array
+  element opaque.
+- `combat`: `decodeEffectDisplays` consumes the cosmetic `ShowFx` byte and documents the
+  per-bearer, per-status summary. Combat status events, replay, and active snapshots now
+  preserve observer-reported `maxStacks`: zero declares no ceiling, while absence means the
+  feed did not report one.
