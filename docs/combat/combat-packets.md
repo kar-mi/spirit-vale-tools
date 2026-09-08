@@ -84,20 +84,29 @@ interval, not the whole status. The trade-off is that it carries **no level**.
 
 #### `QueuedEffectDisplay` on the wire
 
-The RPC map declares the array element as an opaque type, so the layout was
-derived from captures. Each entry:
+The datamine's `_STRUCTURED_LAYOUTS` now names this struct
+(`StatusComponent+QueuedEffectDisplay`, `Id`/`Duration`/`Stacks`/`StacksMax`/`ShowFx`,
+reflection-confirmed), so the RPC map carries its fields. The layout below was originally
+derived from captures and matches. Each entry:
 
 | Field | Codec | Meaning |
 | --- | --- | --- |
 | `statusId` | length-prefixed UTF-8 | catalog status id |
-| `remaining` | `float32` | seconds left; negative means no expiry |
-| `stacks` | packed int | current stack count |
+| `remaining` | `float32` | seconds left; negative means no expiry. The **longest** of the bearer's per-stack timers — not the nominal duration |
+| `stacks` | packed int | current number of live, individually timed status stacks (latest aggregate value) |
 | `maxStacks` | packed int | server-declared ceiling, `0` when none |
-| — | byte `0`/`1` | meaning unestablished; validated then discarded |
+| `showFx` | byte `0`/`1` | cosmetic apply-flash flag; validated then discarded |
 
 Then a `List<string>` of ids to remove. `decodeEffectDisplays`
 (`packages/combat/src/events/effect-display.ts`) is strict: it must consume the payload
 exactly, or it throws and the packet is skipped rather than half-read.
+
+The server keeps one `QueuedEffectDisplay` per (bearer, status) in a dictionary
+(`StatusComponent.ApplyEffectDisplay`), `max`-ing the remaining time and overwriting the
+stack total, so **per-stack application data — who applied which stacks and when each
+expires — is never on the wire**, only this summary. The game's own
+`StatusEffectState` does hold a per-stack `List<float>` of timers; see the datamine's
+`statusTickInterval` formula note.
 
 Framing alone could not pin these fields — `u8` and packed int encode
 identically for small values, so three candidate layouts all consumed all 9,535
@@ -106,12 +115,19 @@ captured payloads exactly. What separated them was behaviour over time:
 ```
 ComboReady   4.000 → 3.000 → 2.667 → 1.833 → 4.000   float tracks wall clock,
                                                      resets on recast
-Poison      10.000 held steady while stacks climbed
+Poison      10.000 held steady while the aggregate live stack count climbed
              3 → 6 → 13 → 29 → 43 → 72
 ```
 
 and a captured `Might` entry that pins the last pair outright — `stacks = 22`,
 `maxStacks = 25`, which is exactly where Might caps.
+
+The growing Poison number is therefore not potency, accumulated damage, or
+poison-element damage. It is the number of Poison stacks whose independent
+timers have not yet expired. The individual timers exist only in server state;
+the observer RPC reports their aggregate count and longest remaining timer.
+See [Status damage and stacking](status-damage.md) for the game calculation,
+wire fields, and direct damage-attribution rules used by the combat package.
 
 Cross-checking the float against the catalog is *misleading*: the server sends
 live remaining time, not the nominal duration, so a valid `Haste` entry reads

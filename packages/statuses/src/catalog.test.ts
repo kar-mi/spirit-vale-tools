@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { CURRENT_GAME_BUILD_FINGERPRINT } from "@kar-mi/spirit-vale-tools-capture";
 import {
   FishNetStatusDirectory,
+  isDamagingStatus,
   loadBundledStatusCatalog,
   resolveFishNetStatus,
   statusDurationSeconds,
@@ -17,6 +18,10 @@ const SYNTHETIC_CATALOG: FishNetStatusCatalog = {
     maxLevel: 5,
     fixedDuration: false,
     effects: [{ id: "SyntheticIgnite", duration: 3, durationPerLevel: 1, chance: 0, chancePerLevel: 0, stacks: 0, stacksPerLevel: 0 }],
+    damage: 1,
+    damagePerc: 3,
+    element: 4,
+    appliedBy: ["SyntheticIgnite", "SyntheticCoating"],
   }],
 };
 
@@ -59,8 +64,38 @@ describe("FishNetStatusDirectory", () => {
     expect(first).toEqual(SYNTHETIC_CATALOG.statuses[0]!);
     expect(first).not.toBe(SYNTHETIC_CATALOG.statuses[0]!);
     expect(first.effects).not.toBe(SYNTHETIC_CATALOG.statuses[0]?.effects);
+    expect(first.appliedBy).not.toBe(SYNTHETIC_CATALOG.statuses[0]?.appliedBy);
     expect(directory.resolve("MissingStatus")).toBeUndefined();
     expect(() => directory.require("MissingStatus")).toThrow("unknown status definition");
+  });
+
+  test("ports per-tick damage and the application graph for damaging debuffs", () => {
+    const burning = resolveFishNetStatus("Burning");
+    expect(burning).toMatchObject({ damage: 1, damagePerc: 3, element: 4 });
+    expect(burning?.appliedBy).toEqual(expect.arrayContaining(["Fireball", "Meteor"]));
+    // Coatings apply their DoT transitively and must land in `appliedBy`.
+    expect(resolveFishNetStatus("Poison")?.appliedBy).toEqual(expect.arrayContaining(["VenomStrike", "VenomCoating"]));
+    // Engine elemental-combo statuses carry damage but no named applier.
+    expect(resolveFishNetStatus("FrostBite")).toMatchObject({ damage: 1 });
+    expect(resolveFishNetStatus("FrostBite")?.appliedBy).toBeUndefined();
+    // Self-grants are excluded rather than listing the status as its own applier.
+    expect(resolveFishNetStatus("LimitBreak")?.appliedBy).toBeUndefined();
+  });
+
+  test("omits damage metadata for non-damaging statuses", () => {
+    for (const id of ["Stun", "Haste", "Frozen"]) {
+      const definition = resolveFishNetStatus(id);
+      expect(definition?.damage).toBeUndefined();
+      expect(definition?.damagePerc).toBeUndefined();
+      expect(definition?.appliedBy).toBeUndefined();
+    }
+  });
+
+  test("isDamagingStatus reflects positive per-tick damage only", () => {
+    expect(isDamagingStatus(resolveFishNetStatus("Burning"))).toBe(true);
+    expect(isDamagingStatus(resolveFishNetStatus("Regeneration"))).toBe(false);
+    expect(isDamagingStatus(resolveFishNetStatus("Stun"))).toBe(false);
+    expect(isDamagingStatus(undefined)).toBe(false);
   });
 
   test("rejects duplicate synthetic IDs", () => {

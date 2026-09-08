@@ -23,6 +23,17 @@ import {
 } from "../testing/combat-packets.ts";
 
 describe("FishNetCombatTracker", () => {
+  test("preserves zero and positive wire ceilings separately for each status bearer", () => {
+    const tracker = new FishNetCombatTracker();
+    for (const [actorId, maxStacks] of [[900, 0], [901, 12]] as const) {
+      const input = packet(1, actorId, "StatusComponent", "ApplyEffectDisplays_O");
+      input.payload = effectDisplayPayload([effectEntry("FictionalVenom", 6, 4, maxStacks)], []);
+      expect(tracker.consume(input)).toMatchObject([
+        { kind: "status", actorId, statusId: "FictionalVenom", stacks: 4, maxStacks },
+      ]);
+    }
+  });
+
   test("emits one flat monster identity event instead of repeating identity on hits", () => {
     const tracker = new FishNetCombatTracker({
       monsterCatalog: new Map([["fictional_mob", { level: 2, displayName: "Fictional Mob" }]]),
@@ -122,6 +133,7 @@ describe("FishNetCombatTracker", () => {
       const tracker = new FishNetCombatTracker();
       const [event] = tracker.consume(packet(1, 60, "StatusComponent", "ApplySkillDisplay_O", [field("id", "FlowState")]));
       expect(event).not.toHaveProperty("remainingSeconds");
+      expect(event).not.toHaveProperty("maxStacks");
     });
 
     test("skips an entry whose id did not decode", () => {
@@ -147,6 +159,7 @@ describe("FishNetCombatTracker", () => {
           action: "applied",
           remainingSeconds: 4.5,
           stacks: 2,
+          maxStacks: 5,
         }),
         expect.objectContaining({
           kind: "status",

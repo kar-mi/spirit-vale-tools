@@ -5,8 +5,13 @@ export interface FishNetStatusEffect {
   readonly id: string;
   readonly duration: number;
   readonly durationPerLevel: number;
+  /**
+   * Historical game-data name for part of the application-quantity calculation. The game combines
+   * this with `stacks` in `SkillStatus.GetChance`; it is not simply a boolean proc probability.
+   */
   readonly chance: number;
   readonly chancePerLevel: number;
+  /** Another component of application quantity, not the observer's aggregate live stack count. */
   readonly stacks: number;
   readonly stacksPerLevel: number;
 }
@@ -18,7 +23,23 @@ export interface FishNetStatusDefinition {
   readonly isDebuff: boolean;
   readonly maxLevel: number;
   readonly fixedDuration: boolean;
+  /**
+   * Re-application cooldown in seconds (`config.Cooldown`): the minimum gap before the same
+   * source can apply this status again. Present only when non-zero.
+   */
+  readonly cooldown?: number;
   readonly effects: readonly FishNetStatusEffect[];
+  /** Flat per-tick damage coefficient (`config.Damage`); present only for damaging statuses. */
+  readonly damage?: number;
+  /** Percent-of-target per-tick damage (`config.DamagePerc`); present only for damaging statuses. */
+  readonly damagePerc?: number;
+  /** Element id the ticks deal (`config.Element`, 0 = physical); present only for damaging statuses. */
+  readonly element?: number;
+  /**
+   * Skill and coating/enchant status ids observed to apply this status, from the data-mine
+   * grant graph. Present only for damaging statuses, where it drives DPS-meter attribution.
+   */
+  readonly appliedBy?: readonly string[];
 }
 
 export interface FishNetStatusCatalog {
@@ -87,8 +108,17 @@ export function statusDurationSeconds(
   return effect.duration + effectiveLevel * effect.durationPerLevel;
 }
 
+/** Whether a status deals positive damage to its bearer on each tick. */
+export function isDamagingStatus(definition: FishNetStatusDefinition | undefined): boolean {
+  return definition !== undefined && ((definition.damage ?? 0) > 0 || (definition.damagePerc ?? 0) > 0);
+}
+
 function cloneDefinition(definition: FishNetStatusDefinition): FishNetStatusDefinition {
-  return { ...definition, effects: definition.effects.map((effect) => ({ ...effect })) };
+  return {
+    ...definition,
+    effects: definition.effects.map((effect) => ({ ...effect })),
+    ...(definition.appliedBy ? { appliedBy: [...definition.appliedBy] } : {}),
+  };
 }
 
 function cloneCatalog(catalog: FishNetStatusCatalog): FishNetStatusCatalog {

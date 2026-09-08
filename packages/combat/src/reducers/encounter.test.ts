@@ -462,6 +462,45 @@ describe("encounter aggregation and rendering", () => {
     });
   });
 
+  test("attributes periodic status damage to its wire attacker and merges a clone alias by owner", () => {
+    const meter = new MeterHarness({ personalName: "Aster Vale" });
+    meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);
+    meter.consumeIdentity(identity(202, "Aster Vale", 1, 7), 0);
+    meter.consumeCombat({
+      ...damage(101, 600, "Poison", "Poison"),
+      damageType: 3,
+      element: 1,
+    }, 500);
+    meter.consumeCombat({
+      ...damage(202, 400, "Poison", "Poison"),
+      damageType: 3,
+      element: 1,
+      isClone: true,
+      isSummon: true,
+    }, 1_000);
+    meter.consumeCombat({
+      ...damage(202, 250, "Burning", "Burning"),
+      damageType: 3,
+      element: 4,
+      isClone: true,
+      isSummon: true,
+    }, 1_500);
+
+    expect(meter.getLatestSnapshot()).toMatchObject({
+      totalDamage: 1_250,
+      actors: [{
+        actorIds: [101, 202],
+        displayName: "Aster Vale",
+        damage: 1_250,
+        skills: [
+          { sourceId: "Poison", damage: 1_000, hits: 2 },
+          { sourceId: "Burning", damage: 250, hits: 1 },
+        ],
+      }],
+      personal: { actorIds: [101, 202], damage: 1_250 },
+    });
+  });
+
   test("merges credited kills across same-owner combat aliases", () => {
     const meter = new MeterHarness();
     meter.consumeIdentity(identity(101, "Aster Vale", 1, 7), 0);

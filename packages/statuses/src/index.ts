@@ -1,5 +1,6 @@
 export {
   FishNetStatusDirectory,
+  isDamagingStatus,
   loadBundledStatusCatalog,
   requireFishNetStatus,
   resolveFishNetStatus,

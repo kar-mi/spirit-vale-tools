@@ -75,6 +75,8 @@ function parseDpsLogEvent(value: unknown): FishNetActorIdentityEvent | FishNetCo
       || typeof value["statusId"] !== "string"
       || (value["level"] !== undefined && !isFiniteNumber(value["level"]))
       || (value["remainingSeconds"] !== undefined && !isFiniteNumber(value["remainingSeconds"]))
+      || (value["maxStacks"] !== undefined && (!isFiniteNumber(value["maxStacks"])
+        || !Number.isInteger(value["maxStacks"]) || value["maxStacks"] < 0))
       || (value["action"] !== "applied" && value["action"] !== "removed")) return undefined;
     return value as unknown as FishNetCombatEvent;
   }

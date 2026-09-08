@@ -87,7 +87,35 @@ export const statusComponentRpcs = [
     "parameters": [
       {
         "name": "applies",
-        "typeName": "StatusComponent+QueuedEffectDisplay[]"
+        "typeName": "StatusComponent+QueuedEffectDisplay[]",
+        "fields": [
+          {
+            "name": "Id",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Duration",
+            "typeName": "System.Single",
+            "codec": "float32"
+          },
+          {
+            "name": "Stacks",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "StacksMax",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "ShowFx",
+            "typeName": "System.Boolean",
+            "codec": "boolean"
+          }
+        ],
+        "repeated": true
       },
       {
         "name": "removes",

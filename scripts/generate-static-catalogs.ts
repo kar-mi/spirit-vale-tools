@@ -43,6 +43,10 @@ interface StatusEntry {
   config: {
     MaxLv: number;
     FixedDuration: number;
+    Cooldown?: number;
+    Damage?: number;
+    DamagePerc?: number;
+    Element?: number;
     StatusEffects?: StatusEffectRow[];
     SelfStatusEffects?: StatusEffectRow[];
   } & Partial<Record<string, ScalarValue>>;
@@ -164,7 +168,21 @@ function statusEffects(id: string, isDebuff: boolean, grants: Map<string, GrantT
   return effects;
 }
 
+/** Deduped skill/coating ids the grant graph records as applying this status, minus self-grants. */
+function statusAppliedBy(id: string, grants: Map<string, GrantTuple[]>): string[] {
+  const ids = new Set<string>();
+  for (const tuple of grants.get(id) ?? []) {
+    if (tuple.id !== id) ids.add(tuple.id);
+  }
+  return [...ids].sort((left, right) => left.localeCompare(right));
+}
+
 function statusDefinition(entry: StatusEntry, grants: Map<string, GrantTuple[]>): FishNetStatusDefinition {
+  const damage = entry.config.Damage ?? 0;
+  const damagePerc = entry.config.DamagePerc ?? 0;
+  const dealsDamage = damage > 0 || damagePerc > 0;
+  const appliedBy = dealsDamage ? statusAppliedBy(entry.id, grants) : [];
+  const cooldown = typeof entry.config.Cooldown === "number" ? entry.config.Cooldown : 0;
   return {
     id: entry.id,
     displayName: entry.displayName,
@@ -172,7 +190,12 @@ function statusDefinition(entry: StatusEntry, grants: Map<string, GrantTuple[]>)
     isDebuff: entry.isDebuff,
     maxLevel: entry.config.MaxLv,
     fixedDuration: entry.config.FixedDuration === 1,
+    ...(cooldown > 0 ? { cooldown } : {}),
     effects: statusEffects(entry.id, entry.isDebuff, grants),
+    ...(dealsDamage
+      ? { damage, damagePerc, element: entry.config.Element ?? 0 }
+      : {}),
+    ...(appliedBy.length > 0 ? { appliedBy } : {}),
   };
 }
 
