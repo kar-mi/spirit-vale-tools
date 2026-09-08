@@ -1,5 +1,29 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 5.1.0
+
+### Minor Changes
+
+- 35eee59: Expose damaging-status metadata and preserve the complete `ApplyEffectDisplays_O` status summary.
+  
+  - `statuses`: `FishNetStatusDefinition` gains per-tick damage metadata (`damage`,
+    `damagePerc`, and `element`), the skill/coating application graph (`appliedBy`), and
+    non-zero status re-application `cooldown` values. An `isDamagingStatus` helper identifies
+    definitions with positive flat or percentage damage.
+  - `capture`: the generated RPC map names the `StatusComponent+QueuedEffectDisplay` fields
+    (`Id`, `Duration`, `Stacks`, `StacksMax`, and `ShowFx`) instead of leaving each array
+    element opaque.
+  - `combat`: `decodeEffectDisplays` consumes the cosmetic `ShowFx` byte and documents the
+    per-bearer, per-status summary. Combat status events, replay, and active snapshots now
+    preserve observer-reported `maxStacks`: zero declares no ceiling, while absence means the
+    feed did not report one.
+
+### Patch Changes
+
+- Updated dependencies [35eee59]
+  - @kar-mi/spirit-vale-tools-statuses@0.3.0
+  - @kar-mi/spirit-vale-tools-capture@3.0.2
+
 ## 5.0.1
 
 ### Patch Changes
