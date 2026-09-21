@@ -49,18 +49,42 @@ export class SystemNpcapRuntime implements NpcapRuntime {
 
   async status(): Promise<NpcapStatus> {
     if (this.readyStatus) return this.readyStatus;
-    if (process.platform !== "win32") {
-      return { availability: "error", detail: "Npcap capture is supported only on Windows" };
+    switch (process.platform) {
+      case "win32": break;
+      case "linux": break;
+      default: return { availability: "error", detail: `${expectedCaptureLibraryName()} capture is supported only on Windows & linux.` };
     }
     const dllPath = npcapDllPath();
-    if (!existsSync(dllPath)) {
-      return { availability: "missing", detail: "Npcap is not installed" };
+
+    switch(process.platform) {
+      case "win32":
+          if (!existsSync(dllPath)) {
+            return { availability: "missing", detail: `${expectedCaptureLibraryName()} is not found, please install it and make sure it's avaliable.` };
+          }
+      case "linux":
+        // we already validated that we can dlopen it in npcapDllPath() function.
+        // dllPath could be "libpcap.so" on linux... but the fully qualified path is actually LD_LIBRARY_PATH="/nix/store/lhqzqnb3r8wclslpchwwam9k12w7w58f-libpcap-1.10.6-lib/lib" + "libpcap.so".
+        // it's maybe better to just attempt a dlopen, and return the linker error then it is to existsSync("libpcap.so").
+        break;
+      default:
+        return { availability: "missing", detail: `Missing packet capture, not supported on this platform.` };
     }
     try {
       const api = this.load();
       const version = String(api.symbols.pcap_lib_version());
-      if (!version.toLowerCase().includes("npcap")) {
-        return { availability: "error", detail: "The loaded packet capture library is not Npcap" };
+      switch (process.platform) {
+        case "win32":
+          if (!version.toLowerCase().includes("npcap")) {
+            return { availability: "error", detail: "The loaded packet capture library is not Npcap" };
+          }
+          break;
+        case "linux":
+          if (!version.toLowerCase().includes("pcap")) {
+            return { availability: "error", detail: `The loaded packet capture library is not libpcap, instead got: '${version}'.` };
+          }
+          break;
+        default:
+          throw new Error("Platform not supported.");
       }
       const devices = this.enumerateDevices(api);
       if (devices.length === 0) {
@@ -202,10 +226,12 @@ class LiveNpcapSession implements NpcapSession {
     const header = pointerFromBuffer(headerPointer);
     const data = pointerFromBuffer(dataPointer);
     if (!header || !data) throw new Error("Npcap returned an invalid packet pointer");
-    const seconds = read.i32(header, 0);
-    const microseconds = read.i32(header, 4);
-    const capturedLength = read.u32(header, 8);
-    const originalLength = read.u32(header, 12);
+    const {
+      seconds,
+      microseconds,
+      capturedLength,
+      originalLength
+    } = readPcapHeader(header);
     const capturedAt = new Date(seconds * 1_000 + Math.floor(microseconds / 1_000));
     return {
       capturedAt,
@@ -220,6 +246,31 @@ class LiveNpcapSession implements NpcapSession {
     this.closed = true;
     this.api.symbols.pcap_close(this.handle);
   }
+}
+
+function readPcapHeader(header: Pointer): {
+  seconds: number;
+  microseconds: number;
+  capturedLength: number;
+  originalLength: number;
+} {
+  if (process.platform === "win32") {
+    // Windows / Npcap: 32-bit timeval
+    return {
+      seconds: read.i32(header, 0),
+      microseconds: read.i32(header, 4),
+      capturedLength: read.u32(header, 8),
+      originalLength: read.u32(header, 12),
+    };
+  }
+
+  // Linux (and typically macOS) LP64: 64-bit timeval
+  return {
+    seconds: Number(read.i64(header, 0)),
+    microseconds: Number(read.i64(header, 8)),
+    capturedLength: read.u32(header, 16),
+    originalLength: read.u32(header, 20),
+  };
 }
 
 interface NpcapSymbols {
@@ -292,7 +343,38 @@ function readCStringBuffer(buffer: Uint8Array): string {
 }
 
 function npcapDllPath(): string {
-  return path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "Npcap", "wpcap.dll");
+  switch (process.platform) {
+    case "win32": return path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "Npcap", "wpcap.dll");
+    case "linux": {
+      const candidates = [
+        process.env.LIBPCAP_PATH ?? "", // user specified override
+        "libpcap.so", // the dynamic linker should search the app folder & $LD_LIBRARY_PATH
+        "libpcap.so.1", // fallbacks
+        "/usr/lib/libpcap.so", // and a fully qualified path where we expect it to be installed on most standard linux distros..
+      ].filter(Boolean);
+      for (const path of candidates) {
+        try {
+          // check that it exists, and can be dlopened.
+          console.log("Trying lib path: ", path);
+          const lib = dlopen(path, { pcap_lib_version: { args: [], returns: FFIType.cstring } });
+          console.log("Found lib:", path, lib, lib.symbols.pcap_lib_version()); // "libpcap version 1.10.6 (64-bit time_t, with TPACKET_V3)"
+          return path;
+        } catch (err) {
+          console.log("Tried to open lib, but failed: ", path, err);
+        }
+      }
+      throw new Error("libpcap dynamic library not found, make sure to install it, and make sure it's avaliable in your $LD_LIBRARY_PATH, or you can set the LIBPCAP_PATH env var.");
+    }
+    default: throw new Error(`${process.platform} Platform not supported.`);
+  }
+}
+
+function expectedCaptureLibraryName(): string {
+  switch (process.platform) {
+    case "win32": return "Npcap";
+    case "linux": return "libpcap";
+    default: throw new Error(`${process.platform} Platform not supported.`);
+  }
 }
 
 function errorMessage(error: unknown): string {
