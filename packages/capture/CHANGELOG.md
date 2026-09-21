@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 3.0.3
+
+### Patch Changes
+
+- beb9cef: Refresh the bundled game-build protocol maps and static catalogs, including current RPC metadata, combat semantics, item definitions, rewards, skills, and statuses. Apply the fixed weight of 10 to all grimoire equipment.
+
 ## 3.0.2
 
 ### Patch Changes

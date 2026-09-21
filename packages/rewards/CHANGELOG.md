@@ -1,5 +1,15 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.4.2
+
+### Patch Changes
+
+- beb9cef: Refresh the bundled game-build protocol maps and static catalogs, including current RPC metadata, combat semantics, item definitions, rewards, skills, and statuses. Apply the fixed weight of 10 to all grimoire equipment.
+- Updated dependencies [beb9cef]
+  - @kar-mi/spirit-vale-tools-capture@3.0.3
+  - @kar-mi/spirit-vale-tools-combat@5.1.1
+  - @kar-mi/spirit-vale-tools-items@0.1.12
+
 ## 1.4.1
 
 ### Patch Changes
