@@ -796,6 +796,11 @@ export class JunkItemDefinitions {
     },
     {
       "itemType": 0,
+      "id": "Masterwork Core",
+      "displayName": "Masterwork Core"
+    },
+    {
+      "itemType": 0,
       "id": "Meat",
       "displayName": "Meat"
     },

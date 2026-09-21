@@ -6,6 +6,7 @@ import type { FishNetBehaviourDefinition } from "../../schema/rpc-map.ts";
 import { baseUnitControllerRpcs } from "./base-unit-controller.ts";
 import { bossGraveStoneRpcs, bossGraveStoneSyncTypes } from "./boss-grave-stone.ts";
 import { combatComponentRpcs, combatComponentSyncTypes } from "./combat-component.ts";
+import { eternalTowerManagerRpcs } from "./eternal-tower-manager.ts";
 import { networkAnimatorRpcs } from "./engine/network-animator.ts";
 import { predictedOwnerRpcs } from "./engine/predicted-owner.ts";
 import { networkTransformRpcs } from "./engine/network-transform.ts";
@@ -27,6 +28,7 @@ export const GENERATED_BEHAVIOURS = [
   { typeName: "BaseUnitController", rpcs: baseUnitControllerRpcs },
   { typeName: "BossGraveStone", rpcs: bossGraveStoneRpcs, syncTypes: bossGraveStoneSyncTypes },
   { typeName: "CombatComponent", rpcs: combatComponentRpcs, syncTypes: combatComponentSyncTypes },
+  { typeName: "EternalTowerManager", rpcs: eternalTowerManagerRpcs },
   { typeName: "FishNet.Component.Animating.NetworkAnimator", rpcs: networkAnimatorRpcs },
   { typeName: "FishNet.Component.Ownership.PredictedOwner", rpcs: predictedOwnerRpcs },
   { typeName: "FishNet.Component.Transforming.NetworkTransform", rpcs: networkTransformRpcs },

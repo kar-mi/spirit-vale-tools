@@ -12,23 +12,13 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": true,
-    "effects": [
-      {
-        "id": "Aegis",
-        "duration": 3,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      }
-    ]
+    "effects": []
   },
   {
     "id": "Aggressive",
     "displayName": "Aggressive",
     "spriteId": "Conditions_Immune_12",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -74,7 +64,7 @@ export class StatusDefinitions {
   {
     "id": "Anathema",
     "displayName": "Anathema",
-    "isDebuff": true,
+    "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -115,6 +105,15 @@ export class StatusDefinitions {
     ]
   },
   {
+    "id": "AngelOfWrath",
+    "displayName": "Angel Of Wrath",
+    "spriteId": "10-highheal 1",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
     "id": "ArcaneSigil",
     "displayName": "Arcane Sigil",
     "spriteId": "T_Icon_Energy_55",
@@ -136,7 +135,8 @@ export class StatusDefinitions {
   {
     "id": "ArmorBreak",
     "displayName": "Armor Break",
-    "isDebuff": false,
+    "spriteId": "Conditions_30",
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": []
@@ -315,7 +315,7 @@ export class StatusDefinitions {
     "id": "Blind",
     "displayName": "Blind",
     "spriteId": "Conditions_3",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -374,6 +374,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       },
       {
+        "id": "RadiantWardEnemy",
+        "duration": 1,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
         "id": "SmokeScreen",
         "duration": 1,
         "durationPerLevel": 0,
@@ -387,6 +396,7 @@ export class StatusDefinitions {
   {
     "id": "BlindImmunity",
     "displayName": "Blind Immunity",
+    "spriteId": "Conditions_Immune_3",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -455,7 +465,6 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
-    "cooldown": 20,
     "effects": []
   },
   {
@@ -540,6 +549,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       },
       {
+        "id": "MeteorStorm",
+        "duration": 10,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
         "id": "TetraVortexFire",
         "duration": 10,
         "durationPerLevel": 0,
@@ -554,7 +572,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 0,
+        "stacks": 3,
         "stacksPerLevel": 0
       },
       {
@@ -601,6 +619,15 @@ export class StatusDefinitions {
         "chancePerLevel": 0,
         "stacks": 0,
         "stacksPerLevel": 0
+      },
+      {
+        "id": "SteamBurst",
+        "duration": 3,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
       }
     ],
     "damage": 1,
@@ -615,7 +642,9 @@ export class StatusDefinitions {
       "FlameOrb",
       "FlameOrbExplosion",
       "Meteor",
+      "MeteorStorm",
       "NPC_Burn",
+      "SteamBurst",
       "TetraVortexFire"
     ]
   },
@@ -637,6 +666,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       }
     ]
+  },
+  {
+    "id": "BurningRage",
+    "displayName": "Burning Rage",
+    "spriteId": "T_Icon_Fire_130",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
   },
   {
     "id": "CastReady",
@@ -665,6 +703,16 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       }
     ]
+  },
+  {
+    "id": "ChainStep",
+    "displayName": "Chain Step",
+    "spriteId": "Skills_353",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "cooldown": 2,
+    "effects": []
   },
   {
     "id": "Cloaking",
@@ -1053,7 +1101,7 @@ export class StatusDefinitions {
     "id": "Curse",
     "displayName": "Curse",
     "spriteId": "Conditions_33",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -1247,9 +1295,27 @@ export class StatusDefinitions {
     "effects": []
   },
   {
+    "id": "DiscipleOfWrath",
+    "displayName": "Disciple Of Wrath",
+    "spriteId": "31-HolyWrath",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
     "id": "Divinity",
     "displayName": "Divinity",
     "spriteId": "46-HolyCross",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "Dominion",
+    "displayName": "Dominion",
+    "spriteId": "T_Icon_Unholy_137",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -1286,7 +1352,7 @@ export class StatusDefinitions {
     "id": "EarthExposure",
     "displayName": "Earth Exposure",
     "spriteId": "earth",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
@@ -1310,6 +1376,15 @@ export class StatusDefinitions {
       },
       {
         "id": "Meteor",
+        "duration": 10,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "MeteorStorm",
         "duration": 10,
         "durationPerLevel": 0,
         "chance": 0,
@@ -1575,70 +1650,6 @@ export class StatusDefinitions {
     ]
   },
   {
-    "id": "Enrage",
-    "displayName": "Enrage",
-    "spriteId": "Berserker18",
-    "isDebuff": false,
-    "maxLevel": 0,
-    "fixedDuration": false,
-    "effects": [
-      {
-        "id": "Execute",
-        "duration": 4,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "GainRage",
-        "duration": 4,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "GroundSlam",
-        "duration": 4,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "ShoutStun",
-        "duration": 4,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "WildCharge",
-        "duration": 4,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "Cyclone",
-        "duration": 0,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      }
-    ]
-  },
-  {
     "id": "ExorcistBrand",
     "displayName": "Exorcist's Brand",
     "spriteId": "14-exorcism",
@@ -1654,7 +1665,6 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
-    "cooldown": 6,
     "effects": [
       {
         "id": "ExplosiveGrenade",
@@ -1672,6 +1682,15 @@ export class StatusDefinitions {
     "displayName": "Fanaticism",
     "spriteId": "T_Icon_Fire_104",
     "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "Fatigue",
+    "displayName": "Fatigue",
+    "spriteId": "Skills_180",
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": []
@@ -1726,7 +1745,7 @@ export class StatusDefinitions {
     "id": "FireExposure",
     "displayName": "Fire Exposure",
     "spriteId": "fire",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
@@ -1785,7 +1804,26 @@ export class StatusDefinitions {
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
-    "effects": []
+    "effects": [
+      {
+        "id": "ConduitWind",
+        "duration": 15,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "CrushingAdvance",
+        "duration": 2,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      }
+    ]
   },
   {
     "id": "FlowState",
@@ -1840,16 +1878,29 @@ export class StatusDefinitions {
     "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
-    "effects": [],
+    "effects": [
+      {
+        "id": "FrozenGround",
+        "duration": 0,
+        "durationPerLevel": 1,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      }
+    ],
     "damage": 1,
     "damagePerc": 3,
-    "element": 5
+    "element": 5,
+    "appliedBy": [
+      "FrozenGround"
+    ]
   },
   {
     "id": "Frozen",
     "displayName": "Frozen",
     "spriteId": "Conditions_10",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -1994,6 +2045,15 @@ export class StatusDefinitions {
     ]
   },
   {
+    "id": "GlacialSurge",
+    "displayName": "Glacial Surge",
+    "spriteId": "Skills_137",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
     "id": "GospelOfGrace",
     "displayName": "Gospel Of Grace",
     "spriteId": "49-HolyLight",
@@ -2103,6 +2163,15 @@ export class StatusDefinitions {
         "chancePerLevel": 0,
         "stacks": 0,
         "stacksPerLevel": 0
+      },
+      {
+        "id": "Status_Haste",
+        "duration": 10,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
       }
     ]
   },
@@ -2128,7 +2197,7 @@ export class StatusDefinitions {
     "id": "HolyExposure",
     "displayName": "Consecrated",
     "spriteId": "holy",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": []
@@ -2267,23 +2336,58 @@ export class StatusDefinitions {
     "id": "LimitBreak",
     "displayName": "Limit Break",
     "spriteId": "T_Icon_Shadow_44",
-    "isDebuff": true,
+    "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
-    "effects": [
-      {
-        "id": "LimitBreak",
-        "duration": 1,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      }
-    ],
+    "effects": [],
     "damage": 0,
     "damagePerc": 5,
     "element": 0
+  },
+  {
+    "id": "LoadoutGatling",
+    "displayName": "Loadout Gatling",
+    "spriteId": "107",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "LoadoutLauncher",
+    "displayName": "Loadout Launcher",
+    "spriteId": "107",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "LoadoutPistol",
+    "displayName": "Loadout Pistol",
+    "spriteId": "107",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "LoadoutRifle",
+    "displayName": "Loadout Rifle",
+    "spriteId": "107",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "LoadoutShotgun",
+    "displayName": "Loadout Shotgun",
+    "spriteId": "107",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
   },
   {
     "id": "Lockdown",
@@ -2308,7 +2412,7 @@ export class StatusDefinitions {
     "id": "MagicExposure",
     "displayName": "Magic Exposure",
     "spriteId": "Conditions_28",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -2344,6 +2448,7 @@ export class StatusDefinitions {
   {
     "id": "ManaEcho",
     "displayName": "Mana Echo",
+    "spriteId": "T_Icon_Arcane_86",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -2390,6 +2495,15 @@ export class StatusDefinitions {
   {
     "id": "MindBreak",
     "displayName": "Mind Break",
+    "spriteId": "Conditions_5",
+    "isDebuff": true,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
+    "id": "Momentum",
+    "displayName": "Momentum",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -2560,6 +2674,7 @@ export class StatusDefinitions {
   {
     "id": "Opportunist",
     "displayName": "Opportunist",
+    "spriteId": "Skills_268",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -2568,6 +2683,7 @@ export class StatusDefinitions {
   {
     "id": "PerfectStrike",
     "displayName": "Perfect Strike",
+    "spriteId": "Skills_306",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -2671,7 +2787,7 @@ export class StatusDefinitions {
     "id": "PoisonExposure",
     "displayName": "Poison Exposure",
     "spriteId": "poison",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": []
@@ -2752,10 +2868,19 @@ export class StatusDefinitions {
     "effects": []
   },
   {
+    "id": "RadiantWard",
+    "displayName": "Radiant Ward",
+    "spriteId": "3-Aegis",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
+  },
+  {
     "id": "Rage",
     "displayName": "Rage",
     "spriteId": "Berserker18",
-    "isDebuff": true,
+    "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -2765,7 +2890,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 5,
+        "stacks": 2,
         "stacksPerLevel": 0
       },
       {
@@ -2774,7 +2899,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 20,
+        "stacks": 10,
         "stacksPerLevel": 0
       },
       {
@@ -2783,7 +2908,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 5,
+        "stacks": 3,
         "stacksPerLevel": 0
       },
       {
@@ -2792,7 +2917,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 20,
+        "stacks": 10,
         "stacksPerLevel": 0
       },
       {
@@ -2801,7 +2926,7 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 15,
+        "stacks": 10,
         "stacksPerLevel": 0
       },
       {
@@ -2819,11 +2944,11 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
-        "stacks": 15,
+        "stacks": 10,
         "stacksPerLevel": 0
       },
       {
-        "id": "Enrage",
+        "id": "Rage",
         "duration": 5,
         "durationPerLevel": 0,
         "chance": 1,
@@ -2833,13 +2958,12 @@ export class StatusDefinitions {
       }
     ],
     "damage": 0,
-    "damagePerc": 0.1,
+    "damagePerc": 0.3,
     "element": 0,
     "appliedBy": [
       "AxeThrow",
       "Cyclone",
       "DarkClaw",
-      "Enrage",
       "Execute",
       "GroundSlam",
       "ShoutStun",
@@ -2873,6 +2997,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       },
       {
+        "id": "ConduitWater",
+        "duration": 15,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 10,
+        "stacksPerLevel": 0
+      },
+      {
         "id": "GuardianBond",
         "duration": 0,
         "durationPerLevel": 60,
@@ -2888,6 +3021,15 @@ export class StatusDefinitions {
         "chance": 0,
         "chancePerLevel": 0,
         "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "Status_Regen",
+        "duration": 10,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 3,
         "stacksPerLevel": 0
       }
     ]
@@ -2987,6 +3129,7 @@ export class StatusDefinitions {
   {
     "id": "Sanctuary2",
     "displayName": "Sanctuary Doctrine",
+    "spriteId": "24-sanctuary",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -2995,6 +3138,7 @@ export class StatusDefinitions {
   {
     "id": "ShadowMark",
     "displayName": "Shadow Mark",
+    "spriteId": "Skills_519",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -3011,15 +3155,6 @@ export class StatusDefinitions {
       {
         "id": "JumpShot",
         "duration": 5,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "ShockAbsorber",
-        "duration": 1,
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
@@ -3051,13 +3186,13 @@ export class StatusDefinitions {
     "id": "Silence",
     "displayName": "Silence",
     "spriteId": "Conditions_26",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
       {
         "id": "FieldSilence",
-        "duration": 5,
+        "duration": 3,
         "durationPerLevel": 0,
         "chance": 0.5,
         "chancePerLevel": 0.1,
@@ -3067,6 +3202,15 @@ export class StatusDefinitions {
       {
         "id": "HolyWrath",
         "duration": 5,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "NPC_Silence",
+        "duration": 3,
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
@@ -3088,15 +3232,6 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0.2,
-        "stacks": 0,
-        "stacksPerLevel": 0
-      },
-      {
-        "id": "NPC_Silence",
-        "duration": 3,
-        "durationPerLevel": 0,
-        "chance": 0,
-        "chancePerLevel": 0,
         "stacks": 0,
         "stacksPerLevel": 0
       }
@@ -3152,7 +3287,7 @@ export class StatusDefinitions {
     "id": "Slow",
     "displayName": "Slow",
     "spriteId": "Conditions_27",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -3256,6 +3391,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       },
       {
+        "id": "FrozenGround",
+        "duration": 1,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
         "id": "IceRelease",
         "duration": 1,
         "durationPerLevel": 0,
@@ -3265,9 +3409,9 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       },
       {
-        "id": "FrozenGround",
-        "duration": 0,
-        "durationPerLevel": 1,
+        "id": "RadiantWardEnemy",
+        "duration": 1,
+        "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
         "stacks": 0,
@@ -3277,6 +3421,15 @@ export class StatusDefinitions {
         "id": "SlowTrap",
         "duration": 0,
         "durationPerLevel": 1,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "SteamBurst",
+        "duration": 3,
+        "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0,
         "stacks": 0,
@@ -3453,7 +3606,7 @@ export class StatusDefinitions {
     "id": "Stagger",
     "displayName": "Stagger",
     "spriteId": "Conditions_7",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -3517,7 +3670,7 @@ export class StatusDefinitions {
     "id": "Stun",
     "displayName": "Stun",
     "spriteId": "Conditions_31",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": true,
     "effects": [
@@ -3545,6 +3698,15 @@ export class StatusDefinitions {
         "durationPerLevel": 0,
         "chance": 0,
         "chancePerLevel": 0.1,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "MeteorStorm",
+        "duration": 3,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0.03,
         "stacks": 0,
         "stacksPerLevel": 0
       },
@@ -3716,6 +3878,7 @@ export class StatusDefinitions {
   {
     "id": "TempestEngine",
     "displayName": "Tempest Engine",
+    "spriteId": "Skills_388",
     "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
@@ -3799,7 +3962,7 @@ export class StatusDefinitions {
     "id": "UndeadExposure",
     "displayName": "Desecrated",
     "spriteId": "undead",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
@@ -3845,7 +4008,7 @@ export class StatusDefinitions {
     "id": "UnholyFrenzy",
     "displayName": "Unholy Frenzy",
     "spriteId": "T_Icon_BloodCombat_50",
-    "isDebuff": true,
+    "isDebuff": false,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -3954,7 +4117,7 @@ export class StatusDefinitions {
     "id": "Vulnerability",
     "displayName": "Vulnerability",
     "spriteId": "Conditions_4",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
@@ -4127,7 +4290,7 @@ export class StatusDefinitions {
     "id": "WaterExposure",
     "displayName": "Water Exposure",
     "spriteId": "water",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
@@ -4173,10 +4336,19 @@ export class StatusDefinitions {
     "id": "Weaken",
     "displayName": "Weaken",
     "spriteId": "Conditions_22",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 0,
     "fixedDuration": false,
     "effects": [
+      {
+        "id": "RadiantWardEnemy",
+        "duration": 1,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
       {
         "id": "SuppressiveShot",
         "duration": 5,
@@ -4187,6 +4359,15 @@ export class StatusDefinitions {
         "stacksPerLevel": 0
       }
     ]
+  },
+  {
+    "id": "WellOfLight",
+    "displayName": "Well Of Light",
+    "spriteId": "25-ReviveAll",
+    "isDebuff": false,
+    "maxLevel": 0,
+    "fixedDuration": false,
+    "effects": []
   },
   {
     "id": "WindAttunement",
@@ -4238,12 +4419,21 @@ export class StatusDefinitions {
     "id": "WindExposure",
     "displayName": "Wind Exposure",
     "spriteId": "wind",
-    "isDebuff": false,
+    "isDebuff": true,
     "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
       {
         "id": "FreezingField",
+        "duration": 10,
+        "durationPerLevel": 0,
+        "chance": 0,
+        "chancePerLevel": 0,
+        "stacks": 0,
+        "stacksPerLevel": 0
+      },
+      {
+        "id": "FrozenGround",
         "duration": 10,
         "durationPerLevel": 0,
         "chance": 0,
@@ -4276,7 +4466,7 @@ export class StatusDefinitions {
     "displayName": "Zeal",
     "spriteId": "T_Icon_Gold_92",
     "isDebuff": false,
-    "maxLevel": 0,
+    "maxLevel": 5,
     "fixedDuration": false,
     "effects": [
       {

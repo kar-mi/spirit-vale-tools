@@ -30,6 +30,39 @@ export const playerSaveRpcs = [
   {
     "wireHash": 2,
     "packetKind": "serverRpc",
+    "methodName": "LoginEditor",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "deviceUID",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      }
+    ]
+  },
+  {
+    "wireHash": 3,
+    "packetKind": "serverRpc",
+    "methodName": "LoginEditorV2",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "securityPayload",
+        "typeName": "SpiritvaleLoginSecurityRpcDto"
+      }
+    ]
+  },
+  {
+    "wireHash": 4,
+    "packetKind": "serverRpc",
     "methodName": "Login",
     "parameters": [
       {
@@ -55,7 +88,33 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 3,
+    "wireHash": 5,
+    "packetKind": "serverRpc",
+    "methodName": "LoginV2",
+    "parameters": [
+      {
+        "name": "ticket",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "version",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "securityPayload",
+        "typeName": "SpiritvaleLoginSecurityRpcDto"
+      },
+      {
+        "name": "branch",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      }
+    ]
+  },
+  {
+    "wireHash": 6,
     "packetKind": "targetRpc",
     "methodName": "SetIsDemo_T",
     "parameters": [
@@ -67,7 +126,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 4,
+    "wireHash": 7,
     "packetKind": "targetRpc",
     "methodName": "ShowPremiumCurrencyChanged_T",
     "parameters": [
@@ -79,7 +138,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 5,
+    "wireHash": 8,
     "packetKind": "targetRpc",
     "methodName": "SetDisconnectedReason",
     "parameters": [
@@ -91,7 +150,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 6,
+    "wireHash": 9,
     "packetKind": "serverRpc",
     "methodName": "LoadCharacter_S",
     "parameters": [
@@ -103,7 +162,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 7,
+    "wireHash": 10,
     "packetKind": "targetRpc",
     "methodName": "LoadCharacter_T",
     "parameters": [
@@ -1360,17 +1419,17 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 8,
+    "wireHash": 11,
     "packetKind": "serverRpc",
     "methodName": "LoadCharacterComplete"
   },
   {
-    "wireHash": 9,
+    "wireHash": 12,
     "packetKind": "serverRpc",
     "methodName": "QuitCharacter_Rpc"
   },
   {
-    "wireHash": 10,
+    "wireHash": 13,
     "packetKind": "targetRpc",
     "methodName": "CharacterListCallback_T",
     "parameters": [
@@ -2628,17 +2687,17 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 11,
+    "wireHash": 14,
     "packetKind": "serverRpc",
     "methodName": "WeaponSwap_S"
   },
   {
-    "wireHash": 12,
+    "wireHash": 15,
     "packetKind": "serverRpc",
     "methodName": "HeavySwap_S"
   },
   {
-    "wireHash": 13,
+    "wireHash": 16,
     "packetKind": "serverRpc",
     "methodName": "ApplyHeavyEquip_S",
     "parameters": [
@@ -2650,12 +2709,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 14,
+    "wireHash": 17,
     "packetKind": "serverRpc",
     "methodName": "RemoveHeavyEquip_S"
   },
   {
-    "wireHash": 15,
+    "wireHash": 18,
     "packetKind": "serverRpc",
     "methodName": "RenameCharacter_S",
     "parameters": [
@@ -2667,7 +2726,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 16,
+    "wireHash": 19,
     "packetKind": "serverRpc",
     "methodName": "ApplyAppearance_S",
     "parameters": [
@@ -2678,7 +2737,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 17,
+    "wireHash": 20,
     "packetKind": "serverRpc",
     "methodName": "CreateCharacter_S",
     "parameters": [
@@ -2689,7 +2748,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 18,
+    "wireHash": 21,
     "packetKind": "serverRpc",
     "methodName": "DeleteCharacter_S",
     "parameters": [
@@ -2701,12 +2760,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 19,
+    "wireHash": 22,
     "packetKind": "serverRpc",
     "methodName": "ResetAttributes_S"
   },
   {
-    "wireHash": 20,
+    "wireHash": 23,
     "packetKind": "serverRpc",
     "methodName": "ApplyAttributes_S",
     "parameters": [
@@ -2717,7 +2776,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 21,
+    "wireHash": 24,
     "packetKind": "serverRpc",
     "methodName": "UseEssence_S",
     "parameters": [
@@ -2738,7 +2797,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 22,
+    "wireHash": 25,
     "packetKind": "serverRpc",
     "methodName": "RefineEquip_S",
     "parameters": [
@@ -2755,7 +2814,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 23,
+    "wireHash": 26,
     "packetKind": "serverRpc",
     "methodName": "RefineArtifact_S",
     "parameters": [
@@ -2772,7 +2831,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 24,
+    "wireHash": 27,
     "packetKind": "serverRpc",
     "methodName": "RefineGem_S",
     "parameters": [
@@ -2789,7 +2848,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 25,
+    "wireHash": 28,
     "packetKind": "targetRpc",
     "methodName": "Refine_T",
     "parameters": [
@@ -4051,7 +4110,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 26,
+    "wireHash": 29,
     "packetKind": "observersRpc",
     "methodName": "ShowRefineResult",
     "parameters": [
@@ -4073,7 +4132,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 27,
+    "wireHash": 30,
     "packetKind": "serverRpc",
     "methodName": "ApplyEquip_S",
     "parameters": [
@@ -4085,7 +4144,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 28,
+    "wireHash": 31,
     "packetKind": "serverRpc",
     "methodName": "RemoveEquip_S",
     "parameters": [
@@ -4096,7 +4155,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 29,
+    "wireHash": 32,
     "packetKind": "serverRpc",
     "methodName": "ApplyCard_S",
     "parameters": [
@@ -4113,7 +4172,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 30,
+    "wireHash": 33,
     "packetKind": "serverRpc",
     "methodName": "RemoveCards_S",
     "parameters": [
@@ -4125,7 +4184,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 31,
+    "wireHash": 34,
     "packetKind": "serverRpc",
     "methodName": "ApplyGem_S",
     "parameters": [
@@ -4142,7 +4201,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 32,
+    "wireHash": 35,
     "packetKind": "serverRpc",
     "methodName": "RemoveGems_S",
     "parameters": [
@@ -4154,7 +4213,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 33,
+    "wireHash": 36,
     "packetKind": "serverRpc",
     "methodName": "ApplyGrimoire_S",
     "parameters": [
@@ -4166,7 +4225,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 34,
+    "wireHash": 37,
     "packetKind": "serverRpc",
     "methodName": "RemoveGrimoire_S",
     "parameters": [
@@ -4178,7 +4237,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 35,
+    "wireHash": 38,
     "packetKind": "serverRpc",
     "methodName": "ApplyArtifact_S",
     "parameters": [
@@ -4268,7 +4327,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 36,
+    "wireHash": 39,
     "packetKind": "serverRpc",
     "methodName": "RemoveArtifact_S",
     "parameters": [
@@ -4279,7 +4338,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 37,
+    "wireHash": 40,
     "packetKind": "serverRpc",
     "methodName": "UseConsumable_S",
     "parameters": [
@@ -4291,7 +4350,40 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 38,
+    "wireHash": 41,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_AddArchetype",
+    "parameters": [
+      {
+        "name": "type",
+        "typeName": "Archetype"
+      }
+    ]
+  },
+  {
+    "wireHash": 42,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_RemoveArchetype",
+    "parameters": [
+      {
+        "name": "type",
+        "typeName": "Archetype"
+      }
+    ]
+  },
+  {
+    "wireHash": 43,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_BackToBaseArchetype",
+    "parameters": [
+      {
+        "name": "type",
+        "typeName": "Archetype"
+      }
+    ]
+  },
+  {
+    "wireHash": 44,
     "packetKind": "serverRpc",
     "methodName": "AdvanceToClass",
     "parameters": [
@@ -4302,12 +4394,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 39,
+    "wireHash": 45,
     "packetKind": "serverRpc",
     "methodName": "ResetSkills_S"
   },
   {
-    "wireHash": 40,
+    "wireHash": 46,
     "packetKind": "serverRpc",
     "methodName": "ApplySkills_S",
     "parameters": [
@@ -4332,7 +4424,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 41,
+    "wireHash": 47,
     "packetKind": "serverRpc",
     "methodName": "AssignSkill_S",
     "parameters": [
@@ -4354,7 +4446,48 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 42,
+    "wireHash": 48,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ClearStorage"
+  },
+  {
+    "wireHash": 49,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_GrantCoins",
+    "parameters": [
+      {
+        "name": "coins",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
+  },
+  {
+    "wireHash": 50,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_LevelUp",
+    "parameters": [
+      {
+        "name": "count",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
+  },
+  {
+    "wireHash": 51,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_LevelDown",
+    "parameters": [
+      {
+        "name": "count",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
+  },
+  {
+    "wireHash": 52,
     "packetKind": "targetRpc",
     "methodName": "CoinsCallback_T",
     "parameters": [
@@ -4366,7 +4499,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 43,
+    "wireHash": 53,
     "packetKind": "targetRpc",
     "methodName": "ExpCoinsChanged_T",
     "parameters": [
@@ -4398,7 +4531,19 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 44,
+    "wireHash": 54,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_GrantPremium",
+    "parameters": [
+      {
+        "name": "value",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 55,
     "packetKind": "serverRpc",
     "methodName": "RequestPremiumPurchase",
     "parameters": [
@@ -4410,7 +4555,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 45,
+    "wireHash": 56,
     "packetKind": "serverRpc",
     "methodName": "NotifyPremiumPurchaseAuthorized",
     "parameters": [
@@ -4422,7 +4567,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 46,
+    "wireHash": 57,
     "packetKind": "targetRpc",
     "methodName": "PremiumChanged_T",
     "parameters": [
@@ -4439,7 +4584,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 47,
+    "wireHash": 58,
     "packetKind": "serverRpc",
     "methodName": "ToggleEquipSlotHidden_S",
     "parameters": [
@@ -4450,7 +4595,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 48,
+    "wireHash": 59,
     "packetKind": "serverRpc",
     "methodName": "ToggleFavorite_S",
     "parameters": [
@@ -4466,7 +4611,18 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 49,
+    "wireHash": 60,
+    "packetKind": "serverRpc",
+    "methodName": "Drop_S",
+    "parameters": [
+      {
+        "name": "list",
+        "typeName": "PickUpList"
+      }
+    ]
+  },
+  {
+    "wireHash": 61,
     "packetKind": "serverRpc",
     "methodName": "Dismantle_S",
     "parameters": [
@@ -4482,7 +4638,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 50,
+    "wireHash": 62,
     "packetKind": "serverRpc",
     "methodName": "MerchantDismantle_S",
     "parameters": [
@@ -4493,7 +4649,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 51,
+    "wireHash": 63,
     "packetKind": "serverRpc",
     "methodName": "MerchantPurchase_S",
     "parameters": [
@@ -4504,7 +4660,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 52,
+    "wireHash": 64,
     "packetKind": "serverRpc",
     "methodName": "MerchantSell_S",
     "parameters": [
@@ -4515,7 +4671,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 53,
+    "wireHash": 65,
     "packetKind": "serverRpc",
     "methodName": "Craft_Rpc",
     "parameters": [
@@ -4536,12 +4692,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 54,
+    "wireHash": 66,
     "packetKind": "serverRpc",
     "methodName": "AttuneWaystone"
   },
   {
-    "wireHash": 55,
+    "wireHash": 67,
     "packetKind": "serverRpc",
     "methodName": "UnlockWaypoint_S",
     "parameters": [
@@ -4553,7 +4709,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 56,
+    "wireHash": 68,
     "packetKind": "observersRpc",
     "methodName": "UnlockWaypoint_C",
     "parameters": [
@@ -4565,7 +4721,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 57,
+    "wireHash": 69,
     "packetKind": "serverRpc",
     "methodName": "WarpWaypoint_S",
     "parameters": [
@@ -4577,7 +4733,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 58,
+    "wireHash": 70,
+    "packetKind": "serverRpc",
+    "methodName": "UnlockAllWaypoints_S"
+  },
+  {
+    "wireHash": 71,
     "packetKind": "serverRpc",
     "methodName": "SpeakToNPC_S",
     "parameters": [
@@ -4589,7 +4750,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 59,
+    "wireHash": 72,
     "packetKind": "targetRpc",
     "methodName": "CharacterCallback_T",
     "parameters": [
@@ -5850,12 +6011,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 60,
+    "wireHash": 73,
     "packetKind": "targetRpc",
     "methodName": "CharacterCallback_T"
   },
   {
-    "wireHash": 61,
+    "wireHash": 74,
     "packetKind": "serverRpc",
     "methodName": "StorageTransaction_S",
     "parameters": [
@@ -5871,7 +6032,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 62,
+    "wireHash": 75,
     "packetKind": "targetRpc",
     "methodName": "StorageBatchResult_T",
     "parameters": [
@@ -6499,7 +6660,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 63,
+    "wireHash": 76,
     "packetKind": "targetRpc",
     "methodName": "PlayerCallback",
     "parameters": [
@@ -6510,7 +6671,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 64,
+    "wireHash": 77,
     "packetKind": "targetRpc",
     "methodName": "PlayerCallback_Storage",
     "parameters": [
@@ -6815,7 +6976,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 65,
+    "wireHash": 78,
     "packetKind": "targetRpc",
     "methodName": "PlayerCallback_Wardrobe",
     "parameters": [
@@ -6826,7 +6987,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 66,
+    "wireHash": 79,
     "packetKind": "targetRpc",
     "methodName": "PlayerCallback_Unlocks",
     "parameters": [
@@ -6837,7 +6998,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 67,
+    "wireHash": 80,
     "packetKind": "serverRpc",
     "methodName": "VendingListItems_S",
     "parameters": [
@@ -6854,7 +7015,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 68,
+    "wireHash": 81,
     "packetKind": "targetRpc",
     "methodName": "VendingListResult_T",
     "parameters": [
@@ -6875,7 +7036,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 69,
+    "wireHash": 82,
     "packetKind": "serverRpc",
     "methodName": "VendingCancelListing_S",
     "parameters": [
@@ -6892,7 +7053,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 70,
+    "wireHash": 83,
     "packetKind": "targetRpc",
     "methodName": "VendingCancelResult_T",
     "parameters": [
@@ -6913,7 +7074,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 71,
+    "wireHash": 84,
     "packetKind": "serverRpc",
     "methodName": "VendingCollect_S",
     "parameters": [
@@ -6925,7 +7086,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 72,
+    "wireHash": 85,
     "packetKind": "targetRpc",
     "methodName": "VendingCollectResult_T",
     "parameters": [
@@ -6946,7 +7107,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 73,
+    "wireHash": 86,
     "packetKind": "serverRpc",
     "methodName": "VendingPurchase_S",
     "parameters": [
@@ -6978,7 +7139,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 74,
+    "wireHash": 87,
     "packetKind": "targetRpc",
     "methodName": "VendingPurchaseResult_T",
     "parameters": [
@@ -6999,7 +7160,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 75,
+    "wireHash": 88,
     "packetKind": "serverRpc",
     "methodName": "HireVendingStall_S",
     "parameters": [
@@ -7016,7 +7177,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 76,
+    "wireHash": 89,
     "packetKind": "targetRpc",
     "methodName": "HireVendingStallResult_T",
     "parameters": [
@@ -7037,12 +7198,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 77,
+    "wireHash": 90,
     "packetKind": "serverRpc",
     "methodName": "ReleaseVendingStall_S"
   },
   {
-    "wireHash": 78,
+    "wireHash": 91,
     "packetKind": "targetRpc",
     "methodName": "ReleaseVendingStallResult_T",
     "parameters": [
@@ -7063,7 +7224,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 79,
+    "wireHash": 92,
     "packetKind": "serverRpc",
     "methodName": "Debug_PickupItems",
     "parameters": [
@@ -7074,12 +7235,19 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 80,
+    "wireHash": 93,
     "packetKind": "serverRpc",
-    "methodName": "Debug_MaxLv"
+    "methodName": "Debug_MaxLv",
+    "parameters": [
+      {
+        "name": "level",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
   },
   {
-    "wireHash": 81,
+    "wireHash": 94,
     "packetKind": "serverRpc",
     "methodName": "Debug_SetClass",
     "parameters": [
@@ -7090,7 +7258,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 82,
+    "wireHash": 95,
     "packetKind": "serverRpc",
     "methodName": "Debug_GrantCoinsAdmin",
     "parameters": [
@@ -7102,22 +7270,39 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 83,
+    "wireHash": 96,
     "packetKind": "serverRpc",
     "methodName": "Debug_UnlockAllCosmetics"
   },
   {
-    "wireHash": 84,
+    "wireHash": 97,
     "packetKind": "serverRpc",
     "methodName": "Debug_UnlockAllWaypoints"
   },
   {
-    "wireHash": 85,
+    "wireHash": 98,
     "packetKind": "serverRpc",
     "methodName": "Debug_UnlockAllGrimoires"
   },
   {
-    "wireHash": 86,
+    "wireHash": 99,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_UnlockAllArtifacts",
+    "parameters": [
+      {
+        "name": "advanced",
+        "typeName": "System.Boolean",
+        "codec": "boolean"
+      }
+    ]
+  },
+  {
+    "wireHash": 100,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ClearItems_S"
+  },
+  {
+    "wireHash": 101,
     "packetKind": "targetRpc",
     "methodName": "PickupItems_T",
     "parameters": [
@@ -7128,7 +7313,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 87,
+    "wireHash": 102,
     "packetKind": "serverRpc",
     "methodName": "SendFriendRequest",
     "parameters": [
@@ -7140,7 +7325,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 88,
+    "wireHash": 103,
     "packetKind": "targetRpc",
     "methodName": "FriendRequest_T",
     "parameters": [
@@ -7157,7 +7342,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 89,
+    "wireHash": 104,
     "packetKind": "serverRpc",
     "methodName": "FriendRequestReject",
     "parameters": [
@@ -7169,7 +7354,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 90,
+    "wireHash": 105,
     "packetKind": "serverRpc",
     "methodName": "FriendRequestAccept",
     "parameters": [
@@ -7186,7 +7371,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 91,
+    "wireHash": 106,
     "packetKind": "serverRpc",
     "methodName": "FriendRemove",
     "parameters": [
@@ -7198,7 +7383,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 92,
+    "wireHash": 107,
     "packetKind": "serverRpc",
     "methodName": "BlockPlayer",
     "parameters": [
@@ -7210,7 +7395,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 93,
+    "wireHash": 108,
     "packetKind": "serverRpc",
     "methodName": "UnblockPlayer",
     "parameters": [
@@ -7222,17 +7407,17 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 94,
+    "wireHash": 109,
     "packetKind": "targetRpc",
     "methodName": "FriendRequestFailed_T"
   },
   {
-    "wireHash": 95,
+    "wireHash": 110,
     "packetKind": "targetRpc",
     "methodName": "FriendRequestSent_T"
   },
   {
-    "wireHash": 96,
+    "wireHash": 111,
     "packetKind": "targetRpc",
     "methodName": "FriendChanged_T",
     "parameters": [
@@ -7247,7 +7432,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 97,
+    "wireHash": 112,
     "packetKind": "targetRpc",
     "methodName": "FriendStatusChanged_T",
     "parameters": [
@@ -7258,7 +7443,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 98,
+    "wireHash": 113,
     "packetKind": "targetRpc",
     "methodName": "CompleteAccountCallback",
     "parameters": [
@@ -7269,7 +7454,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 99,
+    "wireHash": 114,
     "packetKind": "serverRpc",
     "methodName": "UpdateAccountDisplayName",
     "parameters": [
@@ -7281,7 +7466,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 100,
+    "wireHash": 115,
     "packetKind": "serverRpc",
     "methodName": "ConvertCosmetic_Rpc",
     "parameters": [
@@ -7364,7 +7549,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 101,
+    "wireHash": 116,
     "packetKind": "serverRpc",
     "methodName": "RemoveCosmetic_S",
     "parameters": [
@@ -7375,7 +7560,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 102,
+    "wireHash": 117,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ClearCosmetics"
+  },
+  {
+    "wireHash": 118,
     "packetKind": "serverRpc",
     "methodName": "ApplyCosmetic_S",
     "parameters": [
@@ -7391,7 +7581,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 103,
+    "wireHash": 119,
     "packetKind": "serverRpc",
     "methodName": "PurchaseCosmetics_Rpc",
     "parameters": [
@@ -7402,7 +7592,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 104,
+    "wireHash": 120,
     "packetKind": "serverRpc",
     "methodName": "AddWardrobe_Rpc",
     "parameters": [
@@ -7446,7 +7636,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 105,
+    "wireHash": 121,
     "packetKind": "targetRpc",
     "methodName": "ShowMessage_GotoWardrobe_T",
     "parameters": [
@@ -7496,7 +7686,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 106,
+    "wireHash": 122,
     "packetKind": "serverRpc",
     "methodName": "RemoveWardrobe_Rpc",
     "parameters": [
@@ -7508,7 +7698,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 107,
+    "wireHash": 123,
     "packetKind": "serverRpc",
     "methodName": "SelectTitle",
     "parameters": [
@@ -7520,7 +7710,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 108,
+    "wireHash": 124,
     "packetKind": "serverRpc",
     "methodName": "SelectBadge",
     "parameters": [
@@ -7532,7 +7722,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 109,
+    "wireHash": 125,
     "packetKind": "serverRpc",
     "methodName": "SelectChatBubble",
     "parameters": [
@@ -7544,17 +7734,17 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 110,
+    "wireHash": 126,
     "packetKind": "serverRpc",
     "methodName": "UpgradeStorageSpace_Rpc"
   },
   {
-    "wireHash": 111,
+    "wireHash": 127,
     "packetKind": "serverRpc",
     "methodName": "ExpandCharacterSlots_Rpc"
   },
   {
-    "wireHash": 112,
+    "wireHash": 128,
     "packetKind": "targetRpc",
     "methodName": "PresentArenaResult_T",
     "parameters": [
@@ -7574,7 +7764,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 113,
+    "wireHash": 129,
     "packetKind": "serverRpc",
     "methodName": "RequestLeaderboard_Rpc",
     "parameters": [
@@ -7585,12 +7775,12 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 114,
+    "wireHash": 130,
     "packetKind": "targetRpc",
     "methodName": "InvalidateArenaLeaderboard_T"
   },
   {
-    "wireHash": 115,
+    "wireHash": 131,
     "packetKind": "targetRpc",
     "methodName": "RequestLeaderboard_T",
     "parameters": [
@@ -7605,7 +7795,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 116,
+    "wireHash": 132,
     "packetKind": "targetRpc",
     "methodName": "ShowMessage_T",
     "parameters": [
@@ -7617,7 +7807,199 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 117,
+    "wireHash": 133,
+    "packetKind": "targetRpc",
+    "methodName": "ConfigureEacSession_T",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "enabled",
+        "typeName": "System.Boolean",
+        "codec": "boolean"
+      }
+    ]
+  },
+  {
+    "wireHash": 134,
+    "packetKind": "serverRpc",
+    "methodName": "RegisterEacClient_S",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "productUserId",
+        "typeName": "System.Guid"
+      }
+    ]
+  },
+  {
+    "wireHash": 135,
+    "packetKind": "targetRpc",
+    "methodName": "ConfirmEacClientRegistration_T",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "registered",
+        "typeName": "System.Boolean",
+        "codec": "boolean"
+      }
+    ]
+  },
+  {
+    "wireHash": 136,
+    "packetKind": "serverRpc",
+    "methodName": "SubmitEacClientMessage_S",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "wire",
+        "typeName": "SpiritvaleEacMessageRpcDto"
+      }
+    ]
+  },
+  {
+    "wireHash": 137,
+    "packetKind": "targetRpc",
+    "methodName": "ReceiveEacServerMessage_T",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "wire",
+        "typeName": "SpiritvaleEacMessageRpcDto"
+      }
+    ]
+  },
+  {
+    "wireHash": 138,
+    "packetKind": "serverRpc",
+    "methodName": "ReportEacClientState_S",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "eventId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sequence",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "stateValue",
+        "typeName": "System.Byte"
+      },
+      {
+        "name": "reasonValue",
+        "typeName": "System.Byte"
+      },
+      {
+        "name": "occurredAtUtcTicks",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 139,
+    "packetKind": "targetRpc",
+    "methodName": "ShutdownClientForEacFailure_T",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 140,
+    "packetKind": "targetRpc",
+    "methodName": "RequestHardwareTelemetry_T",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 141,
+    "packetKind": "serverRpc",
+    "methodName": "SubmitHardwareTelemetry_S",
+    "parameters": [
+      {
+        "name": "securitySessionId",
+        "typeName": "System.Guid"
+      },
+      {
+        "name": "sessionVersion",
+        "typeName": "System.Int64",
+        "codec": "packedInt64"
+      },
+      {
+        "name": "profile",
+        "typeName": "SpiritvaleHardwareProfileRpcDto"
+      }
+    ]
+  },
+  {
+    "wireHash": 142,
     "packetKind": "targetRpc",
     "methodName": "ShowInstancedMapRecovery_T",
     "parameters": [
@@ -7634,7 +8016,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 118,
+    "wireHash": 143,
     "packetKind": "serverRpc",
     "methodName": "RetryInstancedMap_S",
     "parameters": [
@@ -7646,7 +8028,7 @@ export const playerSaveRpcs = [
     ]
   },
   {
-    "wireHash": 119,
+    "wireHash": 144,
     "packetKind": "serverRpc",
     "methodName": "AbandonInstancedMap_S",
     "parameters": [

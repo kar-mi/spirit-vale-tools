@@ -1076,16 +1076,16 @@ describe("FishNet bundles and sessions", () => {
   });
 
   describe("refusing a match the payload contradicts", () => {
-    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 30.
+    // PlayerController.FullHeal_C takes no arguments and sits at 8-bit hash 34.
     const COLLIDING_HASH_TAIL = Buffer.from([0x66]);
 
     test("does not claim a parameterless method for a packet carrying bytes", () => {
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 1, 30, COLLIDING_HASH_TAIL)),
+        tick(1, observersRpc(4801, 1, 34, COLLIDING_HASH_TAIL)),
         { reliable: true, connectionId: "hash-collision" },
       );
-      expect(packet).toMatchObject({ rpcHash16Candidate: 0x661e, rpcResolution: "unresolved" });
+      expect(packet).toMatchObject({ rpcHash16Candidate: 0x6622, rpcResolution: "unresolved" });
       expect(packet?.rpcName).toBeUndefined();
     });
 
@@ -1093,7 +1093,7 @@ describe("FishNet bundles and sessions", () => {
       // A genuine FullHeal_C carries nothing at all, which is exactly what distinguishes it.
       const decoder = new FishNetSessionDecoder(loadBundledFishNetRpcMap());
       const [packet] = decoder.decode(
-        tick(1, observersRpc(4801, 0, 30)),
+        tick(1, observersRpc(4801, 0, 34)),
         { reliable: true, connectionId: "hash-collision-genuine" },
       );
       expect(packet).toMatchObject({ rpcName: "FullHeal_C", rpcResolution: "verified" });

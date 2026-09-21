@@ -39,7 +39,7 @@ describe("FishNetStatusDirectory", () => {
 
   test("preserves the current source classifications for statuses", () => {
     for (const id of ["Stun", "Blind", "Silence", "Slow", "Frozen", "Curse", "ArmorBreak", "Weaken", "Vulnerability"]) {
-      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: false });
+      expect(resolveFishNetStatus(id)).toMatchObject({ isDebuff: true });
     }
     expect(resolveFishNetStatus("Bleeding")).toMatchObject({ isDebuff: true });
   });
@@ -75,9 +75,9 @@ describe("FishNetStatusDirectory", () => {
     expect(burning?.appliedBy).toEqual(expect.arrayContaining(["Fireball", "Meteor"]));
     // Coatings apply their DoT transitively and must land in `appliedBy`.
     expect(resolveFishNetStatus("Poison")?.appliedBy).toEqual(expect.arrayContaining(["VenomStrike", "VenomCoating"]));
-    // Engine elemental-combo statuses carry damage but no named applier.
+    // Engine elemental-combo statuses carry damage and retain any named applier in the current build.
     expect(resolveFishNetStatus("FrostBite")).toMatchObject({ damage: 1 });
-    expect(resolveFishNetStatus("FrostBite")?.appliedBy).toBeUndefined();
+    expect(resolveFishNetStatus("FrostBite")?.appliedBy).toEqual(["FrozenGround"]);
     // Self-grants are excluded rather than listing the status as its own applier.
     expect(resolveFishNetStatus("LimitBreak")?.appliedBy).toBeUndefined();
   });

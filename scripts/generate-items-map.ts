@@ -9,11 +9,12 @@
  *   3 artifact -> artifacts.ts 4 card -> cards.ts               5 gem -> gems.ts
  *   6 cosmetic -> cosmetics.ts
  *
- * Two equipment fields have no source anywhere in `items.json` (confirmed by exhaustive
- * search): `weight` and `substatGroup`. Both are carried forward by id from whatever is
- * currently checked into `equipment.ts` - genuinely new equipment ids get a `weight: 0`
- * placeholder and are called out in this script's summary output for manual review, rather
- * than guessed at.
+ * Two equipment fields have no direct source anywhere in `items.json` (confirmed by exhaustive
+ * search): `weight` and `substatGroup`. Both are normally carried forward by id from whatever is
+ * currently checked into `equipment.ts`. Grimoire equipment is the exception: its exported
+ * `config.Type` is authoritative and grimoires have a fixed weight of 10. Genuinely new
+ * non-grimoire equipment still gets a `weight: 0` placeholder and is called out in this script's
+ * summary output for manual review, rather than guessed at.
  *
  * Usage: `bun run scripts/generate-items-map.ts <path/to/items.json>`
  * The path is required - this script has no default and no assumption about where a
@@ -217,6 +218,8 @@ function withEffects(item: OutputItem, effects: OutputEffect[], refineEffects: O
 
 const ARTIFACT_REQUIRED_PIECES = 4;
 const ARTIFACT_SLOTS = ["rune", "jewel", "scroll", "relic"] as const;
+const GRIMOIRE_EQUIP_TYPE = 30;
+const GRIMOIRE_WEIGHT = 10;
 function capitalizeSlot(slot: string): string {
   return slot[0]!.toUpperCase() + slot.slice(1);
 }
@@ -233,7 +236,9 @@ function buildOutputItem(
     const stats = [...(raw.config?.PrimaryStats ?? []), ...(raw.config?.SecondaryStats ?? [])];
     const { effects, refineEffects } = effectsFromStats(stats);
     const existing = existingEquipment.get(raw.id);
-    if (existing) {
+    if (raw.config?.Type === GRIMOIRE_EQUIP_TYPE) {
+      item.weight = GRIMOIRE_WEIGHT;
+    } else if (existing) {
       item.weight = existing.weight;
     } else {
       item.weight = 0;

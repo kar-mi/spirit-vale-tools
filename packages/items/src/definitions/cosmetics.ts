@@ -5186,6 +5186,11 @@ export class CosmeticItemDefinitions {
     },
     {
       "itemType": 6,
+      "id": "Staff_Akwyn",
+      "displayName": "AkwinS's Staff"
+    },
+    {
+      "itemType": 6,
       "id": "Staff_SkullStaff",
       "displayName": "Skull Staff"
     },
@@ -5473,6 +5478,11 @@ export class CosmeticItemDefinitions {
       "itemType": 6,
       "id": "Title_Backer",
       "displayName": "Backer"
+    },
+    {
+      "itemType": 6,
+      "id": "Title_BeyondtheEcho",
+      "displayName": "Beyond the Echo"
     },
     {
       "itemType": 6,

@@ -319,8 +319,13 @@ export const playerControllerRpcs = [
   {
     "wireHash": 25,
     "packetKind": "targetRpc",
-    "methodName": "Inspect_T",
+    "methodName": "InspectVisiblePlayer_T",
     "parameters": [
+      {
+        "name": "target",
+        "typeName": "FishNet.Object.NetworkObject",
+        "codec": "networkObject"
+      },
       {
         "name": "data",
         "typeName": "CharacterData",
@@ -1576,6 +1581,1297 @@ export const playerControllerRpcs = [
   {
     "wireHash": 26,
     "packetKind": "targetRpc",
+    "methodName": "Inspect_T",
+    "parameters": [
+      {
+        "name": "data",
+        "typeName": "CharacterData",
+        "nullable": true,
+        "fields": [
+          {
+            "name": "UID",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "AccountId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Version",
+            "typeName": "System.Int64",
+            "codec": "packedInt64"
+          },
+          {
+            "name": "GuildId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "GuildRankId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Name",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Appearance",
+            "typeName": "CharacterAppearanceData",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "BodyColor",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Hair",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "HairColor",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Brow",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Beard",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Mouth",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Eye",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "EyeColor",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Ears",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Iris",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              }
+            ]
+          },
+          {
+            "name": "EquipAppearance",
+            "typeName": "EquipAppearanceData",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "EquipSlotsHidden",
+                "typeName": "System.Boolean[]",
+                "repeated": true,
+                "codec": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "Cosmetics",
+            "typeName": "System.Collections.Generic.List`1[[CosmeticSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Slot",
+                "typeName": "CosmeticSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Id",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Rarity",
+                "typeName": "ItemRarity",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Shiny",
+                "typeName": "System.Boolean",
+                "codec": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "Title",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "ChatBubble",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Badge",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Archetypes",
+            "typeName": "System.Collections.Generic.List`1[[Archetype, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Level",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Exp",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "JobLevel",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "JobExp",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "State",
+            "typeName": "CharacterStateData",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "HealthNormlised",
+                "typeName": "System.Single",
+                "codec": "float32"
+              },
+              {
+                "name": "ManaNormlised",
+                "typeName": "System.Single",
+                "codec": "float32"
+              },
+              {
+                "name": "MapId",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Position",
+                "typeName": "VectorData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "x",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  },
+                  {
+                    "name": "y",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  },
+                  {
+                    "name": "z",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  }
+                ]
+              },
+              {
+                "name": "InstancedMapReturnMapId",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "InstancedMapReturnPosition",
+                "typeName": "VectorData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "x",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  },
+                  {
+                    "name": "y",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  },
+                  {
+                    "name": "z",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  }
+                ]
+              },
+              {
+                "name": "Summons",
+                "typeName": "System.Collections.Generic.List`1[[SummonSaveData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "SkillId",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Exclusive",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  },
+                  {
+                    "name": "Reanimation",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "CloneCount",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Toggles",
+                "typeName": "System.Collections.Generic.List`1[[ToggleSaveData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "SkillId",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  }
+                ]
+              },
+              {
+                "name": "Effects",
+                "typeName": "System.Collections.Generic.List`1[[EffectSaveData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Duration",
+                    "typeName": "System.Single",
+                    "codec": "float32"
+                  },
+                  {
+                    "name": "Stacks",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Attributes",
+            "typeName": "System.Int32[]",
+            "repeated": true,
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Equips",
+            "typeName": "System.Collections.Generic.List`1[[EquipSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Slot",
+                "typeName": "EquipSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Equip",
+                "typeName": "EquipData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cards",
+                    "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                    "repeated": true,
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "StartingPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "SpentPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ChaosType",
+                    "typeName": "EquipType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "ActiveLoadout",
+            "typeName": "WeaponLoadout",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "LoadoutNormal",
+            "typeName": "System.Collections.Generic.List`1[[EquipSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Slot",
+                "typeName": "EquipSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Equip",
+                "typeName": "EquipData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cards",
+                    "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                    "repeated": true,
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "StartingPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "SpentPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ChaosType",
+                    "typeName": "EquipType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "LoadoutSecondary",
+            "typeName": "System.Collections.Generic.List`1[[EquipSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Slot",
+                "typeName": "EquipSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Equip",
+                "typeName": "EquipData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cards",
+                    "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                    "repeated": true,
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "StartingPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "SpentPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ChaosType",
+                    "typeName": "EquipType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "LoadoutHeavy",
+            "typeName": "System.Collections.Generic.List`1[[EquipSlotData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Slot",
+                "typeName": "EquipSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Equip",
+                "typeName": "EquipData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cards",
+                    "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                    "repeated": true,
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "StartingPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "SpentPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ChaosType",
+                    "typeName": "EquipType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Artifacts",
+            "typeName": "System.Collections.Generic.List`1[[ArtifactData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Substats",
+                "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Type",
+                    "typeName": "StatType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Value",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ValueStr",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  }
+                ]
+              },
+              {
+                "name": "Slot",
+                "typeName": "ArtifactSlot",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Gems",
+                "typeName": "System.Collections.Generic.List`1[[GemData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "UID",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Refine",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Id",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Favorite",
+                "typeName": "System.Boolean",
+                "codec": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "Skills",
+            "typeName": "SkillSystemData",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Skills",
+                "typeName": "System.Collections.Generic.List`1[[SkillData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  }
+                ]
+              },
+              {
+                "name": "Assigned",
+                "typeName": "System.Collections.Generic.List`1[[SkillData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  }
+                ]
+              },
+              {
+                "name": "SkillCopy",
+                "typeName": "SkillData",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Level",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  }
+                ]
+              },
+              {
+                "name": "Reanimations",
+                "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                "repeated": true,
+                "codec": "stringUtf8Packed"
+              }
+            ]
+          },
+          {
+            "name": "Grimoires",
+            "typeName": "System.Collections.Generic.List`1[[EquipData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+            "repeated": true,
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Substats",
+                "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "repeated": true,
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Type",
+                    "typeName": "StatType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Value",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ValueStr",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  }
+                ]
+              },
+              {
+                "name": "Cards",
+                "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                "repeated": true,
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "StartingPotential",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "SpentPotential",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "ChaosType",
+                "typeName": "EquipType",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "UID",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Refine",
+                "typeName": "System.Int32",
+                "codec": "packedInt32"
+              },
+              {
+                "name": "Id",
+                "typeName": "System.String",
+                "codec": "stringUtf8Packed"
+              },
+              {
+                "name": "Favorite",
+                "typeName": "System.Boolean",
+                "codec": "boolean"
+              }
+            ]
+          },
+          {
+            "name": "Inventory",
+            "typeName": "InventoryData",
+            "nullable": true,
+            "fields": [
+              {
+                "name": "Equips",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[EquipData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cards",
+                    "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+                    "repeated": true,
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "StartingPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "SpentPotential",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "ChaosType",
+                    "typeName": "EquipType",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Artifacts",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[ArtifactData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Substats",
+                    "typeName": "System.Collections.Generic.List`1[[StatData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "Type",
+                        "typeName": "StatType",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Value",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "ValueStr",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Slot",
+                    "typeName": "ArtifactSlot",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Gems",
+                    "typeName": "System.Collections.Generic.List`1[[GemData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                    "repeated": true,
+                    "nullable": true,
+                    "fields": [
+                      {
+                        "name": "UID",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      },
+                      {
+                        "name": "Refine",
+                        "typeName": "System.Int32",
+                        "codec": "packedInt32"
+                      },
+                      {
+                        "name": "Id",
+                        "typeName": "System.String",
+                        "codec": "stringUtf8Packed"
+                      },
+                      {
+                        "name": "Favorite",
+                        "typeName": "System.Boolean",
+                        "codec": "boolean"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Cards",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[CardData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Count",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Gems",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[GemData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Junks",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[JunkData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Count",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Consumables",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[ConsumableData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Count",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              },
+              {
+                "name": "Cosmetics",
+                "typeName": "System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[CosmeticData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+                "dictionaryKey": "stringUtf8Packed",
+                "nullable": true,
+                "fields": [
+                  {
+                    "name": "Rarity",
+                    "typeName": "ItemRarity",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Shiny",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  },
+                  {
+                    "name": "UID",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Refine",
+                    "typeName": "System.Int32",
+                    "codec": "packedInt32"
+                  },
+                  {
+                    "name": "Id",
+                    "typeName": "System.String",
+                    "codec": "stringUtf8Packed"
+                  },
+                  {
+                    "name": "Favorite",
+                    "typeName": "System.Boolean",
+                    "codec": "boolean"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "LastLogin",
+            "typeName": "System.Int64",
+            "codec": "packedInt64"
+          },
+          {
+            "name": "Playtime",
+            "typeName": "System.Int64",
+            "codec": "packedInt64"
+          },
+          {
+            "name": "MonsterKills",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "BossKills",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Deaths",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "WaypointsUnlocked",
+            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+            "repeated": true,
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "NpcsSpokenTo",
+            "typeName": "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]",
+            "repeated": true,
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "WaystoneMapId",
+            "typeName": "System.String",
+            "codec": "stringUtf8Packed"
+          },
+          {
+            "name": "Created",
+            "typeName": "System.DateTime",
+            "codec": "packedInt64"
+          },
+          {
+            "name": "Updated",
+            "typeName": "System.DateTime",
+            "codec": "packedInt64"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "wireHash": 27,
+    "packetKind": "targetRpc",
+    "methodName": "ValidateObjectState_T",
+    "parameters": [
+      {
+        "name": "objectId",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 28,
+    "packetKind": "serverRpc",
+    "methodName": "ConfirmObjectState",
+    "parameters": [
+      {
+        "name": "objectId",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
+      }
+    ]
+  },
+  {
+    "wireHash": 29,
+    "packetKind": "targetRpc",
     "methodName": "DrawMessage",
     "parameters": [
       {
@@ -1586,7 +2882,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 27,
+    "wireHash": 30,
     "packetKind": "serverRpc",
     "methodName": "ReviveSelf",
     "parameters": [
@@ -1598,22 +2894,27 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 28,
+    "wireHash": 31,
+    "packetKind": "targetRpc",
+    "methodName": "ReviveWaitingForTrade_T"
+  },
+  {
+    "wireHash": 32,
     "packetKind": "observersRpc",
     "methodName": "Revive_C"
   },
   {
-    "wireHash": 29,
+    "wireHash": 33,
     "packetKind": "serverRpc",
     "methodName": "FullHealByHealer"
   },
   {
-    "wireHash": 30,
+    "wireHash": 34,
     "packetKind": "observersRpc",
     "methodName": "FullHeal_C"
   },
   {
-    "wireHash": 31,
+    "wireHash": 35,
     "packetKind": "targetRpc",
     "methodName": "ChannelList_T",
     "parameters": [
@@ -1634,12 +2935,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 32,
+    "wireHash": 36,
     "packetKind": "observersRpc",
     "methodName": "LevelUp_C"
   },
   {
-    "wireHash": 33,
+    "wireHash": 37,
     "packetKind": "serverRpc",
     "methodName": "UpdateLootFilter_S",
     "parameters": [
@@ -1650,12 +2951,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 34,
+    "wireHash": 38,
     "packetKind": "observersRpc",
     "methodName": "Pickup_C"
   },
   {
-    "wireHash": 35,
+    "wireHash": 39,
     "packetKind": "observersRpc",
     "methodName": "TriggerEmote_C",
     "parameters": [
@@ -1667,17 +2968,17 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 36,
+    "wireHash": 40,
     "packetKind": "observersRpc",
     "methodName": "StopEmote_C"
   },
   {
-    "wireHash": 37,
+    "wireHash": 41,
     "packetKind": "serverRpc",
     "methodName": "WarpHome_Rpc"
   },
   {
-    "wireHash": 38,
+    "wireHash": 42,
     "packetKind": "targetRpc",
     "methodName": "WarpFailed_T",
     "parameters": [
@@ -1689,7 +2990,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 39,
+    "wireHash": 43,
     "packetKind": "targetRpc",
     "methodName": "DrawText_T",
     "parameters": [
@@ -1701,7 +3002,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 40,
+    "wireHash": 44,
     "packetKind": "serverRpc",
     "methodName": "SendPartyInvite",
     "parameters": [
@@ -1713,7 +3014,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 41,
+    "wireHash": 45,
     "packetKind": "serverRpc",
     "methodName": "RequestJoinParty",
     "parameters": [
@@ -1725,7 +3026,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 42,
+    "wireHash": 46,
     "packetKind": "targetRpc",
     "methodName": "ShowPartyInvite_T",
     "parameters": [
@@ -1742,7 +3043,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 43,
+    "wireHash": 47,
     "packetKind": "targetRpc",
     "methodName": "ShowJoinRequest_T",
     "parameters": [
@@ -1764,7 +3065,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 44,
+    "wireHash": 48,
     "packetKind": "serverRpc",
     "methodName": "AcceptPartyInvite",
     "parameters": [
@@ -1776,7 +3077,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 45,
+    "wireHash": 49,
     "packetKind": "serverRpc",
     "methodName": "AcceptPartyRequestJoin",
     "parameters": [
@@ -1793,7 +3094,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 46,
+    "wireHash": 50,
     "packetKind": "serverRpc",
     "methodName": "DeclinePartyInvite",
     "parameters": [
@@ -1805,7 +3106,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 47,
+    "wireHash": 51,
     "packetKind": "serverRpc",
     "methodName": "DeclinePartyRequestJoin",
     "parameters": [
@@ -1822,17 +3123,17 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 48,
+    "wireHash": 52,
     "packetKind": "serverRpc",
     "methodName": "CreateParty"
   },
   {
-    "wireHash": 49,
+    "wireHash": 53,
     "packetKind": "serverRpc",
     "methodName": "LeaveParty_S"
   },
   {
-    "wireHash": 50,
+    "wireHash": 54,
     "packetKind": "targetRpc",
     "methodName": "UpdateParty_T",
     "parameters": [
@@ -1843,7 +3144,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 51,
+    "wireHash": 55,
     "packetKind": "serverRpc",
     "methodName": "KickFromParty",
     "parameters": [
@@ -1855,7 +3156,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 52,
+    "wireHash": 56,
     "packetKind": "serverRpc",
     "methodName": "ETCastKickVote",
     "parameters": [
@@ -1872,7 +3173,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 53,
+    "wireHash": 57,
     "packetKind": "targetRpc",
     "methodName": "ShowETKickVote_T",
     "parameters": [
@@ -1889,7 +3190,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 54,
+    "wireHash": 58,
     "packetKind": "serverRpc",
     "methodName": "PromotePartyLeader",
     "parameters": [
@@ -1901,7 +3202,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 55,
+    "wireHash": 59,
     "packetKind": "serverRpc",
     "methodName": "SetPartyName",
     "parameters": [
@@ -1913,7 +3214,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 56,
+    "wireHash": 60,
     "packetKind": "serverRpc",
     "methodName": "SetPartyExp",
     "parameters": [
@@ -1924,7 +3225,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 57,
+    "wireHash": 61,
     "packetKind": "serverRpc",
     "methodName": "SetPartyDrops",
     "parameters": [
@@ -1935,7 +3236,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 58,
+    "wireHash": 62,
     "packetKind": "serverRpc",
     "methodName": "SetPartyLevelRange",
     "parameters": [
@@ -1952,7 +3253,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 59,
+    "wireHash": 63,
     "packetKind": "serverRpc",
     "methodName": "SetPartyPublic",
     "parameters": [
@@ -1964,12 +3265,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 60,
+    "wireHash": 64,
     "packetKind": "serverRpc",
     "methodName": "RequestPartyList_S"
   },
   {
-    "wireHash": 61,
+    "wireHash": 65,
     "packetKind": "targetRpc",
     "methodName": "RequestPartyList_T",
     "parameters": [
@@ -1980,7 +3281,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 62,
+    "wireHash": 66,
     "packetKind": "serverRpc",
     "methodName": "SendTradeRequest",
     "parameters": [
@@ -1992,7 +3293,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 63,
+    "wireHash": 67,
     "packetKind": "targetRpc",
     "methodName": "SendTradeRequest_T",
     "parameters": [
@@ -2004,7 +3305,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 64,
+    "wireHash": 68,
     "packetKind": "serverRpc",
     "methodName": "AcceptTradeRequest",
     "parameters": [
@@ -2016,17 +3317,17 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 65,
+    "wireHash": 69,
     "packetKind": "serverRpc",
     "methodName": "CancelTrade_S"
   },
   {
-    "wireHash": 66,
+    "wireHash": 70,
     "packetKind": "targetRpc",
     "methodName": "CancelTrade_T"
   },
   {
-    "wireHash": 67,
+    "wireHash": 71,
     "packetKind": "targetRpc",
     "methodName": "BeginTrade_T",
     "parameters": [
@@ -2041,7 +3342,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 68,
+    "wireHash": 72,
     "packetKind": "serverRpc",
     "methodName": "UpdateTrade_S",
     "parameters": [
@@ -2052,7 +3353,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 69,
+    "wireHash": 73,
     "packetKind": "targetRpc",
     "methodName": "UpdateTrade_T",
     "parameters": [
@@ -2067,12 +3368,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 70,
+    "wireHash": 74,
     "packetKind": "targetRpc",
     "methodName": "CompleteTradeBegin_T"
   },
   {
-    "wireHash": 71,
+    "wireHash": 75,
     "packetKind": "targetRpc",
     "methodName": "CompleteTrade_T",
     "parameters": [
@@ -2084,7 +3385,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 72,
+    "wireHash": 76,
     "packetKind": "serverRpc",
     "methodName": "RequestVendorItemList_S",
     "parameters": [
@@ -2114,7 +3415,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 73,
+    "wireHash": 77,
     "packetKind": "targetRpc",
     "methodName": "RequestVendorItemList_T",
     "parameters": [
@@ -2126,12 +3427,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 74,
+    "wireHash": 78,
     "packetKind": "serverRpc",
     "methodName": "RequestVendingOverview_S"
   },
   {
-    "wireHash": 75,
+    "wireHash": 79,
     "packetKind": "targetRpc",
     "methodName": "RequestVendingOverview_T",
     "parameters": [
@@ -2143,12 +3444,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 76,
+    "wireHash": 80,
     "packetKind": "serverRpc",
     "methodName": "RequestVendingStallStatus_S"
   },
   {
-    "wireHash": 77,
+    "wireHash": 81,
     "packetKind": "targetRpc",
     "methodName": "RequestVendingStallStatus_T",
     "parameters": [
@@ -2187,12 +3488,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 78,
+    "wireHash": 82,
     "packetKind": "serverRpc",
     "methodName": "RequestInstanceStatus_S"
   },
   {
-    "wireHash": 79,
+    "wireHash": 83,
     "packetKind": "targetRpc",
     "methodName": "RequestInstanceStatus_T",
     "parameters": [
@@ -2203,7 +3504,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 80,
+    "wireHash": 84,
     "packetKind": "serverRpc",
     "methodName": "RequestVendingStallListings_S",
     "parameters": [
@@ -2215,7 +3516,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 81,
+    "wireHash": 85,
     "packetKind": "targetRpc",
     "methodName": "RequestVendingStallListings_T",
     "parameters": [
@@ -2227,7 +3528,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 82,
+    "wireHash": 86,
     "packetKind": "observersRpc",
     "methodName": "SpawnVendingStall_C",
     "parameters": [
@@ -2239,7 +3540,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 83,
+    "wireHash": 87,
     "packetKind": "targetRpc",
     "methodName": "SpawnVendingStall_T",
     "parameters": [
@@ -2251,7 +3552,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 84,
+    "wireHash": 88,
     "packetKind": "observersRpc",
     "methodName": "DespawnVendingStall_C",
     "parameters": [
@@ -2263,7 +3564,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 85,
+    "wireHash": 89,
     "packetKind": "targetRpc",
     "methodName": "DespawnVendingStall_T",
     "parameters": [
@@ -2275,7 +3576,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 86,
+    "wireHash": 90,
     "packetKind": "targetRpc",
     "methodName": "LoadVendingStalls_T",
     "parameters": [
@@ -2287,7 +3588,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 87,
+    "wireHash": 91,
     "packetKind": "serverRpc",
     "methodName": "SendEmoji",
     "parameters": [
@@ -2298,7 +3599,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 88,
+    "wireHash": 92,
     "packetKind": "observersRpc",
     "methodName": "SendEmoji_C",
     "parameters": [
@@ -2309,12 +3610,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 89,
+    "wireHash": 93,
     "packetKind": "targetRpc",
     "methodName": "SendLimitReached"
   },
   {
-    "wireHash": 90,
+    "wireHash": 94,
     "packetKind": "serverRpc",
     "methodName": "SendChat",
     "parameters": [
@@ -2339,7 +3640,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 91,
+    "wireHash": 95,
     "packetKind": "observersRpc",
     "methodName": "BroadcastChat",
     "parameters": [
@@ -2351,7 +3652,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 92,
+    "wireHash": 96,
     "packetKind": "targetRpc",
     "methodName": "ReceiveChat",
     "parameters": [
@@ -2362,7 +3663,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 93,
+    "wireHash": 97,
     "packetKind": "targetRpc",
     "methodName": "ReceiveAnnouncement",
     "parameters": [
@@ -2374,7 +3675,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 94,
+    "wireHash": 98,
     "packetKind": "targetRpc",
     "methodName": "ReceiveSystemMessageLoc_T",
     "parameters": [
@@ -2410,17 +3711,61 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 95,
+    "wireHash": 99,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_SpawnMonster",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      }
+    ]
+  },
+  {
+    "wireHash": 100,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ETSetFloor",
+    "parameters": [
+      {
+        "name": "floor",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
+  },
+  {
+    "wireHash": 101,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ETEnter"
+  },
+  {
+    "wireHash": 102,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ETNextFloor"
+  },
+  {
+    "wireHash": 103,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ETAdvanceTenFloors"
+  },
+  {
+    "wireHash": 104,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_ETSpawnShadow"
+  },
+  {
+    "wireHash": 105,
     "packetKind": "serverRpc",
     "methodName": "ETEnter"
   },
   {
-    "wireHash": 96,
+    "wireHash": 106,
     "packetKind": "serverRpc",
     "methodName": "ETLeave"
   },
   {
-    "wireHash": 97,
+    "wireHash": 107,
     "packetKind": "targetRpc",
     "methodName": "ETUpdateRun",
     "parameters": [
@@ -2436,7 +3781,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 98,
+    "wireHash": 108,
     "packetKind": "targetRpc",
     "methodName": "ETAdvanceFloor",
     "parameters": [
@@ -2453,12 +3798,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 99,
+    "wireHash": 109,
     "packetKind": "serverRpc",
     "methodName": "ETAdvanceFloor_S"
   },
   {
-    "wireHash": 100,
+    "wireHash": 110,
     "packetKind": "serverRpc",
     "methodName": "PvpEnterQueue",
     "parameters": [
@@ -2469,27 +3814,27 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 101,
+    "wireHash": 111,
     "packetKind": "serverRpc",
     "methodName": "PvpLeaveQueue"
   },
   {
-    "wireHash": 102,
+    "wireHash": 112,
     "packetKind": "serverRpc",
     "methodName": "PvpForfeit"
   },
   {
-    "wireHash": 103,
+    "wireHash": 113,
     "packetKind": "serverRpc",
     "methodName": "PvpEnterSkirmish"
   },
   {
-    "wireHash": 104,
+    "wireHash": 114,
     "packetKind": "serverRpc",
     "methodName": "PvpRequestQueueStatus"
   },
   {
-    "wireHash": 105,
+    "wireHash": 115,
     "packetKind": "serverRpc",
     "methodName": "PvpEnterArenaMatch",
     "parameters": [
@@ -2501,12 +3846,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 106,
+    "wireHash": 116,
     "packetKind": "serverRpc",
     "methodName": "RequestPvpQueueTransfer"
   },
   {
-    "wireHash": 107,
+    "wireHash": 117,
     "packetKind": "targetRpc",
     "methodName": "PvpUpdateMatch",
     "parameters": [
@@ -2522,17 +3867,17 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 108,
+    "wireHash": 118,
     "packetKind": "serverRpc",
     "methodName": "AcceptSession"
   },
   {
-    "wireHash": 109,
+    "wireHash": 119,
     "packetKind": "serverRpc",
     "methodName": "DeclineSession"
   },
   {
-    "wireHash": 110,
+    "wireHash": 120,
     "packetKind": "targetRpc",
     "methodName": "UpdateSession",
     "parameters": [
@@ -2543,7 +3888,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 111,
+    "wireHash": 121,
     "packetKind": "targetRpc",
     "methodName": "DrawTitle",
     "parameters": [
@@ -2555,7 +3900,39 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 112,
+    "wireHash": 122,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_Status",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "duration",
+        "typeName": "System.Int32",
+        "codec": "packedInt32"
+      }
+    ]
+  },
+  {
+    "wireHash": 123,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_Kill"
+  },
+  {
+    "wireHash": 124,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_Revive"
+  },
+  {
+    "wireHash": 125,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_KillCurrentMapMonsters"
+  },
+  {
+    "wireHash": 126,
     "packetKind": "serverRpc",
     "methodName": "Guild_Create_S",
     "parameters": [
@@ -2567,7 +3944,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 113,
+    "wireHash": 127,
     "packetKind": "serverRpc",
     "methodName": "Guild_Rename_S",
     "parameters": [
@@ -2579,7 +3956,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 114,
+    "wireHash": 128,
     "packetKind": "serverRpc",
     "methodName": "Guild_Disband_S",
     "parameters": [
@@ -2591,7 +3968,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 115,
+    "wireHash": 129,
     "packetKind": "serverRpc",
     "methodName": "Guild_Invite_S",
     "parameters": [
@@ -2603,7 +3980,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 116,
+    "wireHash": 130,
     "packetKind": "serverRpc",
     "methodName": "Guild_InviteById_S",
     "parameters": [
@@ -2615,7 +3992,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 117,
+    "wireHash": 131,
     "packetKind": "serverRpc",
     "methodName": "Guild_AcceptInvite_S",
     "parameters": [
@@ -2627,7 +4004,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 118,
+    "wireHash": 132,
     "packetKind": "serverRpc",
     "methodName": "Guild_DeclineInvite_S",
     "parameters": [
@@ -2639,7 +4016,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 119,
+    "wireHash": 133,
     "packetKind": "serverRpc",
     "methodName": "Guild_Kick_S",
     "parameters": [
@@ -2651,12 +4028,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 120,
+    "wireHash": 134,
     "packetKind": "serverRpc",
     "methodName": "Guild_Leave_S"
   },
   {
-    "wireHash": 121,
+    "wireHash": 135,
     "packetKind": "serverRpc",
     "methodName": "Guild_LeaveAndPass_S",
     "parameters": [
@@ -2668,7 +4045,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 122,
+    "wireHash": 136,
     "packetKind": "serverRpc",
     "methodName": "Guild_Transfer_S",
     "parameters": [
@@ -2680,7 +4057,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 123,
+    "wireHash": 137,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetMemberRank_S",
     "parameters": [
@@ -2697,7 +4074,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 124,
+    "wireHash": 138,
     "packetKind": "serverRpc",
     "methodName": "Guild_EditRank_S",
     "parameters": [
@@ -2729,12 +4106,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 125,
+    "wireHash": 139,
     "packetKind": "serverRpc",
     "methodName": "Guild_AddRank_S"
   },
   {
-    "wireHash": 126,
+    "wireHash": 140,
     "packetKind": "serverRpc",
     "methodName": "Guild_RemoveRank_S",
     "parameters": [
@@ -2746,7 +4123,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 127,
+    "wireHash": 141,
     "packetKind": "serverRpc",
     "methodName": "Guild_MoveRank_S",
     "parameters": [
@@ -2763,7 +4140,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 128,
+    "wireHash": 142,
     "packetKind": "serverRpc",
     "methodName": "Guild_SpendSkill_S",
     "parameters": [
@@ -2775,7 +4152,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 129,
+    "wireHash": 143,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetNotice_S",
     "parameters": [
@@ -2792,7 +4169,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 130,
+    "wireHash": 144,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetDiscord_S",
     "parameters": [
@@ -2804,7 +4181,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 131,
+    "wireHash": 145,
     "packetKind": "serverRpc",
     "methodName": "Guild_StorageTransaction_S",
     "parameters": [
@@ -2825,12 +4202,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 132,
+    "wireHash": 146,
     "packetKind": "serverRpc",
     "methodName": "Guild_OpenStorage_S"
   },
   {
-    "wireHash": 133,
+    "wireHash": 147,
     "packetKind": "serverRpc",
     "methodName": "Guild_CloseStorage_S",
     "parameters": [
@@ -2847,7 +4224,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 134,
+    "wireHash": 148,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetEmblem_S",
     "parameters": [
@@ -2859,7 +4236,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 135,
+    "wireHash": 149,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetCustomEmblem_S",
     "parameters": [
@@ -2870,7 +4247,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 136,
+    "wireHash": 150,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestEmblem_S",
     "parameters": [
@@ -2882,7 +4259,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 137,
+    "wireHash": 151,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetNameColor_S",
     "parameters": [
@@ -2894,7 +4271,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 138,
+    "wireHash": 152,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetMuted_S",
     "parameters": [
@@ -2906,7 +4283,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 139,
+    "wireHash": 153,
     "packetKind": "serverRpc",
     "methodName": "Guild_SetRecruitment_S",
     "parameters": [
@@ -2923,7 +4300,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 140,
+    "wireHash": 154,
     "packetKind": "serverRpc",
     "methodName": "Guild_Apply_S",
     "parameters": [
@@ -2940,7 +4317,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 141,
+    "wireHash": 155,
     "packetKind": "serverRpc",
     "methodName": "Guild_CancelApplication_S",
     "parameters": [
@@ -2952,7 +4329,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 142,
+    "wireHash": 156,
     "packetKind": "serverRpc",
     "methodName": "Guild_AcceptApplication_S",
     "parameters": [
@@ -2964,7 +4341,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 143,
+    "wireHash": 157,
     "packetKind": "serverRpc",
     "methodName": "Guild_RejectApplication_S",
     "parameters": [
@@ -2976,7 +4353,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 144,
+    "wireHash": 158,
     "packetKind": "serverRpc",
     "methodName": "Guild_Browse_S",
     "parameters": [
@@ -2993,12 +4370,12 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 145,
+    "wireHash": 159,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestPending_S"
   },
   {
-    "wireHash": 146,
+    "wireHash": 160,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestAuditLog_S",
     "parameters": [
@@ -3010,7 +4387,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 147,
+    "wireHash": 161,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestStorageLog_S",
     "parameters": [
@@ -3022,17 +4399,17 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 148,
+    "wireHash": 162,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestPresence_S"
   },
   {
-    "wireHash": 149,
+    "wireHash": 163,
     "packetKind": "serverRpc",
     "methodName": "Guild_RequestRefresh_S"
   },
   {
-    "wireHash": 150,
+    "wireHash": 164,
     "packetKind": "targetRpc",
     "methodName": "GuildStorageLockResult_T",
     "parameters": [
@@ -3069,7 +4446,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 151,
+    "wireHash": 165,
     "packetKind": "targetRpc",
     "methodName": "GuildStorageBatchResult_T",
     "parameters": [
@@ -3712,7 +5089,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 152,
+    "wireHash": 166,
     "packetKind": "targetRpc",
     "methodName": "UpdateGuild_T",
     "parameters": [
@@ -3723,7 +5100,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 153,
+    "wireHash": 167,
     "packetKind": "targetRpc",
     "methodName": "GuildEmblemResult_T",
     "parameters": [
@@ -3744,7 +5121,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 154,
+    "wireHash": 168,
     "packetKind": "targetRpc",
     "methodName": "GuildInvite_T",
     "parameters": [
@@ -3766,7 +5143,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 155,
+    "wireHash": 169,
     "packetKind": "targetRpc",
     "methodName": "GuildBrowseResults_T",
     "parameters": [
@@ -3782,7 +5159,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 156,
+    "wireHash": 170,
     "packetKind": "targetRpc",
     "methodName": "GuildPendingResults_T",
     "parameters": [
@@ -3793,7 +5170,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 157,
+    "wireHash": 171,
     "packetKind": "targetRpc",
     "methodName": "GuildAuditResults_T",
     "parameters": [
@@ -3809,7 +5186,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 158,
+    "wireHash": 172,
     "packetKind": "targetRpc",
     "methodName": "GuildStorageLogResults_T",
     "parameters": [
@@ -3825,7 +5202,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 159,
+    "wireHash": 173,
     "packetKind": "targetRpc",
     "methodName": "GuildPresenceResults_T",
     "parameters": [
@@ -3836,7 +5213,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 160,
+    "wireHash": 174,
     "packetKind": "serverRpc",
     "methodName": "ReportPlayer",
     "parameters": [
@@ -3848,7 +5225,7 @@ export const playerControllerRpcs = [
     ]
   },
   {
-    "wireHash": 161,
+    "wireHash": 175,
     "packetKind": "serverRpc",
     "methodName": "ReportChatMessage",
     "parameters": [
@@ -3930,13 +5307,18 @@ export const playerControllerRpcs = [
       {
         "name": "dto",
         "typeName": "BaseUnitController+TraverseDto"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
       }
     ]
   },
   {
     "wireHash": 5,
     "packetKind": "serverRpc",
-    "methodName": "ClientMapLoadFailed",
+    "methodName": "ConfirmMapState",
     "parameters": [
       {
         "name": "mapId",
@@ -3947,13 +5329,18 @@ export const playerControllerRpcs = [
         "name": "instanceId",
         "typeName": "System.Int32",
         "codec": "packedInt32"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
       }
     ]
   },
   {
     "wireHash": 6,
-    "packetKind": "observersRpc",
-    "methodName": "SyncInstanceState",
+    "packetKind": "serverRpc",
+    "methodName": "ClientMapLoadFailed",
     "parameters": [
       {
         "name": "mapId",
@@ -4169,60 +5556,66 @@ export const playerControllerSyncTypes = [
   },
   {
     "index": 12,
+    "name": "MovementFrozen",
+    "typeName": "Boolean",
+    "codec": "boolean"
+  },
+  {
+    "index": 13,
     "name": "PartyId",
     "typeName": "Int32",
     "codec": "packedInt32"
   },
   {
-    "index": 13,
+    "index": 14,
     "name": "TotalThreat",
     "typeName": "Single",
     "codec": "float32"
   },
   {
-    "index": 14,
+    "index": 15,
     "name": "IsGm",
     "typeName": "Boolean",
     "codec": "boolean"
   },
   {
-    "index": 15,
+    "index": 16,
     "name": "GuildName",
     "typeName": "String",
     "codec": "stringUtf8Packed"
   },
   {
-    "index": 16,
+    "index": 17,
     "name": "GuildRankName",
     "typeName": "String",
     "codec": "stringUtf8Packed"
   },
   {
-    "index": 17,
+    "index": 18,
     "name": "GuildEmblemId",
     "typeName": "String",
     "codec": "stringUtf8Packed"
   },
   {
-    "index": 18,
+    "index": 19,
     "name": "GuildNameColor",
     "typeName": "String",
     "codec": "stringUtf8Packed"
   },
   {
-    "index": 19,
+    "index": 20,
     "name": "ChatMutedUntil",
     "typeName": "Int64",
     "codec": "packedInt64"
   },
   {
-    "index": 20,
+    "index": 21,
     "name": "GmRooted",
     "typeName": "Boolean",
     "codec": "boolean"
   },
   {
-    "index": 21,
+    "index": 22,
     "name": "JailedUntil",
     "typeName": "Int64",
     "codec": "packedInt64"

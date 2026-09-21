@@ -66,13 +66,18 @@ export const baseUnitControllerRpcs = [
       {
         "name": "dto",
         "typeName": "BaseUnitController+TraverseDto"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
       }
     ]
   },
   {
     "wireHash": 5,
     "packetKind": "serverRpc",
-    "methodName": "ClientMapLoadFailed",
+    "methodName": "ConfirmMapState",
     "parameters": [
       {
         "name": "mapId",
@@ -83,13 +88,18 @@ export const baseUnitControllerRpcs = [
         "name": "instanceId",
         "typeName": "System.Int32",
         "codec": "packedInt32"
+      },
+      {
+        "name": "receipt",
+        "typeName": "System.UInt64",
+        "codec": "packedUInt64"
       }
     ]
   },
   {
     "wireHash": 6,
-    "packetKind": "observersRpc",
-    "methodName": "SyncInstanceState",
+    "packetKind": "serverRpc",
+    "methodName": "ClientMapLoadFailed",
     "parameters": [
       {
         "name": "mapId",

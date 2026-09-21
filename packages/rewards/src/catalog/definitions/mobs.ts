@@ -217,9 +217,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -545,9 +545,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -557,7 +557,7 @@ export class MobDefinitions {
       },
       {
         "category": "gem",
-        "itemId": "ChainLightning Gem",
+        "itemId": "Sacrifice Gem",
         "count": 1,
         "chance": 0.1
       },
@@ -685,9 +685,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -1311,9 +1311,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -1323,7 +1323,7 @@ export class MobDefinitions {
       },
       {
         "category": "gem",
-        "itemId": "ChainLightning Gem",
+        "itemId": "Sacrifice Gem",
         "count": 1,
         "chance": 0.1
       },
@@ -2621,9 +2621,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -3821,7 +3821,7 @@ export class MobDefinitions {
       },
       {
         "category": "gem",
-        "itemId": "ThunderStorm Gem",
+        "itemId": "Thunderbolt Gem",
         "count": 1,
         "chance": 0.1
       },
@@ -5121,9 +5121,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -11457,9 +11457,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -11623,9 +11623,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -11747,9 +11747,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -11859,9 +11859,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -12357,9 +12357,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -16785,9 +16785,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -16849,9 +16849,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -16919,9 +16919,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -16995,9 +16995,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17065,9 +17065,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -17147,9 +17147,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17217,9 +17217,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17281,9 +17281,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17345,9 +17345,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -17421,9 +17421,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17491,9 +17491,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -17567,9 +17567,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17637,9 +17637,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -17719,9 +17719,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17789,9 +17789,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17853,9 +17853,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -17917,9 +17917,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -17999,9 +17999,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -18069,9 +18069,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -18133,9 +18133,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -18233,9 +18233,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -18309,9 +18309,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "card",
@@ -18373,9 +18373,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -18467,9 +18467,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -18573,9 +18573,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -19003,9 +19003,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -19115,9 +19115,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -19227,9 +19227,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -20937,9 +20937,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -21989,9 +21989,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -22995,9 +22995,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -23647,9 +23647,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -23765,9 +23765,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -23959,9 +23959,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -24159,9 +24159,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -25215,9 +25215,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -25327,9 +25327,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -25439,9 +25439,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -25551,9 +25551,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 1
+        "chance": 0.1
       },
       {
         "category": "consumable",
@@ -26425,9 +26425,9 @@ export class MobDefinitions {
       },
       {
         "category": "consumable",
-        "itemId": "Artifact Box Base",
+        "itemId": "Artifact Box Advanced",
         "count": 1,
-        "chance": 10
+        "chance": 1
       },
       {
         "category": "consumable",
@@ -27107,7 +27107,7 @@ export class MobDefinitions {
       },
       {
         "category": "gem",
-        "itemId": "Thunderbolt Gem",
+        "itemId": "ChainLightning Gem",
         "count": 1,
         "chance": 0.1
       },
@@ -27195,7 +27195,7 @@ export class MobDefinitions {
       },
       {
         "category": "gem",
-        "itemId": "Thunderbolt Gem",
+        "itemId": "ThunderStorm Gem",
         "count": 1,
         "chance": 0.1
       },

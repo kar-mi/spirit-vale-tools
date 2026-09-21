@@ -62,7 +62,7 @@ export class ArtifactItemDefinitions {
         "Relic": [
           {
             "type": 90,
-            "value": -2
+            "value": -1
           }
         ]
       },
@@ -212,89 +212,37 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Berserker_1",
+      "id": "Berserker_Artifact_1",
       "displayName": "Bloodfury",
       "artifactSlotEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Execute"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Cyclone"
-            }
-          }
-        ],
+        "Rune": [],
+        "Jewel": [],
         "Scroll": [
           {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "AxeThrow"
-            }
+            "type": 60,
+            "value": 1
           }
         ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "DarkClaw"
-            }
-          }
-        ]
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Execute"
-            }
+            "type": 15,
+            "value": 1
           }
         ],
         "Jewel": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Cyclone"
-            }
+            "type": 52,
+            "value": 1
           }
         ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "AxeThrow"
-            }
-          }
-        ],
+        "Scroll": [],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "DarkClaw"
-            }
+            "type": 71,
+            "value": 1
           }
         ]
       },
@@ -630,7 +578,7 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Gunslinger_1",
+      "id": "Gunslinger_Artifact_1",
       "displayName": "Deadeye",
       "artifactSlotEffects": {
         "Rune": [
@@ -659,20 +607,11 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "SniperShot"
+              "id": "ShrapnelShot"
             }
           }
         ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "ExplosiveGrenade"
-            }
-          }
-        ]
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
@@ -701,18 +640,14 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "SniperShot"
+              "id": "ShrapnelShot"
             }
           }
         ],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "ExplosiveGrenade"
-            }
+            "type": 69,
+            "value": 1
           }
         ]
       },
@@ -1367,7 +1302,7 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Necromancer_1",
+      "id": "Necromancer_Artifact_1",
       "displayName": "Gravebound",
       "artifactSlotEffects": {
         "Rune": [
@@ -1376,7 +1311,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "BoneSpikes"
+              "id": "BoneSpear"
             }
           }
         ],
@@ -1386,7 +1321,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "DeathSpiral"
+              "id": "BoneSpikes"
             }
           }
         ],
@@ -1396,20 +1331,11 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "DeathNova"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
               "id": "CorpseExplosionEnemy"
             }
           }
-        ]
+        ],
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
@@ -1418,7 +1344,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "BoneSpikes"
+              "id": "BoneSpear"
             }
           }
         ],
@@ -1428,7 +1354,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "DeathSpiral"
+              "id": "BoneSpikes"
             }
           }
         ],
@@ -1438,18 +1364,14 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "DeathNova"
+              "id": "CorpseExplosionEnemy"
             }
           }
         ],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "CorpseExplosionEnemy"
-            }
+            "type": 135,
+            "value": 0.5
           }
         ]
       },
@@ -1539,89 +1461,47 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Paladin_1",
+      "id": "Paladin_Artifact_1",
       "displayName": "Aegis Light",
       "artifactSlotEffects": {
         "Rune": [
           {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "GrandCross"
-            }
+            "type": 73,
+            "value": 5
           }
         ],
         "Jewel": [
           {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "JudgementBlade"
-            }
+            "type": 74,
+            "value": 5
           }
         ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "ShieldThrow"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Consecration"
-            }
-          }
-        ]
+        "Scroll": [],
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "GrandCross"
-            }
+            "type": 73,
+            "value": 1
           }
         ],
         "Jewel": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "JudgementBlade"
-            }
+            "type": 74,
+            "value": 1
           }
         ],
         "Scroll": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "ShieldThrow"
-            }
+            "type": 68,
+            "value": 1
           }
         ],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Consecration"
-            }
+            "type": 71,
+            "value": 1
           }
         ]
       },
@@ -1639,7 +1519,7 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Priest_1",
+      "id": "Priest_Artifact_1",
       "displayName": "Sanctum Grace",
       "artifactSlotEffects": {
         "Rune": [
@@ -1648,7 +1528,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "Exorcism"
+              "id": "HolyWrath"
             }
           }
         ],
@@ -1658,7 +1538,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "HolyWrath"
+              "id": "Exorcism"
             }
           }
         ],
@@ -1668,20 +1548,11 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "TurnUndead"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
               "id": "Smite"
             }
           }
-        ]
+        ],
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
@@ -1690,7 +1561,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "Exorcism"
+              "id": "HolyWrath"
             }
           }
         ],
@@ -1700,7 +1571,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "HolyWrath"
+              "id": "Exorcism"
             }
           }
         ],
@@ -1710,18 +1581,14 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "TurnUndead"
+              "id": "Smite"
             }
           }
         ],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Smite"
-            }
+            "type": 70,
+            "value": 1
           }
         ]
       },
@@ -2072,7 +1939,7 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Shinobi_1",
+      "id": "Shinobi_Artifact_1",
       "displayName": "Umbral Veil",
       "artifactSlotEffects": {
         "Rune": [
@@ -2081,7 +1948,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "FlameOrb"
+              "id": "FireRelease"
             }
           }
         ],
@@ -2091,7 +1958,7 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "FrostBlade"
+              "id": "IceRelease"
             }
           }
         ],
@@ -2101,20 +1968,11 @@ export class ArtifactItemDefinitions {
             "value": 5,
             "target": {
               "kind": "skill",
-              "id": "LightningStrike"
+              "id": "LightningRelease"
             }
           }
         ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "ShadowRelease"
-            }
-          }
-        ]
+        "Relic": []
       },
       "artifactSlotRefineEffects": {
         "Rune": [
@@ -2123,7 +1981,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "FlameOrb"
+              "id": "FireRelease"
             }
           }
         ],
@@ -2133,7 +1991,7 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "FrostBlade"
+              "id": "IceRelease"
             }
           }
         ],
@@ -2143,18 +2001,14 @@ export class ArtifactItemDefinitions {
             "value": 2,
             "target": {
               "kind": "skill",
-              "id": "LightningStrike"
+              "id": "LightningRelease"
             }
           }
         ],
         "Relic": [
           {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "ShadowRelease"
-            }
+            "type": 70,
+            "value": 1
           }
         ]
       },
@@ -2403,351 +2257,32 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Weaver_1",
-      "displayName": "Fateweave",
-      "artifactSlotEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Firebolt"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Icebolt"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Thunderbolt"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Earthbolt"
-            }
-          }
-        ]
-      },
+      "id": "Weaver_Artifact_1",
+      "displayName": "Manifold",
       "artifactSlotRefineEffects": {
         "Rune": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Firebolt"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Icebolt"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Thunderbolt"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Earthbolt"
-            }
-          }
-        ]
-      },
-      "artifactSet": {
-        "requiredPieces": 4,
-        "perPieceBase": [],
-        "perPiece": [],
-        "fullSet": [
-          {
-            "type": 6,
-            "value": 3
-          }
-        ]
-      }
-    },
-    {
-      "itemType": 3,
-      "id": "Wizard_1",
-      "displayName": "Tempest Engine",
-      "artifactSlotEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Tempest"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "ChainLightning"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "ThunderStorm"
-            }
-          }
-        ],
-        "Relic": []
-      },
-      "artifactSlotRefineEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Tempest"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "ChainLightning"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "ThunderStorm"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 64,
-            "value": 1
-          }
-        ]
-      },
-      "artifactSet": {
-        "requiredPieces": 4,
-        "perPieceBase": [],
-        "perPiece": [],
-        "fullSet": [
-          {
-            "type": 6,
-            "value": 3
-          }
-        ]
-      }
-    },
-    {
-      "itemType": 3,
-      "id": "Wizard_2",
-      "displayName": "Frozen Dominion",
-      "artifactSlotEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "FreezingField"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "IceShard"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "FrozenGround"
-            }
-          }
-        ],
-        "Relic": []
-      },
-      "artifactSlotRefineEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "FreezingField"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "IceShard"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "FrozenGround"
-            }
-          }
-        ],
-        "Relic": [
-          {
-            "type": 76,
-            "value": 2
-          }
-        ]
-      },
-      "artifactSet": {
-        "requiredPieces": 4,
-        "perPieceBase": [],
-        "perPiece": [],
-        "fullSet": [
-          {
-            "type": 6,
-            "value": 3
-          }
-        ]
-      }
-    },
-    {
-      "itemType": 3,
-      "id": "Wizard_3",
-      "displayName": "Meteoric Cataclysm",
-      "artifactSlotEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Meteor"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "FirePillar"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 5,
-            "target": {
-              "kind": "skill",
-              "id": "Combustion"
-            }
-          }
-        ],
-        "Relic": []
-      },
-      "artifactSlotRefineEffects": {
-        "Rune": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Meteor"
-            }
-          }
-        ],
-        "Jewel": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "FirePillar"
-            }
-          }
-        ],
-        "Scroll": [
-          {
-            "type": 49,
-            "value": 2,
-            "target": {
-              "kind": "skill",
-              "id": "Combustion"
-            }
-          }
-        ],
-        "Relic": [
           {
             "type": 70,
             "value": 1
           }
+        ],
+        "Jewel": [
+          {
+            "type": 69,
+            "value": 1
+          }
+        ],
+        "Scroll": [
+          {
+            "type": 71,
+            "value": 1
+          }
+        ],
+        "Relic": [
+          {
+            "type": 90,
+            "value": -1
+          }
         ]
       },
       "artifactSet": {
@@ -2764,41 +2299,37 @@ export class ArtifactItemDefinitions {
     },
     {
       "itemType": 3,
-      "id": "Wizard_4",
+      "id": "Wizard_Artifact_1",
       "displayName": "Arcane Elementalist",
       "artifactSlotEffects": {
-        "Rune": [
+        "Rune": [],
+        "Jewel": [],
+        "Scroll": [
           {
-            "type": 34,
+            "type": 62,
             "value": 1
           }
         ],
-        "Jewel": [],
-        "Scroll": [],
         "Relic": []
       },
       "artifactSlotRefineEffects": {
-        "Rune": [],
-        "Jewel": [
+        "Rune": [
           {
-            "type": 42,
-            "value": 0.5,
-            "target": {
-              "kind": "skill",
-              "id": "FreeCast"
-            }
+            "type": 70,
+            "value": 1
           }
         ],
-        "Scroll": [
+        "Jewel": [
           {
             "type": 64,
             "value": 1
           }
         ],
+        "Scroll": [],
         "Relic": [
           {
-            "type": 76,
-            "value": 2
+            "type": 90,
+            "value": -1
           }
         ]
       },
