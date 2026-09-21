@@ -127,6 +127,16 @@ export const skillsComponentRpcs = [
             "codec": "packedInt32"
           },
           {
+            "name": "MaxInstances",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Instances",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
             "name": "CastTime",
             "typeName": "System.Single",
             "codec": "float32"
@@ -149,6 +159,16 @@ export const skillsComponentRpcs = [
           {
             "name": "LeapType",
             "typeName": "LeapType",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "CastType",
+            "typeName": "CastType",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "TargetType",
+            "typeName": "TargetType",
             "codec": "packedInt32"
           }
         ]
@@ -237,6 +257,16 @@ export const skillsComponentRpcs = [
             "codec": "packedInt32"
           },
           {
+            "name": "MaxInstances",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "Instances",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
             "name": "CastTime",
             "typeName": "System.Single",
             "codec": "float32"
@@ -259,6 +289,16 @@ export const skillsComponentRpcs = [
           {
             "name": "LeapType",
             "typeName": "LeapType",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "CastType",
+            "typeName": "CastType",
+            "codec": "packedInt32"
+          },
+          {
+            "name": "TargetType",
+            "typeName": "TargetType",
             "codec": "packedInt32"
           }
         ]
@@ -292,6 +332,23 @@ export const skillsComponentRpcs = [
   },
   {
     "wireHash": 8,
+    "packetKind": "observersRpc",
+    "methodName": "ScatterEffect_C",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      },
+      {
+        "name": "position",
+        "typeName": "UnityEngine.Vector3",
+        "codec": "vector3"
+      }
+    ]
+  },
+  {
+    "wireHash": 9,
     "packetKind": "observersRpc",
     "methodName": "ToggleBegin_C",
     "parameters": [

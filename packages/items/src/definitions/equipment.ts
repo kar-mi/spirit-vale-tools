@@ -1272,13 +1272,25 @@ export class EquipmentItemDefinitions {
     {
       "itemType": 2,
       "id": "Berserker_1",
-      "displayName": "War Cry",
+      "displayName": "Rend",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_10",
+      "displayName": "Crimson Standard",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_11",
+      "displayName": "Blood Standard",
       "weight": 10
     },
     {
       "itemType": 2,
       "id": "Berserker_2",
-      "displayName": "Crimson Frenzy",
+      "displayName": "Bloodstorm",
       "weight": 10
     },
     {
@@ -1291,6 +1303,36 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Berserker_4",
       "displayName": "Executioner",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_5",
+      "displayName": "Second Wind",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_6",
+      "displayName": "Red Thirst",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_7",
+      "displayName": "Mocking Roar",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_8",
+      "displayName": "Blood Rain",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Berserker_9",
+      "displayName": "Iron Standard",
       "weight": 10
     },
     {
@@ -1535,6 +1577,14 @@ export class EquipmentItemDefinitions {
         {
           "type": 42,
           "value": 5,
+          "target": {
+            "kind": "skill",
+            "id": "Berserk"
+          }
+        },
+        {
+          "type": 248,
+          "value": 1,
           "target": {
             "kind": "skill",
             "id": "Berserk"
@@ -2738,14 +2788,6 @@ export class EquipmentItemDefinitions {
           "value": 1
         },
         {
-          "type": 49,
-          "value": -50,
-          "target": {
-            "kind": "skill",
-            "id": "Heal"
-          }
-        },
-        {
           "type": 106,
           "value": 5,
           "target": {
@@ -3788,8 +3830,8 @@ export class EquipmentItemDefinitions {
           "value": 20
         },
         {
-          "type": 85,
-          "value": 10
+          "type": 151,
+          "value": 1
         },
         {
           "type": 49,
@@ -5244,7 +5286,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 69,
-          "value": 3
+          "value": 2
         },
         {
           "type": 15,
@@ -6037,16 +6079,8 @@ export class EquipmentItemDefinitions {
           "value": 1
         },
         {
-          "type": 223,
-          "value": 1,
-          "target": {
-            "kind": "status",
-            "id": "Stagger"
-          }
-        },
-        {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantShadow"
@@ -6054,7 +6088,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantHoly"
@@ -6069,6 +6103,14 @@ export class EquipmentItemDefinitions {
         {
           "type": 15,
           "value": 1
+        },
+        {
+          "type": 223,
+          "value": 1,
+          "target": {
+            "kind": "status",
+            "id": "Stagger"
+          }
         }
       ]
     },
@@ -6096,7 +6138,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "FreezingEdge"
@@ -6219,6 +6261,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 98,
           "value": 5
+        },
+        {
+          "type": 237,
+          "value": 25
         },
         {
           "type": 148,
@@ -6728,7 +6774,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantPoison"
@@ -6736,7 +6782,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantHoly"
@@ -6744,7 +6790,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantShadow"
@@ -6752,7 +6798,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantUndead"
@@ -6791,7 +6837,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantFire"
@@ -6799,7 +6845,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantWater"
@@ -6807,7 +6853,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantWind"
@@ -6815,7 +6861,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "EnchantEarth"
@@ -8331,7 +8377,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "FreezingEdge"
@@ -8362,48 +8408,40 @@ export class EquipmentItemDefinitions {
       "effects": [
         {
           "type": 9,
-          "value": 25
+          "value": 20
         },
         {
           "type": 10,
-          "value": 25
+          "value": 40
         },
         {
-          "type": 52,
-          "value": 10
+          "type": 151,
+          "value": 1
         },
         {
-          "type": 106,
+          "type": 252,
           "value": 1,
           "target": {
             "kind": "skill",
-            "id": "IceShard"
-          }
-        },
-        {
-          "type": 110,
-          "value": 1,
-          "target": {
-            "kind": "skill",
-            "id": "IceShard"
+            "id": "Whirlwind"
           }
         }
       ],
       "refineEffects": [
         {
           "type": 9,
-          "value": 2.5
+          "value": 2
         },
         {
           "type": 10,
-          "value": 2.5
+          "value": 4
         },
         {
-          "type": 40,
-          "value": 1,
+          "type": 223,
+          "value": 10,
           "target": {
-            "kind": "skill",
-            "id": "IceShard"
+            "kind": "status",
+            "id": "FrostBite"
           }
         }
       ],
@@ -9435,6 +9473,10 @@ export class EquipmentItemDefinitions {
           "value": 5
         },
         {
+          "type": 237,
+          "value": 25
+        },
+        {
           "type": 177,
           "value": 3
         },
@@ -9522,31 +9564,55 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Gunslinger_1",
       "displayName": "Loadout Rhythm",
-      "weight": 0
+      "weight": 10
     },
     {
       "itemType": 2,
       "id": "Gunslinger_2",
       "displayName": "Opportunist",
-      "weight": 0
+      "weight": 10
     },
     {
       "itemType": 2,
       "id": "Gunslinger_3",
-      "displayName": "Grenadier's Codex",
-      "weight": 0
+      "displayName": "Firecracker",
+      "weight": 10
     },
     {
       "itemType": 2,
       "id": "Gunslinger_4",
       "displayName": "Blinding Escape",
-      "weight": 0
+      "weight": 10
     },
     {
       "itemType": 2,
       "id": "Gunslinger_5",
       "displayName": "Desperado Barrage",
-      "weight": 0
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Gunslinger_6",
+      "displayName": "Blasting Zone",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Gunslinger_7",
+      "displayName": "High Noon",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Gunslinger_8",
+      "displayName": "True Shot",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Gunslinger_9",
+      "displayName": "Reserve Ordnance",
+      "weight": 10
     },
     {
       "itemType": 2,
@@ -9687,6 +9753,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 98,
           "value": 5
+        },
+        {
+          "type": 237,
+          "value": 25
         }
       ],
       "refineEffects": [
@@ -12531,6 +12601,10 @@ export class EquipmentItemDefinitions {
           "value": 5
         },
         {
+          "type": 237,
+          "value": 25
+        },
+        {
           "type": 69,
           "value": 10
         },
@@ -13222,6 +13296,60 @@ export class EquipmentItemDefinitions {
           "value": 1
         }
       ]
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_1",
+      "displayName": "Bone Legion",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_2",
+      "displayName": "Bone Choir",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_3",
+      "displayName": "Dancing Dead",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_4",
+      "displayName": "Death's Reach",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_5",
+      "displayName": "Reaper's Toll",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_6",
+      "displayName": "Whirling Harvest",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_7",
+      "displayName": "Bone and Blade",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_8",
+      "displayName": "Rot Cascade",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Necromancer_9",
+      "displayName": "Contagion",
+      "weight": 10
     },
     {
       "itemType": 2,
@@ -14052,6 +14180,18 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Paladin_10",
+      "displayName": "Twin Oath",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_11",
+      "displayName": "Arcane Riposte",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
       "id": "Paladin_2",
       "displayName": "Crushing Advance",
       "weight": 10
@@ -14066,6 +14206,36 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Paladin_4",
       "displayName": "Divine Retribution",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_5",
+      "displayName": "Shieldbreaker",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_6",
+      "displayName": "Righteous Pull",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_7",
+      "displayName": "Swift Intervention",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_8",
+      "displayName": "Hallowed Ground",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Paladin_9",
+      "displayName": "Righteous Verdict",
       "weight": 10
     },
     {
@@ -14859,6 +15029,18 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Priest_10",
+      "displayName": "Well of Light",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Priest_11",
+      "displayName": "Zealotry",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
       "id": "Priest_2",
       "displayName": "Martyr's Oath",
       "weight": 10
@@ -14903,7 +15085,7 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Priest_9",
       "displayName": "Dark Priest",
-      "weight": 0
+      "weight": 10
     },
     {
       "itemType": 2,
@@ -15177,8 +15359,8 @@ export class EquipmentItemDefinitions {
           "value": 5
         },
         {
-          "type": 60,
-          "value": 1
+          "type": 237,
+          "value": 25
         }
       ],
       "refineEffects": [
@@ -15420,6 +15602,10 @@ export class EquipmentItemDefinitions {
           "value": 5
         },
         {
+          "type": 237,
+          "value": 25
+        },
+        {
           "type": 49,
           "value": 25,
           "target": {
@@ -15511,7 +15697,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "BleedCoating"
@@ -17309,6 +17495,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 98,
           "value": 5
+        },
+        {
+          "type": 237,
+          "value": 25
         }
       ],
       "refineEffects": [
@@ -17627,13 +17817,31 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Shinobi_5",
       "displayName": "Spiral Lock",
-      "weight": 0
+      "weight": 10
     },
     {
       "itemType": 2,
       "id": "Shinobi_6",
       "displayName": "Fated Finish",
-      "weight": 0
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Shinobi_7",
+      "displayName": "Release Mastery",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Shinobi_8",
+      "displayName": "Sealed Fate",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Shinobi_9",
+      "displayName": "Phantom Manuscript",
+      "weight": 10
     },
     {
       "itemType": 2,
@@ -18299,6 +18507,10 @@ export class EquipmentItemDefinitions {
         {
           "type": 98,
           "value": 5
+        },
+        {
+          "type": 237,
+          "value": 25
         },
         {
           "type": 49,
@@ -19298,8 +19510,8 @@ export class EquipmentItemDefinitions {
           "value": 25
         },
         {
-          "type": 193,
-          "value": 15
+          "type": 151,
+          "value": 1
         },
         {
           "type": 25,
@@ -19950,7 +20162,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "VenomCoating"
@@ -20198,12 +20410,16 @@ export class EquipmentItemDefinitions {
           "value": 3
         },
         {
+          "type": 64,
+          "value": 1
+        },
+        {
           "type": 73,
-          "value": -5
+          "value": -3
         },
         {
           "type": 74,
-          "value": -5
+          "value": -3
         }
       ]
     },
@@ -21456,6 +21672,12 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Warrior_6",
+      "displayName": "Giant Leap",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
       "id": "Wasteland Cleaver",
       "displayName": "Wasteland Cleaver",
       "weight": 50,
@@ -21735,7 +21957,7 @@ export class EquipmentItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "VenomCoating"
@@ -22290,8 +22512,14 @@ export class EquipmentItemDefinitions {
     },
     {
       "itemType": 2,
+      "id": "Wizard_10",
+      "displayName": "Meteoric Cataclysm",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
       "id": "Wizard_2",
-      "displayName": "Voltaic Overdraw",
+      "displayName": "Wildfire",
       "weight": 10
     },
     {
@@ -22322,6 +22550,18 @@ export class EquipmentItemDefinitions {
       "itemType": 2,
       "id": "Wizard_7",
       "displayName": "Arcane Barrier",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Wizard_8",
+      "displayName": "Tempest Engine",
+      "weight": 10
+    },
+    {
+      "itemType": 2,
+      "id": "Wizard_9",
+      "displayName": "Frozen Dominion",
       "weight": 10
     },
     {

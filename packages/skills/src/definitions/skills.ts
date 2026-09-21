@@ -307,37 +307,97 @@ export class SkillDefinitions {
   },
   {
     "id": "Berserker_1",
-    "displayName": "War Cry",
+    "displayName": "Rend",
     "kinds": [
       "passive",
       "mastery"
     ],
     "effects": [
       {
-        "type": 213,
-        "value": 0,
-        "label": "SkillAutocast ShoutMight"
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 DarkClaw"
       },
       {
-        "type": 213,
+        "type": 236,
+        "value": 1,
+        "label": "SkillTriggerMultistrike 1"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_10",
+    "displayName": "Crimson Standard",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 242,
         "value": 0,
-        "label": "SkillAutocast ShoutFury"
+        "label": "SkillCastType ShoutFury"
       },
       {
-        "type": 213,
-        "value": 0,
-        "label": "SkillAutocast ShoutBlood"
+        "type": 105,
+        "value": 15,
+        "label": "SkillDuration 15"
       },
       {
-        "type": 213,
+        "type": 212,
+        "value": 1,
+        "label": "SkillMaxInstances 1"
+      },
+      {
+        "type": 104,
+        "value": 15,
+        "label": "SkillCooldown 15"
+      },
+      {
+        "type": 106,
+        "value": -5,
+        "label": "SkillArea -5"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_11",
+    "displayName": "Blood Standard",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 242,
         "value": 0,
-        "label": "SkillAutocast ShoutStun"
+        "label": "SkillCastType ShoutBlood"
+      },
+      {
+        "type": 105,
+        "value": 15,
+        "label": "SkillDuration 15"
+      },
+      {
+        "type": 212,
+        "value": 1,
+        "label": "SkillMaxInstances 1"
+      },
+      {
+        "type": 104,
+        "value": 15,
+        "label": "SkillCooldown 15"
+      },
+      {
+        "type": 106,
+        "value": -5,
+        "label": "SkillArea -5"
       }
     ]
   },
   {
     "id": "Berserker_2",
-    "displayName": "Crimson Frenzy",
+    "displayName": "Bloodstorm",
     "kinds": [
       "passive",
       "mastery"
@@ -345,8 +405,18 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 0,
-        "label": "OnCrit"
+        "value": 5,
+        "label": "OnCrit 5"
+      },
+      {
+        "type": 236,
+        "value": 1,
+        "label": "SkillTriggerMultistrike 1"
+      },
+      {
+        "type": 106,
+        "value": 2,
+        "label": "SkillArea 2"
       }
     ]
   },
@@ -360,18 +430,18 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": -1,
-        "label": "OnKill -1"
+        "value": 2,
+        "label": "OnCast WildCharge 2"
       },
       {
         "type": -1,
-        "value": -1,
-        "label": "OnKill -1"
+        "value": 2,
+        "label": "OnCast Cyclone 2"
       },
       {
-        "type": -1,
+        "type": 199,
         "value": 5,
-        "label": "OnKill 5"
+        "label": "SkillRange 5"
       }
     ]
   },
@@ -384,14 +454,154 @@ export class SkillDefinitions {
     ],
     "effects": [
       {
-        "type": 198,
-        "value": 25,
-        "label": "SkillDamageLowHp 25"
-      },
-      {
         "type": -1,
         "value": -1,
         "label": "OnKill Execute -1"
+      },
+      {
+        "type": 162,
+        "value": 1,
+        "label": "SkillCharges 1"
+      },
+      {
+        "type": 254,
+        "value": 2,
+        "label": "SkillChargesMax 2"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_5",
+    "displayName": "Second Wind",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 162,
+        "value": 1,
+        "label": "SkillCharges 1"
+      },
+      {
+        "type": 104,
+        "value": 10,
+        "label": "SkillCooldown 10"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_6",
+    "displayName": "Red Thirst",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnKill 5"
+      },
+      {
+        "type": 237,
+        "value": 25,
+        "label": "LeechCap"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_7",
+    "displayName": "Mocking Roar",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 213,
+        "value": 0,
+        "label": "SkillAutocast ShoutStun"
+      },
+      {
+        "type": 192,
+        "value": 100,
+        "label": "ThreatMult"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_8",
+    "displayName": "Blood Rain",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 243,
+        "value": 0,
+        "label": "SkillTargetType BloodCrash"
+      },
+      {
+        "type": 106,
+        "value": 5,
+        "label": "SkillArea 5"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_9",
+    "displayName": "Iron Standard",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 242,
+        "value": 0,
+        "label": "SkillCastType ShoutMight"
+      },
+      {
+        "type": 105,
+        "value": 15,
+        "label": "SkillDuration 15"
+      },
+      {
+        "type": 212,
+        "value": 1,
+        "label": "SkillMaxInstances 1"
+      },
+      {
+        "type": 104,
+        "value": 15,
+        "label": "SkillCooldown 15"
+      },
+      {
+        "type": 106,
+        "value": -5,
+        "label": "SkillArea -5"
+      }
+    ]
+  },
+  {
+    "id": "Berserker_Artifact_1",
+    "displayName": "Bloodfury",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 248,
+        "value": 1,
+        "label": "SkillNoExclusive 1"
+      },
+      {
+        "type": 248,
+        "value": 1,
+        "label": "SkillNoExclusive 1"
       }
     ]
   },
@@ -650,6 +860,11 @@ export class SkillDefinitions {
         "label": "GrantSkill 5"
       },
       {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
         "type": 112,
         "value": 1,
         "label": "Detector"
@@ -713,6 +928,34 @@ export class SkillDefinitions {
       "active"
     ],
     "spriteId": "T_Icon_Fire_28"
+  },
+  {
+    "id": "ConduitEarth",
+    "displayName": "Conduit Earth",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "ConduitFire",
+    "displayName": "Conduit Fire",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "ConduitWater",
+    "displayName": "Conduit Water",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "ConduitWind",
+    "displayName": "Conduit Wind",
+    "kinds": [
+      "active"
+    ]
   },
   {
     "id": "Conjurer",
@@ -786,13 +1029,6 @@ export class SkillDefinitions {
     ]
   },
   {
-    "id": "CrimsonFrenzy",
-    "displayName": "Crimson Frenzy",
-    "kinds": [
-      "active"
-    ]
-  },
-  {
     "id": "CritMastery",
     "displayName": "Honed Blade",
     "kinds": [
@@ -853,7 +1089,7 @@ export class SkillDefinitions {
     "kinds": [
       "active"
     ],
-    "spriteId": "14-exorcism"
+    "spriteId": "T_Icon_Arcane_56"
   },
   {
     "id": "DarkClaw",
@@ -1011,6 +1247,31 @@ export class SkillDefinitions {
         "value": 50,
         "valuePerLevel": 10,
         "label": "DualWield 50"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
       }
     ]
   },
@@ -1499,14 +1760,6 @@ export class SkillDefinitions {
     "spriteId": "T_Icon_Fire_132"
   },
   {
-    "id": "GainRage",
-    "displayName": "Gain Rage",
-    "kinds": [
-      "active"
-    ],
-    "spriteId": "Berserker18"
-  },
-  {
     "id": "GameMaster",
     "displayName": "Game Master",
     "kinds": [
@@ -1534,11 +1787,6 @@ export class SkillDefinitions {
         "label": "FinalDamageReduction"
       },
       {
-        "type": 112,
-        "value": 1,
-        "label": "Detector"
-      },
-      {
         "type": 42,
         "value": 1,
         "label": "GrantSkill 1"
@@ -1547,6 +1795,16 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 112,
+        "value": 1,
+        "label": "Detector"
       }
     ]
   },
@@ -1657,6 +1915,11 @@ export class SkillDefinitions {
         "value": 0,
         "valuePerLevel": 1,
         "label": "AtkSpd"
+      },
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
       }
     ]
   },
@@ -1670,28 +1933,28 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 3,
-        "label": "OnWeaponSwap Pistol 3"
+        "value": 5,
+        "label": "OnWeaponSwap Pistol 5"
       },
       {
         "type": -1,
-        "value": 3,
-        "label": "OnWeaponSwap Rifle 3"
+        "value": 5,
+        "label": "OnWeaponSwap Rifle 5"
       },
       {
         "type": -1,
-        "value": 3,
-        "label": "OnWeaponSwap Shotgun 3"
+        "value": 5,
+        "label": "OnWeaponSwap Shotgun 5"
       },
       {
         "type": -1,
-        "value": 3,
-        "label": "OnWeaponSwap Launcher 3"
+        "value": 5,
+        "label": "OnWeaponSwap Launcher 5"
       },
       {
         "type": -1,
-        "value": 3,
-        "label": "OnWeaponSwap GatlingGun 3"
+        "value": 5,
+        "label": "OnWeaponSwap GatlingGun 5"
       }
     ]
   },
@@ -1705,43 +1968,43 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 5,
-        "label": "OnEvade 5"
+        "value": 10,
+        "label": "OnEvade 10"
       }
     ]
   },
   {
     "id": "Gunslinger_3",
-    "displayName": "Grenadier's Codex",
+    "displayName": "Firecracker",
     "kinds": [
       "passive",
       "mastery"
     ],
     "effects": [
       {
-        "type": 106,
-        "value": 2,
-        "label": "SkillArea 2"
+        "type": 200,
+        "value": 3,
+        "label": "SkillInstances 3"
       },
       {
-        "type": 107,
-        "value": 1,
-        "label": "SkillHits 1"
+        "type": 249,
+        "value": 10,
+        "label": "SkillInstanceArea 10"
+      },
+      {
+        "type": 247,
+        "value": 0.2,
+        "label": "SkillInstanceDelay 0.2"
       },
       {
         "type": 49,
-        "value": -35,
-        "label": "SkillDamage -35"
+        "value": -65,
+        "label": "SkillDamage -65"
       },
       {
-        "type": 162,
-        "value": 1,
-        "label": "SkillCharges 1"
-      },
-      {
-        "type": 162,
-        "value": 1,
-        "label": "SkillCharges 1"
+        "type": 108,
+        "value": 25,
+        "label": "SkillCost 25"
       }
     ]
   },
@@ -1779,14 +2042,129 @@ export class SkillDefinitions {
         "label": "SkillHits 5"
       },
       {
-        "type": 104,
-        "value": 3,
-        "label": "SkillCooldown 3"
+        "type": 108,
+        "value": 50,
+        "label": "SkillCost 50"
       },
       {
         "type": 214,
-        "value": 4,
-        "label": "SkillApplyStatus 4 PanicBurst"
+        "value": 5,
+        "label": "SkillApplyStatus 5 PanicBurst"
+      }
+    ]
+  },
+  {
+    "id": "Gunslinger_6",
+    "displayName": "Blasting Zone",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnApplyHit 5"
+      },
+      {
+        "type": 24,
+        "value": 3,
+        "label": "Splash"
+      }
+    ]
+  },
+  {
+    "id": "Gunslinger_7",
+    "displayName": "High Noon",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 130,
+        "value": 1,
+        "label": "Chain"
+      },
+      {
+        "type": 80,
+        "value": 30,
+        "label": "DoubleAttack"
+      },
+      {
+        "type": 121,
+        "value": 10,
+        "label": "PerfectDodge"
+      }
+    ]
+  },
+  {
+    "id": "Gunslinger_8",
+    "displayName": "True Shot",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 193,
+        "value": 20,
+        "label": "DefPierce"
+      },
+      {
+        "type": 25,
+        "value": 1,
+        "label": "Range"
+      }
+    ]
+  },
+  {
+    "id": "Gunslinger_9",
+    "displayName": "Reserve Ordnance",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 162,
+        "value": 1,
+        "label": "SkillCharges 1"
+      },
+      {
+        "type": 162,
+        "value": 1,
+        "label": "SkillCharges 1"
+      }
+    ]
+  },
+  {
+    "id": "Gunslinger_Artifact_1",
+    "displayName": "Akimbo",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 234,
+        "value": 0,
+        "label": "DualWieldUnlock"
+      },
+      {
+        "type": -1,
+        "value": -1,
+        "label": "OnCast PanicBurst -1"
+      },
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 PointBlankShot"
+      },
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnCast JumpShot 5"
       }
     ]
   },
@@ -2027,8 +2405,8 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": 221,
-        "value": 2,
-        "label": "StatusPerMissingHpMult 2"
+        "value": 2.5,
+        "label": "StatusPerMissingHpMult 2.5"
       }
     ]
   },
@@ -2184,7 +2562,8 @@ export class SkillDefinitions {
       {
         "type": 214,
         "value": 5,
-        "label": "SkillApplyStatus 5 Taunt"
+        "valuePerLevel": 3,
+        "label": "SkillApplyStatus 5 3 Taunt"
       }
     ]
   },
@@ -2411,7 +2790,7 @@ export class SkillDefinitions {
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyHit"
+        "label": "OnEndStatus Frozen"
       }
     ]
   },
@@ -2451,7 +2830,8 @@ export class SkillDefinitions {
     "displayName": "Meteor Storm",
     "kinds": [
       "active"
-    ]
+    ],
+    "spriteId": "Skills_053"
   },
   {
     "id": "MimicSeal",
@@ -2490,6 +2870,309 @@ export class SkillDefinitions {
         "value": 0,
         "valuePerLevel": 10,
         "label": "DoubleAttack"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_1",
+    "displayName": "Bone Legion",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 43,
+        "value": 4,
+        "label": "SkillLevel 4"
+      },
+      {
+        "type": 240,
+        "value": 5,
+        "label": "SummonStatus 5 Skeleton"
+      },
+      {
+        "type": 240,
+        "value": 5,
+        "label": "SummonStatus 5 Skeleton"
+      },
+      {
+        "type": 241,
+        "value": 5,
+        "label": "SummonSkill 5 Skeleton"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_2",
+    "displayName": "Bone Choir",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 43,
+        "value": 4,
+        "label": "SkillLevel 4"
+      },
+      {
+        "type": 240,
+        "value": 5,
+        "label": "SummonStatus 5 Skeleton Mage"
+      },
+      {
+        "type": 240,
+        "value": 5,
+        "label": "SummonStatus 5 Skeleton Mage"
+      },
+      {
+        "type": 241,
+        "value": 5,
+        "label": "SummonSkill 5 Skeleton Mage"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_3",
+    "displayName": "Dancing Dead",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 169,
+        "value": 25,
+        "label": "SummonDamage"
+      },
+      {
+        "type": 170,
+        "value": 25,
+        "label": "SummonDamageReduction"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      },
+      {
+        "type": 239,
+        "value": 0,
+        "label": "SkillDisable"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_4",
+    "displayName": "Death's Reach",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 242,
+        "value": 0,
+        "label": "SkillCastType DeathNova"
+      },
+      {
+        "type": 244,
+        "value": 0.1,
+        "valuePerLevel": 200,
+        "label": "SkillDamagePerStatusStack 0.1 200 DeathNova"
+      },
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 DeathNova"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_5",
+    "displayName": "Reaper's Toll",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 Reap"
+      },
+      {
+        "type": 244,
+        "value": 2,
+        "label": "SkillDamagePerStatusStack 2 Reap"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_6",
+    "displayName": "Whirling Harvest",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 236,
+        "value": 1,
+        "label": "SkillTriggerMultistrike 1"
+      },
+      {
+        "type": 244,
+        "value": 0.1,
+        "valuePerLevel": 200,
+        "label": "SkillDamagePerStatusStack 0.1 200 DeathSpiral"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_7",
+    "displayName": "Bone and Blade",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 BoneSpear"
+      },
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 BoneSpikes"
+      },
+      {
+        "type": 244,
+        "value": 1,
+        "label": "SkillDamagePerStatusStack 1 Harvest"
+      },
+      {
+        "type": 244,
+        "value": 1,
+        "label": "SkillDamagePerStatusStack 1 Reap"
+      },
+      {
+        "type": 244,
+        "value": 1,
+        "label": "SkillDamagePerStatusStack 1 DeathSpiral"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_8",
+    "displayName": "Rot Cascade",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnSummonDeath"
+      },
+      {
+        "type": 106,
+        "value": 4,
+        "label": "SkillArea 4"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_9",
+    "displayName": "Contagion",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 124,
+        "value": 2,
+        "label": "SkillChains 2"
+      },
+      {
+        "type": 244,
+        "value": 0.1,
+        "valuePerLevel": 200,
+        "label": "SkillDamagePerStatusStack 0.1 200 DeathCoilEnemy"
+      }
+    ]
+  },
+  {
+    "id": "Necromancer_Artifact_1",
+    "displayName": "Dominion",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 10,
+        "label": "OnSummonDeath 10"
       }
     ]
   },
@@ -2813,6 +3496,52 @@ export class SkillDefinitions {
         "type": 199,
         "value": 5,
         "label": "SkillRange 5"
+      },
+      {
+        "type": 49,
+        "value": 20,
+        "label": "SkillDamage 20"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_10",
+    "displayName": "Twin Oath",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 231,
+        "value": 1,
+        "label": "BondTargets"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "valuePerLevel": 10,
+        "label": "OnApplyStatus LifeBond 10"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnEndStatus LifeBond"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_11",
+    "displayName": "Arcane Riposte",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 1,
+        "label": "OnCast Counter 1"
       }
     ]
   },
@@ -2858,6 +3587,141 @@ export class SkillDefinitions {
         "type": -1,
         "value": 5,
         "label": "OnBlock 5"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_5",
+    "displayName": "Shieldbreaker",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 124,
+        "value": -10,
+        "label": "SkillChains -10"
+      },
+      {
+        "type": 205,
+        "value": 100,
+        "label": "SkillHitsMult 100"
+      },
+      {
+        "type": 108,
+        "value": 50,
+        "label": "SkillCost 50"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_6",
+    "displayName": "Righteous Pull",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 197,
+        "value": 4,
+        "label": "SkillPull 4"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_7",
+    "displayName": "Swift Intervention",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 1,
+        "label": "OnCast ShieldBash 1"
+      },
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnCast ShieldBash 5"
+      },
+      {
+        "type": 250,
+        "value": 3,
+        "label": "SkillFixedCooldown 3"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_8",
+    "displayName": "Hallowed Ground",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnCast Consecration Status"
+      },
+      {
+        "type": 106,
+        "value": 4,
+        "label": "SkillArea 4"
+      },
+      {
+        "type": 105,
+        "value": 2,
+        "label": "SkillDuration 2"
+      },
+      {
+        "type": 250,
+        "value": 5,
+        "label": "SkillFixedCooldown 5"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_9",
+    "displayName": "Righteous Verdict",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 JudgementBlade"
+      },
+      {
+        "type": 208,
+        "value": 20,
+        "label": "SkillDamageVsStatus 20 GrandCross"
+      },
+      {
+        "type": 214,
+        "value": 5,
+        "label": "SkillApplyStatus 5 DivinePunishment"
+      }
+    ]
+  },
+  {
+    "id": "Paladin_Artifact_1",
+    "displayName": "Radiant Ward",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnCast Aegis"
       }
     ]
   },
@@ -2940,6 +3804,41 @@ export class SkillDefinitions {
         "type": 214,
         "value": 5,
         "label": "SkillApplyStatus 5 HolyWrathField"
+      }
+    ]
+  },
+  {
+    "id": "Priest_10",
+    "displayName": "Well of Light",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 213,
+        "value": 0,
+        "label": "SkillAutocast ReviveAll"
+      }
+    ]
+  },
+  {
+    "id": "Priest_11",
+    "displayName": "Zealotry",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 214,
+        "value": 1,
+        "label": "SkillApplyStatus 1 Fanaticism"
+      },
+      {
+        "type": 214,
+        "value": 1,
+        "label": "SkillApplyStatus 1 Fanaticism"
       }
     ]
   },
@@ -3057,9 +3956,9 @@ export class SkillDefinitions {
     ],
     "effects": [
       {
-        "type": -1,
+        "type": 214,
         "value": 1,
-        "label": "OnApplyStatus Sanctuary 1"
+        "label": "SkillApplyStatus 1 Sanctuary"
       }
     ]
   },
@@ -3080,7 +3979,51 @@ export class SkillDefinitions {
         "type": 209,
         "value": 0,
         "label": "SkillReplace Exorcism"
+      },
+      {
+        "type": 46,
+        "value": 10,
+        "label": "DamageElement 10"
+      },
+      {
+        "type": 251,
+        "value": 1,
+        "label": "DamageElementConvert 1 Holy"
       }
+    ]
+  },
+  {
+    "id": "Priest_Artifact_1",
+    "displayName": "Angel of Wrath",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnCast HolyWrath 5"
+      },
+      {
+        "type": -1,
+        "value": 5,
+        "label": "OnCast HighHeal 5"
+      }
+    ]
+  },
+  {
+    "id": "RadiantWard",
+    "displayName": "Radiant Ward",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "RadiantWardEnemy",
+    "displayName": "Radiant Ward Enemy",
+    "kinds": [
+      "active"
     ]
   },
   {
@@ -3096,6 +4039,12 @@ export class SkillDefinitions {
         "value": 0,
         "valuePerLevel": 25,
         "label": "StatusMaxStacks 25"
+      },
+      {
+        "type": 218,
+        "value": 0.25,
+        "valuePerLevel": 100,
+        "label": "DamageVsStatus 0.25 100"
       }
     ]
   },
@@ -3564,8 +4513,8 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 0,
-        "label": "OnDodge"
+        "value": 5,
+        "label": "OnDodge 5"
       }
     ]
   },
@@ -3583,9 +4532,9 @@ export class SkillDefinitions {
         "label": "SkillAutocast ShadowFeint"
       },
       {
-        "type": 214,
+        "type": -1,
         "value": 4,
-        "label": "SkillApplyStatus 4 ShurikenFan"
+        "label": "OnCast ShurikenFan 4"
       },
       {
         "type": 104,
@@ -3608,9 +4557,9 @@ export class SkillDefinitions {
     ],
     "effects": [
       {
-        "type": 40,
-        "value": 100,
-        "label": "AutocastAttack 100"
+        "type": -1,
+        "value": 2,
+        "label": "OnCast LightningStrike 2"
       },
       {
         "type": 124,
@@ -3619,8 +4568,8 @@ export class SkillDefinitions {
       },
       {
         "type": 208,
-        "value": 80,
-        "label": "SkillDamageVsStatus 80 LightningStrike"
+        "value": 40,
+        "label": "SkillDamageVsStatus 40 LightningStrike"
       }
     ]
   },
@@ -3669,8 +4618,8 @@ export class SkillDefinitions {
       },
       {
         "type": 208,
-        "value": 40,
-        "label": "SkillDamageVsStatus 40 FlameOrb"
+        "value": 20,
+        "label": "SkillDamageVsStatus 20 FlameOrb"
       }
     ]
   },
@@ -3689,18 +4638,98 @@ export class SkillDefinitions {
       },
       {
         "type": 107,
-        "value": 0,
-        "label": "SkillHits"
+        "value": 5,
+        "label": "SkillHits 5"
       },
       {
         "type": 104,
         "value": -2,
         "label": "SkillCooldown -2"
+      }
+    ]
+  },
+  {
+    "id": "Shinobi_7",
+    "displayName": "Release Mastery",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit FireRelease"
       },
       {
         "type": -1,
-        "value": 50,
-        "label": "None 50"
+        "value": 0,
+        "label": "OnApplyHit LightningRelease"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit IceRelease"
+      }
+    ]
+  },
+  {
+    "id": "Shinobi_8",
+    "displayName": "Sealed Fate",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 214,
+        "value": 10,
+        "label": "SkillApplyStatus 10 FireRelease"
+      },
+      {
+        "type": 214,
+        "value": 10,
+        "label": "SkillApplyStatus 10 IceRelease"
+      },
+      {
+        "type": 214,
+        "value": 10,
+        "label": "SkillApplyStatus 10 LightningRelease"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit FlameOrb"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit FrostBlade"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit LightningStrike"
+      }
+    ]
+  },
+  {
+    "id": "Shinobi_9",
+    "displayName": "Phantom Manuscript",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": -1,
+        "value": 2,
+        "label": "OnEndStatus Cloaking 2"
+      },
+      {
+        "type": -1,
+        "value": 2,
+        "label": "OnEndStatus Cloaking 2"
       }
     ]
   },
@@ -3725,8 +4754,8 @@ export class SkillDefinitions {
     ]
   },
   {
-    "id": "Shinobi_B",
-    "displayName": "Sealed Fate",
+    "id": "Shinobi_Artifact_1",
+    "displayName": "Spellbreaker",
     "kinds": [
       "passive",
       "mastery"
@@ -3734,38 +4763,38 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": 214,
-        "value": 0,
-        "label": "SkillApplyStatus FireRelease"
+        "value": 5,
+        "label": "SkillApplyStatus 5 FireRelease"
       },
       {
         "type": 214,
-        "value": 0,
-        "label": "SkillApplyStatus IceRelease"
+        "value": 5,
+        "label": "SkillApplyStatus 5 IceRelease"
       },
       {
         "type": 214,
-        "value": 0,
-        "label": "SkillApplyStatus LightningRelease"
+        "value": 5,
+        "label": "SkillApplyStatus 5 LightningRelease"
       },
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyHit FlameOrb"
+        "label": "OnCastComplete IceRelease"
       },
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyHit FrostBlade"
+        "label": "OnApplyHit FireRelease"
       },
       {
         "type": -1,
-        "value": 0,
-        "label": "OnApplyHit LightningStrike"
+        "value": 4,
+        "label": "OnCast LightningRelease 4"
       }
     ]
   },
   {
-    "id": "Shinobi_C",
+    "id": "Shinobi_B",
     "displayName": "Honed Technique",
     "kinds": [
       "passive",
@@ -3783,34 +4812,6 @@ export class SkillDefinitions {
         "label": "OnApplyStatus Cloaking 4"
       }
     ]
-  },
-  {
-    "id": "Shinobi_D",
-    "displayName": "Phantom Manuscript",
-    "kinds": [
-      "passive",
-      "mastery"
-    ],
-    "effects": [
-      {
-        "type": -1,
-        "value": 2,
-        "label": "OnEndStatus Cloaking 2"
-      },
-      {
-        "type": -1,
-        "value": 2,
-        "label": "OnEndStatus Cloaking 2"
-      }
-    ]
-  },
-  {
-    "id": "ShockAbsorber",
-    "displayName": "Shock Absorber",
-    "kinds": [
-      "active"
-    ],
-    "spriteId": "sf_s_074"
   },
   {
     "id": "ShoutBlood",
@@ -3835,13 +4836,6 @@ export class SkillDefinitions {
       "active"
     ],
     "spriteId": "ShoutMight-32"
-  },
-  {
-    "id": "ShoutMightLong",
-    "displayName": "War Cry",
-    "kinds": [
-      "active"
-    ]
   },
   {
     "id": "ShoutStun",
@@ -4050,6 +5044,55 @@ export class SkillDefinitions {
     "spriteId": "T_Icon_Energy_35"
   },
   {
+    "id": "Status_Aegis",
+    "displayName": "Aegis",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Fury",
+    "displayName": "Fury",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Haste",
+    "displayName": "Haste",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Might",
+    "displayName": "Might",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Protection",
+    "displayName": "Protection",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Regen",
+    "displayName": "Regeneration",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
+    "id": "Status_Stability",
+    "displayName": "Stability",
+    "kinds": [
+      "active"
+    ]
+  },
+  {
     "id": "StatusRecovery",
     "displayName": "Status Recovery",
     "kinds": [
@@ -4078,6 +5121,14 @@ export class SkillDefinitions {
         "label": "Dex"
       }
     ]
+  },
+  {
+    "id": "SteamBurst",
+    "displayName": "Steam Burst",
+    "kinds": [
+      "active"
+    ],
+    "spriteId": "T_Icon_Frost_32"
   },
   {
     "id": "Stomp",
@@ -4238,8 +5289,8 @@ export class SkillDefinitions {
       },
       {
         "type": 214,
-        "value": 5,
-        "label": "SkillApplyStatus 5 Smite"
+        "value": 3,
+        "label": "SkillApplyStatus 3 Smite"
       },
       {
         "type": 231,
@@ -4297,10 +5348,10 @@ export class SkillDefinitions {
     "spriteId": "T_Icon_Arcane_53",
     "effects": [
       {
-        "type": 92,
+        "type": 135,
         "value": 0,
-        "valuePerLevel": 10,
-        "label": "SummonStatShare"
+        "valuePerLevel": 1,
+        "label": "SummonAllStats"
       }
     ]
   },
@@ -4677,7 +5728,7 @@ export class SkillDefinitions {
       },
       {
         "type": 192,
-        "value": 150,
+        "value": 100,
         "label": "ThreatMult"
       }
     ]
@@ -4712,8 +5763,13 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 10,
-        "label": "OnHealthLow 10"
+        "value": 5,
+        "label": "OnHealthLow 5"
+      },
+      {
+        "type": 220,
+        "value": 25,
+        "label": "MpCostAsHp"
       }
     ]
   },
@@ -4734,6 +5790,21 @@ export class SkillDefinitions {
         "type": -1,
         "value": 3,
         "label": "OnApplyStatus Spinning 3"
+      }
+    ]
+  },
+  {
+    "id": "Warrior_6",
+    "displayName": "Giant Leap",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 199,
+        "value": 5,
+        "label": "SkillRange 5"
       }
     ]
   },
@@ -4778,6 +5849,36 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
       }
     ]
   },
@@ -4798,6 +5899,21 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
       }
     ]
   },
@@ -4818,6 +5934,51 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 43,
+        "value": 1,
+        "label": "SkillLevel 1"
+      },
+      {
+        "type": 43,
+        "value": 1,
+        "label": "SkillLevel 1"
+      },
+      {
+        "type": 43,
+        "value": 1,
+        "label": "SkillLevel 1"
+      },
+      {
+        "type": 43,
+        "value": 1,
+        "label": "SkillLevel 1"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
       }
     ]
   },
@@ -4838,6 +5999,41 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
+      },
+      {
+        "type": 43,
+        "value": 3,
+        "label": "SkillLevel 3"
       }
     ]
   },
@@ -4858,6 +6054,46 @@ export class SkillDefinitions {
         "type": 42,
         "value": 5,
         "label": "GrantSkill 5"
+      },
+      {
+        "type": 42,
+        "value": 5,
+        "label": "GrantSkill 5"
+      },
+      {
+        "type": 43,
+        "value": 1,
+        "label": "SkillLevel 1"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      },
+      {
+        "type": 43,
+        "value": 2,
+        "label": "SkillLevel 2"
+      }
+    ]
+  },
+  {
+    "id": "Weaver_Artifact_1",
+    "displayName": "Manifold",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 232,
+        "value": 2,
+        "label": "GrimoireSlots"
       }
     ]
   },
@@ -4893,6 +6129,14 @@ export class SkillDefinitions {
         "label": "SkillSplash"
       }
     ]
+  },
+  {
+    "id": "WellOfLight",
+    "displayName": "Well Of Light",
+    "kinds": [
+      "active"
+    ],
+    "spriteId": "25-ReviveAll"
   },
   {
     "id": "Whirlwind",
@@ -4932,6 +6176,11 @@ export class SkillDefinitions {
         "label": "SkillHitsMult 100"
       },
       {
+        "type": 108,
+        "value": 50,
+        "label": "SkillCost 50"
+      },
+      {
         "type": 204,
         "value": 20,
         "label": "SkillCastTimeMult 20"
@@ -4944,22 +6193,47 @@ export class SkillDefinitions {
     ]
   },
   {
-    "id": "Wizard_2",
-    "displayName": "Voltaic Overdraw",
+    "id": "Wizard_10",
+    "displayName": "Meteoric Cataclysm",
     "kinds": [
       "passive",
       "mastery"
     ],
     "effects": [
       {
-        "type": -1,
+        "type": 209,
         "value": 0,
-        "label": "OnApplyHit ChainLightning"
+        "label": "SkillReplace Meteor"
       },
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyHit Tempest"
+        "label": "OnApplyStatus Stun"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit Meteor"
+      }
+    ]
+  },
+  {
+    "id": "Wizard_2",
+    "displayName": "Wildfire",
+    "kinds": [
+      "passive",
+      "mastery"
+    ],
+    "effects": [
+      {
+        "type": 212,
+        "value": 2,
+        "label": "SkillMaxInstances 2"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyStatus Burning"
       }
     ]
   },
@@ -4992,11 +6266,6 @@ export class SkillDefinitions {
     ],
     "effects": [
       {
-        "type": 206,
-        "value": 100,
-        "label": "SkillDurationMult 100"
-      },
-      {
         "type": 214,
         "value": 1,
         "label": "SkillApplyStatus 1 EarthWall"
@@ -5018,7 +6287,7 @@ export class SkillDefinitions {
       },
       {
         "type": 188,
-        "value": -10,
+        "value": -5,
         "label": "CastTimeReductionLimit"
       }
     ]
@@ -5048,28 +6317,48 @@ export class SkillDefinitions {
     "effects": [
       {
         "type": -1,
-        "value": 1,
-        "label": "OnApplyStatus FireBarrier 1"
+        "value": 0,
+        "label": "OnApplyStatus FireBarrier"
       },
       {
         "type": -1,
-        "value": 1,
-        "label": "OnApplyStatus WaterBarrier 1"
+        "value": 0,
+        "label": "OnEndStatus FireBarrier"
       },
       {
         "type": -1,
-        "value": 1,
-        "label": "OnApplyStatus WindBarrier 1"
+        "value": 0,
+        "label": "OnApplyStatus WaterBarrier"
       },
       {
         "type": -1,
-        "value": 1,
-        "label": "OnApplyStatus EarthBarrier 1"
+        "value": 0,
+        "label": "OnEndStatus WaterBarrier"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyStatus WindBarrier"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnEndStatus WindBarrier"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyStatus EarthBarrier"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnEndStatus EarthBarrier"
       }
     ]
   },
   {
-    "id": "Wizard_Artifact_1",
+    "id": "Wizard_8",
     "displayName": "Tempest Engine",
     "kinds": [
       "passive",
@@ -5090,11 +6379,16 @@ export class SkillDefinitions {
         "type": -1,
         "value": 0,
         "label": "OnApplyHit ChainLightning"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyHit Tempest"
       }
     ]
   },
   {
-    "id": "Wizard_Artifact_2",
+    "id": "Wizard_9",
     "displayName": "Frozen Dominion",
     "kinds": [
       "passive",
@@ -5102,14 +6396,14 @@ export class SkillDefinitions {
     ],
     "effects": [
       {
-        "type": 211,
-        "value": 30,
-        "label": "StatusDuration 30"
+        "type": 218,
+        "value": 10,
+        "label": "DamageVsStatus 10"
       },
       {
-        "type": 109,
-        "value": 1,
-        "label": "SkillRemoveKnockback 1"
+        "type": 218,
+        "value": 10,
+        "label": "DamageVsStatus 10"
       },
       {
         "type": 213,
@@ -5120,12 +6414,17 @@ export class SkillDefinitions {
         "type": -1,
         "value": 0,
         "label": "OnApplyHit IceShard"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnApplyStatus Slow"
       }
     ]
   },
   {
-    "id": "Wizard_Artifact_3",
-    "displayName": "Meteoric Cataclysm",
+    "id": "Wizard_Artifact_1",
+    "displayName": "Conduit",
     "kinds": [
       "passive",
       "mastery"
@@ -5134,22 +6433,27 @@ export class SkillDefinitions {
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyStatus Burning"
+        "label": "OnCast TetraVortexFire"
       },
       {
         "type": -1,
         "value": 0,
-        "label": "OnApplyStatus Stun"
+        "label": "OnCast TetraVortexWater"
       },
       {
-        "type": 212,
-        "value": 2,
-        "label": "SkillMaxInstances 2"
-      },
-      {
-        "type": 209,
+        "type": -1,
         "value": 0,
-        "label": "SkillReplace Meteor"
+        "label": "OnCast TetraVortexWind"
+      },
+      {
+        "type": -1,
+        "value": 0,
+        "label": "OnCast TetraVortexEarth"
+      },
+      {
+        "type": 42,
+        "value": 1,
+        "label": "GrantSkill 1 Mage"
       }
     ]
   },

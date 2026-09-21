@@ -48,6 +48,18 @@ export const summoningComponentRpcs = [
   },
   {
     "wireHash": 2,
+    "packetKind": "serverRpc",
+    "methodName": "Debug_SummonReanimation",
+    "parameters": [
+      {
+        "name": "id",
+        "typeName": "System.String",
+        "codec": "stringUtf8Packed"
+      }
+    ]
+  },
+  {
+    "wireHash": 3,
     "packetKind": "targetRpc",
     "methodName": "ApplyRecall_T",
     "parameters": [
@@ -59,7 +71,7 @@ export const summoningComponentRpcs = [
     ]
   },
   {
-    "wireHash": 3,
+    "wireHash": 4,
     "packetKind": "targetRpc",
     "methodName": "Swap_T",
     "parameters": [
@@ -71,7 +83,7 @@ export const summoningComponentRpcs = [
     ]
   },
   {
-    "wireHash": 4,
+    "wireHash": 5,
     "packetKind": "observersRpc",
     "methodName": "CloneEffect_C"
   }

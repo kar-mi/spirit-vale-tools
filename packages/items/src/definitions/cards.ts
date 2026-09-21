@@ -1196,6 +1196,14 @@ export class CardItemDefinitions {
       "displayName": "Kraken Card",
       "effects": [
         {
+          "type": 42,
+          "value": 1,
+          "target": {
+            "kind": "skill",
+            "id": "FreezingField"
+          }
+        },
+        {
           "type": 200,
           "value": 3,
           "target": {
@@ -1204,11 +1212,19 @@ export class CardItemDefinitions {
           }
         },
         {
-          "type": 42,
+          "type": 206,
+          "value": -50,
+          "target": {
+            "kind": "skill",
+            "id": "IceShard"
+          }
+        },
+        {
+          "type": 110,
           "value": 1,
           "target": {
             "kind": "skill",
-            "id": "FreezingField"
+            "id": "IceShard"
           }
         }
       ]
@@ -2082,7 +2098,7 @@ export class CardItemDefinitions {
         },
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "FreezingEdge"
@@ -2727,7 +2743,7 @@ export class CardItemDefinitions {
       "effects": [
         {
           "type": 218,
-          "value": 5,
+          "value": 3,
           "target": {
             "kind": "status",
             "id": "Slow"
@@ -2735,7 +2751,7 @@ export class CardItemDefinitions {
         },
         {
           "type": 218,
-          "value": 5,
+          "value": 3,
           "target": {
             "kind": "status",
             "id": "Frozen"
@@ -2743,7 +2759,7 @@ export class CardItemDefinitions {
         },
         {
           "type": 218,
-          "value": 5,
+          "value": 3,
           "target": {
             "kind": "status",
             "id": "Stun"
@@ -3031,7 +3047,7 @@ export class CardItemDefinitions {
       "effects": [
         {
           "type": 42,
-          "value": 1,
+          "value": 5,
           "target": {
             "kind": "skill",
             "id": "VenomCoating"

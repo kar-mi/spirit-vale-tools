@@ -17,7 +17,7 @@ describe("FishNetSkillDirectory", () => {
   test("loads the current reduced catalog", () => {
     const catalog = loadBundledSkillCatalog();
     expect(catalog.buildFingerprint).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
-    expect(catalog.skills).toHaveLength(406);
+    expect(catalog.skills).toHaveLength(456);
     expect(resolveFishNetSkillDisplayName(catalog.skills[0]?.id)).toBe(catalog.skills[0]?.displayName);
     expect(() => loadBundledSkillCatalog("fictional-build")).toThrow("unknown skill catalog build");
   });

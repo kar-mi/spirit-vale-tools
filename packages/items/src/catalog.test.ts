@@ -9,7 +9,7 @@ import {
 test("loads a complete build-scoped item catalog", () => {
   const catalog = loadBundledItemCatalog();
   expect(catalog.buildFingerprint).toBe(CURRENT_GAME_BUILD_FINGERPRINT);
-  expect(countByType(catalog.items)).toEqual([282, 31, 690, 45, 329, 129, 1179]);
+  expect(countByType(catalog.items)).toEqual([283, 31, 726, 42, 329, 130, 1181]);
   expect(catalog.items.every((item) => item.id.length > 0 && item.displayName.length > 0)).toBe(true);
   expect(new Set(catalog.items.map((item) => `${item.itemType}|${item.id}`)).size).toBe(catalog.items.length);
 
@@ -34,6 +34,11 @@ test("resolves duplicate ids independently by item type", () => {
   expect(resolveFishNetItem(2, "Sword")?.weight).toBe(30);
   expect(resolveFishNetItem(2, "ArcaneFeet")?.weight).toBe(20);
   expect(resolveFishNetItem(2, "3D Glasses")?.weight).toBe(10);
+});
+
+test("uses the fixed grimoire weight for existing and newly exported grimoires", () => {
+  expect(resolveFishNetItem(2, "Gunslinger_1")?.weight).toBe(10);
+  expect(resolveFishNetItem(2, "Berserker_10")?.weight).toBe(10);
 });
 
 test("directory entries are immutable cached defensive copies", () => {

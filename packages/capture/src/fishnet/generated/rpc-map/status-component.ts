@@ -110,6 +110,11 @@ export const statusComponentRpcs = [
             "codec": "packedInt32"
           },
           {
+            "name": "Level",
+            "typeName": "System.Int32",
+            "codec": "packedInt32"
+          },
+          {
             "name": "ShowFx",
             "typeName": "System.Boolean",
             "codec": "boolean"

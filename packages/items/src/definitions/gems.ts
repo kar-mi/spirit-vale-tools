@@ -386,12 +386,8 @@ export class GemItemDefinitions {
       "displayName": "Seer Gem",
       "effects": [
         {
-          "type": 42,
-          "value": 1,
-          "target": {
-            "kind": "skill",
-            "id": "TrueSight"
-          }
+          "type": 112,
+          "value": 1
         }
       ],
       "refineEffects": [
@@ -514,14 +510,6 @@ export class GemItemDefinitions {
             "kind": "skill",
             "id": "Exorcism"
           }
-        },
-        {
-          "type": 49,
-          "value": 2,
-          "target": {
-            "kind": "skill",
-            "id": "Dark Exorcism"
-          }
         }
       ]
     },
@@ -536,6 +524,14 @@ export class GemItemDefinitions {
           "target": {
             "kind": "skill",
             "id": "ExplosiveGrenade"
+          }
+        },
+        {
+          "type": 49,
+          "value": 2,
+          "target": {
+            "kind": "skill",
+            "id": "FireField"
           }
         }
       ]
@@ -784,6 +780,14 @@ export class GemItemDefinitions {
           "target": {
             "kind": "skill",
             "id": "FreezeGrenade"
+          }
+        },
+        {
+          "type": 49,
+          "value": 2,
+          "target": {
+            "kind": "skill",
+            "id": "FrozenGround"
           }
         }
       ]
@@ -1385,6 +1389,14 @@ export class GemItemDefinitions {
             "kind": "skill",
             "id": "PoisonGrenade"
           }
+        },
+        {
+          "type": 49,
+          "value": 2,
+          "target": {
+            "kind": "skill",
+            "id": "PoisonField"
+          }
         }
       ]
     },
@@ -1437,6 +1449,21 @@ export class GemItemDefinitions {
         {
           "type": 76,
           "value": 3
+        }
+      ]
+    },
+    {
+      "itemType": 5,
+      "id": "Sacrifice Gem",
+      "displayName": "Sacrifice Gem",
+      "refineEffects": [
+        {
+          "type": 49,
+          "value": 2,
+          "target": {
+            "kind": "skill",
+            "id": "Sacrifice"
+          }
         }
       ]
     },

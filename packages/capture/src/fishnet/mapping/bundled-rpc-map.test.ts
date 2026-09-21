@@ -121,8 +121,8 @@ describe("bundled FishNet maps", () => {
 
   test("assembles a complete map with unique behaviour-local identifiers", () => {
     const map = loadBundledFishNetRpcMap();
-    expect(map.behaviours).toHaveLength(15);
-    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(337);
+    expect(map.behaviours).toHaveLength(16);
+    expect(map.behaviours.reduce((count, behaviour) => count + behaviour.rpcs.length, 0)).toBe(379);
     expect(map.broadcasts).toHaveLength(6);
 
     const behaviourNames = map.behaviours.map(({ typeName }) => typeName);
@@ -222,7 +222,7 @@ describe("bundled FishNet maps", () => {
     ]);
     const results = decoder.decode(tick(9, Buffer.concat([
       spawnWithoutLinks(70, 0, 4),
-      targetRpc(70, 0, 97, run),
+      targetRpc(70, 0, 107, run),
     ])), { reliable: true, connectionId: "synthetic-tower" });
 
     expect(results[1]).toMatchObject({
@@ -411,8 +411,8 @@ describe("bundled FishNet maps", () => {
     ]);
     const results = decoder.decode(tick(13, Buffer.concat([
       spawnWithoutLinks(501, 0, 4),
-      serverRpc(501, 0, 72, request),
-      targetRpc(501, 0, 77, stallStatus),
+      serverRpc(501, 0, 76, request),
+      targetRpc(501, 0, 81, stallStatus),
     ])), { reliable: true, connectionId: "synthetic-market" });
 
     expect(results[1]).toMatchObject({
@@ -443,7 +443,7 @@ describe("bundled FishNet maps", () => {
     expect(results[2]?.undecodedPayload).toBeUndefined();
 
     const lateAttach = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(14,
-      serverRpc(777, 0, 72, request)), { reliable: true, connectionId: "synthetic-market-late-attach" });
+      serverRpc(777, 0, 76, request)), { reliable: true, connectionId: "synthetic-market-late-attach" });
     expect(lateAttach[0]).toMatchObject({
       networkBehaviourType: "PlayerController",
       rpcName: "RequestVendorItemList_S",
@@ -452,7 +452,7 @@ describe("bundled FishNet maps", () => {
     expect(lateAttach[0]?.undecodedPayload).toEqual(trailingRequestFields);
 
     const lateResponse = new FishNetSessionDecoder(loadBundledFishNetRpcMap()).decode(tick(15,
-      targetRpc(778, 0, 73, string("{\"Success\":true,\"Listings\":[]}"))),
+      targetRpc(778, 0, 77, string("{\"Success\":true,\"Listings\":[]}"))),
     { reliable: true, connectionId: "synthetic-market-late-response" });
     expect(lateResponse[0]).toMatchObject({
       networkBehaviourType: "PlayerController",
