@@ -1,5 +1,11 @@
 # Spirit Vale Tools
 
+> [!WARNING]
+> **Deprecated:** This repository and all published
+> `@kar-mi/spirit-vale-tools-*` packages are no longer maintained. Existing
+> releases remain available as-is, but no further updates or support are
+> planned. Do not use them for new projects.
+
 Spirit Vale Tools provides reusable Bun packages and command-line utilities for
 passive packet capture, protocol decoding, catalogs, combat, character,
 market, and reward analysis. Capture uses Npcap in non-promiscuous mode and never

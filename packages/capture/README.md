@@ -1,5 +1,9 @@
 # @kar-mi/spirit-vale-tools-capture
 
+> [!WARNING]
+> **Deprecated:** This package is no longer maintained. Existing releases remain
+> available as-is, but no further updates or support are planned.
+
 Passive Windows packet capture and Spirit Vale protocol decoding for Bun.
 
 ## Install

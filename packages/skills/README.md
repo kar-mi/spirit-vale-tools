@@ -1,5 +1,9 @@
 # @kar-mi/spirit-vale-tools-skills
 
+> [!WARNING]
+> **Deprecated:** This package is no longer maintained. Existing releases remain
+> available as-is, but no further updates or support are planned.
+
 Build-scoped Spirit Vale skill catalog utilities.
 
 ## Install

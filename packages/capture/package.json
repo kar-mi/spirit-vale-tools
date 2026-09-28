@@ -1,7 +1,7 @@
 {
   "name": "@kar-mi/spirit-vale-tools-capture",
   "version": "3.0.3",
-  "description": "Passive Windows packet capture and Spirit Vale protocol decoding for Bun.",
+  "description": "[DEPRECATED] Passive Windows packet capture and Spirit Vale protocol decoding for Bun.",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",

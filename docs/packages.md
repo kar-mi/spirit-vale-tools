@@ -1,5 +1,10 @@
 # Packages
 
+> [!WARNING]
+> **Deprecated:** All `@kar-mi/spirit-vale-tools-*` packages are no longer
+> maintained. Existing releases remain available as-is, but should not be used
+> for new projects.
+
 The reusable Bun packages are published to npm and GitHub Packages under the
 `@kar-mi` scope. npm consumers can install a package directly:
 

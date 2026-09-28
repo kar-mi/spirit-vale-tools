@@ -1,5 +1,9 @@
 # @kar-mi/spirit-vale-tools-market
 
+> [!WARNING]
+> **Deprecated:** This package is no longer maintained. Existing releases remain
+> available as-is, but no further updates or support are planned.
+
 Spirit Vale market decoding and replay utilities.
 
 ## Install

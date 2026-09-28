@@ -1,5 +1,9 @@
 # @kar-mi/spirit-vale-tools-metrics
 
+> [!WARNING]
+> **Deprecated:** This package is no longer maintained. Existing releases remain
+> available as-is, but no further updates or support are planned.
+
 Shared rate-estimation primitives for Spirit Vale tools.
 
 > **Internal package.** This package is published only because the domain

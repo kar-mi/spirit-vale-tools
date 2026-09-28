@@ -1,5 +1,10 @@
 # Documentation
 
+> [!WARNING]
+> **Deprecated:** Spirit Vale Tools and its published packages are no longer
+> maintained. This documentation describes the final releases and is retained
+> for reference only.
+
 These guides cover the reusable packages, command-line tools, protocol
 implementation, and contributor references.
 
