@@ -1,5 +1,18 @@
 # @kar-mi/spirit-vale-tools-combat
 
+## 5.1.2
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-capture@3.0.4
+  - @kar-mi/spirit-vale-tools-logging@0.10.2
+  - @kar-mi/spirit-vale-tools-metrics@0.2.2
+  - @kar-mi/spirit-vale-tools-skills@0.2.6
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.4
+  - @kar-mi/spirit-vale-tools-statuses@0.3.2
+
 ## 5.1.1
 
 ### Patch Changes

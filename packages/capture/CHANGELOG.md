@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-capture
 
+## 3.0.4
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+
 ## 3.0.3
 
 ### Patch Changes

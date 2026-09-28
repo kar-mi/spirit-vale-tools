@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-logging
 
+## 0.10.2
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+
 ## 0.10.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @kar-mi/spirit-vale-tools-sqlite
 
+## 0.2.4
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-logging@0.10.2
+
 ## 0.2.3
 
 ### Patch Changes

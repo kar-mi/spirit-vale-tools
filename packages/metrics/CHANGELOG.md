@@ -1,5 +1,11 @@
 # @kar-mi/spirit-vale-tools-metrics
 
+## 0.2.2
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+
 ## 0.2.1
 
 ### Patch Changes
