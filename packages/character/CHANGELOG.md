@@ -1,5 +1,15 @@
 # @kar-mi/spirit-vale-tools-character
 
+## 0.6.2
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-capture@3.0.4
+  - @kar-mi/spirit-vale-tools-items@0.1.13
+  - @kar-mi/spirit-vale-tools-skills@0.2.6
+
 ## 0.6.1
 
 ### Patch Changes

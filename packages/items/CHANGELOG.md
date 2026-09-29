@@ -1,5 +1,13 @@
 # @kar-mi/spirit-vale-tools-items
 
+## 0.1.13
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-capture@3.0.4
+
 ## 0.1.12
 
 ### Patch Changes

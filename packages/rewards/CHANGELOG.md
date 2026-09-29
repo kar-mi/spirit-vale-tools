@@ -1,5 +1,17 @@
 # @kar-mi/spirit-vale-tools-rewards
 
+## 1.4.3
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-capture@3.0.4
+  - @kar-mi/spirit-vale-tools-combat@5.1.2
+  - @kar-mi/spirit-vale-tools-items@0.1.13
+  - @kar-mi/spirit-vale-tools-logging@0.10.2
+  - @kar-mi/spirit-vale-tools-sqlite@0.2.4
+
 ## 1.4.2
 
 ### Patch Changes

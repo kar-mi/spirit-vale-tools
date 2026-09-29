@@ -1,5 +1,15 @@
 # @kar-mi/spirit-vale-tools-market
 
+## 2.0.3
+
+### Patch Changes
+
+- 1d0727d: Mark the package as deprecated and no longer maintained.
+- Updated dependencies [1d0727d]
+  - @kar-mi/spirit-vale-tools-capture@3.0.4
+  - @kar-mi/spirit-vale-tools-items@0.1.13
+  - @kar-mi/spirit-vale-tools-logging@0.10.2
+
 ## 2.0.2
 
 ### Patch Changes
